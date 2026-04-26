@@ -12,3 +12,10 @@ export { PluginDiscoveryService } from './discovery/plugin-discovery.service';
 
 // Interfaces
 export { IPluginMetadata, PluginCategory } from './interfaces/plugin-metadata.interface';
+
+// Configuration
+export {
+  DISABLED_SOURCES_ENV_VAR,
+  parseDisabledSources,
+  readDisabledSources,
+} from './config/disabled-sources';

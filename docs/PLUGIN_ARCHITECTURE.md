@@ -191,3 +191,38 @@ query {
   }
 }
 ```
+
+## Runtime Configuration
+
+### `EVER_JOBS_DISABLED_SOURCES`
+
+Comma-separated list of `Site` ids to skip at registration time. The discovery
+service reads the variable in `OnModuleInit` and never registers the listed plugins,
+so requests for those sites resolve to "no scraper" exactly as if the plugin were
+uninstalled.
+
+```bash
+# Disable two sources for this process
+export EVER_JOBS_DISABLED_SOURCES="linkedin, indeed"
+
+# Whitespace tolerated; matching is case-insensitive
+export EVER_JOBS_DISABLED_SOURCES="LinkedIn,glassdoor"
+
+# Empty / unset → all plugins enabled (default)
+unset EVER_JOBS_DISABLED_SOURCES
+```
+
+Behaviour notes:
+
+- **Lookup parity** — `PluginRegistry.has(site)` returns `false` and
+  `PluginRegistry.getScraper(site)` returns `undefined` for disabled sites.
+- **Listing parity** — disabled sites do **not** appear in `listSources()`,
+  `listSiteKeys()`, `listAtsSites()`, or `/api/sources`.
+- **Typo guard** — unknown ids are accepted but logged at `warn` level by
+  `PluginDiscoveryService` so operators notice typos without crashing the boot.
+- **No restart required for read paths** — the var is consumed only at
+  `OnModuleInit`. To toggle a plugin without redeploy, prefer the upcoming admin
+  endpoint (Spec 001 Phase 3).
+
+Spec reference: [`.specify/specs/001-plugin-architecture-foundation/`](../.specify/specs/001-plugin-architecture-foundation/spec.md).
+
