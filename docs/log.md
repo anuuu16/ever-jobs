@@ -5,6 +5,163 @@
 
 ---
 
+## 2026-04-26 — Scheduled run #10 (Spec 005 Phase 1 — circuit-breaker service + interceptor)
+
+**Scope:** open Spec 005 (`Source Health & Circuit Breaker`) by shipping
+Phase 1 (T01–T03): the model interfaces, the `CircuitBreakerService`
+state machine, and the `CircuitBreakerInterceptor` programmatic facade.
+Spec 005 graduates from "draft (full)" to "Phase 1 done (T01–T03);
+Phase 2+ pending". Q-012 (`opossum` vs hand-rolled engine) opened and
+resolved in favour of the hand-rolled state machine.
+
+**Changes — code:**
+
+- `packages/models/src/interfaces/circuit-breaker.interface.ts` — new
+  file declaring the public contract for Spec 005:
+  - **Types:** `CircuitState` (`'closed' | 'open' | 'half-open'`),
+    `CircuitPolicy` (`failureThreshold`, `cooldownMs`, `halfOpenProbes`,
+    `rollingWindowMs`), `SourceHealth` (`site`, `state`, `successRate`,
+    `p95LatencyMs`, `lastError?`, `windowMs`), `SourceHealthError`
+    (`code`, `message`, `at`).
+  - **Interfaces:** `ICircuitBreakerService` (the service surface
+    consumed by the interceptor + `/api/sources/health` route + admin
+    endpoints) and `ICircuitBreakerPolicyProvider` (per-plugin policy
+    override hook for T08, with a `hasCircuitBreakerPolicy(candidate)`
+    type guard).
+  - **Constants:** `DEFAULT_CIRCUIT_POLICY` (Q-003 option A — 5 fails,
+    30 s cooldown, 1 probe, 60 s window) and the `ERR_SOURCE_CIRCUIT_OPEN`
+    + `CIRCUIT_BREAKER_TOKEN` strings.
+- `packages/models/src/interfaces/index.ts` — barrel re-export for the
+  new circuit-breaker module.
+- `packages/plugin/src/circuit-breaker/circuit-breaker.service.ts` —
+  new ~250 LOC hand-rolled state machine (Q-012) implementing
+  `ICircuitBreakerService`. Per-site `BreakerEntry` holds policy,
+  state, consecutive-failure counter, half-open probe quota tracker,
+  ring buffer of `Sample {at, success, latencyMs}` (capped at
+  `MAX_SAMPLES = 600`), and a compact `lastError` projection.
+  - **Public surface:** `exec`, `state`, `health`, `forceOpen`,
+    `forceReset`, `setPolicy`, `list`. Plus a `setClock(fn)` test seam
+    that defaults to `Date.now`.
+  - **State machine:** `closed → 5 fail → open`; `open → cooldownMs
+    elapsed → half-open` (lazy: `state(site)` reports `half-open`
+    even without an `exec()` call so health snapshots stay live);
+    `half-open → success → closed`; `half-open → fail → open` with a
+    fresh cooldown window. Successful calls in `closed` reset the
+    consecutive counter.
+  - **Memory:** `MAX_SITES = 250` hard cap → ~250 KB ceiling per
+    Spec 005 / NFR-3. Sample ring buffer is wall-clock pruned in
+    `health()`/`list()`.
+  - **Error projection:** `projectError(err, atMs)` extracts a
+    `{ code, message, at }` triple — captures `err.code`, falls back
+    to `err.name`, finally to `'ERR_SOURCE_UNKNOWN'`. Robust against
+    primitive throws.
+  - **Percentile:** `percentile(values, p)` is a sort-and-pick
+    (no interpolation) — fine for our 600-sample ceiling and stable
+    add/remove.
+- `packages/plugin/src/circuit-breaker/circuit-breaker.interceptor.ts` —
+  thin `@Injectable()` facade exposing `wrap<T>(site, fn)`. Uses
+  `@Optional() @Inject(CIRCUIT_BREAKER_TOKEN)` so the interceptor can
+  be constructed in unit tests with a concrete `CircuitBreakerService`
+  (token-bound or class-bound), and throws clearly when neither path
+  has provided a breaker. **Why a class and not a `NestInterceptor`?**
+  The natural interception point is per-source (each plugin's
+  `IScraper.scrape()` call), not per-HTTP-request — see file-level
+  comment.
+- `packages/plugin/src/circuit-breaker/circuit-breaker.module.ts` —
+  new module that registers `CircuitBreakerService` under the
+  `CIRCUIT_BREAKER_TOKEN`, plus the interceptor; exports both. Mirrors
+  the binding pattern used by `DedupHybridModule`.
+- `packages/plugin/src/index.ts` — barrel re-exports for the new
+  service, interceptor, and module.
+
+**Changes — tests:**
+
+- `packages/plugin/src/circuit-breaker/__tests__/circuit-breaker.service.spec.ts`
+  — 14 unit cases organised into seven describe blocks:
+  - **default state:** unseen-site closed, pass-through call, idle
+    health snapshot (`successRate=1`, `p95=0`, `windowMs` echoes
+    policy).
+  - **closed → open:** opens at exactly `failureThreshold`; a single
+    interrupting success resets the counter; short-circuit throws
+    `ERR_SOURCE_CIRCUIT_OPEN` with `site` echoed and `fn` not invoked.
+  - **open → half-open → closed:** stays open before cooldown,
+    reports `half-open` lazily once cooldown elapses, closes on a
+    successful probe.
+  - **half-open → open:** probe failure reopens with a *new*
+    cooldown window (verified by checking the second cooldown is
+    measured from the new `openedAt`).
+  - **forceOpen / forceReset:** force-open blocks; force-reset clears
+    `successRate`, `lastError`, and lets the next call succeed.
+  - **per-site policy override:** tighter `failureThreshold` and
+    custom `cooldownMs` honoured.
+  - **health snapshot:** `successRate` over rolling window, samples
+    pruned outside the window, `list()` returns one snapshot per
+    known site.
+  - **exhausted half-open probes:** quota-spent reopen with fresh
+    cooldown.
+- `packages/plugin/src/circuit-breaker/__tests__/circuit-breaker.interceptor.spec.ts`
+  — 5 unit cases: closed-state pass-through, error rethrow,
+  short-circuit when open (`fn` not invoked), missing-binding error,
+  per-site isolation (linkedin open + indeed closed in the same
+  interceptor).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/005-source-health-circuit-breaker/tasks.md` — Phase 1
+  graduates from "pending" to "DONE" with per-task `Done:` notes
+  pointing at the new files. Phases 2-5 unchanged.
+- `.specify/specs/005-source-health-circuit-breaker/spec.md` — `Status`
+  flipped from `draft` to `Phase 1 done (T01–T03); Phase 2+ pending`;
+  §9 now lists Q-012; §10 records the run #10 decision; §11 footnote
+  marks `opossum` as deferred per Q-012.
+- `.specify/specs/005-source-health-circuit-breaker/plan.md` — §1
+  prefaces with the run #10 update on the `opossum` vs hand-rolled
+  decision; §4 dependency table strikes `opossum` and references
+  Q-012.
+- `docs/questions.md` — adds **Q-012** (`opossum` vs hand-rolled
+  engine) at the top with Options A/B/C; resolves to Option C with
+  a short rationale block citing FR-2's consecutive-failure semantics
+  and the `setClock` testability win.
+- `docs/index.md` — Spec 005 row updated to
+  `Phase 1 done (T01–T03) in run #10; Phase 2+ pending`. Run-tag
+  bumped to #10.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #10 sync line; no upstream commits in
+  any of the three tracked repos.
+
+**Notes:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #9
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`).
+- Tests authored but not executed in this scheduled run —
+  `node_modules` is not installed in the agent sandbox; CI on push
+  will validate. The state machine is fully covered by the 14 unit
+  cases (closed→open, open→half-open→closed, half-open→open,
+  policy overrides, rolling-window pruning, isolation by site,
+  forceOpen/forceReset).
+- `setClock(fn)` is the single testing seam — used only inside the
+  spec files. Production callers leave the default `Date.now`. The
+  alternative (`jest.useFakeTimers('modern')`) was rejected because
+  it would couple our tests to Jest's timer-mocking edge cases and
+  drag in transitive timer behaviour we don't want exercised.
+- The interceptor is intentionally NOT a `NestInterceptor` — the
+  natural interception point is per-source, not per-HTTP-request.
+  An HTTP-level adapter can be added in a later phase without
+  changing the wrap contract.
+- Spec 005 Phase 2 (T04 — wire the interceptor into `JobsAggregator`)
+  is the natural next block. It will need a tiny set of fake
+  `IScraper` implementations to drive the "1-of-3 always-fail" test
+  scenario, but the per-site fan-out path inside the aggregator is
+  already in place from Spec 003 / Phase 5.
+- Default for run #11 is **Spec 005 Phase 2 (T04)** — wires the
+  interceptor into `JobsAggregator` and adds the integration test.
+  Spec 004 (persistence) remains blocked on Q-005 (Postgres vs
+  Mongo vs SQLite) which is still pending review.
+
+---
+
 ## 2026-04-26 — Scheduled run #9 (Spec 002 Phase 3 — doc-lint script + CI hook)
 
 **Scope:** close Spec 002 by shipping the `scripts/docs-lint.ts` linter

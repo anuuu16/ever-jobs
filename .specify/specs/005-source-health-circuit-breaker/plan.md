@@ -8,15 +8,21 @@
 
 ## 1. Approach
 
-Use the **`opossum`** library — battle-tested Node circuit breaker — as the underlying
-state-machine, wrapped in a NestJS `@Injectable()` service so DI consumers see a stable
-`ICircuitBreakerService` and not the lib type. We avoid hand-rolling state transitions
-(would otherwise be a primary risk).
+> **Update — run #10 (2026-04-26):** Q-012 resolved → Phase 1 adopted a
+> hand-rolled state machine instead of wrapping `opossum`. The library
+> models failures as an `errorThresholdPercentage` over a rolling count
+> window and does NOT support the "N consecutive failures → open"
+> semantics required by Spec 005 / FR-2. The hand-rolled engine in
+> `packages/plugin/src/circuit-breaker/circuit-breaker.service.ts`
+> implements the exact contract behind a stable `ICircuitBreakerService`
+> interface, leaving the engine swappable should a future need (e.g.
+> distributed breaker) make a different library a better fit.
 
-Each `Site` gets a dedicated `opossum` instance held in a `Map<Site, Breaker>`. The
-service is plugged in through a NestJS interceptor (`CircuitBreakerInterceptor`) applied
-to the aggregator's per-source dispatch — *not* to the controller, because the breaker
-is a per-source concern, not a per-request one.
+A single `Site` gets a dedicated `BreakerEntry` held in a `Map<Site, BreakerEntry>`. The
+service is plugged in through a programmatic interceptor (`CircuitBreakerInterceptor.wrap`)
+applied to the aggregator's per-source dispatch — *not* to the controller, because the
+breaker is a per-source concern, not a per-request one. (A NestJS-`NestInterceptor`
+adapter could be added later for HTTP-level instrumentation; not needed for fan-out.)
 
 Health is snapshotted from each `opossum` instance's stats on demand. Latency
 percentiles are tracked via a small ring-buffer per site (1 min window, 600 samples).
@@ -69,10 +75,10 @@ The admin endpoints (`forceOpen`, `forceReset`) live behind the existing API-key
 
 ## 4. Dependencies
 
-| Library                | Version  | Rationale                            |
-| ---------------------- | -------- | ------------------------------------ |
-| `opossum`              | latest   | Mature circuit-breaker; MIT; small.  |
-| `prom-client`          | latest   | Standard Prometheus exposition.      |
+| Library                | Version  | Rationale                                  |
+| ---------------------- | -------- | ------------------------------------------ |
+| ~~`opossum`~~          | ~~latest~~ | Considered & deferred — see Q-012 (run #10). |
+| `prom-client`          | latest   | Standard Prometheus exposition (Phase 3 / T06). |
 
 ## 5. Risks & Mitigations
 

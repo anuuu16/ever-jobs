@@ -4,7 +4,7 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 005                                                  |
 | Slug           | source-health-circuit-breaker                        |
-| Status         | draft                                                |
+| Status         | Phase 1 done (T01–T03); Phase 2+ pending             |
 | Owner          | scheduled-task agent                                 |
 | Created        | 2026-04-26                                           |
 | Last updated   | 2026-04-26                                           |
@@ -118,12 +118,17 @@ export interface ICircuitBreakerService {
 ## 9. Open Questions
 
 - Q-003 in `docs/questions.md` (default policy aggressiveness).
+- Q-012 in `docs/questions.md` (`opossum` vs hand-rolled engine).
 
 ## 10. Decisions
 
 - 2026-04-26: Default = Q-003 option A (5 / 30 s) per Constitution Article 6 §2.
+- 2026-04-26 (run #10): Q-012 resolved → hand-rolled state machine adopted
+  for Phase 1 to honour FR-2's consecutive-failure semantics exactly.
+  Plan §1 (`opossum` wrap) superseded; replacement remains a 1-day commit
+  through the `ICircuitBreakerService` seam if a future need surfaces.
 
 ## 11. References
 
-- `opossum` (Node circuit-breaker library) — candidate dep, MIT, mature.
+- `opossum` (Node circuit-breaker library) — considered, deferred per Q-012.
 - Constitution Article 6.

@@ -4,3 +4,4 @@ export * from './source-observation.interface';
 export * from './canonical-job.interface';
 export * from './dedup-engine.interface';
 export * from './merge-resolver.interface';
+export * from './circuit-breaker.interface';

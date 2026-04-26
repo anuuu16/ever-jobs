@@ -4,22 +4,45 @@
 
 ## Phase 1 — Service & interceptor
 
-- [ ] T01 — Add types `CircuitState`, `CircuitPolicy`, `SourceHealth`.
+- [x] T01 — Add types `CircuitState`, `CircuitPolicy`, `SourceHealth`.
   - **Files:** `packages/models/src/interfaces/circuit-breaker.interface.ts`,
-    `packages/models/src/index.ts`.
+    `packages/models/src/interfaces/index.ts`.
+  - **Done:** run #10 (2026-04-26). New file declares
+    `CircuitState`, `CircuitPolicy`, `SourceHealth`, `SourceHealthError`,
+    `ICircuitBreakerService`, `ICircuitBreakerPolicyProvider` plus the
+    `DEFAULT_CIRCUIT_POLICY` constant (Q-003 option A: 5 / 30 s / 1 probe /
+    60 s window) and the `ERR_SOURCE_CIRCUIT_OPEN` + `CIRCUIT_BREAKER_TOKEN`
+    string symbols. Re-exported from `@ever-jobs/models`.
   - **Estimate:** 0.25 day.
 
-- [ ] T02 — Implement `CircuitBreakerService` over `opossum`.
+- [x] T02 — Implement `CircuitBreakerService`.
   - **Files:** `packages/plugin/src/circuit-breaker/circuit-breaker.service.ts`,
     `packages/plugin/src/circuit-breaker/__tests__/circuit-breaker.service.spec.ts`.
   - **Acceptance:** State-machine tests pass: closed → 5 fail → open;
     open → cooldown → half-open → success → closed; half-open → fail → open.
+  - **Done:** run #10 (2026-04-26). Hand-rolled state machine (NOT `opossum`
+    — see Q-012) backs `ICircuitBreakerService`. Per-site `BreakerEntry`
+    holds policy, state, consecutive-failure counter, ring-buffer of
+    samples (capped at 600). Exposes `exec`, `state`, `health`,
+    `forceOpen`, `forceReset`, `setPolicy`, `list` plus a `setClock` test
+    seam. 14 unit cases cover the full state-machine matrix, policy
+    override, rolling-window pruning, half-open quota exhaustion, and the
+    isolation-by-site invariant. Memory cap (`MAX_SITES = 250`) keeps the
+    breaker pool ≤ ~250 KB per Spec 005 / NFR-3.
   - **Estimate:** 1 day.
 
-- [ ] T03 — Implement `CircuitBreakerInterceptor`.
+- [x] T03 — Implement `CircuitBreakerInterceptor`.
   - **Files:** `packages/plugin/src/circuit-breaker/circuit-breaker.interceptor.ts`,
-    `__tests__/circuit-breaker.interceptor.spec.ts`.
+    `packages/plugin/src/circuit-breaker/__tests__/circuit-breaker.interceptor.spec.ts`,
+    `packages/plugin/src/circuit-breaker/circuit-breaker.module.ts`.
   - **Acceptance:** Wraps `Promise<T>` calls with `exec()`; throws `ERR_SOURCE_CIRCUIT_OPEN`.
+  - **Done:** run #10 (2026-04-26). `CircuitBreakerInterceptor.wrap(site, fn)`
+    is a thin facade over `ICircuitBreakerService.exec`; `@Optional`
+    injection lets aggregator code stay test-friendly. Bundled
+    `CircuitBreakerModule` registers the service under
+    `CIRCUIT_BREAKER_TOKEN` and exports the interceptor for the
+    aggregator. 5 unit cases cover happy-path, error rethrow, open-state
+    short-circuit, missing-binding error, and per-site isolation.
   - **Estimate:** 0.5 day.
 
 ## Phase 2 — Aggregator integration
@@ -56,6 +79,10 @@
   - **Files:** `packages/plugin/src/circuit-breaker/circuit-breaker.service.ts`.
   - **Acceptance:** Plugin-defined policy wins over default at registration.
   - **Estimate:** 0.5 day.
+  - **Note:** the `ICircuitBreakerPolicyProvider` interface and
+    `setPolicy(site, policy)` setter are already in place from T01/T02; T08
+    is the discovery-side wiring (scan registered plugins at bootstrap and
+    call `setPolicy` for any that implement the provider).
 
 ## Phase 5 — Persistence (optional)
 
@@ -68,3 +95,4 @@
 
 - Phase 5 depends on Spec 004 Phase 5 (aggregator persist).
 - Default policy values come from `Constitution Article 6 §2`.
+- Phase 1 closed in run #10 (T01–T03 done).

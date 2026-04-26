@@ -10,6 +10,67 @@
 
 ---
 
+## Q-012 — Circuit-breaker engine: `opossum` vs hand-rolled state machine (Spec 005 Phase 1)
+
+**Context:** Spec 005 plan.md §1 suggested wrapping the
+[`opossum`](https://www.npmjs.com/package/opossum) Node circuit-breaker
+library inside a NestJS service to "avoid hand-rolling state transitions
+(would otherwise be a primary risk)". Spec 005 §FR-2 then specifies the
+default policy as **"5 consecutive failures → open"** with a 30 s
+cooldown. While inspecting `opossum`'s API for T02 we found that the
+library models failures as an `errorThresholdPercentage` over a rolling
+count window (`rollingCountTimeout` × `rollingCountBuckets`). It does
+**not** ship a "N consecutive failures" trigger; emulating consecutive-
+failure semantics requires post-event monkey-patching of the breaker's
+internals, which would itself be a fragility risk.
+
+**Options:**
+
+- **A. Wrap `opossum`.** Configure `volumeThreshold: 5` +
+  `errorThresholdPercentage: 100` so 5 errors in the rolling window
+  open the breaker. Approximates the contract but is not strictly
+  consecutive — a single mid-window success does not reset the count
+  the way Spec 005 / FR-2 expects. Downside: behavioural drift
+  surfaces only under load, where it's hardest to debug.
+- **B. Wrap `opossum` + custom counter overlay.** Use `opossum` for
+  cooldown/half-open mechanics, add a side-channel counter that
+  resets on `success` and triggers `breaker.open()` on the threshold.
+  Touches `opossum`'s public events but doesn't subclass it.
+  ~80 LOC of glue plus the dep.
+- **C. Hand-rolled state machine in
+  `packages/plugin/src/circuit-breaker/circuit-breaker.service.ts`.**
+  ~250 LOC including doc comments. Implements the exact FR-2
+  contract: counter increments on failure, resets on success, opens
+  at threshold, half-open after `cooldownMs`, reopens with a fresh
+  cooldown on probe failure. Fully unit-testable via an injectable
+  clock seam (`setClock`). No new dependencies.
+
+**Default (proceeding):** **C. Hand-rolled state machine** — Spec 005's
+contract is firmer than its plan; consecutive-failure semantics is
+explicit (`§5 / FR-2`) and matches operator intuition ("the source
+broke five times in a row, kill it"). The `opossum` wrap path's
+behavioural drift would only show up at production scale. Hand-rolling
+also lets us:
+  - inject a deterministic clock for unit tests (no `jest.useFakeTimers`
+    timing-flake risk),
+  - cap memory at `MAX_SAMPLES = 600` per site explicitly, satisfying
+    Spec 005 / NFR-3,
+  - publish exactly the `ICircuitBreakerService` shape declared in
+    `@ever-jobs/models` without leaking `opossum`'s event-emitter API.
+
+**Resolution:** Adopted **C. Hand-rolled state machine** in run #10
+(2026-04-26). Implementation in
+`packages/plugin/src/circuit-breaker/circuit-breaker.service.ts`. 14
+unit tests in
+`__tests__/circuit-breaker.service.spec.ts` cover the full state-machine
+matrix. Will revisit option A only if a future requirement (e.g.
+half-open back-pressure, distributed breaker) makes a battle-tested
+library a better fit. The `setClock` test seam plus the strict
+`ICircuitBreakerService` interface keeps that swap a 1-day commit if
+ever needed.
+
+---
+
 ## Q-011 — Doc-lint markdown parser choice (Spec 002 Phase 3, T11)
 
 **Context:** Spec 002 plan.md §4 listed `remark-parse` + `unified` as the
