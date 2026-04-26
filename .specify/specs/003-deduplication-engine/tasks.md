@@ -135,17 +135,42 @@
 
 ## Phase 5 — Wire into `JobsAggregator`
 
-- [ ] T13 — Update `JobsAggregator` to invoke `IDedupEngine` after fan-out.
+- [x] T13 — Update `JobsAggregator` to invoke `IDedupEngine` after fan-out.
   - **Files:** `apps/api/src/jobs/jobs.aggregator.ts`,
-    `apps/api/__tests__/integration/jobs.aggregator.spec.ts`.
+    `apps/api/src/jobs/__tests__/jobs.aggregator.spec.ts`,
+    `apps/api/src/jobs/__tests__/jobs.aggregator.integration.spec.ts`,
+    `apps/api/src/jobs/jobs.module.ts` (DI wiring).
   - **Acceptance:** Multi-source response is deduped; `dedup=false` opt-out works.
   - **Estimate:** 0.5 day.
+  - **Done:** 2026-04-26 (run #7) — `JobsAggregator` is a thin wrapper:
+    delegates fan-out to `JobsService.searchJobs` and (optionally) hands the
+    raw batch to whatever `IDedupEngine` is bound under `DEDUP_ENGINE_TOKEN`.
+    The engine is `@Optional()` so environments that haven't imported
+    `DedupHybridModule` keep working as a pass-through. The aggregator picks
+    the **first** raw `JobPostDto` per canonical cluster, preserving the
+    `JobsService` sort order (site asc → datePosted desc). Cache continues
+    to store **raw** jobs so cache invalidation stays decoupled from
+    dedup-engine version changes; the dedup pass runs per-request even on
+    cache hits. Unit tests cover pass-through paths (no engine, dedup=false,
+    empty input), dedup paths (cluster-collapse, insertion order preserved,
+    rejected entries dropped, default-true behaviour), and the full
+    `aggregate()` pipeline. Integration test wires the real
+    `DedupHybridService` and asserts cosmetic-different jobs collapse.
 
-- [ ] T14 — Expose `dedup` query param on `/api/jobs/search`.
+- [x] T14 — Expose `dedup` query param on `/api/jobs/search`.
   - **Files:** `apps/api/src/jobs/jobs.controller.ts`,
-    `apps/api/__tests__/e2e/jobs-search.e2e-spec.ts`.
+    `apps/api/src/jobs/__tests__/jobs.controller.spec.ts`,
+    `apps/api/__tests__/search.e2e-spec.ts`.
   - **Acceptance:** Backwards compatible; default true.
   - **Estimate:** 0.25 day.
+  - **Done:** 2026-04-26 (run #7) — controller now accepts
+    `?dedup=true|false|1|0|yes|no` (case-insensitive). Default `true`.
+    Garbage values fall back to the default. Response shape gains three
+    additive fields — `deduped: boolean`, `raw_count: number`, and
+    optional `dedup_metrics` (only when the engine actually ran). All
+    pre-existing fields (`count`, `jobs`, `cached`, pagination keys) are
+    preserved verbatim. The e2e suite now asserts the new fields and
+    exercises the `?dedup=false` opt-out path.
 
 ## Notes
 

@@ -31,16 +31,38 @@ function makeCacheService(cachedValue: any = null) {
   };
 }
 
-function createController(opts: { jobs?: JobPostDto[]; cachedValue?: any } = {}) {
+/**
+ * Pass-through aggregator stub. Mirrors the production
+ * "no engine bound → return raw" path so existing controller tests
+ * keep their pre-Phase-5 semantics.
+ */
+function makePassthroughAggregator() {
+  return {
+    aggregateRaw: jest.fn(async (rawJobs: JobPostDto[], options: { dedup?: boolean } = {}) => ({
+      jobs: rawJobs,
+      rawCount: rawJobs.length,
+      outputCount: rawJobs.length,
+      deduped: false,
+      dedupMetrics: undefined,
+      // record the option so dedup-flag tests can assert on it
+      _calledWith: options,
+    })),
+    aggregate: jest.fn(),
+  };
+}
+
+function createController(opts: { jobs?: JobPostDto[]; cachedValue?: any; aggregator?: any } = {}) {
   const jobsService = makeJobsService(opts.jobs ?? []);
   const analyticsService = makeAnalyticsService();
   const cacheService = makeCacheService(opts.cachedValue);
+  const aggregator = opts.aggregator ?? makePassthroughAggregator();
   const controller = new JobsController(
     jobsService as any,
+    aggregator as any,
     analyticsService as any,
     cacheService as any,
   );
-  return { controller, jobsService, cacheService, analyticsService };
+  return { controller, jobsService, cacheService, analyticsService, aggregator };
 }
 
 function makeJob(overrides: Partial<JobPostDto> = {}): JobPostDto {
@@ -69,10 +91,12 @@ describe('JobsController', () => {
         new ScraperInputDto({ searchTerm: 'node' }),
       ) as any;
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         count: 2,
         jobs,
         cached: false,
+        deduped: false,        // pass-through aggregator → no engine bound
+        raw_count: 2,
       });
     });
 
@@ -84,10 +108,12 @@ describe('JobsController', () => {
         new ScraperInputDto({ searchTerm: 'node' }),
       ) as any;
 
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         count: 1,
         jobs: cachedJobs,
         cached: true,
+        deduped: false,
+        raw_count: 1,
       });
       // Should NOT call jobsService when cache hit
       expect(jobsService.searchJobs).not.toHaveBeenCalled();
@@ -182,6 +208,7 @@ describe('JobsController', () => {
         undefined,
         undefined,
         undefined,
+        undefined,    // dedup
         mockRes as any,
       );
 
@@ -192,6 +219,135 @@ describe('JobsController', () => {
       );
       // Result should be a StreamableFile
       expect(result).toBeDefined();
+    });
+  });
+
+  describe('POST /search — dedup flag (Spec 003 / T14)', () => {
+    it('defaults dedup=true when query param is absent', async () => {
+      const jobs = [makeJob()];
+      const { controller, aggregator } = createController({ jobs });
+
+      await controller.searchJobs(
+        new ScraperInputDto({ searchTerm: 'node' }),
+      );
+
+      expect(aggregator.aggregateRaw).toHaveBeenCalledWith(jobs, { dedup: true });
+    });
+
+    it('honours dedup=false explicitly', async () => {
+      const jobs = [makeJob()];
+      const { controller, aggregator } = createController({ jobs });
+
+      await controller.searchJobs(
+        new ScraperInputDto({ searchTerm: 'node' }),
+        undefined,    // format
+        undefined,    // paginate
+        undefined,    // page
+        undefined,    // page_size
+        'false',      // dedup
+      );
+
+      expect(aggregator.aggregateRaw).toHaveBeenCalledWith(jobs, { dedup: false });
+    });
+
+    it('honours dedup=0 explicitly', async () => {
+      const jobs = [makeJob()];
+      const { controller, aggregator } = createController({ jobs });
+
+      await controller.searchJobs(
+        new ScraperInputDto({ searchTerm: 'node' }),
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        '0',
+      );
+
+      expect(aggregator.aggregateRaw).toHaveBeenCalledWith(jobs, { dedup: false });
+    });
+
+    it('honours dedup=true explicitly', async () => {
+      const jobs = [makeJob()];
+      const { controller, aggregator } = createController({ jobs });
+
+      await controller.searchJobs(
+        new ScraperInputDto({ searchTerm: 'node' }),
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        'true',
+      );
+
+      expect(aggregator.aggregateRaw).toHaveBeenCalledWith(jobs, { dedup: true });
+    });
+
+    it('falls back to dedup=true on garbage values', async () => {
+      const jobs = [makeJob()];
+      const { controller, aggregator } = createController({ jobs });
+
+      await controller.searchJobs(
+        new ScraperInputDto({ searchTerm: 'node' }),
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        'not-a-bool',
+      );
+
+      expect(aggregator.aggregateRaw).toHaveBeenCalledWith(jobs, { dedup: true });
+    });
+
+    it('runs dedup on cached responses too', async () => {
+      const cachedJobs = [makeJob({ title: 'Cached' })];
+      const { controller, jobsService, aggregator } = createController({ cachedValue: cachedJobs });
+
+      await controller.searchJobs(
+        new ScraperInputDto({ searchTerm: 'node' }),
+      );
+
+      expect(jobsService.searchJobs).not.toHaveBeenCalled();
+      expect(aggregator.aggregateRaw).toHaveBeenCalledWith(cachedJobs, { dedup: true });
+    });
+
+    it('caches RAW jobs (pre-dedup) so cache invalidation is independent of engine version', async () => {
+      const jobs = [makeJob(), makeJob({ id: 'test-2' })];
+      const { controller, cacheService } = createController({ jobs });
+
+      await controller.searchJobs(new ScraperInputDto({ searchTerm: 'node' }));
+
+      // Cache write should hold the unmodified raw list
+      expect(cacheService.set).toHaveBeenCalledWith(expect.any(Object), jobs);
+    });
+
+    it('returns dedup_metrics when the engine ran', async () => {
+      const jobs = [makeJob(), makeJob({ id: 'test-2' })];
+      const fakeMetrics = {
+        inputCount: 2,
+        outputCount: 1,
+        mergedPairs: 1,
+        elapsedMs: 4,
+      };
+      const aggregator = {
+        aggregateRaw: jest.fn().mockResolvedValue({
+          jobs: [jobs[0]],
+          rawCount: 2,
+          outputCount: 1,
+          deduped: true,
+          dedupMetrics: fakeMetrics,
+        }),
+        aggregate: jest.fn(),
+      };
+      const { controller } = createController({ jobs, aggregator });
+
+      const result = (await controller.searchJobs(
+        new ScraperInputDto({ searchTerm: 'node' }),
+      )) as any;
+
+      expect(result.deduped).toBe(true);
+      expect(result.raw_count).toBe(2);
+      expect(result.count).toBe(1);
+      expect(result.dedup_metrics).toEqual(fakeMetrics);
     });
   });
 

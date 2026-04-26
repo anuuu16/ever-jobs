@@ -5,6 +5,94 @@
 
 ---
 
+## 2026-04-26 — Scheduled run #7 (Spec 003 Phase 5 closes — JobsAggregator + dedup query param)
+
+**Scope:** finish Spec 003 Phase 5. Land T13 (`JobsAggregator` wired to
+`IDedupEngine` post-fan-out) and T14 (`dedup` query param on
+`/api/jobs/search`). Spec 003 is now end-to-end shippable.
+
+**Changes — code:**
+
+- `apps/api/src/jobs/jobs.aggregator.ts` — new thin orchestration layer
+  between `JobsService` (fan-out) and the bound `IDedupEngine`. Engine is
+  `@Optional()` injection under `DEDUP_ENGINE_TOKEN`, so environments
+  that haven't imported `DedupHybridModule` (or that swap it for a no-op)
+  remain a pass-through. Two methods: `aggregate(input)` runs the full
+  fan-out + dedup pipeline; `aggregateRaw(jobs, opts)` lets the
+  controller insert dedup post-cache. Picks the **first** raw
+  `JobPostDto` per canonical cluster (preserves `JobsService` sort order:
+  site asc → datePosted desc). Returns an envelope with `jobs`,
+  `rawCount`, `outputCount`, `deduped`, optional `dedupMetrics`.
+- `apps/api/src/jobs/jobs.module.ts` — imports `DedupHybridModule` and
+  `MergeDefaultModule`; registers `JobsAggregator` as a provider and
+  exports it for downstream consumers (analytics, future GraphQL
+  resolver-side dedup).
+- `apps/api/src/jobs/jobs.controller.ts` — constructor now takes
+  `JobsAggregator`. New `?dedup=true|false|1|0|yes|no` query param
+  (default `true`; garbage values fall back to default). Cache layer
+  stores **raw** fan-out (pre-dedup) so cache invalidation stays
+  decoupled from dedup-engine version changes — the dedup pass runs per
+  request even on cache hits. Response shape gains additive fields:
+  `deduped: boolean`, `raw_count: number`, optional `dedup_metrics`. All
+  pre-existing fields (`count`, `jobs`, `cached`, pagination keys)
+  preserved.
+
+**Changes — tests:**
+
+- `apps/api/src/jobs/__tests__/jobs.aggregator.spec.ts` — 11 unit cases:
+  pass-through when no engine, pass-through with `dedup=false`, empty
+  input, cluster collapse, insertion-order preservation, rejected-entry
+  drop (`assignments[i] === null`), default-true with engine, full
+  `aggregate()` pipeline, `dedup=false` via `aggregate()`.
+- `apps/api/src/jobs/__tests__/jobs.aggregator.integration.spec.ts` —
+  4 cases wired to the real `DedupHybridService`: 3-source collapse,
+  `dedup=false` returns identity, cosmetic-different jobs collapse,
+  end-to-end `aggregate(input)`.
+- `apps/api/src/jobs/__tests__/jobs.controller.spec.ts` — updated
+  constructor signature; existing tests now use a pass-through
+  aggregator stub. New `dedup flag` block covers absent/`true`/`false`/
+  `0`/garbage values, cached-response dedup, raw-cache invariant, and
+  `dedup_metrics` exposure.
+- `apps/api/__tests__/search.e2e-spec.ts` — primary shape assertion
+  upgraded to include `deduped` + `raw_count`. New e2e case exercises
+  `?dedup=false` and asserts `count === raw_count`.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/003-deduplication-engine/tasks.md` — T13 + T14 marked
+  done with per-task notes pointing at the new files and behavioural
+  details.
+- `docs/index.md` — Spec 003 status flipped to
+  `All phases done (T01–T14); shipped on develop`. Run-tag bumped to #7.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #7 sync line; no upstream commits in any
+  of the three tracked repos.
+
+**Notes:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #6
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`).
+- Tests authored but not executed in this scheduled run —
+  `node_modules` is not installed in the agent sandbox; CI on push will
+  validate.
+- The `IMergeResolver` is wired into the module graph but not yet
+  consumed inside `dedup-hybrid.service.ts` — the engine still picks the
+  head record per cluster. That's acceptable for shipping Phase 5
+  because the resolver's primary use-case (per-field winner selection
+  beyond `title/company/location`) shows up only when richer per-source
+  fields land (compensation provenance, jobType provenance). A follow-up
+  spec will fold `MERGE_RESOLVER_TOKEN` into the dedup engine's field
+  materialisation pass; this is **not** on Spec 003's scope.
+- The aggregator deliberately avoids returning `CanonicalJob[]` to
+  callers — the existing wire format is `JobPostDto[]` and downstream
+  clients (CSV exporter, pagination wrapper, GraphQL resolver) expect
+  it. The canonical record's provenance graph remains accessible via a
+  future `/api/jobs/canonical` endpoint (not yet specced).
+
+---
+
 ## 2026-04-26 — Scheduled run #6 (Spec 003 Phase 4 closes — merge-default plugin)
 
 **Scope:** finish Spec 003 Phase 4. Land T11 (scaffold

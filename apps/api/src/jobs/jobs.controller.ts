@@ -20,6 +20,7 @@ import {
   JobAnalysisDto,
 } from '@ever-jobs/models';
 import { JobsService } from './jobs.service';
+import { JobsAggregator } from './jobs.aggregator';
 import { AnalyticsService } from '@ever-jobs/analytics';
 import { CacheService } from '../cache/cache.service';
 
@@ -30,6 +31,7 @@ export class JobsController {
 
   constructor(
     private readonly jobsService: JobsService,
+    private readonly aggregator: JobsAggregator,
     private readonly analyticsService: AnalyticsService,
     private readonly cacheService: CacheService,
   ) {}
@@ -43,18 +45,27 @@ export class JobsController {
    * Output format and pagination are controlled via query parameters:
    *   ?format=csv    → returns CSV file download
    *   ?paginate=true&page=1&page_size=10 → paginated JSON
+   *   ?dedup=false   → opt out of cross-source deduplication (default true)
    */
   @Post('search')
   @ApiOperation({
     summary: 'Search for jobs across multiple sources',
     description:
       'Searches selected job boards concurrently and returns a merged, sorted list of job postings. ' +
-      'Supports caching, CSV export (via ?format=csv), and pagination (via ?paginate=true).',
+      'Supports caching, CSV export (via ?format=csv), pagination (via ?paginate=true), and ' +
+      'cross-source deduplication (default ?dedup=true; pass ?dedup=false to opt out).',
   })
   @ApiQuery({ name: 'format', required: false, description: 'Output format: json (default) or csv', example: 'json' })
   @ApiQuery({ name: 'paginate', required: false, type: Boolean, description: 'Enable pagination' })
   @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (when paginate=true)' })
   @ApiQuery({ name: 'page_size', required: false, type: Number, description: 'Results per page (1-100, default 10)' })
+  @ApiQuery({
+    name: 'dedup',
+    required: false,
+    type: Boolean,
+    description:
+      'Cross-source deduplication. Default true — collapses identical or near-duplicate jobs surfaced by multiple sources into one record. Pass false to keep every observation as a separate result (Spec 003 / FR-1).',
+  })
   @ApiResponse({ status: 200, description: 'Job search results' })
   @ApiResponse({ status: 429, description: 'Rate limit exceeded' })
   async searchJobs(
@@ -63,6 +74,7 @@ export class JobsController {
     @Query('paginate') paginateRaw?: string,
     @Query('page') pageRaw?: string,
     @Query('page_size') pageSizeRaw?: string,
+    @Query('dedup') dedupRaw?: string,
     @Res({ passthrough: true }) res?: Response,
   ) {
     this.logger.log(
@@ -72,25 +84,40 @@ export class JobsController {
     // ── Helper parsers ────────────────────
     const parseBool = (v?: string): boolean =>
       v !== undefined && ['true', '1', 'yes'].includes(v.toLowerCase());
+    /** Like parseBool but with a configurable default when the param is absent. */
+    const parseBoolWithDefault = (v: string | undefined, fallback: boolean): boolean => {
+      if (v === undefined) return fallback;
+      const s = v.toLowerCase();
+      if (['true', '1', 'yes'].includes(s)) return true;
+      if (['false', '0', 'no'].includes(s)) return false;
+      return fallback;
+    };
     const parseNum = (v?: string): number | undefined =>
       v === undefined ? undefined : Number(v) || undefined;
 
-    // ── Cache check ───────────────────────
+    // ── Cache check (cache stores RAW fan-out — dedup runs per-request) ──
     const cacheParams = { ...input, endpoint: 'search' };
     const cached = await this.cacheService.get<JobPostDto[]>(cacheParams);
-    let jobs: JobPostDto[];
+    let rawJobs: JobPostDto[];
     let fromCache = false;
 
     if (cached) {
-      jobs = cached;
+      rawJobs = cached;
       fromCache = true;
-      this.logger.log(`Cache hit — returning ${jobs.length} cached results`);
+      this.logger.log(`Cache hit — returning ${rawJobs.length} cached results`);
     } else {
-      jobs = await this.jobsService.searchJobs(input);
-      await this.cacheService.set(cacheParams, jobs);
+      rawJobs = await this.jobsService.searchJobs(input);
+      await this.cacheService.set(cacheParams, rawJobs);
     }
 
-    this.logger.log(`Returning ${jobs.length} jobs (cached=${fromCache})`);
+    // ── Dedup (Spec 003 / FR-1) ───────────
+    const dedup = parseBoolWithDefault(dedupRaw, true);
+    const aggregated = await this.aggregator.aggregateRaw(rawJobs, { dedup });
+    const jobs = aggregated.jobs;
+
+    this.logger.log(
+      `Returning ${jobs.length} jobs (raw=${aggregated.rawCount}, deduped=${aggregated.deduped}, cached=${fromCache})`,
+    );
 
     // ── CSV output ────────────────────────
     if (format?.toLowerCase() === 'csv') {
@@ -116,6 +143,9 @@ export class JobsController {
         page_size: pageSize,
         jobs: pageJobs,
         cached: fromCache,
+        deduped: aggregated.deduped,
+        raw_count: aggregated.rawCount,
+        dedup_metrics: aggregated.dedupMetrics,
         next_page: page < totalPages ? page + 1 : null,
         previous_page: page > 1 ? page - 1 : null,
       };
@@ -126,6 +156,9 @@ export class JobsController {
       count: jobs.length,
       jobs,
       cached: fromCache,
+      deduped: aggregated.deduped,
+      raw_count: aggregated.rawCount,
+      dedup_metrics: aggregated.dedupMetrics,
     };
   }
 

@@ -10,6 +10,36 @@
 
 ---
 
+## Q-010 — Should the GraphQL `searchJobs` query also dedup by default?
+
+**Context:** Spec 003 Phase 5 (run #7) wired the dedup engine into the REST
+endpoint `/api/jobs/search` and added the opt-out `?dedup=false` query param.
+The GraphQL resolver in `apps/api/src/jobs/jobs.resolver.ts` still calls
+`JobsService.searchJobs()` directly and bypasses `JobsAggregator`, so it
+returns raw fan-out. Spec 003 didn't itemise GraphQL parity.
+
+**Options:**
+
+- **A. Mirror REST.** Inject `JobsAggregator` into `JobsResolver` and add a
+  `dedup: Boolean = true` arg to the `searchJobs` GraphQL input. Maximum
+  consistency; one extra optional arg in the schema.
+- **B. Leave GraphQL as raw-only.** Document the divergence and add a
+  follow-up spec for GraphQL `canonicalJobs` that returns `CanonicalJob[]`
+  with full provenance. Keeps the current schema stable; clients with
+  bespoke ranking logic don't pay the dedup tax.
+- **C. Dedup by default with no opt-out.** Smallest schema change; matches
+  the "default true" REST migration. But denies GraphQL clients a way to
+  inspect raw fan-out for debugging.
+
+**Default (proceeding):** **A. Mirror REST** — keeps the public surface
+coherent and avoids a class of "why is REST count != GraphQL count" support
+tickets. Ship in a future run as a tiny follow-up (T15 candidate); not a
+Spec 003 blocker.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-009 — MinHash library choice for Spec 003 Phase 3 stage 2 (T08)
 
 **Context:** Spec 003 plan.md §4 Dependencies suggests `datasketch-js`. Run #4

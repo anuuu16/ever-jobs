@@ -23,7 +23,7 @@ describe('POST /api/jobs/search (E2E)', () => {
     await app.close();
   });
 
-  it('should return jobs in standard {count, jobs, cached} shape', async () => {
+  it('should return jobs in standard {count, jobs, cached, deduped, raw_count} shape', async () => {
     const res = await request(app.getHttpServer())
       .post('/api/jobs/search')
       .send({
@@ -36,9 +36,13 @@ describe('POST /api/jobs/search (E2E)', () => {
     expect(res.body).toHaveProperty('count');
     expect(res.body).toHaveProperty('jobs');
     expect(res.body).toHaveProperty('cached');
+    expect(res.body).toHaveProperty('deduped');     // Spec 003 / T14
+    expect(res.body).toHaveProperty('raw_count');   // Spec 003 / T14
     expect(typeof res.body.count).toBe('number');
     expect(Array.isArray(res.body.jobs)).toBe(true);
     expect(typeof res.body.cached).toBe('boolean');
+    expect(typeof res.body.deduped).toBe('boolean');
+    expect(typeof res.body.raw_count).toBe('number');
 
     if (res.body.jobs.length > 0) {
       const job = res.body.jobs[0];
@@ -47,6 +51,21 @@ describe('POST /api/jobs/search (E2E)', () => {
       expect(typeof job.title).toBe('string');
       expect(typeof job.jobUrl).toBe('string');
     }
+  });
+
+  it('should opt out of dedup when ?dedup=false (Spec 003 / T14)', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/jobs/search?dedup=false')
+      .send({
+        searchTerm: 'software engineer',
+        siteType: ['google'],
+        resultsWanted: 3,
+      })
+      .expect(201);
+
+    expect(res.body).toHaveProperty('deduped', false);
+    // raw_count and count should match when dedup is off
+    expect(res.body.raw_count).toBe(res.body.count);
   });
 
   it('should return paginated response when ?paginate=true', async () => {
