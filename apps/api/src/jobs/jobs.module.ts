@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PluginModule } from '@ever-jobs/plugin';
+import { PluginModule, CircuitBreakerModule } from '@ever-jobs/plugin';
 import { ALL_SOURCE_MODULES } from '@ever-jobs/plugin-sources';
 import { AnalyticsModule } from '@ever-jobs/analytics';
 import { DedupHybridModule } from '@ever-jobs/dedup-hybrid';
@@ -20,6 +20,11 @@ import { JobsResolver } from './jobs.resolver';
     // same token (FR-1 / FR-4).
     DedupHybridModule,
     MergeDefaultModule,
+    // Spec 005 / T04 — bind the circuit-breaker service + interceptor so
+    // `JobsService` can wrap each per-source `scrape()` call. The
+    // underlying engine is swappable by replacing this module (the
+    // service is registered under `CIRCUIT_BREAKER_TOKEN`).
+    CircuitBreakerModule,
   ],
   controllers: [JobsController],
   providers: [JobsService, JobsAggregator, JobsResolver],

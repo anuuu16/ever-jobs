@@ -46,7 +46,7 @@ export class MetricsService implements OnModuleInit {
     this.scraperRequestsTotal = new Counter({
       name: 'ever_jobs_scraper_requests_total',
       help: 'Total number of scraper requests',
-      labelNames: ['site', 'status'], // status: success, error
+      labelNames: ['site', 'status'], // status: success | error | circuit_open
       registers: [this.registry],
     });
 

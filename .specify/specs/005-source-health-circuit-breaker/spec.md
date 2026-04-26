@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 005                                                  |
 | Slug           | source-health-circuit-breaker                        |
-| Status         | Phase 1 done (T01–T03); Phase 2+ pending             |
+| Status         | Phase 1+2 done (T01–T04); Phase 3+ pending           |
 | Owner          | scheduled-task agent                                 |
 | Created        | 2026-04-26                                           |
-| Last updated   | 2026-04-26                                           |
+| Last updated   | 2026-04-27                                           |
 | Supersedes     | (none)                                               |
 | Related specs  | 001, 003, 004                                        |
 
@@ -127,6 +127,12 @@ export interface ICircuitBreakerService {
   for Phase 1 to honour FR-2's consecutive-failure semantics exactly.
   Plan §1 (`opossum` wrap) superseded; replacement remains a 1-day commit
   through the `ICircuitBreakerService` seam if a future need surfaces.
+- 2026-04-27 (run #12): Phase 2 / T04 — interceptor wired into
+  `JobsService` (the actual per-source dispatch point) rather than
+  `JobsAggregator`. `JobsAggregator` delegates fan-out to
+  `JobsService.searchJobs`, so wiring at the dispatch site honours
+  FR-1's "wraps every `IScraper.scrape()` call" exactly. Documented as
+  Q-013 (resolved Option B).
 
 ## 11. References
 

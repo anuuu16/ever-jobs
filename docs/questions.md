@@ -10,6 +10,58 @@
 
 ---
 
+## Q-013 — Circuit-breaker wiring point: `JobsAggregator` vs `JobsService` (Spec 005 / T04)
+
+**Context:** Spec 005 plan.md §1 says the breaker is "applied to the
+aggregator's per-source dispatch — *not* to the controller, because the
+breaker is a per-source concern, not a per-request one." Tasks.md /
+T04 names `apps/api/src/jobs/jobs.aggregator.ts` as the file to patch
+and `Acceptance: 1-of-3 always-fail fake plugins → aggregator returns
+2 results.` While inspecting the dispatch path during run #12 we found
+that the per-source `scraper.scrape()` fan-out actually lives in
+`JobsService.searchJobs` (which `JobsAggregator.aggregate` delegates
+to). `JobsAggregator` itself runs **after** fan-out — its job is the
+dedup pass; it never sees individual sources.
+
+**Options:**
+
+- **A. Refactor `JobsAggregator` to own the per-source dispatch.**
+  Move the `selectedScrapers.map(...)` loop out of `JobsService`, wire
+  the breaker there. Pro: matches T04's named file. Con: ~150 LOC of
+  refactor cuts across `JobsService` (routing + retries + metrics +
+  salary post-processing), needs to keep `JobsAggregator.aggregate`
+  vs `aggregateRaw` working without a regression in the existing
+  Spec 003 / Phase 5 dedup flow. High blast radius for a Phase 2 wire.
+- **B. Wire the breaker into `JobsService` (the actual dispatch
+  site).** `@Optional()` inject `CircuitBreakerInterceptor` and wrap
+  `scraper.scrape(scraperInput)` with `interceptor.wrap(site, …)`. Pro:
+  lands FR-1 ("wraps every `IScraper.scrape()` call") exactly where
+  the call happens; back-compat for tests that don't import
+  `CircuitBreakerModule` is automatic via `@Optional()`. Tasks.md /
+  T04's *acceptance* — "1-of-3 always-fail fake plugins → aggregator
+  returns 2 results" — still holds end-to-end through the aggregator
+  because the aggregator delegates to the service.
+- **C. Wire it in *both* layers.** Belt-and-suspenders. Pro: makes the
+  task description literally true. Con: introduces a meaningless
+  second wrap (the aggregator's dispatch IS the service's dispatch),
+  doubles the `wrap` overhead, fragments where the breaker's
+  observability lives.
+
+**Default (proceeding):** **B. Wire into `JobsService`** — the
+acceptance criterion is the contract; the file name in T04 was a
+proxy for "the dispatch site". Wiring at the actual dispatch point
+keeps the change minimal (~15 LOC) and honours FR-1 literally.
+Tasks.md was annotated with "Files (planned) / Files (actual)" so the
+deviation is visible.
+
+**Resolution:** **2026-04-27 (run #12) — Option B.** Implementation
+landed in `apps/api/src/jobs/jobs.service.ts` +
+`apps/api/src/jobs/jobs.module.ts`; integration suite at
+`apps/api/__tests__/integration/circuit-breaker.spec.ts` (4 cases,
+all green) demonstrates the T04 acceptance.
+
+---
+
 ## Q-012 — Circuit-breaker engine: `opossum` vs hand-rolled state machine (Spec 005 Phase 1)
 
 **Context:** Spec 005 plan.md §1 suggested wrapping the

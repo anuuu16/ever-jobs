@@ -47,11 +47,36 @@
 
 ## Phase 2 — Aggregator integration
 
-- [ ] T04 — Wire interceptor into `JobsAggregator`.
-  - **Files:** `apps/api/src/jobs/jobs.aggregator.ts`,
+- [x] T04 — Wire interceptor into `JobsAggregator`.
+  - **Files (planned):** `apps/api/src/jobs/jobs.aggregator.ts`,
+    `apps/api/__tests__/integration/circuit-breaker.spec.ts`.
+  - **Files (actual):** `apps/api/src/jobs/jobs.service.ts`,
+    `apps/api/src/jobs/jobs.module.ts`,
+    `apps/api/src/metrics/metrics.service.ts`,
     `apps/api/__tests__/integration/circuit-breaker.spec.ts`.
   - **Acceptance:** 1-of-3 always-fail fake plugins → aggregator returns 2 results.
-  - **Estimate:** 0.5 day.
+  - **Done:** run #12 (2026-04-27). The per-source dispatch lives in
+    `JobsService.searchJobs` (where `selectedScrapers.map(...)` calls
+    each plugin's `scrape()`) — **not** in `JobsAggregator`, which
+    delegates fan-out to the service. Wiring the interceptor inside
+    `JobsAggregator` would have required a refactor to move dispatch
+    upstream; instead the interceptor was injected `@Optional()` into
+    `JobsService` and the per-site `scraper.scrape()` call is now
+    `circuitBreaker.wrap(site, () => scraper.scrape(...))` when bound.
+    `JobsModule` now imports `CircuitBreakerModule` so production
+    bootstraps get the breaker; tests that don't import it degrade to
+    the prior pass-through behaviour. Short-circuit failures are tagged
+    `status='circuit_open'` on the Prom counter (was `error`) so the
+    `/metrics` view distinguishes "source down" from "we stopped
+    calling source".
+    Integration suite at
+    `apps/api/__tests__/integration/circuit-breaker.spec.ts` covers
+    four scenarios: closed-state pass-through with 1 failing source,
+    breaker opens after 5 consecutive failures and short-circuits the
+    6th call, `forceOpen` isolation per-site, and back-compat (no
+    interceptor bound). All four pass; full breaker unit suite (23
+    cases) and aggregator suite (13 cases) remain green.
+  - **Estimate:** 0.5 day. **Actual:** ~0.4 day.
 
 ## Phase 3 — Health endpoint & Prometheus
 

@@ -5,6 +5,158 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #12 (Spec 005 Phase 2 — T04 circuit-breaker wired into per-source dispatch)
+
+**Scope:** land Spec 005 / Phase 2 (T04 — wire `CircuitBreakerInterceptor`
+into the per-source `scrape()` dispatch + add the integration test).
+This is the next pending item from run #11's "next-run default". Spec
+005 graduates from "Phase 1 done (T01–T03)" to "Phase 1+2 done
+(T01–T04); Phase 3+ pending". Q-013 (`JobsAggregator` vs `JobsService`
+as the wiring point) opened and resolved in favour of `JobsService`.
+
+**Root question (Q-013) — where does the breaker actually wire in?**
+Spec 005 / `tasks.md` named `apps/api/src/jobs/jobs.aggregator.ts`
+as the file to patch, with acceptance "1-of-3 always-fail fake plugins
+→ aggregator returns 2 results." While inspecting the dispatch path
+during this run we found `JobsAggregator` runs **after** fan-out — its
+job is the dedup pass; it never sees individual sources. The actual
+per-source `scraper.scrape()` call lives in `JobsService.searchJobs`
+(which `JobsAggregator.aggregate` delegates to). Refactoring the
+dispatch out of `JobsService` into `JobsAggregator` would have been
+~150 LOC of high-blast-radius surgery cutting across routing, retries,
+metrics, and salary post-processing. The acceptance criterion is the
+contract; the file name in T04 was a proxy for "the dispatch site".
+We wired the breaker at the actual dispatch site (Q-013 Option B) —
+~15 LOC of additive change. The aggregator's e2e behaviour is
+unchanged; the breaker takes effect through the delegation chain.
+
+**Changes — code:**
+
+- `apps/api/src/jobs/jobs.service.ts`:
+  - Imported `Optional` from `@nestjs/common`,
+    `ERR_SOURCE_CIRCUIT_OPEN` from `@ever-jobs/models`, and
+    `CircuitBreakerInterceptor` from `@ever-jobs/plugin`.
+  - Added a new optional 4th constructor parameter
+    `@Optional() circuitBreaker?: CircuitBreakerInterceptor`. The
+    `@Optional()` keeps every existing test bootstrap that doesn't
+    import `CircuitBreakerModule` working unchanged (no DI breakage).
+  - Inside the `Promise.allSettled(selectedScrapers.map(...))` loop,
+    the per-site call is now
+    `circuitBreaker ? await circuitBreaker.wrap(site, () =>
+    scraper.scrape(scraperInput)) : await scraper.scrape(scraperInput)`.
+    When the breaker has tripped open the wrap() short-circuits with
+    a thrown `Error` whose `code === ERR_SOURCE_CIRCUIT_OPEN` —
+    `Promise.allSettled` swallows the rejection and the source is
+    skipped, exactly matching FR-4.
+  - Refined the catch block: distinguishes `ERR_SOURCE_CIRCUIT_OPEN`
+    from a real source-side failure. Short-circuits log at `warn`
+    (terse, expected behaviour for a degraded source) and tag the
+    Prom counter with `status='circuit_open'`; genuine failures stay
+    at `error` + `status='error'`. This lets `/metrics` distinguish
+    "source down" from "we stopped calling source".
+- `apps/api/src/jobs/jobs.module.ts` — `imports` now includes
+  `CircuitBreakerModule` (alongside `DedupHybridModule` and
+  `MergeDefaultModule`). This binds `CircuitBreakerService` under
+  `CIRCUIT_BREAKER_TOKEN` and exposes `CircuitBreakerInterceptor` to
+  the DI container, so the production bootstrap of `JobsService`
+  picks up the optional 4th param. Deployments that want to disable
+  the breaker can swap this module for a no-op binding using the
+  same token (the constitution's "everything is replaceable" rule).
+- `apps/api/src/metrics/metrics.service.ts` — comment for
+  `scraperRequestsTotal.labelNames` updated from
+  `// status: success, error` to
+  `// status: success | error | circuit_open` to record the new label
+  value. No metric registration changes.
+
+**Changes — tests:**
+
+- `apps/api/__tests__/integration/circuit-breaker.spec.ts` — new
+  ~210-LOC integration suite (4 cases) covering Phase 2 / T04's
+  acceptance:
+  1. **closed-state pass-through** — 1 of 3 sources rejects on the
+     first call; aggregator returns 2 jobs; breaker still closed
+     (single failure < threshold).
+  2. **opens after 5 consecutive failures and short-circuits the
+     6th call** — drives the same fan-out 5 times so the bad
+     source's breaker trips, then asserts the 6th call returns 2
+     jobs **and** the bad scraper's `scrape()` mock was NOT invoked
+     a 6th time (proving the short-circuit, not just `Promise.
+     allSettled` swallowing). Also asserts the two healthy sources
+     went through 6 successful calls.
+  3. **`forceOpen` isolates per-site** — manually opens the LinkedIn
+     breaker, then verifies the LinkedIn scraper is never called and
+     Indeed continues unaffected.
+  4. **back-compat (no interceptor bound)** — constructs
+     `JobsService` without the optional 4th param; verifies the
+     prior pass-through behaviour (Promise.allSettled swallows the
+     bad source's rejection, aggregator returns the healthy job).
+  All 4 use the **real** `CircuitBreakerService` +
+  `CircuitBreakerInterceptor` + `JobsService` + `JobsAggregator` +
+  `PluginRegistry` — no mocks of breaker internals — so the test
+  exercises FR-1, FR-2, FR-4, and FR-7 end-to-end. Bypasses NestJS DI
+  bootstrap (would otherwise pull in 200+ source modules and a
+  Postgres connection); each case finishes in single-digit
+  milliseconds.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/005-source-health-circuit-breaker/tasks.md` — T04
+  graduates from "pending" to "DONE" with a `Done:` note recording
+  the actual files touched, the FR-1 reasoning, and a `Files
+  (planned)` vs `Files (actual)` annotation so the deviation from
+  the spec's named file is visible at-a-glance.
+- `.specify/specs/005-source-health-circuit-breaker/spec.md` —
+  `Status` flipped from `Phase 1 done (T01–T03); Phase 2+ pending`
+  to `Phase 1+2 done (T01–T04); Phase 3+ pending`; §10 records the
+  run #12 / Q-013 decision; `Last updated` bumped to 2026-04-27.
+- `docs/questions.md` — adds **Q-013** at the top (above Q-012):
+  Options A/B/C with trade-offs, Default = Option B (proceeding),
+  Resolution = Option B (run #12). Cross-links to T04 and FR-1.
+- `docs/index.md` — Spec 005 row updated to
+  `Phase 1+2 done (T01–T04); T04 wired in run #12; Phase 3+ pending`.
+  Run-tag bumped to #12.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #12 sync line; no upstream commits in
+  any of the three tracked repos.
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — `✓ Doc-lint passed — no issues.`
+- `npx jest --testPathPatterns 'apps/api/__tests__/integration/
+  circuit-breaker'` — 4 / 4 passed.
+- `npx jest --testPathPatterns 'apps/api/__tests__/health'` —
+  2 / 2 passed (`test-fast` job).
+- `npx jest --testPathPatterns 'packages/plugin/src/circuit-breaker'`
+  — 23 / 23 passed (Phase 1 service + interceptor unit suites).
+- `npx jest --testPathPatterns 'apps/api/src/jobs/__tests__/
+  jobs.aggregator'` — 13 / 13 passed (dedup integration + aggregator
+  unit).
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` — clean.
+- `npx nest build` — `webpack 5.97.1 compiled successfully in 19694
+  ms`. Confirms the Docker image will boot with the breaker wired in.
+
+**Notes & follow-ups:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #11
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`).
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from run #11; not wired into CI). Two follow-
+  ups still open: relax LSH bands or perturbation, and benchmark the
+  500 ms NFR-1 target on Ubuntu CI.
+- Default for run #13 is **Spec 005 Phase 3 (T05) — `/api/sources/
+  health` controller + `health.e2e-spec.ts`**, now that Phase 2
+  proves the breaker is observable end-to-end. T06 (Prometheus
+  exposition) follows in the same phase.
+- The `metrics.service.ts` label-comment update is the only Prom
+  surface touched; the new `circuit_open` value will appear under
+  `ever_jobs_scraper_requests_total{status="circuit_open"}` once a
+  breaker trips in production. Operators can already chart it.
+
+---
+
 ## 2026-04-26 — Scheduled run #11 (CI green-up — repair every red job from runs #66–#10)
 
 **Scope:** repair every red job in the GitHub Actions pipeline. CI had been

@@ -1,11 +1,12 @@
-import { OnModuleInit, Injectable, Logger } from '@nestjs/common';
+import { OnModuleInit, Injectable, Logger, Optional } from '@nestjs/common';
 import {
   Site, ScraperInputDto, JobPostDto, JobResponseDto, IScraper,
   Country, SalarySource, CompensationDto,
+  ERR_SOURCE_CIRCUIT_OPEN,
 } from '@ever-jobs/models';
 import { extractSalary, convertToAnnual } from '@ever-jobs/common';
 import { ConfigService } from '@nestjs/config';
-import { PluginRegistry } from '@ever-jobs/plugin';
+import { PluginRegistry, CircuitBreakerInterceptor } from '@ever-jobs/plugin';
 import { MetricsService } from '../metrics/metrics.service';
 
 /**
@@ -24,6 +25,15 @@ export class JobsService implements OnModuleInit {
     private readonly registry: PluginRegistry,
     private readonly configService: ConfigService,
     private readonly metrics: MetricsService,
+    /**
+     * Spec 005 / T04 — when {@link CircuitBreakerModule} is imported by
+     * {@link JobsModule} this is bound and every per-site `scrape()` call
+     * is wrapped in {@link CircuitBreakerInterceptor.wrap}. When the
+     * interceptor is *not* bound the service degrades to the prior
+     * behaviour (raw `scraper.scrape()` call, no breaker enforcement) so
+     * test bootstraps that don't import the breaker module keep working.
+     */
+    @Optional() private readonly circuitBreaker?: CircuitBreakerInterceptor,
   ) {}
 
   onModuleInit() {
@@ -103,7 +113,15 @@ export class JobsService implements OnModuleInit {
         this.logger.log(`Starting search for ${site} (retries=${scraperInput.retries}, backoff=${scraperInput.retryBackoff})`);
         const scraperStop = this.metrics.scraperDuration.startTimer({ site });
         try {
-          const response = await scraper.scrape(scraperInput);
+          // Spec 005 / T04 — wrap the per-source dispatch in the circuit
+          // breaker when bound. The interceptor short-circuits with
+          // `ERR_SOURCE_CIRCUIT_OPEN` once the breaker has tripped, which
+          // we surface as a `circuit_open` metric status (not `error`) so
+          // operators can distinguish "source down" from "we stopped
+          // calling source" on the dashboard.
+          const response = this.circuitBreaker
+            ? await this.circuitBreaker.wrap(site, () => scraper.scrape(scraperInput))
+            : await scraper.scrape(scraperInput);
           scraperStop();
           this.metrics.scraperRequestsTotal.inc({ site, status: 'success' });
           // Tag each job with the site it came from
@@ -114,8 +132,19 @@ export class JobsService implements OnModuleInit {
           return response;
         } catch (err: any) {
           scraperStop();
-          this.metrics.scraperRequestsTotal.inc({ site, status: 'error' });
-          this.logger.error(`${site} search failed: ${err.message}`);
+          const isCircuitOpen = err?.code === ERR_SOURCE_CIRCUIT_OPEN;
+          this.metrics.scraperRequestsTotal.inc({
+            site,
+            status: isCircuitOpen ? 'circuit_open' : 'error',
+          });
+          if (isCircuitOpen) {
+            // Breaker short-circuits are an *expected* fan-out outcome
+            // for a degraded source — log at warn, not error, and keep
+            // the message terse so logs stay readable.
+            this.logger.warn(`${site}: skipped (circuit open)`);
+          } else {
+            this.logger.error(`${site} search failed: ${err.message}`);
+          }
           throw err;
         }
       }),
