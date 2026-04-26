@@ -5,6 +5,133 @@
 
 ---
 
+## 2026-04-26 — Scheduled run #9 (Spec 002 Phase 3 — doc-lint script + CI hook)
+
+**Scope:** close Spec 002 by shipping the `scripts/docs-lint.ts` linter
+(T11) and wiring it into npm + GitHub Actions (T12). Spec 002 graduates
+from "Phase 1+2 complete; Phase 3 pending" to "All phases done
+(T01–T12)". Q-011 (parser-dep trade-off) resolved in favour of a
+zero-dep regex parser.
+
+**Changes — code:**
+
+- `scripts/docs-lint.ts` — new linter, ~270 LOC, zero runtime deps.
+  Public surface: `lintDocs(repoRoot): Promise<DocLintResult>` plus the
+  pure helpers `extractLinks`, `parseLogHeaders`, `checkFrontmatter`,
+  `formatResult`. Five checks:
+  - **Broken internal links** — scans every `*.md` under `docs/` and
+    `.specify/`, extracts inline `[text](href)` links, skips external
+    schemes (`http(s)`, `mailto`, `ftp`, `tel`, `data`, `ssh`,
+    `javascript`), pure anchors (`#section`), strips `:line` /
+    `#fragment` / `?query` suffixes, then `fs.stat`s each target.
+    Honours code fences (` ``` ` and `~~~`) and inline-code spans
+    (`` `code` ``) so docstring examples don't trip the checker.
+  - **Unindexed docs** — every doc under `docs/` and `.specify/` must
+    be reachable from `docs/index.md`. Exemptions: `docs/{index,log,
+    questions}.md`, `.specify/README.md`,
+    `.specify/memory/constitution.md`, plus everything under
+    `.specify/templates/` (still indexed but skipped to avoid
+    template-vs-real-spec conflation).
+  - **Duplicate log entries** — parses `## YYYY-MM-DD — … run #N` headers
+    in `docs/log.md`; flags any `date#run-number` pair that repeats.
+  - **Out-of-order log entries** — same headers must be DESC by
+    `(date, run-number)` from top to bottom (newest-at-top contract
+    from Spec 002 §FR-6).
+  - **Spec frontmatter** — every `spec.md` / `plan.md` / `tasks.md`
+    under `.specify/specs/<NNN>-<slug>/` must start with an `H1` and
+    a `| Field | Value |` metadata table within the next 40 lines.
+  - CLI mode: `ts-node scripts/docs-lint.ts [repoRoot]` exits 0 on
+    clean, 1 on lint issues, 2 on internal error. Programmatic mode
+    returns the full `DocLintResult` envelope so consumers can render
+    custom output (e.g. a future GitHub annotation step).
+- `docs/DEPLOYMENT.md` — fixed a stale `[\`.env.example\`](.env.example)`
+  link that resolved to `docs/.env.example` (non-existent). Now
+  `(../.env.example)` and resolves to repo-root `.env.example`. This
+  was the only broken link surfaced when running the new lint against
+  the live repo.
+
+**Changes — tests:**
+
+- `scripts/__tests__/docs-lint.spec.ts` — 26 unit cases:
+  - `extractLinks` — basic inline, multiple-per-file, fenced
+    (` ``` `) skip, fenced (`~~~`) skip, inline-code skip,
+    link-text-with-inline-code, title-attribute trimming.
+  - `parseLogHeaders` — date+run, date-only, no-headers, line-number
+    accounting.
+  - `checkFrontmatter` — H1+table pass, H1-only fail, no-H1 fail.
+  - `lintDocs` end-to-end: minimal-clean, broken-internal-link,
+    external/anchor skip, `:line`-suffix strip,
+    `#fragment`/`?query` strip, unindexed-doc flag, exempt-list
+    coverage, duplicate-log-entry detection, out-of-order-log
+    detection, newest-at-top happy path, spec-frontmatter
+    pass/fail, `/`-rooted resolution, `../`-rooted resolution,
+    fenced-code link ignore, 100-doc tree NFR-1 < 5 s perf gate.
+  - `formatResult` — green-tick output on `ok`, one section per
+    non-empty issue list otherwise.
+- `jest.config.js` — `roots` extended with `<rootDir>/scripts/` so
+  `npm test` picks up the lint suite alongside packages + apps.
+
+**Changes — npm + CI:**
+
+- `package.json` — two new scripts:
+  - `lint:docs` → `ts-node -r tsconfig-paths/register
+    scripts/docs-lint.ts` (CLI mode against the repo).
+  - `test:scripts` → `jest --testPathPatterns scripts/__tests__`
+    (focused on the lint suite).
+- `.github/workflows/ci.yml` — new `docs-lint` job runs first on every
+  push/PR. Two steps: `npm run lint:docs` (exits non-zero on any of
+  the five lint checks) followed by `npx jest --testPathPatterns
+  'scripts/__tests__/docs-lint'` (executes the unit suite). Both
+  steps required — no `continue-on-error` since doc rot should block
+  merges per Spec 002 §FR-10.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/002-docs-and-spec-kit-bootstrap/tasks.md` — Phase 3
+  graduates from "deferred" to "DONE"; T11 + T12 marked done with
+  per-task `Done:` notes referencing the new files and the broken-link
+  fix.
+- `docs/index.md` — Spec 002 row updated to
+  `All phases done (T01–T12); doc-lint live in CI run #9`. Run-tag
+  bumped to #9.
+- `docs/questions.md` — added **Q-011** (parser-dep trade-off) and
+  resolved it in favour of the zero-dep regex parser.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #9 sync line; no upstream commits in any
+  of the three tracked repos.
+
+**Notes:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #8
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`).
+- Tests authored but not executed in this scheduled run —
+  `node_modules` is not installed in the agent sandbox; CI on push
+  will validate. Manual link audit on the live repo surfaced one
+  broken link (now fixed); all other links verified by hand against
+  the file system.
+- The lint deliberately exempts `.specify/templates/*.template.md`
+  from the unindexed-doc check even though they ARE linked from
+  `docs/index.md`. This is intentional: the templates are reference
+  scaffolding, not first-class docs, and a future template-rename
+  shouldn't auto-trigger an "unindexed" failure if the index hasn't
+  been updated yet — the broken-link check still catches that case.
+- The `docs-lint` CI job is positioned **before** `build` so doc rot
+  fails fast (a broken link doesn't need to wait on a 10-minute
+  Docker build to surface). The job has no test dependency, so it
+  runs in parallel with the rest of the matrix on the runner.
+- Spec 002 is now end-to-end shippable. Spec 004 (persistence
+  plugins) and Spec 005 (source health + circuit breaker) are the
+  only un-started full-spec blocks; Spec 003 is closed (run #8).
+  Default for run #10 is **Spec 005** — the circuit-breaker
+  contract is small and high-leverage (every source plugin gets
+  graceful degradation on flaky upstreams). Spec 004 is bigger and
+  blocks on Q-005 (Postgres vs Mongo vs SQLite) which is still
+  pending review.
+
+---
+
 ## 2026-04-26 — Scheduled run #8 (Spec 003 T15 — GraphQL dedup parity)
 
 **Scope:** close Q-010 by mirroring the REST controller's dedup pipeline on

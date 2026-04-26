@@ -18,7 +18,9 @@
     "test:api": "jest --testPathPatterns apps/api/__tests__",
     "test:cli": "jest --testPathPatterns apps/cli/__tests__",
     "test:sources": "jest --testPathPatterns packages/source-",
-    "test:fast": "jest --testPathPatterns apps/api/__tests__/health"
+    "test:fast": "jest --testPathPatterns apps/api/__tests__/health",
+    "test:scripts": "jest --testPathPatterns scripts/__tests__",
+    "lint:docs": "ts-node -r tsconfig-paths/register scripts/docs-lint.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",

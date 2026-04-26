@@ -2,7 +2,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/packages/', '<rootDir>/apps/'],
+  roots: ['<rootDir>/packages/', '<rootDir>/apps/', '<rootDir>/scripts/'],
   testMatch: ['**/__tests__/**/*.e2e-spec.ts', '**/__tests__/**/*.spec.ts'],
   moduleNameMapper: {
     '^@ever-jobs/models$': '<rootDir>/packages/models/src/index.ts',

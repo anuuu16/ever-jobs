@@ -92,4 +92,4 @@ spec:
 
 ## Environment Variables
 
-See [`.env.example`](.env.example) for all configurable options.
+See [`.env.example`](../.env.example) for all configurable options.

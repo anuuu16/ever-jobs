@@ -10,6 +10,46 @@
 
 ---
 
+## Q-011 — Doc-lint markdown parser choice (Spec 002 Phase 3, T11)
+
+**Context:** Spec 002 plan.md §4 listed `remark-parse` + `unified` as the
+suggested deps for `scripts/docs-lint.ts`. Both are popular and battle-tested,
+but they pull a 30+ transitive-dep graph into the build for what is a small
+build-time tool. The five lint checks (broken internal links, unindexed docs,
+duplicate log entries, newest-at-top ordering, spec-file frontmatter
+presence) all operate on a small surface of the markdown grammar — inline
+`[text](href)` links plus `## YYYY-MM-DD — Scheduled run #N` headers.
+
+**Options:**
+
+- **A. `remark-parse` + `unified` (the plan's suggestion).** Full markdown AST.
+  Future-proof if we later want to lint heading levels, table integrity,
+  list nesting, footnotes, etc. ~30 transitive deps; ~2 MB install footprint;
+  startup cost ~150 ms.
+- **B. `remark-parse` only, no `unified`.** Same AST without the streaming
+  pipeline. Saves ~5 deps. Still a heavy install for a build-time tool.
+- **C. Zero-dep regex parser in-tree.** ~150 LOC; no install footprint;
+  startup cost negligible. Requires us to handle code fences (` ``` ` and
+  `~~~`), inline-code spans, link-text escapes, and `:line` / `#frag` /
+  `?query` URL suffixes manually. Falls down on reference-style links
+  (`[text][ref]` + `[ref]: url`), nested brackets, and HTML inside markdown
+  — none of which appear in our docs today.
+
+**Default (proceeding):** **C. Zero-dep regex parser** — keeps the doc-lint
+job lightweight (CI step <10 s end to end including `npm ci`), avoids the
+risk of a future remark major bump breaking the lint, and matches the
+shape of the markdown we actually write. If we ever need full-AST checks
+(table-divider validation, list-nesting consistency, frontmatter YAML), we
+can swap to option A behind the same `lintDocs(repoRoot)` interface
+without touching CI wiring.
+
+**Resolution:** Adopted **C. Zero-dep regex parser** in run #9 (2026-04-26).
+Implementation in `scripts/docs-lint.ts`. Will revisit option A only if a
+real lint check requires AST traversal that the regex parser can't
+deliver cleanly.
+
+---
+
 ## Q-010 — Should the GraphQL `searchJobs` query also dedup by default?
 
 **Context:** Spec 003 Phase 5 (run #7) wired the dedup engine into the REST
