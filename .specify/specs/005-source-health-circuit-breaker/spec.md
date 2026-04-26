@@ -4,7 +4,7 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 005                                                  |
 | Slug           | source-health-circuit-breaker                        |
-| Status         | Phase 1+2+3 done (T01–T06); Phase 4+ pending |
+| Status         | Phase 1+2+3 done (T01–T06); Phase 4 partial (T08 done; T07 pending); Phase 5 pending |
 | Owner          | scheduled-task agent                                 |
 | Created        | 2026-04-26                                           |
 | Last updated   | 2026-04-27                                           |
@@ -146,6 +146,19 @@ export interface ICircuitBreakerService {
   to `@Res({ passthrough: true })` so `LoggingInterceptor` can still
   attach `X-Process-Time` without colliding with `res.end()`. Q-015
   resolved Option A (proceeding default).
+- 2026-04-27 (run #15): Phase 4 / T08 — per-plugin
+  `getCircuitBreakerPolicy()` discovery wired through a new
+  `PluginPolicyBootstrapper` provider in `apps/api/src/jobs/`. Runs at
+  `OnApplicationBootstrap` (after `PluginDiscoveryService.onModuleInit`
+  has populated the registry) and pushes any provider-defined policy
+  override into `CircuitBreakerService.setPolicy(site, policy)`. Both
+  deps are `@Optional()` so test bootstraps that don't import
+  `CircuitBreakerModule` degrade to a logged no-op. A throw inside
+  `getCircuitBreakerPolicy()` is caught and the affected `Site` keeps
+  `DEFAULT_CIRCUIT_POLICY` rather than aborting the rest of the pass.
+  Mirrors the T06 bridge pattern (separate provider in `JobsModule`
+  rather than reaching into `CircuitBreakerModule`) so the breaker
+  stays a swappable plugin. Q-016 resolved Option A (proceeding default).
 - 2026-04-27 (run #13): Phase 3 / T05 — `SourcesHealthController` ships
   at `apps/api/src/jobs/health.controller.ts` exposing
   `GET /api/sources/health`. Returns `{ count, sources }` envelope with

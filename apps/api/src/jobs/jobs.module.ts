@@ -10,6 +10,7 @@ import { JobsController } from './jobs.controller';
 import { JobsResolver } from './jobs.resolver';
 import { SourcesHealthController } from './health.controller';
 import { MetricsCircuitBreakerBridge } from './metrics-circuit-breaker.bridge';
+import { PluginPolicyBootstrapper } from './plugin-policy.bootstrapper';
 
 @Module({
   imports: [
@@ -38,6 +39,12 @@ import { MetricsCircuitBreakerBridge } from './metrics-circuit-breaker.bridge';
     // wiring; safe to register here because both deps resolve from
     // this module's import graph.
     MetricsCircuitBreakerBridge,
+    // Spec 005 / T08 — discovery-side wiring for per-plugin
+    // `getCircuitBreakerPolicy()` overrides (FR-3). At
+    // OnApplicationBootstrap, scans `PluginRegistry` and pushes any
+    // override into the breaker via `setPolicy`. Plugins with no
+    // override silently keep `DEFAULT_CIRCUIT_POLICY`.
+    PluginPolicyBootstrapper,
   ],
   exports: [JobsService, JobsAggregator],
 })

@@ -149,14 +149,65 @@
   - **Acceptance:** Force-open succeeds with valid API key; 401 otherwise.
   - **Estimate:** 0.5 day.
 
-- [ ] T08 — Honour per-plugin `getCircuitBreakerPolicy()` override.
-  - **Files:** `packages/plugin/src/circuit-breaker/circuit-breaker.service.ts`.
+- [x] T08 — Honour per-plugin `getCircuitBreakerPolicy()` override.
+  - **Files (planned):** `packages/plugin/src/circuit-breaker/circuit-breaker.service.ts`.
+  - **Files (actual):** `apps/api/src/jobs/plugin-policy.bootstrapper.ts`
+    (new), `apps/api/src/jobs/jobs.module.ts`,
+    `apps/api/src/jobs/__tests__/plugin-policy.bootstrapper.spec.ts`
+    (new), `apps/api/__tests__/integration/plugin-policy.bootstrapper.spec.ts`
+    (new).
   - **Acceptance:** Plugin-defined policy wins over default at registration.
-  - **Estimate:** 0.5 day.
-  - **Note:** the `ICircuitBreakerPolicyProvider` interface and
-    `setPolicy(site, policy)` setter are already in place from T01/T02; T08
-    is the discovery-side wiring (scan registered plugins at bootstrap and
-    call `setPolicy` for any that implement the provider).
+  - **Done:** run #15 (2026-04-27). The `ICircuitBreakerPolicyProvider`
+    interface and `CircuitBreakerService.setPolicy()` setter were already
+    in place from T01/T02 — T08 is purely the discovery-side wiring. A
+    new `PluginPolicyBootstrapper` provider in `apps/api/src/jobs/` runs
+    at `OnApplicationBootstrap` (after `PluginDiscoveryService.onModuleInit`
+    has populated the registry) and walks every registered scraper. For
+    each scraper that implements `getCircuitBreakerPolicy()`
+    (verified via the existing `hasCircuitBreakerPolicy` type guard in
+    `@ever-jobs/models`) the bootstrapper calls
+    `breaker.setPolicy(site, scraper.getCircuitBreakerPolicy())`. A throw
+    inside the policy provider is caught and logged so a buggy plugin
+    can't take the rest of the pass down (the affected `Site` keeps
+    `DEFAULT_CIRCUIT_POLICY`). Both deps are `@Optional()` — when the
+    breaker isn't bound (test bootstraps that don't import
+    `CircuitBreakerModule`) or the registry isn't bound (impossible in
+    production because `PluginModule` is global), the bootstrapper is
+    a no-op. Q-016 records the design choices.
+    The bootstrapper exposes `applyPluginPolicies(): Site[]` as a public
+    method (also called from `onApplicationBootstrap`) so future
+    hot-swap paths (e.g. a community plugin registered after bootstrap
+    via `PluginRegistry.registerExternal`) can re-apply discovery
+    without writing a new bootstrapper.
+
+    **Why a separate provider in `JobsModule` (not in
+    `CircuitBreakerModule`/`packages/plugin`)** — `CircuitBreakerModule`
+    is intentionally standalone and unaware of `PluginRegistry`;
+    teaching it to scan the registry would create a back-edge that
+    breaks AGENTS.md §0.2's "every plugin replaceable" invariant
+    (a custom breaker plugged in via `CIRCUIT_BREAKER_TOKEN` would
+    silently lose policy overrides). The bootstrapper owns *both*
+    dependencies and is mounted by `JobsModule`, mirroring the T06
+    `MetricsCircuitBreakerBridge` pattern.
+
+    **Tests:** 8 unit cases drive the bootstrapper directly with stub
+    breaker + real `PluginRegistry` (plain plugin, overriding plugin,
+    mixed registry, throwing override, unbound breaker, unbound
+    registry, `onApplicationBootstrap` delegation, late-binding
+    re-trigger). 3 integration cases wire the **real**
+    `CircuitBreakerService` end-to-end and assert that an overridden
+    plugin actually opens after 2 failures (TIGHT_POLICY) instead of
+    5 (default), proving the override lands at the breaker — not just
+    in the bootstrapper's bookkeeping.
+
+    Plugins that already exist (`source-linkedin`, `source-indeed`, the
+    ATS family, etc.) do not currently implement
+    `getCircuitBreakerPolicy()` — the bootstrapper logs
+    "no plugin overrode the default circuit-breaker policy" and the
+    behaviour is unchanged. The wiring is now in place for a future PR
+    to add overrides to known-flaky niche sites without further core
+    edits.
+  - **Estimate:** 0.5 day. **Actual:** ~0.4 day.
 
 ## Phase 5 — Persistence (optional)
 

@@ -5,6 +5,173 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #15 (Spec 005 Phase 4 — T08 per-plugin `getCircuitBreakerPolicy()` discovery wiring)
+
+**Scope:** land Spec 005 / Phase 4 / T08 — the discovery-side wiring
+that pushes a plugin's `getCircuitBreakerPolicy()` override into
+`CircuitBreakerService.setPolicy(...)` at bootstrap. T07 (auth-gated
+admin `POST /circuit/{open|reset}`) and T09 (cron persistence) remain
+pending. Spec 005 graduates from "Phase 1+2+3 done; Phase 4+ pending"
+to "Phase 1+2+3 done; Phase 4 partial (T08 done; T07 pending); Phase 5
+pending". Q-016 opened and resolved (default Option A) covering the
+provider location, lifecycle hook, and hot-swap escape hatch.
+
+**Root question (Q-016) — three sub-questions in one ticket.** T08's
+acceptance is just "Plugin-defined policy wins over default at
+registration." The interface, the type guard, and the breaker setter
+are already in place from T01/T02 — T08 is purely the wiring. Three
+latent design choices weren't called out in `tasks.md`:
+
+1. **Where does the bootstrap live?** Spec 005 / `tasks.md` planned
+   the work inside `CircuitBreakerService` itself, but the breaker
+   doesn't (and shouldn't) know about `PluginRegistry`. Teaching it
+   to scan plugins would create a back-edge that breaks AGENTS.md
+   §0.2's "every plugin replaceable" invariant: a custom breaker
+   plugged in via `CIRCUIT_BREAKER_TOKEN` would silently lose policy
+   overrides. We instead add a small `PluginPolicyBootstrapper`
+   provider in `apps/api/src/jobs/` that owns *both* dependencies
+   (`PluginRegistry` is global; `CIRCUIT_BREAKER_TOKEN` is bound by
+   `CircuitBreakerModule` imported from `JobsModule`).
+2. **When does it run?** `OnApplicationBootstrap` — fires after every
+   module's `OnModuleInit`, so `PluginDiscoveryService.onModuleInit`
+   has already populated the registry. No race window; no retries.
+3. **What about hot-swap?** `applyPluginPolicies(): Site[]` is exposed
+   as a public method (also called from `onApplicationBootstrap`) so
+   community plugins registered later via
+   `PluginRegistry.registerExternal` can re-apply discovery without
+   writing a new bootstrapper. The integration suite exercises this
+   explicitly.
+
+**Changes — code:**
+
+- `apps/api/src/jobs/plugin-policy.bootstrapper.ts` — new ~95-LOC
+  `PluginPolicyBootstrapper` provider. `OnApplicationBootstrap` calls
+  `applyPluginPolicies()`, which walks `PluginRegistry.listSiteKeys()`,
+  fetches each scraper, gates on `hasCircuitBreakerPolicy(scraper)`,
+  and calls `breaker.setPolicy(site, scraper.getCircuitBreakerPolicy())`.
+  A throw inside `getCircuitBreakerPolicy()` is caught and logged so
+  the affected `Site` keeps `DEFAULT_CIRCUIT_POLICY` rather than
+  aborting the rest of the pass. Both deps are `@Optional()` — when
+  the breaker isn't bound (test bootstraps that don't import
+  `CircuitBreakerModule`) or the registry isn't bound (impossible in
+  production because `PluginModule` is `@Global()`), the bootstrapper
+  is a no-op. Returns the `Site[]` of overridden plugins so callers
+  / tests can assert.
+- `apps/api/src/jobs/jobs.module.ts` — registers
+  `PluginPolicyBootstrapper` in the `providers` array. No new
+  `imports` needed (`PluginRegistry` resolves via the global
+  `PluginModule`; `CIRCUIT_BREAKER_TOKEN` resolves via the
+  already-imported `CircuitBreakerModule`).
+
+**Changes — tests:**
+
+- `apps/api/src/jobs/__tests__/plugin-policy.bootstrapper.spec.ts` —
+  new ~165-LOC unit suite (8 cases). No Nest bootstrap — drives the
+  bootstrapper directly with a stub breaker (asserting the exact
+  `setPolicy(site, policy)` calls) and the **real** `PluginRegistry`.
+  Cases:
+  1. **Plain plugin** — no override; `setPolicy` not called.
+  2. **Overriding plugin** — exact policy reaches `setPolicy`.
+  3. **Mixed registry** — only override-capable plugins land in the
+     returned `Site[]`.
+  4. **Throwing override** — caught; remaining plugins still applied.
+  5. **Unbound breaker** — no-op, returns `[]`, logs a warning.
+  6. **Unbound registry** — no-op, returns `[]`, logs a warning.
+  7. **`onApplicationBootstrap` delegates to `applyPluginPolicies`.**
+  8. **Hot-swap re-trigger** — late-bound plugin picked up by manual
+     `applyPluginPolicies()` call (the documented escape hatch).
+- `apps/api/__tests__/integration/plugin-policy.bootstrapper.spec.ts`
+  — new ~115-LOC integration suite (3 cases). Wires the **real**
+  `CircuitBreakerService` end-to-end and asserts behaviour, not just
+  bookkeeping. Cases:
+  1. **Override behaviour lands** — TIGHT_POLICY (failureThreshold: 2)
+     opens after 2 failures; default policy holds at 5 failures for
+     a sibling plugin (per-site isolation invariant preserved).
+  2. **`applyPluginPolicies()` returns the actual overridden sites**
+     — direct assertion on the public-method return.
+  3. **Late registration only takes effect after re-trigger** —
+     covers the documented hot-swap path.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/005-source-health-circuit-breaker/tasks.md` — T08
+  graduates from "pending" to "done" with planned-vs-actual file
+  list (the actual landing site is `apps/api/src/jobs/...`, not
+  `packages/plugin/.../circuit-breaker.service.ts`), the Q-016
+  reasoning, and the per-plugin override status note ("plugins that
+  exist today don't override; the wiring is now in place for a
+  future PR to add overrides to known-flaky niche sites").
+- `.specify/specs/005-source-health-circuit-breaker/spec.md` —
+  `Status` flipped from `Phase 1+2+3 done (T01–T06); Phase 4+ pending`
+  to `Phase 1+2+3 done (T01–T06); Phase 4 partial (T08 done; T07
+  pending); Phase 5 pending`; §10 records the run #15 / Q-016
+  decision.
+- `docs/questions.md` — adds **Q-016** at the top (above Q-015):
+  Options A/B/C with trade-offs, Default = Option A (proceeding),
+  Resolution _pending_. Cross-links to T08, FR-3, and the T06
+  bridge-pattern precedent.
+- `docs/index.md` — Spec 005 row updated; run-tag bumped to #15.
+- `CLAUDE.md` — run-tag bumped to #15 in the footer.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #15 sync line; no upstream commits in
+  any of the three tracked repos (5 consecutive zero-churn runs).
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns 'apps/api/src/jobs/__tests__/
+  plugin-policy.bootstrapper'` — 8 / 8 passed (T08 unit acceptance
+  suite).
+- `npx jest --testPathPatterns 'apps/api/__tests__/integration/
+  plugin-policy.bootstrapper'` — 3 / 3 passed (T08 integration suite,
+  exercises the real breaker state machine).
+- `npx jest --testPathPatterns 'apps/api/__tests__/(e2e/sources-health|
+  e2e/metrics-circuit-state|integration/circuit-breaker|integration/
+  plugin-policy|health\.e2e)|packages/plugin/src/circuit-breaker|
+  apps/api/src/jobs/__tests__/plugin-policy|apps/api/src/metrics/
+  __tests__/metrics.service'` — 56 / 56 passed across 9 suites
+  (regression: T01–T08 all green plus legacy `/health` + `/ping`).
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` — clean.
+- `npx nest build` — `webpack 5.97.1 compiled successfully`. Confirms
+  the Docker image will boot with the new bootstrapper registered.
+
+**Notes & follow-ups:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #14
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). Five consecutive runs of zero-churn — the watch is
+  stable.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#14; not wired into CI).
+  Two follow-ups still open: relax LSH bands or perturbation, and
+  benchmark the 500 ms NFR-1 target on Ubuntu CI.
+- No source plugin in the current registry implements
+  `getCircuitBreakerPolicy()` yet — the bootstrapper logs "no plugin
+  overrode the default circuit-breaker policy" and the runtime
+  behaviour is unchanged. The wiring is now in place for a future
+  PR to add overrides to known-flaky niche sites without further
+  core edits. Candidate: a tighter policy for ATS sources known to
+  rate-limit aggressively (Greenhouse, Lever) and a lax policy for
+  niche boards behind Cloudflare challenges.
+- Default for run #16 is **Spec 005 Phase 4 / T07 — auth-gated admin
+  `POST /api/sources/:site/circuit/{open|reset}`**. Will need to
+  introduce an explicit-auth path beyond the global `ApiKeyGuard`
+  (today a no-op when `auth.enabled=false`); the e2e bootstrap will
+  need a valid API-key fixture. Estimate: 0.5 day. Alternative:
+  pivot to T09 (60 s health-snapshot cron) but that depends on
+  Spec 004 Phase 5 which has not yet shipped.
+- `applyPluginPolicies()` is a one-shot pass at bootstrap. If a
+  future startup self-test needs the override applied *before* the
+  very first call (currently the first call may briefly use the
+  default if it lands before `OnApplicationBootstrap`), the fix is
+  to move the wiring into `register`/`registerExternal` directly —
+  but that couples the registry to the breaker against AGENTS.md
+  §0.2 and is left as a deferred decision pending a concrete
+  trigger.
+
+---
+
 ## 2026-04-27 — Scheduled run #14 (Spec 005 Phase 3 — T06 Prometheus `source_circuit_state` Gauge)
 
 **Scope:** land Spec 005 / Phase 3 / T06 — the per-site

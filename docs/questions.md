@@ -10,6 +10,82 @@
 
 ---
 
+## Q-016 — Per-plugin `getCircuitBreakerPolicy()` discovery: where does the bootstrap live, when does it run, what about hot-swap (Spec 005 / T08)
+
+**Context:** T08's acceptance is just "Plugin-defined policy wins over
+default at registration." The interface (`ICircuitBreakerPolicyProvider`),
+the type guard (`hasCircuitBreakerPolicy`), and the breaker setter
+(`CircuitBreakerService.setPolicy(site, policy)`) are all already in
+place from T01/T02 — T08 is purely the wiring. Three latent design
+choices weren't called out in `tasks.md`:
+
+1. **Where does the bootstrap live?** Spec 005 / `tasks.md` planned the
+   work inside `packages/plugin/src/circuit-breaker/circuit-breaker.service.ts`
+   — but `CircuitBreakerService` doesn't (and shouldn't) know about
+   `PluginRegistry`. Teaching the breaker to scan plugins would create
+   a back-edge that breaks AGENTS.md §0.2's "every plugin replaceable"
+   invariant: a custom breaker plugged in via `CIRCUIT_BREAKER_TOKEN`
+   would silently lose policy overrides.
+2. **When does the bootstrap run?** `PluginDiscoveryService.onModuleInit`
+   populates the registry. Running override-discovery in another
+   `OnModuleInit` would be a race; running in
+   `OnApplicationBootstrap` (which fires after every module's
+   `OnModuleInit`) is race-free but means the override only applies
+   to plugins registered *during* discovery — not to community
+   plugins registered later via
+   `PluginRegistry.registerExternal(...)`.
+3. **What about hot-swap?** Should `PluginRegistry.register` itself be
+   updated to call `breaker.setPolicy` when the new scraper implements
+   `getCircuitBreakerPolicy()`? That couples the registry to the
+   breaker (against AGENTS.md §0.2 again).
+
+**Options:**
+
+- **Option A — Separate provider in `JobsModule`,
+  `OnApplicationBootstrap`, `applyPluginPolicies()` exposed as a public
+  re-trigger.** Mirrors the T06 `MetricsCircuitBreakerBridge` pattern.
+  The bootstrapper owns *both* dependencies (`PluginRegistry` is
+  global; `CIRCUIT_BREAKER_TOKEN` is bound by `CircuitBreakerModule`
+  imported from `JobsModule`) and so violates neither §5 (no peer
+  imports) nor §0.2 (every component pluggable). Late-registered
+  plugins can re-trigger discovery via the public method without
+  writing a new bootstrapper. A throw inside
+  `getCircuitBreakerPolicy()` is caught — the affected `Site` keeps
+  `DEFAULT_CIRCUIT_POLICY` — so a buggy plugin can't take down the
+  pass.
+- **Option B — Teach `CircuitBreakerService` about `PluginRegistry` directly.**
+  Inject `PluginRegistry` into `CircuitBreakerService` in
+  `packages/plugin/src/circuit-breaker/`. Simplest dependency graph
+  but breaks AGENTS.md §0.2: any custom breaker plugged in through
+  `CIRCUIT_BREAKER_TOKEN` would have to re-implement the override
+  scan or silently lose it.
+- **Option C — Wrap `PluginRegistry.register` to push policy synchronously.**
+  Override-discovery runs at the moment of registration, with no
+  bootstrap step. Tightens coupling between the registry and the
+  breaker, and means `register` is now async-effectful rather than
+  pure. Doesn't help `registerExternal` callers any more than Option A
+  + the documented re-trigger does.
+
+**Default — proceeding with Option A (run #15).**
+Option A keeps the breaker pluggable, keeps the registry pure, and
+matches the T06 bridge pattern — operators only have to learn one
+"per-feature wiring provider in `JobsModule`" idiom. The public
+`applyPluginPolicies()` method is the documented hot-swap escape
+hatch, exercised by the integration suite. A future task could lift
+the bootstrapper into a generic `BootstrapHooks` mechanism if a third
+"discovery + token-based wiring" feature appears, but that abstraction
+is premature with two cases.
+
+**Resolution:** _pending_ — proceeding with Option A. Revisit if a
+future plugin needs synchronous policy application at registration
+(e.g. to override the policy *before* the very first call) — the
+current bootstrap order is "first call may briefly use the default
+policy if it lands before `OnApplicationBootstrap`," which is
+acceptable for steady-state operation but could matter for a startup
+self-test.
+
+---
+
 ## Q-015 — Prometheus exposition of `source_circuit_state`: bridge wiring, state encoding, label set (Spec 005 / T06)
 
 **Context:** T06's acceptance is just "`curl /metrics` includes
