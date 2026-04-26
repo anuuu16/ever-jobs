@@ -5,6 +5,79 @@
 
 ---
 
+## 2026-04-26 — Scheduled run #3 (Spec 003 Phase 1 + 2 land)
+
+**Scope:** ship the foundation of the dedup engine — types, schemas, and
+canonicalisation helpers. Phase 1 (T01–T03) and Phase 2 (T04–T05) of Spec
+003 are now complete; Phase 3 (`dedup-hybrid` plugin scaffolding) unblocked
+for the next run.
+
+**Changes — code:**
+
+- `packages/models/src/interfaces/field-with-provenance.interface.ts` — new
+  `FieldWithProvenance<T>` interface plus `provenance()` constructor helper.
+- `packages/models/src/interfaces/source-observation.interface.ts` — new
+  `SourceObservation` interface (per-source sighting record).
+- `packages/models/src/interfaces/canonical-job.interface.ts` — new
+  `CanonicalJob` interface; flat shortcut fields plus `fields` provenance map.
+- `packages/models/src/interfaces/dedup-engine.interface.ts` — new
+  `IDedupEngine` interface, `DedupResult`, `DedupInputError`, `DedupMetrics`,
+  and `DEDUP_ENGINE_TOKEN`.
+- `packages/models/src/interfaces/merge-resolver.interface.ts` — new
+  `IMergeResolver` interface and `MERGE_RESOLVER_TOKEN`.
+- `packages/models/src/interfaces/index.ts` — barrel re-exports the five
+  new interfaces.
+- `packages/models/src/schemas/canonical-job.schema.ts` — new zod schemas
+  `FieldWithProvenanceSchema`, `SourceObservationSchema`,
+  `CanonicalJobSchema`, `RawJobSchema` with inferred `*Shape` aliases.
+- `packages/models/src/schemas/index.ts` + `packages/models/src/index.ts` —
+  re-export the schemas alongside enums/dtos/interfaces.
+- `packages/common/src/normalize.ts` — pure `normalizeCompany`,
+  `normalizeTitle`, `normalizeLocation` helpers (idempotent, NFKD
+  diacritic-stripping, US-state abbreviation expansion, remote-token
+  collapsing, multi-word company-suffix removal).
+- `packages/common/src/canonical-key.ts` — `canonicalKey()` joins normalised
+  triple with pipes; `canonicalJobId()` sha-256 lower-case hex digest.
+- `packages/common/src/index.ts` — re-exports `normalize` + `canonical-key`.
+- `package.json` — added `zod ^3.23.0` to runtime dependencies.
+
+**Changes — tests:**
+
+- `packages/models/__tests__/canonical-job.schema.spec.ts` — 8 cases for
+  `CanonicalJobSchema`, `SourceObservationSchema`, `FieldWithProvenanceSchema`,
+  `RawJobSchema` covering happy paths, bad URL, missing required fields,
+  empty arrays, and round-trip via `parse()`.
+- `packages/common/__tests__/normalize.spec.ts` — 30+ golden-input table
+  cases plus per-helper idempotency proofs.
+- `packages/common/__tests__/canonical-key.spec.ts` — 10 cases asserting
+  determinism, hex shape, distinctness, and that cosmetic-only differences
+  collapse to the same id.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/003-deduplication-engine/tasks.md` — T01–T05 marked done,
+  with per-task "Done:" notes.
+- `docs/log.md` — this entry.
+- `docs/index.md` — Spec 003 status flipped from `draft (full)` to
+  `Phase 1 + 2 complete; Phase 3 next`.
+- `docs/questions.md` — no new questions this run.
+
+**Notes:**
+
+- External research repos tracked outside this monorepo were re-fetched
+  via their `upstream-https` remotes; no new commits since run #2.
+  No external-tracking entries belong in this repo (they live in the
+  parent-directory watch file per the scheduled-task brief).
+- Tests authored but not executed in this run — `node_modules` is not
+  installed in the agent sandbox; CI will validate.
+- Zod was already mentioned as a "preferred reusable lib" in `AGENTS.md`
+  §6 but not yet in deps. Now resolved; pinned `^3.23.0`.
+- Push blocked again — `origin` is SSH-only and the sandbox has no
+  agent SSH key. Local commit lands on `develop`; user's interactive
+  environment will push.
+
+---
+
 ## 2026-04-26 — Scheduled run #2 (specs backfill, env-var, deep audit)
 
 **Scope:** complete Spec-Kit Phase 2 (backfill specs 002–005), implement Spec 001 FR-6

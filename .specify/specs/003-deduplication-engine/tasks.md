@@ -4,38 +4,51 @@
 
 ## Phase 1 — Models & contracts
 
-- [ ] T01 — Add `CanonicalJob`, `SourceObservation`, `FieldWithProvenance` types.
+- [x] T01 — Add `CanonicalJob`, `SourceObservation`, `FieldWithProvenance` types.
   - **Files:** `packages/models/src/interfaces/canonical-job.interface.ts`,
     `packages/models/src/interfaces/source-observation.interface.ts`,
     `packages/models/src/interfaces/field-with-provenance.interface.ts`,
     `packages/models/src/index.ts` (re-export).
   - **Acceptance:** Types compile; barrel exports them; sample fixture parses.
   - **Estimate:** 0.5 day.
+  - **Done:** 2026-04-26 (run #3) — interfaces shipped, all `readonly`,
+    `provenance()` helper exported.
 
-- [ ] T02 — Add `IDedupEngine`, `IMergeResolver` interfaces.
+- [x] T02 — Add `IDedupEngine`, `IMergeResolver` interfaces.
   - **Files:** `packages/models/src/interfaces/dedup-engine.interface.ts`,
     `packages/models/src/interfaces/merge-resolver.interface.ts`.
   - **Acceptance:** Interfaces exported; consumed by Phase 3 plugin.
   - **Estimate:** 0.25 day.
+  - **Done:** 2026-04-26 (run #3) — `IDedupEngine` returns a
+    `DedupResult` envelope with assignments, errors, metrics; tokens
+    `DEDUP_ENGINE_TOKEN` & `MERGE_RESOLVER_TOKEN` exported.
 
-- [ ] T03 — Add zod schemas for `CanonicalJob` and `RawJob` boundaries.
-  - **Files:** `packages/models/src/schemas/canonical-job.schema.ts`.
+- [x] T03 — Add zod schemas for `CanonicalJob` and `RawJob` boundaries.
+  - **Files:** `packages/models/src/schemas/canonical-job.schema.ts`,
+    `packages/models/__tests__/canonical-job.schema.spec.ts`.
   - **Acceptance:** `CanonicalJobSchema.parse()` round-trips a fixture.
   - **Estimate:** 0.25 day.
+  - **Done:** 2026-04-26 (run #3) — schemas, `safeParse` tests for
+    happy + sad paths, zod added as runtime dep at root.
 
 ## Phase 2 — Canonicalisation helpers
 
-- [ ] T04 — Implement `normalizeCompany`, `normalizeTitle`, `normalizeLocation`.
+- [x] T04 — Implement `normalizeCompany`, `normalizeTitle`, `normalizeLocation`.
   - **Files:** `packages/common/src/normalize.ts`,
     `packages/common/__tests__/normalize.spec.ts`.
   - **Acceptance:** golden-input table tests pass; idempotent.
   - **Estimate:** 0.5 day.
+  - **Done:** 2026-04-26 (run #3) — 30+ golden-table cases, idempotency
+    proved per-helper, US-state abbreviation expansion, remote-token
+    canonicalisation.
 
-- [ ] T05 — Implement `canonicalKey(job)` and `canonicalJobId(job)` (sha-256).
+- [x] T05 — Implement `canonicalKey(job)` and `canonicalJobId(job)` (sha-256).
   - **Files:** `packages/common/src/canonical-key.ts`,
     `packages/common/__tests__/canonical-key.spec.ts`.
   - **Acceptance:** Same input → same id; different input → different id.
   - **Estimate:** 0.25 day.
+  - **Done:** 2026-04-26 (run #3) — sha-256 lower-case hex digest,
+    deterministic, cosmetic-only differences collapse to same id.
 
 ## Phase 3 — `dedup-hybrid` plugin
 

@@ -10,6 +10,37 @@
 
 ---
 
+## Q-008 — Scrubbing legacy "ported from <competitor>" comments in source files
+
+**Context:** The scheduled-task brief forbids competitor mentions inside this
+repo. Run #3 found ~7 pre-existing files with `Ported from <repo>/...` doc
+comments (`packages/common/src/utils/experience-extractor.ts`, several
+`packages/plugins/source-ats-*/src/*.types.ts`, README acknowledgements,
+plus a "StapplyMap" UA string in
+`packages/plugins/source-company-cursor/src/cursor.service.ts`).
+
+The brief also says "do NOT remove anything (move or improve is OK)", so a
+silent purge isn't appropriate.
+
+**Options:**
+
+- **A. Spec it.** Open a small "Spec 006 — Scrub external-project mentions"
+  with a deterministic find-and-rewrite list. Each comment becomes a neutral
+  "Reference implementation in upstream Python project" with no name. README
+  acknowledgements move to an external file (`/competitor-watch.md`).
+- **B. Drop the comments wholesale.** Safe for code; loses provenance breadcrumb.
+- **C. Leave as-is** — accept the brief's rule is about *new* mentions, not
+  pre-existing breadcrumbs.
+
+**Default (proceeding):** **A. Spec it** — keeps history navigable, satisfies
+the rule, and gives the cleanup a reviewable diff. Spec will be authored
+next run; this run does not touch the legacy comments to keep the
+Spec-003-Phase-1+2 commit focused.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-007 — One spec per new source plugin, or one bulk spec for multiple adoptions?
 
 **Context:** Run #2 identified 6 new platforms to adopt
