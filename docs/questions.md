@@ -10,6 +10,74 @@
 
 ---
 
+## Q-015 — Prometheus exposition of `source_circuit_state`: bridge wiring, state encoding, label set (Spec 005 / T06)
+
+**Context:** T06's acceptance is just "`curl /metrics` includes
+`source_circuit_state{site=...}`." Three latent design choices weren't
+called out in `tasks.md`:
+
+1. **Where does the breaker connect to the Gauge?** `MetricsModule` is
+   `@Global()`; `CircuitBreakerModule` is **not** — it's imported by
+   `JobsModule`. So `MetricsService` cannot inject `CIRCUIT_BREAKER_TOKEN`
+   directly without either (a) making `CircuitBreakerModule` global (wide
+   blast radius — every test bootstrap that pulls `MetricsModule` would
+   suddenly see a breaker), (b) reaching across modules at runtime
+   (forbidden by AGENTS.md §5 plugin rule), or (c) introducing a small
+   bridge provider that owns *both* dependencies and writes the breaker
+   into the Gauge's `collect()` callback.
+2. **State encoding.** Prometheus Gauges are numeric. The natural
+   encodings are: `closed=0, half-open=1, open=2` (degradation severity
+   ascending), or `closed=0, open=1, half-open=2` (open-vs-rest binary
+   first), or three separate Gauges (`source_circuit_state_closed`,
+   …_open, …_half_open) each at 0/1. The first matches Spec 005's
+   FR-1/FR-2 mental model (graduating severity) and lets a single
+   `max_over_time(source_circuit_state[5m]) >= 2` alert trigger on any
+   open episode.
+3. **Label set.** `{site}` is the only label `tasks.md` mandates. Should
+   we also expose `{state}` as a second label so PromQL can sum by
+   state without remembering the encoding? That would mean *three* time
+   series per site (one per state, value 0 or 1) — for ~190 sites
+   that's ~570 series. Acceptable but >2× the cardinality.
+
+**Options:**
+
+- **Option A — Bridge provider, single-Gauge severity encoding, `{site}`-only label.**
+  Add `CircuitBreakerMetricsBridge` in `apps/api/src/jobs/`
+  (a Nest provider with `OnApplicationBootstrap`) that injects both
+  `MetricsService` and `CIRCUIT_BREAKER_TOKEN` and calls
+  `metricsService.bindCircuitBreakerSource(() => breaker.list())`.
+  The Gauge `ever_jobs_source_circuit_state{site}` reports
+  `closed=0, half-open=1, open=2`. `MetricsService` exposes a
+  `bindCircuitBreakerSource(fn)` setter that wires the source into the
+  Gauge's `collect()` callback — when no source is bound, `collect()`
+  is a no-op and the metric is simply absent (back-compat with test
+  bootstraps that don't import `JobsModule`). HELP text records the
+  encoding.
+- **Option B — Make `CircuitBreakerModule` `@Global()` and inject `CIRCUIT_BREAKER_TOKEN` directly into `MetricsService`.**
+  Wires straight from breaker to Gauge with no bridge. Simpler dependency
+  graph but inverts the Spec 005 / FR-3 plugin model — the breaker is
+  meant to be a swappable plugin imported once at the application
+  boundary, not an ambient global. Also forces every consumer of
+  `MetricsService` (cache, future analytics dashboards) to pull the
+  breaker into their bootstrap.
+- **Option C — Three Gauges (`…_closed`, `…_open`, `…_half_open`) with `{site}` label.**
+  Each Gauge reports 0 or 1. PromQL becomes `source_circuit_state_open == 1`.
+  No encoding to remember; double the series count; mismatches the
+  spec's "`source_circuit_state{site}`" wording (the spec names a
+  *single* metric).
+
+**Default — proceeding with Option A (run #14).**
+Option A keeps the breaker pluggable (no global), keeps cardinality at
+~190 series (one per site), matches the spec's metric naming exactly,
+and degrades cleanly when the bridge isn't wired (the Gauge is simply
+absent from `/metrics`). The encoding is documented in the Gauge's
+HELP text so PromQL authors don't need to read code.
+
+**Resolution:** _pending_ — proceeding with Option A. Revisit if
+operators surface friction with the numeric encoding.
+
+---
+
 ## Q-014 — `/api/sources/health` shape, registry-overlay default, and auth posture (Spec 005 / T05)
 
 **Context:** T05's acceptance is just "Returns array of `SourceHealth`;

@@ -9,6 +9,7 @@ import { JobsAggregator } from './jobs.aggregator';
 import { JobsController } from './jobs.controller';
 import { JobsResolver } from './jobs.resolver';
 import { SourcesHealthController } from './health.controller';
+import { MetricsCircuitBreakerBridge } from './metrics-circuit-breaker.bridge';
 
 @Module({
   imports: [
@@ -28,7 +29,16 @@ import { SourcesHealthController } from './health.controller';
     CircuitBreakerModule,
   ],
   controllers: [JobsController, SourcesHealthController],
-  providers: [JobsService, JobsAggregator, JobsResolver],
+  providers: [
+    JobsService,
+    JobsAggregator,
+    JobsResolver,
+    // Spec 005 / T06 — wires CIRCUIT_BREAKER_TOKEN into MetricsService's
+    // `source_circuit_state` Gauge at OnApplicationBootstrap. Pure
+    // wiring; safe to register here because both deps resolve from
+    // this module's import graph.
+    MetricsCircuitBreakerBridge,
+  ],
   exports: [JobsService, JobsAggregator],
 })
 export class JobsModule {}

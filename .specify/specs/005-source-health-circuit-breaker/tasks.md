@@ -110,11 +110,36 @@
     opt-in-overlay + no-extra-auth defaults.
   - **Estimate:** 0.5 day. **Actual:** ~0.4 day.
 
-- [ ] T06 — Add Prometheus exposition under `/metrics`.
-  - **Files:** `apps/api/src/metrics/metrics.module.ts`,
+- [x] T06 — Add Prometheus exposition under `/metrics`.
+  - **Files (planned):** `apps/api/src/metrics/metrics.module.ts`,
     `apps/api/src/metrics/metrics.controller.ts`.
+  - **Files (actual):** `apps/api/src/metrics/metrics.service.ts`,
+    `apps/api/src/metrics/metrics.controller.ts`,
+    `apps/api/src/jobs/metrics-circuit-breaker.bridge.ts` (new),
+    `apps/api/src/jobs/jobs.module.ts`.
   - **Acceptance:** `curl /metrics` includes `source_circuit_state{site=...}`.
-  - **Estimate:** 0.5 day.
+  - **Done:** run #14 (2026-04-27). New per-site Gauge
+    `ever_jobs_source_circuit_state{site}` is registered on the
+    `MetricsService`'s prom-client registry with a `collect()` callback
+    that delegates to the breaker via a thin closure
+    (`bindCircuitBreakerSource(fn)`). The closure is wired at
+    `OnApplicationBootstrap` by a new `MetricsCircuitBreakerBridge`
+    provider in `JobsModule` (where both `MetricsService` and
+    `CIRCUIT_BREAKER_TOKEN` resolve). Encoding `closed=0, half-open=1,
+    open=2` (severity ascending) is documented in the Gauge's HELP
+    text and exported as `CIRCUIT_STATE_GAUGE_VALUE` for re-use. When
+    no source is bound (test bootstraps that don't import `JobsModule`),
+    the Gauge has no samples and `source_circuit_state` is simply
+    absent from `/metrics` — back-compat preserved. Q-015 records the
+    bridge-vs-global, encoding, and label-cardinality choices.
+    Side-fix: the `/metrics` controller switched from `@Res() res` +
+    `res.end()` to `@Res({ passthrough: true })` + `return ...`
+    because `LoggingInterceptor.tap.next` was setting
+    `X-Process-Time` *after* the body was sent and turning every
+    `/metrics` scrape into a 500. Bug was latent — there was no
+    pre-existing `/metrics` e2e suite to surface it. The new T06
+    e2e suite exercises the path so the regression can never recur.
+  - **Estimate:** 0.5 day. **Actual:** ~0.4 day.
 
 ## Phase 4 — Admin endpoints & per-plugin override
 

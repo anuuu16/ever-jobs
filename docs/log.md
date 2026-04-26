@@ -5,6 +5,176 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #14 (Spec 005 Phase 3 — T06 Prometheus `source_circuit_state` Gauge)
+
+**Scope:** land Spec 005 / Phase 3 / T06 — the per-site
+`ever_jobs_source_circuit_state{site=...}` Gauge so Grafana panels
+can render a heatmap "open / half-open / closed" without parsing
+the existing `scraper_requests_total{status="circuit_open"}`
+counter. T07 (auth-gated admin `POST /circuit/{open|reset}`) and
+beyond remain pending. Spec 005 graduates from
+"Phase 1+2 done; Phase 3 partial (T05 done, T06 pending)" to
+"Phase 1+2+3 done (T01–T06); Phase 4+ pending". Q-015 opened and
+resolved (default Option A) covering bridge-vs-global wiring,
+state encoding, and label cardinality.
+
+**Root question (Q-015) — three sub-questions in one ticket.** T06's
+acceptance is just "`curl /metrics` includes
+`source_circuit_state{site=...}`." Three latent design choices weren't
+called out in `tasks.md`:
+
+1. **Wiring point.** `MetricsModule` is `@Global()`;
+   `CircuitBreakerModule` is *not* (it's pluggable per FR-3, imported
+   once at the application boundary by `JobsModule`). So
+   `MetricsService` cannot inject `CIRCUIT_BREAKER_TOKEN` directly
+   without either making `CircuitBreakerModule` global (wide blast
+   radius — every test bootstrap that imports `MetricsModule` would
+   suddenly own a breaker) or violating AGENTS.md §5's "no peer-plugin
+   imports" rule. We instead add a small `MetricsCircuitBreakerBridge`
+   provider in `JobsModule` that owns *both* dependencies and wires the
+   breaker into the Gauge's `collect()` callback at
+   `OnApplicationBootstrap`. When the breaker isn't bound, the bridge
+   is a no-op and the Gauge stays absent from `/metrics` (back-compat
+   with narrow test bootstraps).
+2. **State encoding.** Picked `closed=0, half-open=1, open=2` (severity
+   ascending) so a single `ever_jobs_source_circuit_state >= 2` PromQL
+   predicate matches "open episode in progress." Encoding is documented
+   in the Gauge's HELP text and exported as `CIRCUIT_STATE_GAUGE_VALUE`.
+3. **Label cardinality.** `{site}` only (one series per site,
+   ~190 series). Three separate Gauges (`…_closed`, `…_open`,
+   `…_half_open`) was rejected because it would more than double the
+   series count and mismatches the spec's literal
+   `source_circuit_state{site=...}` wording.
+
+**Changes — code:**
+
+- `apps/api/src/metrics/metrics.service.ts` — adds the
+  `sourceCircuitState` Gauge with a `collect()` callback that
+  delegates to a `CircuitBreakerHealthSource` closure
+  (`bindCircuitBreakerSource(fn)` setter). On every scrape the
+  callback calls `reset()` then re-emits one `set({site}, encoded)`
+  per `SourceHealth` snapshot. A throw inside the closure is caught
+  and logged so `/metrics` never returns 500. Exports
+  `CIRCUIT_STATE_GAUGE_VALUE` and the `CircuitBreakerHealthSource`
+  type for re-use.
+- `apps/api/src/metrics/metrics.controller.ts` — switched from
+  `@Res() res` + `res.end(metrics)` to `@Res({ passthrough: true })`
+  + `return this.metricsService.getMetrics()`. The previous shape
+  closed the response *before* the global `LoggingInterceptor`'s
+  `tap.next` callback ran, and `setHeader('X-Process-Time', …)`
+  on a closed response throws "Cannot set headers after they are
+  sent" → 500 on every `/metrics` scrape. The bug was latent
+  because there was no pre-existing `/metrics` e2e suite to
+  exercise the path. The new T06 e2e suite makes the regression
+  un-fixable without re-introducing the failure.
+- `apps/api/src/jobs/metrics-circuit-breaker.bridge.ts` — new
+  ~50-LOC `MetricsCircuitBreakerBridge` provider with
+  `OnApplicationBootstrap`. `@Optional() @Inject(CIRCUIT_BREAKER_TOKEN)`
+  so the bridge degrades to a no-op (just a log warning) when no
+  breaker is bound. Captures `breaker.list` via a thin closure so a
+  future engine swap through `CIRCUIT_BREAKER_TOKEN` doesn't require
+  touching this file.
+- `apps/api/src/jobs/jobs.module.ts` — registers
+  `MetricsCircuitBreakerBridge` in the `providers` array. No new
+  `imports` needed (`MetricsService` resolves via the global
+  `MetricsModule`; `CIRCUIT_BREAKER_TOKEN` resolves via the
+  already-imported `CircuitBreakerModule`).
+
+**Changes — tests:**
+
+- `apps/api/src/metrics/__tests__/metrics.service.spec.ts` — new
+  ~150-LOC unit suite (7 cases). No Nest bootstrap, no breaker — drives
+  the Gauge's `collect()` hook directly via `bindCircuitBreakerSource`
+  + `getMetrics()` and asserts the wire-level Prometheus exposition.
+  Cases:
+  1. **Encoding** — `closed=0, half-open=1, open=2`.
+  2. **Without bind** — Gauge metadata present, no sample lines.
+  3. **With bind** — one sample per `Site` with the right encoding.
+  4. **State changes between scrapes** — closure re-evaluated, stale
+     samples gone (regression test for the `reset()` line in collect).
+  5. **Aged-out sites disappear** — defensive against a future
+     eviction policy.
+  6. **Throw in closure does not crash `/metrics`** — defensive
+     against breaker bugs corrupting the entire exposition.
+  7. **Rebinding replaces** — last-writer-wins semantics are explicit.
+- `apps/api/__tests__/e2e/metrics-circuit-state.e2e-spec.ts` — new
+  ~95-LOC e2e suite (4 cases). Bootstraps the full `AppModule` via
+  `createTestApp()` so the bridge runs at `OnApplicationBootstrap`
+  and binds the live `CircuitBreakerService` into the Gauge. Drives
+  the breaker via `forceOpen` / `forceReset` and asserts the actual
+  `/metrics` text response. Cases:
+  1. **Gauge metadata always present** — `# TYPE
+     ever_jobs_source_circuit_state gauge` with the encoding
+     documented in the HELP line.
+  2. **`forceOpen` → value 2** — the literal acceptance criterion
+     `source_circuit_state{site="linkedin"} 2`.
+  3. **`forceReset` → value 0** — round-trip through both states.
+  4. **Cardinality** — sample-line count equals `breaker.list().length`.
+  Uses sequential `forceReset` in `afterAll` to prevent breaker state
+  leaking into `sources-health.e2e-spec.ts` (Jest is `maxWorkers: 1`,
+  but defensive-reset is cheap and explicit).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/005-source-health-circuit-breaker/tasks.md` — T06
+  graduates from "pending" to "done" with planned-vs-actual file
+  list, the Q-015 reasoning, and a callout for the
+  `LoggingInterceptor`/`/metrics` side-fix so the rationale survives.
+- `.specify/specs/005-source-health-circuit-breaker/spec.md` —
+  `Status` flipped from `Phase 1+2 done; Phase 3 partial (T05 done,
+  T06 pending); Phase 4+ pending` to `Phase 1+2+3 done (T01–T06);
+  Phase 4+ pending`; §10 records the run #14 / Q-015 decision.
+- `docs/questions.md` — adds **Q-015** at the top (above Q-014):
+  Options A/B/C with trade-offs, Default = Option A (proceeding),
+  Resolution _pending_. Cross-links to T06, FR-3, and FR-6.
+- `docs/index.md` — Spec 005 row updated; run-tag bumped to #14.
+- `CLAUDE.md` — run-tag bumped to #14 in the footer.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #14 sync line; no upstream commits in
+  any of the three tracked repos.
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — `✓ Doc-lint passed — no issues.`
+- `npx jest --testPathPatterns 'apps/api/src/metrics/__tests__/
+  metrics.service'` — 7 / 7 passed (T06 unit acceptance suite).
+- `npx jest --testPathPatterns 'apps/api/__tests__/e2e/
+  metrics-circuit-state'` — 4 / 4 passed (T06 e2e acceptance suite).
+- `npx jest --testPathPatterns 'apps/api/__tests__/(e2e/sources-health|
+  integration/circuit-breaker|health\.e2e)|packages/plugin/src/
+  circuit-breaker'` — 34 / 34 passed (regression: T03 / T04 / T05 +
+  legacy `/health` + `/ping` + breaker units, all green).
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` — clean.
+- `npx nest build` — `webpack 5.97.1 compiled successfully`. Confirms
+  the Docker image will boot with the new bridge registered.
+
+**Notes & follow-ups:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #13
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). Four runs of zero-churn — the watch is stable.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#13; not wired into CI).
+  Two follow-ups still open: relax LSH bands or perturbation, and
+  benchmark the 500 ms NFR-1 target on Ubuntu CI.
+- Default for run #15 is **Spec 005 Phase 4 / T07 — auth-gated admin
+  `POST /api/sources/:site/circuit/{open|reset}`**. Will need to
+  thread the existing `ApiKeyGuard` (today a global, no-op when
+  `auth.enabled=false`) into a route-level explicit auth requirement
+  per FR-7 — the e2e bootstrap will need a valid API-key fixture.
+  Estimate: 0.5 day. Alternative: T08 (per-plugin
+  `getCircuitBreakerPolicy()` discovery wiring) which has a smaller
+  blast radius (no auth changes) and is closer to the breaker code.
+- The `/metrics` controller side-fix (`@Res({ passthrough: true })`)
+  silently affects every Prometheus scrape — operators hitting
+  `/metrics` will now also receive `X-Process-Time` and
+  `X-Request-Id` headers (previously they would have caused 500s).
+  No alert tuning needed; documented in the controller comment.
+
+---
+
 ## 2026-04-27 — Scheduled run #13 (Spec 005 Phase 3 — T05 `/api/sources/health` controller + e2e suite)
 
 **Scope:** land Spec 005 / Phase 3 / T05 — the read-side health

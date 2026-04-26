@@ -4,7 +4,7 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 005                                                  |
 | Slug           | source-health-circuit-breaker                        |
-| Status         | Phase 1+2 done; Phase 3 partial (T05 done, T06 pending); Phase 4+ pending |
+| Status         | Phase 1+2+3 done (T01–T06); Phase 4+ pending |
 | Owner          | scheduled-task agent                                 |
 | Created        | 2026-04-26                                           |
 | Last updated   | 2026-04-27                                           |
@@ -133,6 +133,19 @@ export interface ICircuitBreakerService {
   `JobsService.searchJobs`, so wiring at the dispatch site honours
   FR-1's "wraps every `IScraper.scrape()` call" exactly. Documented as
   Q-013 (resolved Option B).
+- 2026-04-27 (run #14): Phase 3 / T06 — `ever_jobs_source_circuit_state{site}`
+  Gauge (encoding `closed=0, half-open=1, open=2`) ships on the
+  prom-client registry. Wired through a new
+  `MetricsCircuitBreakerBridge` provider in `JobsModule` (rather than
+  injecting `CIRCUIT_BREAKER_TOKEN` directly into `MetricsService`)
+  so `CircuitBreakerModule` stays non-global and pluggable per
+  Spec 005 / FR-3. The `MetricsService.bindCircuitBreakerSource(fn)`
+  hook is a one-line setter; the Gauge's `collect()` callback re-reads
+  `breaker.list()` on every `/metrics` scrape (lazy-init memory
+  property NFR-3 preserved). Side-fix: `/metrics` controller switched
+  to `@Res({ passthrough: true })` so `LoggingInterceptor` can still
+  attach `X-Process-Time` without colliding with `res.end()`. Q-015
+  resolved Option A (proceeding default).
 - 2026-04-27 (run #13): Phase 3 / T05 — `SourcesHealthController` ships
   at `apps/api/src/jobs/health.controller.ts` exposing
   `GET /api/sources/health`. Returns `{ count, sources }` envelope with
