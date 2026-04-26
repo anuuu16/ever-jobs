@@ -14,6 +14,7 @@ import {
 import { canonicalJobId, canonicalKey, normalizeCompany, normalizeLocation, normalizeTitle } from '@ever-jobs/common';
 
 import { HashStrategy } from './strategies/hash-strategy';
+import { MinHashStrategy } from './strategies/minhash-strategy';
 import { ClusterPartition, DedupHybridOptions, IDedupStrategy, PreparedJob } from './types';
 import { UnionFind } from './union-find';
 
@@ -23,7 +24,8 @@ import { UnionFind } from './union-find';
  * Pipeline (each stage further merges clusters from the previous stage):
  *
  *  1. {@link HashStrategy} — exact `canonicalJobId` bucketing (O(N), fast path).
- *  2. *(future)* `MinHashStrategy` — near-duplicate detection on description.
+ *  2. {@link MinHashStrategy} — MinHash + LSH near-duplicate detection on
+ *     long-form text (description, falling back to title + company).
  *
  * The service:
  *  - validates inputs (rejects entries missing `title` or `companyName`)
@@ -36,7 +38,10 @@ import { UnionFind } from './union-find';
 @Injectable()
 export class DedupHybridService implements IDedupEngine {
   private readonly logger = new Logger(DedupHybridService.name);
-  private readonly strategies: ReadonlyArray<IDedupStrategy> = [new HashStrategy()];
+  private readonly strategies: ReadonlyArray<IDedupStrategy> = [
+    new HashStrategy(),
+    new MinHashStrategy(),
+  ];
   private readonly options: Required<DedupHybridOptions> = {
     rejectInvalid: true,
   };

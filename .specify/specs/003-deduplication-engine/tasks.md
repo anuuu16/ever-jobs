@@ -69,31 +69,42 @@
     precomputed `canonicalJobId`; preserves stable insertion order; six
     unit tests including a 1 000-input < 25 ms perf assertion.
 
-- [ ] T08 — Implement MinHash + LSH stage 2.
-  - **Files:** `src/strategies/minhash-strategy.ts`.
+- [x] T08 — Implement MinHash + LSH stage 2.
+  - **Files:** `src/minhash.ts`, `src/strategies/minhash-strategy.ts`.
   - **Acceptance:** Threshold-config respected; near-dupes merged.
   - **Estimate:** 1 day.
-  - **Notes:** Q-008 added — pick MinHash lib (custom vs `minhash` npm).
+  - **Done:** 2026-04-26 (run #5) — in-tree MinHash + LSH per Q-009
+    default. `MinHasher` produces a deterministic `Uint32Array`
+    signature (default size 128) using FNV-1a-hashed word-shingles
+    (default k=3) and seeded affine permutations.
+    `MinHashStrategy` uses LSH banding (default B=16, R=8) for
+    candidate generation and verifies each candidate with
+    `signatureSimilarity ≥ similarityThreshold` (default 0.85). The
+    strategy is pure / allocation-light: typed-array signatures, no
+    global state, deterministic given options + seed.
 
-- [~] T09 — Wire strategies into `DedupHybridService`.
+- [x] T09 — Wire strategies into `DedupHybridService`.
   - **Files:** `src/dedup-hybrid.service.ts`,
     `__tests__/dedup-hybrid.service.spec.ts`.
   - **Acceptance:** Spec tests + golden set ≥ 99% precision.
   - **Estimate:** 0.5 day.
-  - **Partial:** 2026-04-26 (run #4) — service runs strategies through
-    a Union-Find pipeline, materialises `CanonicalJob` records, fills
-    `assignments[]` and `metrics`, rejects invalid inputs with
-    `ERR_DEDUP_INVALID_INPUT`. 9 happy/sad-path tests pass locally
-    (NFR-1 perf assertion included). Will close when MinHash strategy
-    plugs into the pipeline (T08).
+  - **Done:** 2026-04-26 (run #5) — service composes
+    `[HashStrategy(), MinHashStrategy()]` and unions partitions via
+    `UnionFind`. Two new tests exercise Stage-2 only (different titles,
+    same description → merged via MinHash; unrelated descriptions → not
+    merged). Stage 1 still drives the fast path; Stage 2 handles
+    near-duplicates that the canonical-id-only hash misses.
 
-- [ ] T10 — Performance benchmark.
+- [x] T10 — Performance benchmark.
   - **Files:** `__tests__/dedup-perf.spec.ts`.
   - **Acceptance:** 1 K jobs < 250 ms p95; 10 K jobs < 2.5 s p95.
   - **Estimate:** 0.5 day.
-  - **Notes:** A 1 K-input perf assertion already lives in
-    `dedup-hybrid.service.spec.ts` as a smoke gate; the full p95 suite
-    moves to `dedup-perf.spec.ts` once MinHash lands.
+  - **Done:** 2026-04-26 (run #5) — dedicated benchmark suite measures
+    the worst-of-N elapsed across N=5 runs (override via
+    `DEDUP_PERF_RUNS`, `DEDUP_PERF_NFR1_MS`, `DEDUP_PERF_NFR2_MS`).
+    Runs use a 5x duplication factor with long descriptions so both
+    stages do real work. The smoke gate in
+    `dedup-hybrid.service.spec.ts` is preserved as a fast pre-check.
 
 ## Phase 4 — `merge-default` plugin
 

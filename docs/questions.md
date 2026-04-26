@@ -38,7 +38,11 @@ matches AGENTS.md §6 ("Reuse existing libs **when popular & well-maintained**"
 ourselves either way, so the dep buys us very little). If perf or correctness
 falls short we'll revisit option A in T08 follow-up.
 
-**Resolution:** _pending review._
+**Resolution:** Adopted **C. In-tree** in run #5 (2026-04-26). Implementation
+in `packages/plugins/dedup-hybrid/src/minhash.ts` — 128-permutation MinHash,
+LSH banding (B=16, R=8), seeded affine permutations, FNV-1a shingle hashing.
+Zero dependencies; deterministic given seed. Will revisit option A only if
+the perf benchmark or golden-set precision regresses.
 
 ---
 

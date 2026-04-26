@@ -110,6 +110,57 @@ describe('DedupHybridService', () => {
     }
   });
 
+  it('merges near-duplicate descriptions across sources via MinHash', async () => {
+    const desc =
+      'We are hiring a Staff Backend Engineer to lead our distributed-systems team. ' +
+      'You will design and operate Kubernetes-based platforms in production. ' +
+      'Strong TypeScript / Go experience required, plus 7+ years of work on high-scale ' +
+      'distributed services. We offer equity, a remote-friendly culture, and an ' +
+      'engineering team that values mentorship and craft.';
+    const tweaked = desc + ' Visa sponsorship available. Generous PTO.';
+
+    // Different titles → Stage 1 (hash) cannot merge; Stage 2 (MinHash) must.
+    const a = job({
+      id: '1',
+      title: 'Staff Backend Engineer',
+      description: desc,
+      site: Site.GREENHOUSE,
+    });
+    const b = job({
+      id: '2',
+      title: 'Senior Backend Engineer',
+      description: tweaked,
+      site: Site.LINKEDIN,
+    });
+
+    const out = await service.dedup([a, b]);
+    expect(out.canonical).toHaveLength(1);
+    expect(out.metrics.mergedPairs).toBe(1);
+    expect(out.assignments[0]).toEqual(out.assignments[1]);
+  });
+
+  it('keeps unrelated long descriptions separate', async () => {
+    const a = job({
+      id: '1',
+      title: 'Staff Backend Engineer',
+      description:
+        'Hiring a backend engineer experienced with distributed databases, ' +
+        'event sourcing, and large-scale data pipelines.',
+      site: Site.GREENHOUSE,
+    });
+    const b = job({
+      id: '2',
+      title: 'Lead UX Designer',
+      description:
+        'Hiring a UX lead to drive end-to-end design of mobile and web products. ' +
+        'Strong Figma fluency, design-system stewardship, and user research required.',
+      site: Site.LINKEDIN,
+    });
+    const out = await service.dedup([a, b]);
+    expect(out.canonical).toHaveLength(2);
+    expect(out.metrics.mergedPairs).toBe(0);
+  });
+
   it('meets NFR-1 — 1 000 mostly-unique jobs dedup in under 250 ms', async () => {
     const inputs: JobPostDto[] = [];
     for (let i = 0; i < 1000; i++) {

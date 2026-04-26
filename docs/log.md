@@ -5,6 +5,91 @@
 
 ---
 
+## 2026-04-26 — Scheduled run #5 (Spec 003 Phase 3 closes — MinHash + perf gate)
+
+**Scope:** finish Spec 003 Phase 3. Land T08 (MinHash + LSH strategy), close
+T09 (wire MinHash into the service), and ship T10 (dedicated `dedup-perf`
+benchmark suite). Q-009 resolved (in-tree MinHash per the run #4 default).
+
+**Changes — code:**
+
+- `packages/plugins/dedup-hybrid/src/minhash.ts` — new in-tree MinHash + LSH
+  building blocks. Public surface: `MinHasher` (deterministic
+  `Uint32Array` signatures, default size 128, default k=3 word-shingles,
+  seeded affine permutations + Murmur-style finaliser); `lshBandKeys`
+  (split signature into B band-keys); `signatureSimilarity` (Jaccard
+  estimate from two signatures); `tokenizeForShingles` and
+  `shingleHashes` (test-friendly utility re-exports). Allocation-light:
+  typed-array signatures, no global state.
+- `packages/plugins/dedup-hybrid/src/strategies/minhash-strategy.ts` — new
+  Stage-2 dedup strategy. Configurable knobs:
+  `signatureSize`/`bands`/`shingleSize`/`minTextLength`/
+  `similarityThreshold`/`maxBucketSize`/`seed`. Defaults
+  `B=16, R=8` (LSH curve crosses 0.5 around s≈0.71 → high recall at
+  spec's 0.85 verification threshold), `signatureSize=128`,
+  `minTextLength=80`, `similarityThreshold=0.85`,
+  `maxBucketSize=200` (guards against pathological boilerplate buckets).
+  Falls back to `title + companyName` when description is empty.
+- `packages/plugins/dedup-hybrid/src/dedup-hybrid.service.ts` — service
+  now composes `[HashStrategy(), MinHashStrategy()]`. Pipeline doc
+  comment updated.
+- `packages/plugins/dedup-hybrid/src/index.ts` — barrel re-exports
+  `MinHashStrategy`, `MinHasher`, `lshBandKeys`, `shingleHashes`,
+  `signatureSimilarity`, `tokenizeForShingles` and the `MinHasherOptions`
+  / `MinHashStrategyOptions` types.
+
+**Changes — tests:**
+
+- `packages/plugins/dedup-hybrid/__tests__/minhash.spec.ts` — 24+ unit
+  cases across `tokenizeForShingles`, `shingleHashes`, `MinHasher`,
+  `lshBandKeys`, and `signatureSimilarity` (length, determinism,
+  near-dup similarity > 0.8, distinct-text similarity < 0.2,
+  seed-dependence, error guards).
+- `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts` — 9
+  cases covering name, configuration validation, empty / single-input
+  no-ops, near-dup merging at default threshold, configurable threshold
+  (strict 0.95 vs lenient 0.6), `minTextLength` skip, title+company
+  fallback, determinism, and a 500-input < 500 ms perf gate.
+- `packages/plugins/dedup-hybrid/__tests__/dedup-hybrid.service.spec.ts`
+  — 2 new cases: Stage-2-only merge across different titles via
+  MinHash, and unrelated-description separation. Existing 9 cases
+  unchanged.
+- `packages/plugins/dedup-hybrid/__tests__/dedup-perf.spec.ts` — new
+  dedicated NFR-1 / NFR-2 benchmark suite. Worst-of-N elapsed gating
+  with `DEDUP_PERF_RUNS` / `DEDUP_PERF_NFR1_MS` / `DEDUP_PERF_NFR2_MS`
+  env-var overrides for slower CI workers.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/003-deduplication-engine/tasks.md` — T08, T09, T10
+  marked done with per-task notes referencing the new files.
+- `docs/questions.md` — Q-009 resolved (in-tree MinHash adopted).
+- `docs/index.md` — Spec 003 status flipped to `Phases 1–3 + perf gate
+  done (T01–T10); merge resolver (Phase 4) next`.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #5 sync line; no upstream commits in any
+  of the three tracked repos.
+
+**Notes:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #4
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`).
+- Tests authored but not executed in this scheduled run —
+  `node_modules` is not installed in the agent sandbox; CI will
+  validate on push. The `dedup-perf` suite ships with permissive
+  defaults (250 ms / 2.5 s, max-of-5 runs) and env-var overrides; if a
+  cold CI worker flakes, bump `DEDUP_PERF_NFR1_MS` / `_NFR2_MS` via
+  workflow env.
+- Phase 4 (`merge-default` plugin, T11/T12) is now the next pending
+  block. Phase 5 (`JobsAggregator` wiring, T13/T14) follows.
+- LSH band/row default chosen as B=16, R=8 (not B=8, R=16 as initially
+  drafted) to keep recall high at the spec-target 0.85 threshold —
+  candidate-pair P(LSH-match | s=0.85) ≈ 0.96 vs ≈ 0.46 for B=8.
+
+---
+
 ## 2026-04-26 — Scheduled run #4 (Spec 003 Phase 3 hash path lands)
 
 **Scope:** ship T06 (scaffold), T07 (hash-only fast path), and partial T09
