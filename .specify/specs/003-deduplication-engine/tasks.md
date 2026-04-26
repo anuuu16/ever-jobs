@@ -172,6 +172,28 @@
     preserved verbatim. The e2e suite now asserts the new fields and
     exercises the `?dedup=false` opt-out path.
 
+## Phase 6 — GraphQL parity
+
+- [x] T15 — Mirror REST dedup behaviour on the GraphQL `searchJobs` query.
+  - **Files:** `apps/api/src/jobs/gql-types.ts`,
+    `apps/api/src/jobs/jobs.resolver.ts`,
+    `apps/api/src/jobs/__tests__/jobs.resolver.spec.ts`.
+  - **Acceptance:** GraphQL clients can pass `dedup: Boolean = true` on
+    `SearchJobsInput`; response surfaces `deduped`, `rawCount`,
+    `dedupMetrics`. REST and GraphQL counts match for the same input.
+  - **Estimate:** 0.25 day.
+  - **Done:** 2026-04-26 (run #8) — resolver now injects
+    `JobsAggregator` and runs the same `cache → fan-out → cache write
+    (raw) → dedup` pipeline as the REST controller. New `dedup` input
+    field defaults to `true`; opt-out preserved. Cache key is bumped to
+    `endpoint=graphql-search-v2` so v1 entries (which stored
+    post-dedup-but-this-was-actually-raw lists keyed without the dedup
+    flag) are invalidated cleanly. New `DedupMetricsGql` ObjectType plus
+    additive fields on `SearchJobsResult` (`deduped`, `rawCount`,
+    `dedupMetrics`). 14 resolver unit tests cover defaults, `dedup:
+    false`, cache hit re-dedup, raw-cache invariant, metrics passthrough,
+    and `listSources` regression.
+
 ## Notes
 
 - Phase 1 and Phase 2 can run in parallel.

@@ -36,7 +36,15 @@ coherent and avoids a class of "why is REST count != GraphQL count" support
 tickets. Ship in a future run as a tiny follow-up (T15 candidate); not a
 Spec 003 blocker.
 
-**Resolution:** _pending review._
+**Resolution:** Adopted **A. Mirror REST** in run #8 (2026-04-26). Implementation
+in `apps/api/src/jobs/jobs.resolver.ts` — `JobsResolver` now injects
+`JobsAggregator` and runs the same `cache → fan-out → cache write
+(raw) → dedup` pipeline as the REST controller. `SearchJobsInput.dedup`
+defaults to `true` (opt-out via `dedup: false`). `SearchJobsResult`
+gains additive fields (`deduped`, `rawCount`, `dedupMetrics`) for
+parity with the REST envelope. Cache key is bumped to
+`endpoint=graphql-search-v2` to invalidate v1 entries cleanly. 14
+resolver unit tests cover the parity matrix.
 
 ---
 

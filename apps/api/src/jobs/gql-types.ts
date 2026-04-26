@@ -34,6 +34,14 @@ export class SearchJobsInput {
 
   @Field({ nullable: true, defaultValue: 'markdown', description: 'Description format: markdown, html, or text' })
   descriptionFormat?: string;
+
+  @Field({
+    nullable: true,
+    defaultValue: true,
+    description:
+      'Cross-source deduplication. Default true — collapses identical or near-duplicate jobs surfaced by multiple sources into one record. Pass false to keep every observation as a separate result (Spec 003 / FR-1).',
+  })
+  dedup?: boolean;
 }
 
 // ── Output Types ─────────────────────────────────────────
@@ -110,9 +118,31 @@ export class JobPostGql {
   logoUrl?: string;
 }
 
+@ObjectType({
+  description:
+    'Per-call dedup metrics — populated only when the dedup engine actually ran (Spec 003 / FR-3).',
+})
+export class DedupMetricsGql {
+  @Field(() => Int, { description: 'Number of raw jobs fed into the engine.' })
+  inputCount!: number;
+
+  @Field(() => Int, { description: 'Number of canonical clusters emitted.' })
+  outputCount!: number;
+
+  @Field(() => Int, {
+    description: 'Number of raw-pair merges performed across all stages.',
+  })
+  mergedPairs!: number;
+
+  @Field(() => Float, {
+    description: 'Wall-clock cost of the dedup pass, in milliseconds.',
+  })
+  elapsedMs!: number;
+}
+
 @ObjectType()
 export class SearchJobsResult {
-  @Field(() => Int)
+  @Field(() => Int, { description: 'Number of jobs in the response (post-dedup when applicable).' })
   count!: number;
 
   @Field(() => [JobPostGql])
@@ -120,6 +150,23 @@ export class SearchJobsResult {
 
   @Field()
   cached!: boolean;
+
+  @Field({
+    description:
+      'True iff the dedup engine actually ran. False when no engine is bound or the caller passed dedup: false.',
+  })
+  deduped!: boolean;
+
+  @Field(() => Int, {
+    description: 'Pre-dedup count. Equals raw fan-out length.',
+  })
+  rawCount!: number;
+
+  @Field(() => DedupMetricsGql, {
+    nullable: true,
+    description: 'Populated only when deduped=true.',
+  })
+  dedupMetrics?: DedupMetricsGql;
 }
 
 @ObjectType()

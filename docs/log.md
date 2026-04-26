@@ -5,6 +5,94 @@
 
 ---
 
+## 2026-04-26 — Scheduled run #8 (Spec 003 T15 — GraphQL dedup parity)
+
+**Scope:** close Q-010 by mirroring the REST controller's dedup pipeline on
+the GraphQL `searchJobs` resolver. Spec 003 graduates from "T01–T14"
+to "T01–T15" with REST + GraphQL parity end to end.
+
+**Changes — code:**
+
+- `apps/api/src/jobs/gql-types.ts` — `SearchJobsInput` gains an optional
+  `dedup: Boolean = true` field (matches the REST `?dedup=`
+  query param semantics). New `DedupMetricsGql` ObjectType exposes
+  `inputCount`, `outputCount`, `mergedPairs`, `elapsedMs`.
+  `SearchJobsResult` gains additive `deduped: Boolean!`,
+  `rawCount: Int!`, `dedupMetrics: DedupMetricsGql` fields. The
+  pre-existing `count`, `jobs`, `cached` fields are preserved (no
+  breaking change for existing consumers).
+- `apps/api/src/jobs/jobs.resolver.ts` — `JobsResolver` now injects
+  `JobsAggregator` and runs the same `cache → fan-out → cache write
+  (raw) → dedup` pipeline as the REST controller. Dedup defaults to
+  `true`; `dedup: false` opts out. The cache key is bumped to
+  `endpoint=graphql-search-v2` so v1 entries (which were written when
+  the resolver bypassed the aggregator and didn't include the dedup
+  flag) are invalidated cleanly. The dedup flag is stripped from the
+  cache key (`dedup: undefined`) so toggling it doesn't split entries —
+  the cache holds **raw** fan-out and dedup runs per-request.
+
+**Changes — tests:**
+
+- `apps/api/src/jobs/__tests__/jobs.resolver.spec.ts` — new file with 14
+  unit cases covering:
+  - basic shape on cache miss / cache hit;
+  - cache writes hold raw jobs (engine version is decoupled);
+  - cache key uses `graphql-search-v2`, with `dedup` scrubbed;
+  - `input.dedup` defaults to `true`;
+  - `dedup: true` and `dedup: false` honoured explicitly;
+  - dedup runs on cache hits;
+  - `dedupMetrics` + collapsed `count` surface when the engine ran;
+  - toggling `dedup` produces equal cache params (no entry-splitting);
+  - input mapping forwards `location`, `country`, `distance`,
+    `companySlug`, `descriptionFormat`, `siteType`, `resultsWanted`;
+  - `resultsWanted` defaults to 20, `descriptionFormat` defaults to
+    `markdown`;
+  - `listSources` regression: returns one row per `Site` enum value.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/003-deduplication-engine/tasks.md` — new Phase 6 with
+  T15 marked done; per-task notes reference the new files.
+- `docs/questions.md` — Q-010 resolved (option A, mirror REST adopted).
+- `docs/index.md` — Spec 003 row updated to `All phases done
+  (T01–T15); GraphQL parity shipped run #8`. Run-tag bumped to #8.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #8 sync line; no upstream commits in any
+  of the three tracked repos.
+
+**Notes:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #7
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`).
+- Tests authored but not executed in this scheduled run —
+  `node_modules` is not installed in the agent sandbox; CI on push will
+  validate.
+- The graphql cache key bump (`graphql-search-v2`) is a one-time
+  invalidation. v1 was technically uncontaminated (it stored arrays of
+  `JobPostDto` keyed by the input shape), but the resolver previously
+  treated those entries as if they were already deduped. Bumping the
+  key sidesteps a mixed cache-state window where some entries are
+  pre-dedup and others post-dedup. The next deploy will see one cache
+  miss per (input, endpoint) pair, then steady-state.
+- The dedup flag is intentionally stripped from the cache key. If we
+  *kept* it in the key we'd double the cache footprint for no benefit
+  (the underlying raw fan-out is identical regardless of the
+  post-process).
+- `JobsAggregator.aggregateRaw` already returns `outputCount` separately
+  from `jobs.length`; the GraphQL field is `count` (matches the REST
+  shape) and is sourced from `aggregated.jobs.length` for symmetry. The
+  REST `count` is computed the same way.
+- Spec 003 is now end-to-end shippable on both wire formats. The next
+  pending block is Spec 002 Phase 3 (`scripts/docs-lint.ts` + CI hook,
+  T11/T12), Spec 004 (persistence plugins), or Spec 005 (source health
+  + circuit breaker). Default for run #9 is **Spec 002 Phase 3** — the
+  doc-lint script is the cheapest infrastructure win and protects every
+  future run from broken-link rot.
+
+---
+
 ## 2026-04-26 — Scheduled run #7 (Spec 003 Phase 5 closes — JobsAggregator + dedup query param)
 
 **Scope:** finish Spec 003 Phase 5. Land T13 (`JobsAggregator` wired to
