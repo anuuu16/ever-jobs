@@ -5,6 +5,184 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #13 (Spec 005 Phase 3 — T05 `/api/sources/health` controller + e2e suite)
+
+**Scope:** land Spec 005 / Phase 3 / T05 — the read-side health
+endpoint (`GET /api/sources/health`) so operators can see per-source
+circuit-breaker state without scraping `/metrics`. T06 (Prometheus
+exposition of `source_circuit_state`) and T07 (auth-gated admin
+`POST /circuit/{open|reset}`) remain pending. Spec 005 graduates from
+"Phase 1+2 done" to "Phase 1+2 done; Phase 3 partial (T05 done)".
+Q-014 opened and resolved in favour of Option A (envelope shape,
+opt-in registry overlay, no extra auth gate beyond the global
+`ApiKeyGuard`).
+
+**Root question (Q-014) — three sub-questions in one ticket.**
+T05's acceptance is just "Returns array of `SourceHealth`;
+cache-control 1 s." Three latent design choices weren't called out in
+the spec or plan:
+
+1. **Response shape.** A bare `SourceHealth[]` is the minimum the
+   acceptance asks for, but it's awkward for monitoring scripts that
+   want `count`-style alerting and forces clients to compute
+   `Array.length` themselves. We picked an envelope `{ count, sources }`
+   so a future `nextCursor`-style addition (e.g. for a 1000-row tenant
+   with sharded breakers) doesn't break the wire shape.
+2. **Registry overlay.** `breaker.list()` only returns sites the
+   breaker has actually observed (lazy init in
+   `CircuitBreakerService.getOrCreate`). For a freshly-bounced process
+   the response would be **empty** until a search runs — confusing for
+   operators monitoring a "should never be empty" dashboard.
+   Eagerly seeding `breaker.health(site)` for every registered plugin
+   would fix the empty case but also create 190+ live `BreakerEntry`
+   rows on every cold boot, blowing through the lazy-init memory
+   property NFR-3 was designed to preserve. Instead the controller
+   exposes `?include=all` and synthesises the overlay rows directly
+   from `PluginRegistry.listSiteKeys()` **without** ever touching
+   `breaker.health(site)` for unseen sites — operators get the
+   "complete picture" view on demand and the breaker pool stays
+   bounded by actual usage.
+3. **Auth posture.** FR-7 explicitly says "auth-required" for the
+   admin force-open / force-reset paths (T07). By implication the
+   read endpoint is not auth-required. The endpoint is still subject
+   to the global `ApiKeyGuard` (which is no-op when
+   `auth.enabled=false`, the deployed default), so an operator who
+   wants it private just flips the env var. No bespoke `@Public()`
+   decorator was added.
+
+**Changes — code:**
+
+- `apps/api/src/jobs/health.controller.ts` — new ~145-LOC
+  `SourcesHealthController`:
+  - `@Controller('api/sources')`, single `@Get('health')` route.
+  - Constructor injects `@Optional() @Inject(CIRCUIT_BREAKER_TOKEN)
+    breaker?: ICircuitBreakerService` and
+    `@Optional() registry?: PluginRegistry`. The double-`@Optional()`
+    means the controller degrades to an empty list when neither is
+    bound — same back-compat pattern T04 chose for `JobsService`.
+  - `@Header('Cache-Control', 'public, max-age=1')` exactly matches
+    the T05 acceptance.
+  - Returns `{ count: number; sources: SourceHealth[] }` sorted
+    alphabetically by `Site` (stable for dashboards).
+  - `?include=all` overlay: walks `registry.listSiteKeys()`, skips
+    any site already in `observed`, and synthesises a `SourceHealth`
+    with `state: 'closed'`, `successRate: 1`, `p95LatencyMs: 0`,
+    `windowMs: DEFAULT_CIRCUIT_POLICY.rollingWindowMs`. Never calls
+    `breaker.health(site)` for unseen sites — the lazy-init memory
+    property survives.
+  - Local `siteCompare` helper wraps the `Site < Site` string
+    comparison so a future opaque-typing of `Site` (a real
+    consideration as we approach 200 plugins) doesn't silently break
+    ordering.
+- `apps/api/src/jobs/jobs.module.ts` — adds `SourcesHealthController`
+  to the `controllers` array. The breaker is already bound by the
+  pre-existing `CircuitBreakerModule` import (added in run #12 / T04),
+  so no new module imports are needed.
+
+**Changes — tests:**
+
+- `apps/api/__tests__/e2e/sources-health.e2e-spec.ts` — new ~115-LOC
+  e2e suite (5 cases). Bootstraps the full `AppModule` via the shared
+  `createTestApp()` helper so the global `ApiKeyGuard`,
+  `ThrottlerGuard`, `MetricsInterceptor`, and `LoggingInterceptor` are
+  all live. Drives the production `CircuitBreakerService` into known
+  states via its public admin path (`forceOpen` / `forceReset`).
+  Cases:
+  1. **Shape & Cache-Control** — asserts `{ count, sources }` envelope,
+     `count === sources.length`, and `Cache-Control: max-age=1` header
+     (the T05 acceptance criterion verbatim).
+  2. **Reflects forceOpen** — `breaker.forceOpen(Site.LINKEDIN)`,
+     then asserts the response includes a `{ site: 'linkedin',
+     state: 'open' }` row with `successRate`, `p95LatencyMs`, and
+     `windowMs: 60_000` populated.
+  3. **Alphabetical sort stability** — opens two sites and confirms
+     the response is monotonically sorted by `site` (a regression
+     here would silently flip dashboard rows on every refresh).
+  4. **Overlay additive** — `?include=all` produces a row count
+     `>= registry.listSiteKeys().length` (the registered floor) and
+     the synthetic rows all carry `windowMs: 60_000`.
+  5. **Overlay doesn't mask forceOpen** — re-opens LinkedIn and
+     confirms its row stays `state: 'open'` even with `?include=all`.
+  Uses sequential `forceReset` in `afterAll` so a leaked open breaker
+  doesn't bleed into `search.e2e-spec.ts` (Jest runs serially per
+  `maxWorkers: 1`, but defensive-reset is cheap and explicit).
+- The legacy `apps/api/__tests__/health.e2e-spec.ts` (which tests
+  `/health` and `/ping`) is untouched. The new file is named
+  `sources-health.e2e-spec.ts` and lives under `e2e/` so the two
+  suites can never name-collide. Per AGENTS.md §7, `e2e/` is the
+  canonical location for new e2e tests; the legacy file's path is
+  pre-existing and grandfathered.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/005-source-health-circuit-breaker/tasks.md` — T05
+  graduates from "pending" to "done" with a `Done:` note recording
+  the actual files touched, the Q-014 reasoning, and a `Files
+  (planned)` vs `Files (actual)` annotation so the file-name
+  divergence (`sources-health.e2e-spec.ts` vs the planned
+  `health.e2e-spec.ts`) is visible at a glance.
+- `.specify/specs/005-source-health-circuit-breaker/spec.md` —
+  `Status` flipped from `Phase 1+2 done (T01–T04); Phase 3+ pending`
+  to `Phase 1+2 done; Phase 3 partial (T05 done, T06 pending);
+  Phase 4+ pending`; §10 records the run #13 / Q-014 decision.
+- `docs/questions.md` — adds **Q-014** at the top (above Q-013):
+  Options A/B/C with trade-offs, Default = Option A (proceeding),
+  Resolution = Option A (run #13). Cross-links to T05, FR-5, FR-7,
+  and NFR-3.
+- `docs/index.md` — Spec 005 row updated to
+  `Phase 1+2 done; Phase 3 partial (T05 shipped run #13, T06
+  pending); Phase 4+ pending`. Run-tag bumped to #13.
+- `CLAUDE.md` — run-tag bumped to #13 in the footer.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #13 sync line; no upstream commits in
+  any of the three tracked repos.
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — `✓ Doc-lint passed — no issues.`
+- `npx jest --testPathPatterns 'apps/api/__tests__/e2e/
+  sources-health'` — 5 / 5 passed (the new T05 acceptance suite).
+- `npx jest --testPathPatterns 'apps/api/__tests__/integration/
+  circuit-breaker'` — 4 / 4 passed (T04 regression check).
+- `npx jest --testPathPatterns 'apps/api/__tests__/health'` —
+  2 / 2 passed (legacy `/health` + `/ping` regression check).
+- `npx jest --testPathPatterns 'packages/plugin/src/circuit-breaker'`
+  — 23 / 23 passed (Phase 1 unit suite still green).
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` — clean.
+- `npx nest build` — `webpack 5.97.1 compiled successfully`. Confirms
+  the Docker image will boot with the new controller registered.
+
+**Notes & follow-ups:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #12
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). Three runs of zero-churn — the watch is mature.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11 / #12; not wired into CI).
+  Two follow-ups still open: relax LSH bands or perturbation, and
+  benchmark the 500 ms NFR-1 target on Ubuntu CI.
+- Default for run #14 is **Spec 005 Phase 3 / T06 — Prometheus
+  exposition of `source_circuit_state{site=...}`**. The metric
+  surface (`metrics.service.ts`) already records the
+  `circuit_open` status label on `scraper_requests_total` (run
+  #12); T06 adds a per-site Gauge for the breaker state itself so
+  Grafana panels can colour a heatmap "open / half-open / closed"
+  without parsing the request counter. Estimate: 0.5 day. After
+  T06 the alternative is to start Phase 4 / T07 (auth-gated admin
+  endpoints) which has a different blast radius (touches the
+  `ApiKeyGuard` test bootstrap).
+- The `?include=all` overlay surfaces a small operator-ergonomics
+  question that's not blocking: should the synthetic rows carry a
+  `synthesized: true` discriminator? Today operators tell them
+  apart by `successRate === 1 && p95LatencyMs === 0`, which is
+  ambiguous for a healthy site that genuinely returned every call
+  in <1 ms. Logging here so a future T-something can decide; not
+  in scope for T05's acceptance.
+
+---
+
 ## 2026-04-27 — Scheduled run #12 (Spec 005 Phase 2 — T04 circuit-breaker wired into per-source dispatch)
 
 **Scope:** land Spec 005 / Phase 2 (T04 — wire `CircuitBreakerInterceptor`

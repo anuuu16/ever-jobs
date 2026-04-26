@@ -8,6 +8,7 @@ import { JobsService } from './jobs.service';
 import { JobsAggregator } from './jobs.aggregator';
 import { JobsController } from './jobs.controller';
 import { JobsResolver } from './jobs.resolver';
+import { SourcesHealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { JobsResolver } from './jobs.resolver';
     // service is registered under `CIRCUIT_BREAKER_TOKEN`).
     CircuitBreakerModule,
   ],
-  controllers: [JobsController],
+  controllers: [JobsController, SourcesHealthController],
   providers: [JobsService, JobsAggregator, JobsResolver],
   exports: [JobsService, JobsAggregator],
 })

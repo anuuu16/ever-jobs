@@ -10,6 +10,60 @@
 
 ---
 
+## Q-014 — `/api/sources/health` shape, registry-overlay default, and auth posture (Spec 005 / T05)
+
+**Context:** T05's acceptance is just "Returns array of `SourceHealth`;
+cache-control 1 s." Three sub-questions emerged while authoring the
+controller:
+
+1. **Response shape.** `{ count, sources }` envelope vs raw array
+   `SourceHealth[]`?
+2. **Registry overlay.** `breaker.list()` only returns sites the breaker
+   has actually observed (lazy init). Should the endpoint also list every
+   *registered* source plugin so a fresh process surface a "no data yet,
+   closed" row for the ~190 sites?
+3. **Auth posture.** FR-7 explicitly says "auth-required" for the
+   `POST /circuit/{open|reset}` admin paths. By implication FR-5 (this
+   read endpoint) is **not** auth-required. Should T05 still gate it
+   behind `ApiKeyGuard`?
+
+**Options:**
+
+- **Option A — Envelope shape, opt-in overlay, no extra auth.**
+  Response is `{ count, sources: SourceHealth[] }`. Default returns only
+  sites the breaker has observed; `?include=all` overlays the rest.
+  Endpoint is subject to the existing global `ApiKeyGuard` (which is
+  no-op when `auth.enabled=false`, the deployed default). Memory-safe
+  by design — the overlay never calls `breaker.health(site)` for unseen
+  sites (which would create real entries and balloon the ~190 × 1 KB
+  ceiling per Spec 005 / NFR-3).
+- **Option B — Raw array, always overlay, public.**
+  Response is `SourceHealth[]`. Always returns every registered plugin.
+  Endpoint exempt from `ApiKeyGuard`. Simpler client-side but forces
+  every dashboard to render ~190 rows even when only 1 site has been
+  called; eager overlay also sacrifices the lazy-init memory property.
+- **Option C — Envelope shape, always overlay, no extra auth.**
+  Hybrid of A's envelope and B's eagerness. Same memory regression as
+  B; less surprising than B for clients (envelope is more idiomatic
+  REST).
+
+**Default — proceeding with Option A (run #13).**
+The envelope is friendlier to monitoring scripts that want
+`count`-style alerting; the opt-in overlay keeps the default response
+small (only "interesting" sites) while still being reachable for
+operators who want a complete picture (`?include=all`); leaving the
+endpoint subject to the global guard preserves the deploy-time choice
+in `auth.enabled` (operators who want it private just enable the guard).
+
+**Resolution:** Option A (run #13). Documented in
+`apps/api/src/jobs/health.controller.ts` and exercised by 5 e2e cases
+in `apps/api/__tests__/e2e/sources-health.e2e-spec.ts`. Revisit if a
+real client surfaces friction with the envelope shape — the controller
+already returns `sources` as a stable array so a future un-wrapping
+would be a 1-line change.
+
+---
+
 ## Q-013 — Circuit-breaker wiring point: `JobsAggregator` vs `JobsService` (Spec 005 / T04)
 
 **Context:** Spec 005 plan.md §1 says the breaker is "applied to the

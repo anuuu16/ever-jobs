@@ -4,7 +4,7 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 005                                                  |
 | Slug           | source-health-circuit-breaker                        |
-| Status         | Phase 1+2 done (T01–T04); Phase 3+ pending           |
+| Status         | Phase 1+2 done; Phase 3 partial (T05 done, T06 pending); Phase 4+ pending |
 | Owner          | scheduled-task agent                                 |
 | Created        | 2026-04-26                                           |
 | Last updated   | 2026-04-27                                           |
@@ -133,6 +133,15 @@ export interface ICircuitBreakerService {
   `JobsService.searchJobs`, so wiring at the dispatch site honours
   FR-1's "wraps every `IScraper.scrape()` call" exactly. Documented as
   Q-013 (resolved Option B).
+- 2026-04-27 (run #13): Phase 3 / T05 — `SourcesHealthController` ships
+  at `apps/api/src/jobs/health.controller.ts` exposing
+  `GET /api/sources/health`. Returns `{ count, sources }` envelope with
+  `Cache-Control: public, max-age=1`. `?include=all` overlays
+  registered-but-unobserved sites with synthetic closed rows without
+  mutating breaker state (NFR-3 preserved). Defaults documented as
+  Q-014 (resolved Option A). The endpoint is subject to the global
+  `ApiKeyGuard` (no-op when `auth.enabled=false`); the explicit-auth
+  admin paths (FR-7) remain pending in T07.
 
 ## 11. References
 

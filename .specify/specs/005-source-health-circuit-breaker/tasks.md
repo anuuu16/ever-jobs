@@ -80,11 +80,35 @@
 
 ## Phase 3 — Health endpoint & Prometheus
 
-- [ ] T05 — Add `health.controller.ts` exposing `/api/sources/health`.
-  - **Files:** `apps/api/src/jobs/health.controller.ts`,
+- [x] T05 — Add `health.controller.ts` exposing `/api/sources/health`.
+  - **Files (planned):** `apps/api/src/jobs/health.controller.ts`,
     `apps/api/__tests__/e2e/health.e2e-spec.ts`.
+  - **Files (actual):** `apps/api/src/jobs/health.controller.ts`,
+    `apps/api/src/jobs/jobs.module.ts`,
+    `apps/api/__tests__/e2e/sources-health.e2e-spec.ts`.
   - **Acceptance:** Returns array of `SourceHealth`; cache-control 1 s.
-  - **Estimate:** 0.5 day.
+  - **Done:** run #13 (2026-04-27). New `SourcesHealthController`
+    (Spec 005 / FR-5) is `@Controller('api/sources')` with a single
+    `GET health` route returning `{ count, sources: SourceHealth[] }`
+    sorted alphabetically by `Site`. Reads from `CIRCUIT_BREAKER_TOKEN`
+    via `@Optional()` injection (degrades to an empty list when the
+    token is unbound — same back-compat pattern T04 chose for
+    `JobsService`). Carries `Cache-Control: public, max-age=1` exactly
+    as the acceptance asks. The optional `?include=all` query overlays
+    every registered plugin from `PluginRegistry.listSiteKeys()` with a
+    synthetic closed/no-data row **without** calling
+    `breaker.health(site)` for unseen sites — the lazy-init property
+    that keeps the breaker pool inside the NFR-3 ceiling is preserved.
+    The actual e2e test file is named `sources-health.e2e-spec.ts` (not
+    `health.e2e-spec.ts`) so it can sit alongside the legacy `/health`
+    + `/ping` suite at `apps/api/__tests__/health.e2e-spec.ts` without
+    a name collision. The legacy file stays as-is. The five e2e cases
+    cover (a) shape + `Cache-Control: max-age=1`, (b) reflection of a
+    `forceOpen` state, (c) alphabetical sort stability, (d) overlay
+    additive semantics with default windowMs=60_000, and (e) overlay
+    not masking a force-open. Q-014 records the envelope-shape +
+    opt-in-overlay + no-extra-auth defaults.
+  - **Estimate:** 0.5 day. **Actual:** ~0.4 day.
 
 - [ ] T06 — Add Prometheus exposition under `/metrics`.
   - **Files:** `apps/api/src/metrics/metrics.module.ts`,
