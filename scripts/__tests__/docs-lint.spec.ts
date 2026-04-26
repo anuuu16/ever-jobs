@@ -230,19 +230,20 @@ describe('lintDocs', () => {
     expect(r.duplicateLogEntries).toEqual([]);
   });
 
-  it('flags spec files missing the H1+table frontmatter', async () => {
+  it('flags spec.md and plan.md missing the H1+table frontmatter (tasks.md is exempt)', async () => {
     tempRoot = await makeRepo({
       'docs/index.md':
         '# Index\n[s](../.specify/specs/006-foo/spec.md)\n[p](../.specify/specs/006-foo/plan.md)\n[t](../.specify/specs/006-foo/tasks.md)\n',
       '.specify/specs/006-foo/spec.md': '# Spec\nNo metadata.\n',
       '.specify/specs/006-foo/plan.md':
         '# Plan\n\n| Field | Value |\n| --- | --- |\n| Spec | s |\n',
+      // tasks.md intentionally has no metadata table — should NOT be flagged
+      // because the lint scope was narrowed in run #11 to spec.md + plan.md.
       '.specify/specs/006-foo/tasks.md': 'just a paragraph, no h1\n',
     });
     const r = await lintDocs(tempRoot);
     expect(r.missingFrontmatter).toEqual([
       '.specify/specs/006-foo/spec.md',
-      '.specify/specs/006-foo/tasks.md',
     ]);
   });
 

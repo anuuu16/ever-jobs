@@ -61,7 +61,7 @@ describe('MinHashStrategy', () => {
       prepared({ index: 1, description: tweaked }),
     ]);
     expect(out.clusters).toHaveLength(1);
-    expect(out.clusters[0].sort()).toEqual([0, 1]);
+    expect([...out.clusters[0]].sort((a, b) => a - b)).toEqual([0, 1]);
   });
 
   it('respects a configurable similarity threshold', () => {

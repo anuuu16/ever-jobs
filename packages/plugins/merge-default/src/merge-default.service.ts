@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import {
   FieldWithProvenance,
   IMergeResolver,
@@ -6,6 +6,14 @@ import {
 } from '@ever-jobs/models';
 import { MergeCategory, MergeDefaultOptions } from './types';
 import { SITE_CATEGORY_DEFAULTS } from './site-category-defaults';
+
+/**
+ * DI token used by {@link MergeDefaultModule} to optionally supply a
+ * partial {@link MergeDefaultOptions} bag. Provide a `useValue` for the
+ * token in a parent module to override the resolver's defaults — see
+ * `merge-default.module.ts` for the binding wiring.
+ */
+export const MERGE_DEFAULT_OPTIONS_TOKEN = 'MERGE_DEFAULT_OPTIONS';
 
 /**
  * Default ladder used by {@link MergeDefaultService.resolveCategoryPriority}
@@ -80,7 +88,12 @@ export class MergeDefaultService implements IMergeResolver {
   >;
   private readonly preferRecent: boolean;
 
-  constructor(options: MergeDefaultOptions = {}) {
+  constructor(
+    @Optional()
+    @Inject(MERGE_DEFAULT_OPTIONS_TOKEN)
+    options?: MergeDefaultOptions,
+  ) {
+    options = options ?? {};
     this.siteCategoryMap = options.siteCategoryMap ?? SITE_CATEGORY_DEFAULTS;
     this.fallbackCategory = options.fallbackCategory ?? 'job-board';
     this.priority = mergePriority(

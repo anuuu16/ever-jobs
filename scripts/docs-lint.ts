@@ -66,8 +66,18 @@ const TEMPLATE_PREFIX = '.specify/templates/';
 const INLINE_LINK_RE = /\[(?:[^\]\\]|\\.)*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 const INLINE_CODE_RE = /`[^`]+`/g;
 const FENCE_RE = /^(```|~~~)/;
-const LOG_HEADER_RE = /^##\s+(\d{4}-\d{2}-\d{2})\s+—.*?(?:run\s*#?(\d+))?/i;
-const SPEC_FILE_RE = /^\.specify\/specs\/[0-9a-z][0-9a-z\-]*\/(spec|plan|tasks)\.md$/;
+// Two-pass header parser: first try to capture the run number, then fall
+// back to a date-only header. A single combined regex with an optional
+// run-number group is unreliable because the lazy `.*?` always succeeds
+// with the optional group skipped — turning every header into a
+// "date-only" record (the bug fixed in run #11).
+const LOG_HEADER_WITH_RUN_RE =
+  /^##\s+(\d{4}-\d{2}-\d{2})\b[^\n]*?\brun\s*#?(\d+)/i;
+const LOG_HEADER_DATE_ONLY_RE = /^##\s+(\d{4}-\d{2}-\d{2})\b/;
+// Frontmatter check applies to `spec.md` + `plan.md` only (Spec 002 §FR-7).
+// `tasks.md` is a list of work items and intentionally has no metadata
+// table — see the `.specify/templates/tasks.template.md` shape.
+const SPEC_FRONTMATTER_RE = /^\.specify\/specs\/[0-9a-z][0-9a-z\-]*\/(spec|plan)\.md$/;
 const TABLE_HEADER_RE = /^\s*\|.+\|\s*$/;
 const TABLE_DIVIDER_RE = /^\s*\|[\s:|-]+\|\s*$/;
 
@@ -166,13 +176,24 @@ export function parseLogHeaders(body: string): LogEntry[] {
   const lines = body.split(/\r?\n/);
   const out: LogEntry[] = [];
   for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(LOG_HEADER_RE);
-    if (m) {
+    const line = lines[i];
+    const withRun = line.match(LOG_HEADER_WITH_RUN_RE);
+    if (withRun) {
       out.push({
         line: i + 1,
-        date: m[1],
-        runNumber: m[2] ? Number(m[2]) : null,
-        raw: lines[i],
+        date: withRun[1],
+        runNumber: Number(withRun[2]),
+        raw: line,
+      });
+      continue;
+    }
+    const dateOnly = line.match(LOG_HEADER_DATE_ONLY_RE);
+    if (dateOnly) {
+      out.push({
+        line: i + 1,
+        date: dateOnly[1],
+        runNumber: null,
+        raw: line,
       });
     }
   }
@@ -305,9 +326,10 @@ export async function lintDocs(repoRoot: string): Promise<DocLintResult> {
     result.outOfOrderLogEntries = findOutOfOrder(entries);
   }
 
-  // 5. Frontmatter check on spec/plan/tasks under .specify/specs/.
+  // 5. Frontmatter check on spec/plan under .specify/specs/.
+  // tasks.md is intentionally exempt — see SPEC_FRONTMATTER_RE comment.
   for (const doc of docs) {
-    if (SPEC_FILE_RE.test(doc.relPath)) {
+    if (SPEC_FRONTMATTER_RE.test(doc.relPath)) {
       if (!checkFrontmatter(doc.body)) {
         result.missingFrontmatter.push(doc.relPath);
       }
@@ -357,10 +379,30 @@ export function formatResult(result: DocLintResult): string {
   return lines.join('\n');
 }
 
-if (require.main === module) {
+// CLI entry — runs only when this file is the program entrypoint.
+// Uses a CJS/ESM-tolerant detection so the script works under both
+// Node 20 ts-node-CJS (CI) and Node 24 ts-node-ESM (local dev box).
+function isCliEntry(): boolean {
+  try {
+    if (typeof require !== 'undefined' && require.main === module) {
+      return true;
+    }
+  } catch {
+    /* not running in CJS — fall through */
+  }
+  // Fallback for ESM: argv[1] should resolve to this file.
+  const entry = process.argv[1] ?? '';
+  return entry.endsWith('docs-lint.ts') || entry.endsWith('docs-lint.js');
+}
+
+if (isCliEntry()) {
+  // `__dirname` is unavailable under pure ESM; fall back to `process.cwd()`
+  // when not present (the npm script always runs from the repo root).
+  const here =
+    typeof __dirname !== 'undefined' ? __dirname : process.cwd();
   const repoRoot = process.argv[2]
     ? path.resolve(process.argv[2])
-    : path.resolve(__dirname, '..');
+    : path.resolve(here, here.endsWith('scripts') ? '..' : '.');
   lintDocs(repoRoot)
     .then((res) => {
       // eslint-disable-next-line no-console

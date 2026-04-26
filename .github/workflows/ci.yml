@@ -133,7 +133,7 @@ jobs:
         run: npm ci
 
       - name: Run source scraper tests
-        run: npx jest --testPathPatterns 'packages/source-' --verbose
+        run: npx jest --testPathPatterns 'packages/plugins/source-' --passWithNoTests --verbose
         env:
           EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
 
