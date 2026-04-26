@@ -5,6 +5,89 @@
 
 ---
 
+## 2026-04-26 — Scheduled run #6 (Spec 003 Phase 4 closes — merge-default plugin)
+
+**Scope:** finish Spec 003 Phase 4. Land T11 (scaffold
+`packages/plugins/merge-default`) and T12 (priority-order resolver).
+The default `IMergeResolver` is now ready for the JobsAggregator
+wiring in Phase 5 (T13/T14).
+
+**Changes — code:**
+
+- `packages/plugins/merge-default/package.json` — new package
+  `@ever-jobs/merge-default` v0.1.0.
+- `packages/plugins/merge-default/tsconfig.json` — extends root base.
+- `packages/plugins/merge-default/src/index.ts` — barrel re-exports
+  module, service, options/types, the
+  `DEFAULT_CATEGORY_PRIORITY` ladder, and the
+  `SITE_CATEGORY_DEFAULTS` map.
+- `packages/plugins/merge-default/src/types.ts` — `MergeCategory` union
+  (mirrors `PluginCategory` from `@ever-jobs/plugin` to avoid a runtime
+  dependency between feature plugins) plus `MergeDefaultOptions`
+  (`siteCategoryMap`, `fallbackCategory`, `categoryPriority`,
+  `fieldOverrides`, `preferRecent`, `preferAgreement`).
+- `packages/plugins/merge-default/src/site-category-defaults.ts` —
+  explicit ~150-entry Site → category lookup (38 ATS, 15 company-direct,
+  9 government, 23 regional, 13 remote, 2 freelance, ~50 niche, ~15
+  general boards). Sites not in the map fall back to `'job-board'`.
+- `packages/plugins/merge-default/src/merge-default.service.ts` —
+  `MergeDefaultService` implements `IMergeResolver`. Pure
+  category-priority resolver: rank by category index → recency
+  (`preferRecent`) → deterministic `siteRank` (enum declaration order).
+  `describe()` returns a snapshot of the active configuration for
+  logs / health endpoints.
+- `packages/plugins/merge-default/src/merge-default.module.ts` — NestJS
+  module that binds `MergeDefaultService` under `MERGE_RESOLVER_TOKEN`.
+- `tsconfig.base.json` — added `@ever-jobs/merge-default` path alias.
+- `jest.config.js` — added matching `moduleNameMapper` entry.
+
+**Changes — tests:**
+
+- `packages/plugins/merge-default/__tests__/merge-default.service.spec.ts`
+  — 16 cases covering: empty-list throw, single-candidate pass-through,
+  default ATS-first ladder, recency tie-break inside the same tier,
+  deterministic `siteRank` tie-break, fallback for un-mapped Sites,
+  `preferRecent: false` keeps insertion order, partial
+  `categoryPriority` override (prefix; tail filled from defaults),
+  per-field `fieldOverrides` map, `describe()` snapshot, ATS / company /
+  job-board buckets in `SITE_CATEGORY_DEFAULTS`, default ladder shape,
+  insertion-order independence.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/003-deduplication-engine/tasks.md` — T11 + T12 marked
+  done; per-task notes describe the ladder, the Site→category map, and
+  the resolver's tunables.
+- `docs/index.md` — Spec 003 status flipped to
+  `Phases 1–4 done (T01–T12); JobsAggregator wiring (Phase 5) next`.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #6 sync line; no upstream commits in any
+  of the three tracked repos.
+
+**Notes:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #5
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`).
+- Tests authored but not executed in this scheduled run —
+  `node_modules` is not installed in the agent sandbox; CI will
+  validate on push.
+- The `dedup-hybrid` service was intentionally **not** wired to consume
+  `MERGE_RESOLVER_TOKEN` in this run. Coupling the engine to the
+  resolver crosses Phase 4 ↔ Phase 5 boundaries; T13 in Phase 5 is the
+  point at which `JobsAggregator` composes both providers and feeds
+  resolver-merged values back into the canonical record. The current
+  "head wins" default in `dedup-hybrid.service.ts` is still correct as
+  a Phase 3 baseline.
+- Default category ladder extends FR-5's
+  `ats > company > job-board > niche` with a stable middle for the
+  practical extras (`regional`, `government`, `remote`, `freelance`).
+  Callers may collapse them by passing a partial `categoryPriority`
+  prefix — the resolver fills the tail in default order.
+
+---
+
 ## 2026-04-26 — Scheduled run #5 (Spec 003 Phase 3 closes — MinHash + perf gate)
 
 **Scope:** finish Spec 003 Phase 3. Land T08 (MinHash + LSH strategy), close

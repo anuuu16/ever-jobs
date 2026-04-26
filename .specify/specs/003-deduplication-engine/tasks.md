@@ -108,15 +108,30 @@
 
 ## Phase 4 — `merge-default` plugin
 
-- [ ] T11 — Scaffold `packages/plugins/merge-default/`.
+- [x] T11 — Scaffold `packages/plugins/merge-default/`.
   - **Files:** standard plugin layout.
   - **Estimate:** 0.25 day.
+  - **Done:** 2026-04-26 (run #6) — package scaffolded with NestJS module
+    that binds `MergeDefaultService` under `MERGE_RESOLVER_TOKEN`. Path
+    aliases registered in `tsconfig.base.json` + `jest.config.js`.
 
-- [ ] T12 — Implement priority-order resolver (ATS > company > board > niche).
+- [x] T12 — Implement priority-order resolver (ATS > company > board > niche).
   - **Files:** `src/merge-default.service.ts`,
+    `src/site-category-defaults.ts`, `src/types.ts`,
     `__tests__/merge-default.service.spec.ts`.
   - **Acceptance:** Precedence + provenance preserved.
   - **Estimate:** 0.5 day.
+  - **Done:** 2026-04-26 (run #6) — `MergeDefaultService` implements
+    `IMergeResolver`. Default ladder
+    `ats > company > job-board > regional > government > remote >
+    freelance > niche`; Site→category map covers ~150 known Sites with
+    a `'job-board'` fallback. Tunables (in `MergeDefaultOptions`):
+    `siteCategoryMap`, `fallbackCategory`, `categoryPriority` (partial
+    overrides extend with defaults at the tail), `fieldOverrides`
+    (per-field ladders, e.g. `{ description: ['company','ats'] }`),
+    `preferRecent` (default `true`). Tie-break order:
+    *category → recency → deterministic `siteRank` from enum order.*
+    Pure / side-effect-free; safe on the dedup hot loop.
 
 ## Phase 5 — Wire into `JobsAggregator`
 
