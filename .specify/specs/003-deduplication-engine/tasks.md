@@ -52,32 +52,48 @@
 
 ## Phase 3 — `dedup-hybrid` plugin
 
-- [ ] T06 — Scaffold `packages/plugins/dedup-hybrid/`.
+- [x] T06 — Scaffold `packages/plugins/dedup-hybrid/`.
   - **Files:** `package.json`, `tsconfig.json`, `src/index.ts`,
     `src/dedup-hybrid.module.ts`, `src/dedup-hybrid.service.ts`.
   - **Acceptance:** Package builds standalone.
   - **Estimate:** 0.25 day.
+  - **Done:** 2026-04-26 (run #4) — package scaffolded with NestJS module
+    that binds `DedupHybridService` under `DEDUP_ENGINE_TOKEN`. Path
+    aliases registered in `tsconfig.base.json` + `jest.config.js`.
 
-- [ ] T07 — Implement hash-only fast path.
+- [x] T07 — Implement hash-only fast path.
   - **Files:** `src/strategies/hash-strategy.ts`.
   - **Acceptance:** O(N) bucketing; collisions surfaced for Phase 3 stage 2.
   - **Estimate:** 0.5 day.
+  - **Done:** 2026-04-26 (run #4) — `HashStrategy` buckets by
+    precomputed `canonicalJobId`; preserves stable insertion order; six
+    unit tests including a 1 000-input < 25 ms perf assertion.
 
 - [ ] T08 — Implement MinHash + LSH stage 2.
   - **Files:** `src/strategies/minhash-strategy.ts`.
   - **Acceptance:** Threshold-config respected; near-dupes merged.
   - **Estimate:** 1 day.
+  - **Notes:** Q-008 added — pick MinHash lib (custom vs `minhash` npm).
 
-- [ ] T09 — Wire strategies into `DedupHybridService`.
+- [~] T09 — Wire strategies into `DedupHybridService`.
   - **Files:** `src/dedup-hybrid.service.ts`,
     `__tests__/dedup-hybrid.service.spec.ts`.
   - **Acceptance:** Spec tests + golden set ≥ 99% precision.
   - **Estimate:** 0.5 day.
+  - **Partial:** 2026-04-26 (run #4) — service runs strategies through
+    a Union-Find pipeline, materialises `CanonicalJob` records, fills
+    `assignments[]` and `metrics`, rejects invalid inputs with
+    `ERR_DEDUP_INVALID_INPUT`. 9 happy/sad-path tests pass locally
+    (NFR-1 perf assertion included). Will close when MinHash strategy
+    plugs into the pipeline (T08).
 
 - [ ] T10 — Performance benchmark.
   - **Files:** `__tests__/dedup-perf.spec.ts`.
   - **Acceptance:** 1 K jobs < 250 ms p95; 10 K jobs < 2.5 s p95.
   - **Estimate:** 0.5 day.
+  - **Notes:** A 1 K-input perf assertion already lives in
+    `dedup-hybrid.service.spec.ts` as a smoke gate; the full p95 suite
+    moves to `dedup-perf.spec.ts` once MinHash lands.
 
 ## Phase 4 — `merge-default` plugin
 

@@ -155,12 +155,19 @@ packages/plugins/<plugin-id>/
 └── __tests__/              # unit tests for THIS plugin (jest)
 ```
 
-Then register in three places (failure to do so makes the plugin invisible):
+Then register in **four** places for **source** plugins (failure to do so makes the
+plugin invisible):
 
 1. `packages/models/src/enums/site.enum.ts` — add the `Site.<KEY>` value.
 2. `packages/plugins/index.ts` — append to `ALL_SOURCE_MODULES`.
 3. `tsconfig.base.json` `paths` — `@ever-jobs/<plugin-id>: ["packages/plugins/<plugin-id>/src/index.ts"]`.
 4. `jest.config.js` `moduleNameMapper` — mirror the path alias.
+
+For **feature plugins** (e.g. `dedup-hybrid`, `merge-default`, `store-postgres`,
+`ai-classifier`) only the **last two** apply — feature plugins bind under a
+dedicated DI token (e.g. `DEDUP_ENGINE_TOKEN`) rather than the `Site` enum,
+and they are imported by the consumer module directly, not via
+`ALL_SOURCE_MODULES`.
 
 ---
 
@@ -231,4 +238,4 @@ Before opening a commit, verify:
 
 ---
 
-_Last revised: 2026-04-26 (scheduled run)_
+_Last revised: 2026-04-26 (scheduled run #4)_

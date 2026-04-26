@@ -51,12 +51,15 @@ packages/plugins/<plugin-id>/
   __tests__/<plugin>.service.spec.ts
 ```
 
-Register in **four** files:
+Register in **four** files for **source plugins**:
 
 1. `packages/models/src/enums/site.enum.ts` — `Site.<KEY> = '<plugin-id>'`
 2. `packages/plugins/index.ts` — append to `ALL_SOURCE_MODULES`
 3. `tsconfig.base.json` — path alias under `compilerOptions.paths`
 4. `jest.config.js` — matching `moduleNameMapper` entry
+
+For **feature plugins** (dedup, merge resolver, persistence, AI, etc.) only
+steps 3 and 4 apply — they bind under a dedicated DI token, not `Site`.
 
 Then add a spec under `.specify/specs/<NNN>-source-<plugin-id>/` (spec.md, plan.md, tasks.md).
 

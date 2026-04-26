@@ -1,0 +1,10 @@
+export { DedupHybridModule } from './dedup-hybrid.module';
+export { DedupHybridService } from './dedup-hybrid.service';
+export { HashStrategy } from './strategies/hash-strategy';
+export { UnionFind } from './union-find';
+export {
+  ClusterPartition,
+  DedupHybridOptions,
+  IDedupStrategy,
+  PreparedJob,
+} from './types';

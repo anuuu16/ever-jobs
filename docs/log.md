@@ -5,6 +5,86 @@
 
 ---
 
+## 2026-04-26 — Scheduled run #4 (Spec 003 Phase 3 hash path lands)
+
+**Scope:** ship T06 (scaffold), T07 (hash-only fast path), and partial T09
+(wire strategies + materialise canonical records) of Spec 003 — the
+default `IDedupEngine` plugin is now bootable. T08 (MinHash) is queued
+behind a new question (Q-009) and stays for the next run; T10's full
+perf-suite waits on T08.
+
+**Changes — code:**
+
+- `packages/plugins/dedup-hybrid/package.json` — new package
+  `@ever-jobs/dedup-hybrid` v0.1.0.
+- `packages/plugins/dedup-hybrid/tsconfig.json` — extends root base.
+- `packages/plugins/dedup-hybrid/src/index.ts` — barrel re-exports
+  module + service + strategy + types + UnionFind utility.
+- `packages/plugins/dedup-hybrid/src/types.ts` — internal contracts
+  (`PreparedJob`, `ClusterPartition`, `IDedupStrategy`,
+  `DedupHybridOptions`).
+- `packages/plugins/dedup-hybrid/src/union-find.ts` — disjoint-set
+  with path compression + union-by-rank, backed by `Int32Array` for
+  zero-GC merging.
+- `packages/plugins/dedup-hybrid/src/strategies/hash-strategy.ts` —
+  Stage 1 strategy: O(N) bucketing on the precomputed `canonicalJobId`.
+- `packages/plugins/dedup-hybrid/src/dedup-hybrid.service.ts` —
+  `DedupHybridService` implements `IDedupEngine`: validates inputs,
+  prepares per-input keys once, runs strategies through Union-Find,
+  emits one `CanonicalJob` per cluster with field provenance, returns
+  a `DedupResult` envelope (canonical + assignments + errors + metrics).
+- `packages/plugins/dedup-hybrid/src/dedup-hybrid.module.ts` — NestJS
+  module that binds `DedupHybridService` under `DEDUP_ENGINE_TOKEN`.
+- `tsconfig.base.json` — added `@ever-jobs/dedup-hybrid` path alias.
+- `jest.config.js` — added matching `moduleNameMapper` entry.
+
+**Changes — tests:**
+
+- `packages/plugins/dedup-hybrid/__tests__/union-find.spec.ts` — 5
+  cases including a 10 K-element merge < 100 ms perf assertion.
+- `packages/plugins/dedup-hybrid/__tests__/hash-strategy.spec.ts` — 6
+  cases (uniqueness, grouping, empty input, determinism, 1 K-input
+  perf gate < 25 ms).
+- `packages/plugins/dedup-hybrid/__tests__/dedup-hybrid.service.spec.ts`
+  — 9 cases covering identical-input merge, cosmetic-difference merge
+  ("Acme, Inc." / "ACME Inc" / "Acme" → 1 record), distinct-title
+  separation, invalid-input rejection
+  (`ERR_DEDUP_INVALID_INPUT`), sha-256 hex shape, determinism, empty
+  input, per-field provenance, and an NFR-1 1 K-job dedup < 250 ms
+  smoke gate.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/003-deduplication-engine/tasks.md` — T06 + T07 marked
+  done with per-task notes; T09 marked partial; T08 + T10 carry context
+  notes referencing Q-009 and the existing in-service smoke gate.
+- `docs/questions.md` — added **Q-009** (MinHash library choice for T08;
+  default = **in-tree implementation** to keep Phase 3 zero-dep).
+- `docs/index.md` — Spec 003 status flipped to `Phase 1, 2, and Phase 3
+  hash-path done (T01–T07); MinHash (T08) next`.
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #3
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). External-tracking notes belong in the parent-directory
+  watch file per the scheduled-task brief, not here.
+- Tests authored but not executed in this scheduled run —
+  `node_modules` is not installed in the agent sandbox; CI will validate
+  on push. The NFR-1 perf assertion in `dedup-hybrid.service.spec.ts`
+  may flake on cold-CI workers; if so we relax the threshold or move
+  the assertion to a dedicated benchmark suite (T10).
+- Dedup is intentionally registered under `DEDUP_ENGINE_TOKEN` (not
+  added to `Site` enum or `ALL_SOURCE_MODULES`) — it's a feature plugin,
+  not a source plugin. Spec 003 / FR-1 explicitly calls for swap-by-DI.
+- Push status will mirror prior runs — `origin` is SSH-only and the
+  sandbox has no agent SSH key. The user's interactive environment
+  pushes the develop branch.
+
+---
+
 ## 2026-04-26 — Scheduled run #3 (Spec 003 Phase 1 + 2 land)
 
 **Scope:** ship the foundation of the dedup engine — types, schemas, and

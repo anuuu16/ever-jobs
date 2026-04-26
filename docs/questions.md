@@ -10,6 +10,38 @@
 
 ---
 
+## Q-009 — MinHash library choice for Spec 003 Phase 3 stage 2 (T08)
+
+**Context:** Spec 003 plan.md §4 Dependencies suggests `datasketch-js`. Run #4
+verified that crate's npm presence is patchy (only one published version, last
+push 2017, no TypeScript types). The next stage of the dedup pipeline needs
+MinHash + LSH for near-duplicate detection of long descriptions; we have to
+choose between a third-party library and a small in-tree implementation.
+
+**Options:**
+
+- **A. `minhash` npm package** (~12 KB, MIT, ~150 K weekly downloads,
+  TypeScript types via `@types/minhash`) — battle-tested, but does not ship
+  LSH bucketing; we would still write the LSH banding wrapper in-tree.
+- **B. `datasketch-js`** — the spec's original suggestion. Stale and untyped;
+  mostly a port of Python's `datasketch`. Risk: pulls in extra deps, no
+  recent maintainer.
+- **C. In-tree implementation** under `packages/plugins/dedup-hybrid/src/strategies/minhash.ts`
+  using `crypto.createHash('sha1')` for permutation hashing plus a small LSH
+  banding helper. ~150 LOC; no extra deps; full control over signature
+  width, band count, and the hot loop.
+
+**Default (proceeding):** **C. In-tree** — keeps the Phase 3 commit zero-dep,
+gives us a deterministic baseline for the perf gate (NFR-1 / NFR-2), and
+matches AGENTS.md §6 ("Reuse existing libs **when popular & well-maintained**"
+— `minhash` qualifies on popularity but we still need to write the LSH layer
+ourselves either way, so the dep buys us very little). If perf or correctness
+falls short we'll revisit option A in T08 follow-up.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-008 — Scrubbing legacy "ported from <competitor>" comments in source files
 
 **Context:** The scheduled-task brief forbids competitor mentions inside this

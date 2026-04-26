@@ -10,6 +10,7 @@ module.exports = {
     '^@ever-jobs/analytics$': '<rootDir>/packages/analytics/src/index.ts',
     '^@ever-jobs/plugin$': '<rootDir>/packages/plugin/src/index.ts',
     '^@ever-jobs/plugin-sources$': '<rootDir>/packages/plugins/index.ts',
+    '^@ever-jobs/dedup-hybrid$': '<rootDir>/packages/plugins/dedup-hybrid/src/index.ts',
     '^@ever-jobs/source-linkedin$': '<rootDir>/packages/plugins/source-linkedin/src/index.ts',
     '^@ever-jobs/source-indeed$': '<rootDir>/packages/plugins/source-indeed/src/index.ts',
     '^@ever-jobs/source-glassdoor$': '<rootDir>/packages/plugins/source-glassdoor/src/index.ts',
