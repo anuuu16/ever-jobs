@@ -75,7 +75,7 @@
 | 003 | [Job Deduplication Engine](../.specify/specs/003-deduplication-engine/spec.md) — [plan](../.specify/specs/003-deduplication-engine/plan.md) — [tasks](../.specify/specs/003-deduplication-engine/tasks.md) | All phases done (T01–T15); GraphQL parity shipped run #8 |
 | 004 | [Persistence & Storage Plugins](../.specify/specs/004-persistence-storage-plugins/spec.md) — [plan](../.specify/specs/004-persistence-storage-plugins/plan.md) — [tasks](../.specify/specs/004-persistence-storage-plugins/tasks.md) | All phases done (T01 run #17, T02 run #18, T03 run #19, T04 run #20, T05+T06 run #21, T07+T08 run #22, T09 run #23, T10 run #24, T11 run #25, T12 run #26); spec complete |
 | 005 | [Source Health & Circuit Breaker](../.specify/specs/005-source-health-circuit-breaker/spec.md) — [plan](../.specify/specs/005-source-health-circuit-breaker/plan.md) — [tasks](../.specify/specs/005-source-health-circuit-breaker/tasks.md) | All phases done (T01–T08 runs #10–#16; T09 run #27); spec complete |
-| 006 | [ATS-Scrapers Parity, Batch 1 (Avature / Gem / Join.com)](../.specify/specs/006-ats-scrapers-parity-batch-1/spec.md) — [plan](../.specify/specs/006-ats-scrapers-parity-batch-1/plan.md) — [tasks](../.specify/specs/006-ats-scrapers-parity-batch-1/tasks.md) | Phase 1+2+3 done (T01..T06 runs #29..#31); T07..T13 pending |
+| 006 | [ATS-Scrapers Parity, Batch 1 (Avature / Gem / Join.com)](../.specify/specs/006-ats-scrapers-parity-batch-1/spec.md) — [plan](../.specify/specs/006-ats-scrapers-parity-batch-1/plan.md) — [tasks](../.specify/specs/006-ats-scrapers-parity-batch-1/tasks.md) | Phase 1+2+3+4 done (T01..T08 runs #29..#32); T09..T13 pending |
 
 ## 8. Templates
 
@@ -87,4 +87,4 @@
 
 ---
 
-_Last revised: 2026-04-27 (run #31)._
+_Last revised: 2026-04-27 (run #32)._

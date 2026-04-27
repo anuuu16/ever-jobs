@@ -5,6 +5,142 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #32 (Spec 006 / Phase 4 — T07 + T08: JoinComService REST two-step + 11 unit cases)
+
+**Scope:** land Spec 006 / Phase 4 / T07 + T08 — the
+`JoinComService.scrape()` REST two-step implementation (HTML
+scrape for company id with primary + fallback regexes, then
+paginated `/api/public/companies/<id>/jobs`) plus its 11-case
+unit suite. Run #31's Notes-for-the-next-run pinned this default
+("Spec 006 / Phase 4 / T07 + T08 — `JoinComService` REST
+two-step path + ≥ 5 unit cases").
+
+**No new questions opened this run** — Q-022 covers all three
+plugins' input shape; Join.com has no custom-domain wrinkle.
+
+**Three load-bearing decisions** weren't called out in run #31's
+Notes-for-the-next-run and were locked into the source/test
+surface:
+
+1. **Polite pacing applies to Step 1 too.** Upstream Python only
+   paces Step 2 (paginated `/jobs` calls); we wire
+   `rateDelayMin: 0.5` on the entire `createHttpClient` instance
+   so Step 1's HTML scrape also rate-limits at 0.5 s. Matches
+   the AvatureService precedent (also paces every GET) and gives
+   us a uniform per-source pacing posture across the three new
+   plugins. Cost is one extra 500 ms wait on the FIRST call only
+   (the rate limiter starts ticking from creation), which is
+   well within the spec's NFR budgets.
+2. **Constants split out into `joincom.constants.ts`.** Both
+   regex shapes (`JOINCOM_COMPANY_ID_PRIMARY_REGEX`,
+   `JOINCOM_COMPANY_ID_FALLBACK_REGEX`) live as named exports so
+   a future contributor diffing upstream Python's `get_company_id`
+   can pin them in one place — saves grepping through the
+   ~300-LOC service file. Same precedent as Avature's
+   `AVATURE_APPLY_DECOY_TEXTS` and Gem's `GEM_JOB_BOARD_LIST_QUERY`.
+3. **Fixture had to be minified.** The original
+   `joincom-company-page.html` fixture used pretty-printed JSON
+   inside `<script type="application/json">`. The upstream regex
+   `/"company":\{"id":(\d+)/` requires no whitespace between
+   `"company":` and `{`, so the test failed at the
+   regex-match step. Fixed by collapsing the fixture's JSON
+   onto one line — matches production reality (Next.js
+   `__NEXT_DATA__` always emits single-line JSON in production
+   builds). The fix is in the fixture, NOT the regex; widening
+   the regex to allow whitespace would silently match the wrong
+   `"company":` shape inside any nested object that happens to
+   precede the company-id (e.g. a co-occurring `"companyMember"`
+   blob — the leading word-boundary on `company` + the strict
+   `:{"id":` are the disambiguation).
+
+**Changes — code:**
+
+- `packages/plugins/source-ats-joincom/src/joincom.constants.ts`
+  — new ~85 LOC. Base URLs (`https://join.com` + `/api/public`),
+  `JOINCOM_PAGE_SIZE = 50`, `JOINCOM_RATE_DELAY_SECONDS = 0.5`,
+  `JOINCOM_DEFAULT_RESULTS_WANTED = 100`,
+  `JOINCOM_MAX_PAGES = 100`, `JOINCOM_DEFAULT_LOCALE = 'en-us'`,
+  `JOINCOM_HTML_HEADERS` (browser-shaped Accept for the Step 1
+  HTML scrape), `JOINCOM_JSON_HEADERS` (`Accept: application/json`
+  for Step 2), and the two regex constants.
+- `packages/plugins/source-ats-joincom/src/joincom.types.ts`
+  — new ~65 LOC. Structural interfaces for `JoinComLocation` /
+  `JoinComJobItem` / `JoinComPagination` / `JoinComJobsPage` /
+  `JoinComTenantContext`. Subset of upstream Python's response
+  shape, narrowed to the fields we map onto `JobPostDto`.
+- `packages/plugins/source-ats-joincom/src/joincom.service.ts`
+  — extended ~300 LOC (replaces the ~10 LOC stub from T02).
+  `resolveTenant(client, slug)` runs Step 1, walks both regexes,
+  returns `null` on any miss. `collectJobItems(client, tenant,
+  resultsWanted)` runs Step 2 paginated GETs until empty page,
+  totalPages reached, or resultsWanted hit. `toJobPost` maps
+  each item to `JobPostDto` with three-tier remote detection.
+  `formatDescription` applies `DescriptionFormat.PLAIN` via
+  `htmlToPlainText`. `deriveCompanyName(slug)` title-cases the
+  slug (`acme-corp` → `Acme Corp`).
+
+**Changes — tests:**
+
+- `packages/plugins/source-ats-joincom/__tests__/joincom.service.spec.ts`
+  — extended ~290 LOC. **11 cases** across 7 describe-blocks:
+  registration scaffolding (3 cases — DI / enum value /
+  missing-slug bypass), happy path (2 — full mapping +
+  `resultsWanted` cap), fallback regex hit (1), empty board
+  (1), HTTP failures (2 — Step 1 error + Step 2 error,
+  distinct), slug-not-found regex miss (1), descriptionFormat
+  PLAIN (1).
+- `packages/plugins/source-ats-joincom/__tests__/fixtures/joincom-company-page.html`
+  — new ~13 LOC. Minified JSON inside `__NEXT_DATA__` script
+  block (matches production reality).
+- `packages/plugins/source-ats-joincom/__tests__/fixtures/joincom-company-page-fallback.html`
+  — new ~10 LOC. Skinned tenant emitting
+  `"companyId":4242` (no `"company":{` shape).
+- `packages/plugins/source-ats-joincom/__tests__/fixtures/joincom-company-page-no-id.html`
+  — new ~10 LOC. 404 page with no embedded company id at all.
+- `packages/plugins/source-ats-joincom/__tests__/fixtures/joincom-jobs-page-1.json`
+  — new ~35 LOC. 2-item page with `pagination.totalPages=2,
+  total=3` (exercises mid-pagination cap and the "second page
+  fails / loop-breaks" branch).
+
+Verification: `npx jest --testPathPatterns 'packages/plugins/source-ats-joincom'`
+locally → `Test Suites: 1 passed, 1 total · Tests: 11 passed,
+11 total · exit 0`.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/006-ats-scrapers-parity-batch-1/tasks.md` —
+  T07 + T08 graduate to "done" with full planned-vs-actual
+  file lists and per-bullet acceptance verification.
+- `.specify/specs/006-ats-scrapers-parity-batch-1/spec.md` —
+  `Status` → `Phase 1+2+3+4 done (T01..T08 runs #29..#32);
+  T09..T13 pending`.
+- `docs/index.md` — Spec 006 row + footer bumped to run #32.
+- `CLAUDE.md` — run-tag → #32.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #32 sync line; **no upstream
+  commits** (twenty consecutive zero-churn runs).
+
+**Notes & follow-ups:**
+
+- Default for run #33 is **Spec 006 / Phase 5 / T09 + T10**
+  — three-plugin live integration spec
+  (`apps/api/__tests__/integration/source-ats-batch-1.integration.spec.ts`)
+  + e2e supertest spec
+  (`apps/api/__tests__/e2e/source-ats-batch-1.e2e-spec.ts`).
+  T09 boots `AppModule` with stubbed `createHttpClient` for all
+  three plugins and asserts ≥ 1 row from each in the deduped
+  result. T10 hits `/api/jobs?site=avature&companySlug=bloomberg`
+  etc. against a `nock`-fixture upstream and asserts dedup-engine
+  collapses identical postings across the three plugins.
+- All three Phase-4 plugins are now fully implemented behaviourally;
+  the remaining Phase 5 work is wiring + docs + perf benches.
+  Spec 006 closes after T13.
+- External research repos: no new commits since run #31. Twenty
+  consecutive zero-churn runs.
+- Pre-existing dedup-hybrid red tests unchanged.
+
+---
+
 ## 2026-04-27 — Scheduled run #31 (Spec 006 / Phase 3 — T05 + T06: GemService GraphQL-batch + 9 unit cases)
 
 **Scope:** land Spec 006 / Phase 3 / T05 + T06 — the

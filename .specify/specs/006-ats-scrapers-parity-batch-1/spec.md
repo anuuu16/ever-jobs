@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 006                                                  |
 | Slug           | ats-scrapers-parity-batch-1                          |
-| Status         | Phase 1+2+3 done (T01..T06 runs #29..#31); T07..T13 pending |
+| Status         | Phase 1+2+3+4 done (T01..T08 runs #29..#32); T09..T13 pending |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #28)                                 |
-| Last updated   | 2026-04-27 (run #31)                                 |
+| Last updated   | 2026-04-27 (run #32)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker) |
 

@@ -246,36 +246,83 @@
 
 ## Phase 4 — Join.com
 
-- [ ] T07 — `JoinComService.scrape(input)` REST two-step path.
-  - **Files:** `packages/plugins/source-ats-joincom/src/joincom.service.ts`,
+- [x] T07 — `JoinComService.scrape(input)` REST two-step path.
+  - **Files (planned):** `packages/plugins/source-ats-joincom/src/joincom.service.ts`,
     `…/joincom.types.ts`, `…/joincom.constants.ts`.
+  - **Files (actual):** matched plan exactly.
+    `joincom.service.ts` (~300 LOC; replaces the T02 stub),
+    `joincom.constants.ts` (~85 LOC; both regexes pinned as
+    constants, base URLs, headers, defaults),
+    `joincom.types.ts` (~65 LOC; structural interfaces for
+    `JoinComJobItem` / `JoinComJobsPage` / `JoinComLocation`
+    / `JoinComPagination` / `JoinComTenantContext`).
   - **Acceptance:**
     - Step 1: `GET https://join.com/companies/<slug>` (HTML) →
       regex-extract numeric ID via `"company":{"id":(\d+)`
-      first, fallback `"companyId":(\d+)`.
+      first, fallback `"companyId":(\d+)`. ✅ Both regexes
+      live as constants (`JOINCOM_COMPANY_ID_PRIMARY_REGEX`,
+      `JOINCOM_COMPANY_ID_FALLBACK_REGEX`); `resolveTenant`
+      tries primary first, falls through to the fallback,
+      returns `null` on a miss.
     - Step 2: `GET https://join.com/api/public/companies/<id>/jobs?locale=en-us&page=N&pageSize=50&withAggregations=true&sort=+title`
       until `pagination.totalPages` reached or `items[]` empty.
-    - Maps each `items[i]` to a `JobPostDto` with `id = item.id`,
-      `title = item.title`, `location = item.locations?.[0]?.name`,
-      `description = item.description` (HTML →
-      `htmlToPlainText` if `descriptionFormat === 'text'`),
-      `url = item.shareableUrl ?? \`https://join.com/jobs/\${item.id}\``,
-      `postedAt = item.publishedAt`.
-    - Caps at `input.resultsWanted` mid-pagination.
-    - Sleeps `>= 0.5 s` between pages (matches upstream Python's
-      polite pacing).
+      ✅ `collectJobItems` paginates via `currentPage` index,
+      breaks on empty page, breaks at `currentPage >=
+      totalPages`, breaks at `JOINCOM_MAX_PAGES = 100` ceiling.
+    - Maps each `items[i]` to a `JobPostDto`. ✅ `toJobPost`
+      maps id / title / locations[0].name (with city fallback) /
+      description (with `DescriptionFormat.PLAIN` → `htmlToPlainText`)
+      / shareableUrl-or-fallback / publishedAt / employmentType /
+      department (with category.name fallback). Three-tier
+      remote detection cascades through `locations[0].isRemote`,
+      then case-insensitive `"remote"` substring match on
+      location name, then on `item.remoteOption`.
+    - Caps at `input.resultsWanted` mid-pagination. ✅ Inner
+      `for-of` breaks early; outer `while` breaks too. The
+      `resultsWanted=1` test pins this against a 2-item page.
+    - Sleeps `>= 0.5 s` between pages. ✅ `createHttpClient`'s
+      `rateDelayMin: 0.5` enforces this on every GET (Step 1
+      AND Step 2 — slightly stricter than upstream Python which
+      only paces Step 2, but matches the AvatureService pacing
+      precedent).
     - Catches HTTP errors / regex miss → empty `JobResponseDto`.
-  - **Estimate:** 1 day.
+      ✅ Step 1 / Step 2 errors both caught; `resolveTenant`
+      returns `null` on either error or regex miss; `scrape`
+      collapses to empty `JobResponseDto` on every failure
+      branch. NEVER throws.
+  - **Done:** run #32 (2026-04-27). Constants split out into
+    `joincom.constants.ts` (rather than inlining) so a future
+    contributor can pin the regex shapes against upstream Python's
+    `get_company_id` without grepping the service file.
+  - **Estimate:** 1 day. **Actual:** ~0.5 day.
 
-- [ ] T08 — Join.com unit tests.
-  - **Files:** `packages/plugins/source-ats-joincom/__tests__/joincom.service.spec.ts`,
+- [x] T08 — Join.com unit tests.
+  - **Files (planned):** `packages/plugins/source-ats-joincom/__tests__/joincom.service.spec.ts`,
     `…/__tests__/fixtures/joincom-company-page.html`,
     `…/__tests__/fixtures/joincom-jobs-page-1.json`.
+  - **Files (actual):** matched plan plus two extra fixtures —
+    `joincom-company-page-fallback.html` (exercises the
+    `"companyId":4242` regex branch) and
+    `joincom-company-page-no-id.html` (a 404 page that fails
+    BOTH regexes, pinning the slug-not-found error path).
   - **Acceptance:** ≥ 5 cases — happy path, empty board,
     HTTP 500 caught, slug-not-found (no `"company":{"id":` match,
     no `"companyId":` fallback), `resultsWanted=20` mid-page cap.
-    All green.
-  - **Estimate:** 0.5 day.
+    All green. ✅ **11 cases** total (5 mandated + 3 carry-over
+    scaffolding cases from T02 + 3 extras: fallback-regex hit,
+    Step 1 HTTP 500 distinct from Step 2 HTTP 500, and
+    `DescriptionFormat.PLAIN` strips embedded HTML). Locally
+    `npx jest --testPathPatterns 'packages/plugins/source-ats-joincom'`
+    reports `Test Suites: 1 passed, 1 total · Tests: 11 passed,
+    11 total · exit 0`.
+  - **Done:** run #32 (2026-04-27). One in-run fixture
+    correction: the original `joincom-company-page.html` was
+    pretty-printed JSON, but the upstream regex requires no
+    whitespace between `"company":` and `{"id":`. The fixture
+    was minified to one line so the regex hits — matches
+    production reality (Next.js `__NEXT_DATA__` always emits
+    single-line JSON in production builds).
+  - **Estimate:** 0.5 day. **Actual:** ~0.5 day.
 
 ## Phase 5 — Integration & docs
 
