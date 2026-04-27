@@ -36,3 +36,10 @@ export {
   ERR_STORE_INVALID_ID,
   ERR_STORE_DUPLICATE_ID,
 } from './store/store-registry.service';
+export {
+  StoreModule,
+  StoreModuleConfigurationError,
+  StoreModuleForActiveOptions,
+  ERR_STORE_ACTIVE_ID_REQUIRED,
+  ERR_STORE_BACKEND_NOT_DECORATED,
+} from './store/store.module';

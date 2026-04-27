@@ -5,6 +5,256 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #20 (Spec 004 Phase 1 — T04 `StoreModule.forActive(storeId)` factory; Phase 1 closes)
+
+**Scope:** land Spec 004 / Phase 1 / T04 — the `StoreModule.forActive(storeId, options)`
+dynamic-module factory that operators consume from `apps/api`'s root
+module to bind the active persistent-store backend. With T04 done,
+Spec 004 graduates from "Phase 1 partial (T01–T03 done; T04 pending)"
+to "Phase 1 done (T01–T04); Phases 2–5 pending" — the plugin
+infrastructure is now complete end-to-end and Phase 2 (`store-memory`
+reference backend, T05/T06) is unblocked. This was run #19's explicit
+default for #20 ("~80-LOC NestJS dynamic module that consults
+`StoreRegistry.get(storeId)` at bootstrap and binds the chosen
+backend to `JOB_STORE_TOKEN` + `JOB_OBSERVATION_STORE_TOKEN`").
+Implemented as planned, with three additional design decisions
+locked into the test surface (see below); the LOC came in at ~250
+in source + ~340 in tests because a thin `~80-LOC` factory wrapper
+left half a dozen failure modes undocumented and untested — every
+one of those is now an exported error code with a regression case.
+
+**No new questions opened this run.** T04 is structurally a thin
+wrapper, but three latent design choices weren't called out in
+`tasks.md`. All three are load-bearing enough to lock in via the
+test suite and exported constants rather than as questions:
+
+1. **Where do the `IJobStore` and `IJobObservationStore` tokens
+   resolve from — one provider or two?** Spec 004 §7 says the same
+   backend SHOULD implement both contracts in production deployments
+   (so the canonical row and its observations stay transactionally
+   aligned in a partial outage). The factory binds the active
+   backend to BOTH tokens by default; operators can opt out with
+   `bindObservationStore: false` when wiring a separate observation
+   store explicitly (e.g. archival-only setups). This default-on
+   behaviour is gated by an explicit Jest case so a future refactor
+   can't accidentally drop the second binding.
+2. **What about duplicate-id collisions across two backends — silent
+   skip, or fail loud?** Earlier draft used an `if (!registry.has(id))`
+   short-circuit to make the factory idempotent against re-imports.
+   That was dropped after the duplicate-id test exposed the silent
+   path: a typo where two backends declare `id: 'memory'` would
+   cause the second registration to be skipped, the first to win,
+   and an operator chasing "why is my Postgres backend not active?"
+   to find no error in the logs. Solution: register each backend
+   unconditionally; the registry's existing `ERR_STORE_DUPLICATE_ID`
+   guard bubbles up at `.compile()` time. Idempotence-on-re-import
+   is now an explicit non-feature; if a future task needs it (e.g.
+   for hot-swap support), it MUST opt in via a separate registry
+   API and document why the trade-off is safe.
+3. **Where does pre-registration validation live — at factory time
+   (synchronous, throws from `forActive()` itself) or bootstrap time
+   (async, throws from the `useFactory`)?** Two conditions are
+   programmer errors that should fail BEFORE NestJS even starts
+   building the DI graph: (a) blank `storeId` (operator left
+   `EVER_JOBS_STORE` empty in their env), and (b) a class in
+   `backends` missing `@StorePlugin()` (developer added a class but
+   forgot the decorator). Both throw `StoreModuleConfigurationError`
+   synchronously from `forActive()`, with the error codes
+   `ERR_STORE_ACTIVE_ID_REQUIRED` and `ERR_STORE_BACKEND_NOT_DECORATED`
+   respectively, exported from `@ever-jobs/plugin` so log alerts can
+   grep them. Conditions that depend on the actual backend instance
+   (duplicate-id, unknown-storeId) stay in the `useFactory` because
+   they need the registry to be populated first.
+
+**Changes — code:**
+
+- `packages/plugin/src/store/store.module.ts` — new ~250-LOC file.
+  Exports the `@Module({})` shell `StoreModule` with the static
+  `forActive(storeId, options)` factory plus the
+  `StoreModuleConfigurationError` class and two registry-local
+  error codes. Surface area:
+    - **Factory:** `StoreModule.forActive(storeId, { backends?,
+      bindObservationStore? })` returns `DynamicModule` with
+      `global: true` so feature modules can `@Inject(JOB_STORE_TOKEN)`
+      without re-importing per-feature (mirrors `PluginModule`).
+    - **Inputs:**
+      - `backends: ReadonlyArray<Type<IJobStore>>` — declared
+        backend classes (each must be `@StorePlugin()`-decorated).
+        Empty list is permitted; downstream `registry.get(storeId)`
+        will then raise `ERR_STORE_NOT_FOUND` with the friendly
+        "Registered ids: []" message — exactly the failure mode
+        T12 (`EVER_JOBS_STORE` honoured at bootstrap) will rely on.
+      - `bindObservationStore?: boolean` (default `true`) — bind
+        the active backend to `JOB_OBSERVATION_STORE_TOKEN` as well.
+    - **Providers (in order):** `StoreRegistry`, all backend classes,
+      a `useFactory` for `JOB_STORE_TOKEN` (depends on
+      `[StoreRegistry, ...backends]`; walks the parallel arrays to
+      register each instance, then returns `registry.get(storeId)`),
+      and (default-on) a `useFactory` for `JOB_OBSERVATION_STORE_TOKEN`
+      that depends on `[JOB_STORE_TOKEN]` and casts.
+    - **Exports:** `JOB_STORE_TOKEN`, `StoreRegistry`, and (when
+      bound) `JOB_OBSERVATION_STORE_TOKEN`.
+    - **Error path:** `StoreModuleConfigurationError extends Error`
+      with a `code: string` field so `instanceof` works in
+      interceptors / structured-log middleware. Two registry-local
+      codes — `ERR_STORE_ACTIVE_ID_REQUIRED` (blank `storeId`)
+      and `ERR_STORE_BACKEND_NOT_DECORATED` (class missing
+      `@StorePlugin()`) — are exported alongside.
+  Doc-block cites Spec 004 / FR-3 / FR-4 / T04 / §7 / §7.3 and
+  explains the synchronous-vs-bootstrap-time validation split, the
+  default-on observation-token binding, the duplicate-id-fails-loud
+  decision, and the global-module rationale.
+- `packages/plugin/src/index.ts` — appends 5 new exports under the
+  existing `// Persistence-store plugin (Spec 004)` group:
+  `StoreModule`, `StoreModuleConfigurationError`,
+  `StoreModuleForActiveOptions`, `ERR_STORE_ACTIVE_ID_REQUIRED`,
+  `ERR_STORE_BACKEND_NOT_DECORATED`. No other line changed; existing
+  exports order preserved.
+
+**Changes — tests:**
+
+- `packages/plugin/src/store/__tests__/store.module.spec.ts` —
+  new ~340-LOC suite (**16 cases** across 10 describe-blocks):
+  1. **happy path** (3 cases): `JOB_STORE_TOKEN` resolves to the
+     declared backend instance; `JOB_OBSERVATION_STORE_TOKEN`
+     resolves to the *same* instance by default; `StoreRegistry`
+     itself is injectable alongside the active store binding.
+  2. **`bindObservationStore: false`** (1 case): the observation
+     token is NOT registered; injecting it throws.
+  3. **multi-backend selection** (2 cases): factory picks the
+     backend whose `@StorePlugin` id matches `storeId` from a list
+     of three; instance identity is preserved across multiple
+     `@Inject(JOB_STORE_TOKEN)` consumers (no transient scope, no
+     factory re-runs — Spec 004 / NFR-3 expects ≤ 2 KB/job memory
+     overhead, which would blow up if every consumer got its own
+     copy).
+  4. **global module reach** (1 case): a downstream feature module
+     (`@Module({ providers: [JobsService] })`) that does NOT import
+     `StoreModule` directly can still `@Inject(JOB_STORE_TOKEN)` —
+     proving `global: true` is wired correctly.
+  5. **unknown `storeId`** (1 case): propagates `ERR_STORE_NOT_FOUND`
+     from `StoreRegistry.get` at `.compile()` time; error message
+     includes the registered ids for triage.
+  6. **empty `storeId`** (3 cases via `it.each`): empty string and
+     whitespace-only both throw `StoreModuleConfigurationError`
+     with code `ERR_STORE_ACTIVE_ID_REQUIRED` *synchronously* from
+     `forActive()` — no `Test.createTestingModule` involved; +1
+     case asserting the error message lists the configured backend
+     ids ("Set EVER_JOBS_STORE to one of: [memory, sqlite]").
+  7. **undecorated backend** (1 case): a class in `backends`
+     missing `@StorePlugin()` throws `StoreModuleConfigurationError`
+     with code `ERR_STORE_BACKEND_NOT_DECORATED` from `forActive()`
+     synchronously; error message names the offending class.
+  8. **duplicate id across backends** (1 case): two distinct
+     classes both decorated with `id: 'memory'` propagate
+     `ERR_STORE_DUPLICATE_ID` from `StoreRegistry.register` at
+     `.compile()` time. Critical regression: an earlier draft
+     swallowed this silently via `if (!registry.has(id))` — the
+     test pins the loud-failure behaviour explicitly.
+  9. **error class identity** (2 cases): `StoreModuleConfigurationError
+     extends Error`, `.name === 'StoreModuleConfigurationError'`,
+     `.code` propagates; both error code constants have the
+     expected literal string values.
+ 10. **no-backends edge case** (1 case): `forActive('memory',
+     { backends: [] })` throws `ERR_STORE_NOT_FOUND` from the
+     registry with "Registered ids: []" — the exact failure mode
+     T12 (`EVER_JOBS_STORE` honoured at bootstrap) needs.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/004-persistence-storage-plugins/tasks.md` — T04
+  graduates from "pending" to "done" with planned-vs-actual file
+  list, three-decision rationale (default-on observation binding,
+  duplicate-id-fails-loud, two-layer validation split), per-case
+  test summary, and an over-estimate note (~0.4 day actual vs
+  0.25 day planned — extra describe-blocks for downstream-feature
+  integration and the duplicate-id path).
+- `.specify/specs/004-persistence-storage-plugins/spec.md` — `Status`
+  flipped to `Phase 1 done (T01–T04); Phases 2–5 pending`;
+  `Last updated` bumped to `2026-04-27 (run #20)`.
+- `docs/index.md` — Spec 004 row updated with new status string;
+  `Last revised` bumped to `2026-04-27 (run #20)`.
+- `CLAUDE.md` — run-tag bumped to #20 in the footer.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #20 sync line; **no upstream commits**
+  in any of the three tracked repos (ten consecutive zero-churn
+  runs).
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns
+  'packages/plugin/src/store/__tests__/store\.module'` —
+  **16 / 16 passed** (T04 module suite).
+- `npx jest --testPathPatterns
+  'packages/models|packages/plugin/__tests__|packages/plugin/src/store|packages/plugin/src/circuit-breaker'`
+  — **128 / 128 passed across 9 suites** (regression: T01 + T02
+  + T03 + T04 + circuit-breaker + canonical-job + disabled-sources
+  + plugin-discovery tests all green).
+- `npx jest --testPathPatterns
+  'apps/api/__tests__/(e2e/sources-(health|admin)|e2e/metrics-circuit-state|integration/circuit-breaker|integration/plugin-policy|health\.e2e)|packages/plugin/src/circuit-breaker|apps/api/src/jobs/__tests__/(plugin-policy|sources-admin)|apps/api/src/auth/__tests__/api-key|apps/api/src/metrics/__tests__/metrics.service|packages/models|packages/plugin/__tests__|packages/plugin/src/store'`
+  — **194 / 194 passed across 19 suites** (full regression bundle:
+  Spec 005 / T01–T08, legacy `/health` + `/ping`, Spec 004 /
+  T01–T04, canonical-job schema, disabled-sources, plugin-discovery,
+  api-key guard, metrics service).
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` — clean.
+
+**Notes & follow-ups:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #19
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). **Ten** consecutive runs of zero-churn — well past
+  the point where adopting the open `Ats-scrapers`-parity items
+  in `competitor-watch.md §C` (AC-1..AC-9) would be the higher-
+  leverage default if Spec 004 / Phase 2 stalls.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#19; not wired into CI). Open
+  fall-back follow-up.
+- Default for run #21 is **Spec 004 / Phase 2 / T05 + T06 — `store-memory`
+  reference backend**:
+    - T05 scaffolds `packages/plugins/store-memory/` (package.json,
+      tsconfig.json, `src/{index.ts, store-memory.module.ts,
+      store-memory.service.ts}`, `__tests__/store-memory.spec.ts`).
+      Pure infrastructure work — register the path alias in
+      `tsconfig.base.json` and `jest.config.js` (T05 estimate:
+      0.25 day).
+    - T06 implements the in-memory `Map<canonicalJobId, CanonicalJob>`
+      backend behind `IJobStore`, plus the parallel
+      `Map<canonicalJobId, SourceObservation[]>` for
+      `IJobObservationStore`. Adds opaque-cursor pagination
+      (base64-encoded `{ offset: number }` is sufficient for an
+      in-memory store; production backends will use a real cursor
+      shape per their query plan). Conformance tests live in
+      `packages/plugin/src/store/__tests__/conformance.ts` (the
+      shared suite called out in `tasks.md` Notes) and re-import
+      into `packages/plugins/store-memory/__tests__/store-memory.spec.ts`.
+      T06 estimate: 0.5 day.
+  Together T05 + T06 give us the first concrete `IJobStore`
+  implementation, which (a) lets `apps/api` wire `EVER_JOBS_STORE`
+  end-to-end against a working backend without needing Postgres,
+  and (b) bootstraps the conformance suite that every later
+  backend (T08 sqlite-drizzle, T10 postgres-prisma) will reuse.
+  If T05/T06 is blocked for any reason, fall-back order is:
+    1. competitor-watch §C / AC-1 (`source-ats-avature` plugin —
+       0.5 day).
+    2. The open `dedup-hybrid` LSH follow-up (~0.5 day).
+- T04 is the **first** task in Spec 004 to ship a *runtime*
+  consumer surface — T01–T03 were structural (interfaces, decorator,
+  registry). The 16 cases here pin the contract that `apps/api`'s
+  root module will bind against, so a future contributor can't
+  drift the global-vs-feature scoping, the dual-token semantics,
+  or the failure-mode error codes without lighting up CI.
+- The `forActive` factory deliberately reads `@StorePlugin()`
+  metadata via raw `Reflect.getMetadata` rather than NestJS's
+  `Reflector` — the factory runs at module-definition time, BEFORE
+  any DI container exists, so `Reflector` (which is a Nest
+  provider) isn't reachable. Both APIs read the same metadata
+  table and round-trip identically (asserted in the T02 decorator
+  suite).
+
+---
+
 ## 2026-04-27 — Scheduled run #19 (Spec 004 Phase 1 — T03 `StoreRegistry` unblocking T04 `StoreModule.forActive()`)
 
 **Scope:** land Spec 004 / Phase 1 / T03 — the `StoreRegistry` Nest

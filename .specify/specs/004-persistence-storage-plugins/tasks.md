@@ -116,10 +116,61 @@
     identity, and NestJS DI singleton resolution.
   - **Estimate:** 0.5 day. **Actual:** ~0.5 day.
 
-- [ ] T04 — Add `StoreModule.forActive(storeId)` factory.
-  - **Files:** `packages/plugin/src/store/store.module.ts`.
-  - **Acceptance:** Returns dynamic module binding `IJobStore` to chosen plugin.
-  - **Estimate:** 0.25 day.
+- [x] T04 — Add `StoreModule.forActive(storeId)` factory.
+  - **Files (planned):** `packages/plugin/src/store/store.module.ts`.
+  - **Files (actual):** `packages/plugin/src/store/store.module.ts`
+    (~250 LOC; `@Module({})` shell exposing the static
+    `forActive(storeId, options)` returning a `global: true` dynamic
+    module that provides `StoreRegistry`, every backend in
+    `options.backends`, a `useFactory` for `JOB_STORE_TOKEN`, and —
+    by default — a `useFactory` for `JOB_OBSERVATION_STORE_TOKEN`),
+    `packages/plugin/src/store/__tests__/store.module.spec.ts`
+    (~340 LOC; **16 cases** across 10 describe-blocks),
+    `packages/plugin/src/index.ts` (added 5 exports — `StoreModule`,
+    `StoreModuleConfigurationError`, `StoreModuleForActiveOptions`,
+    `ERR_STORE_ACTIVE_ID_REQUIRED`, `ERR_STORE_BACKEND_NOT_DECORATED`).
+  - **Acceptance:** Returns dynamic module binding `IJobStore` to chosen
+    plugin. **Done:** run #20 (2026-04-27). The factory wires four pieces
+    together:
+      1. `StoreRegistry` — provider so admin endpoints (`GET /api/storage`)
+         can list every declared backend, not just the active one.
+      2. Each `options.backends` class as a NestJS provider — instantiated
+         on bootstrap, then registered into the registry from
+         `@StorePlugin()` metadata.
+      3. `JOB_STORE_TOKEN` — `useFactory` that depends on
+         `[StoreRegistry, ...backends]`, walks the parallel arrays to
+         register each instance, and returns `registry.get(storeId)`.
+      4. `JOB_OBSERVATION_STORE_TOKEN` (default-on, opt-out via
+         `bindObservationStore: false`) — `useFactory` that simply
+         returns the active `IJobStore` cast to `IJobObservationStore`,
+         enforcing Spec 004 §7's "single backend implements both
+         contracts" recommendation by default.
+    Validation runs at two layers:
+      - **Factory-time (synchronous in `forActive()`):** empty / blank
+        `storeId` → throws `StoreModuleConfigurationError` with code
+        `ERR_STORE_ACTIVE_ID_REQUIRED`. Class missing `@StorePlugin()`
+        in `backends` → throws same error type with code
+        `ERR_STORE_BACKEND_NOT_DECORATED`. Both names the offending
+        class / lists the available ids in the message for ops triage.
+      - **Bootstrap-time (async in `useFactory`):** duplicate-id
+        across two backends → propagates `ERR_STORE_DUPLICATE_ID` from
+        `StoreRegistry.register` (deliberately NOT swallowed —
+        idempotent skip-on-duplicate would let a typo silently bind
+        the wrong implementation). Unknown `storeId` → propagates
+        `ERR_STORE_NOT_FOUND` from `StoreRegistry.get`.
+    Module is `global: true` (mirrors `PluginModule`) so feature
+    modules can `@Inject(JOB_STORE_TOKEN)` without re-importing
+    per-feature. Test suite locks: chosen-backend resolution by id,
+    same-instance dual-token binding, opt-out of observation-token
+    binding, multi-backend registry visibility, instance-identity
+    across multiple consumers (no transient scope), global module
+    reach via downstream feature module, every error code wired
+    end-to-end, no-backends edge case, error-class identity, and
+    error-code constant string values. 16 / 16 passed.
+  - **Estimate:** 0.25 day. **Actual:** ~0.4 day (slightly over —
+    the test fixture for downstream-feature-module integration and
+    the duplicate-id path required two extra describe-blocks beyond
+    what the original task description called out).
 
 ## Phase 2 — `store-memory`
 
