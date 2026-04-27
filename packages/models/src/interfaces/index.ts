@@ -7,3 +7,4 @@ export * from './merge-resolver.interface';
 export * from './circuit-breaker.interface';
 export * from './job-store-query.interface';
 export * from './job-store.interface';
+export * from './health-snapshot-store.interface';

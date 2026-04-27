@@ -11,6 +11,7 @@ import { JobsResolver } from './jobs.resolver';
 import { SourcesHealthController } from './health.controller';
 import { MetricsCircuitBreakerBridge } from './metrics-circuit-breaker.bridge';
 import { PluginPolicyBootstrapper } from './plugin-policy.bootstrapper';
+import { HealthSnapshotCron } from './health-snapshot.cron';
 
 @Module({
   imports: [
@@ -45,6 +46,13 @@ import { PluginPolicyBootstrapper } from './plugin-policy.bootstrapper';
     // override into the breaker via `setPolicy`. Plugins with no
     // override silently keep `DEFAULT_CIRCUIT_POLICY`.
     PluginPolicyBootstrapper,
+    // Spec 005 / T09 — periodic (60 s) `breaker.list() → store.putAll(...)`
+    // cron. Both deps are `@Optional()`; the cron silently bypasses
+    // when either is unbound (FR-8: "best-effort" + "bypass when no
+    // store"). Adds zero hot-path cost and zero new dependencies
+    // (uses `setInterval` rather than `@nestjs/schedule` per Q-020 /
+    // Option A).
+    HealthSnapshotCron,
   ],
   exports: [JobsService, JobsAggregator],
 })

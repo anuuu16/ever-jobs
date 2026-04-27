@@ -227,4 +227,152 @@ describe('store-memory plugin (Spec 004 / T06)', () => {
       expect(await store.listByCanonicalId('a')).toEqual([]);
     });
   });
+
+  // ----------------------------------------------------------------------
+  // Spec 005 / T09 — IHealthSnapshotStore co-resident binding
+  // ----------------------------------------------------------------------
+
+  describe('IHealthSnapshotStore (Spec 005 / T09)', () => {
+    function makeHealth(
+      site: Site,
+      overrides: Partial<{
+        successRate: number;
+        p95LatencyMs: number;
+        state: 'closed' | 'open' | 'half-open';
+      }> = {},
+    ) {
+      return {
+        site,
+        state: overrides.state ?? ('closed' as const),
+        successRate: overrides.successRate ?? 1,
+        p95LatencyMs: overrides.p95LatencyMs ?? 0,
+        windowMs: 60_000,
+      };
+    }
+
+    it('putBatch appends rows and reports inserted count', async () => {
+      const store = new InMemoryJobStore();
+      const ts = new Date('2026-04-27T10:00:00Z');
+      const result = await store.putBatch(
+        [makeHealth(Site.LINKEDIN), makeHealth(Site.INDEED, { successRate: 0.9 })],
+        ts,
+      );
+      expect(result).toEqual({ inserted: 2 });
+      expect(store.snapshotSize).toBe(2);
+    });
+
+    it('putBatch with empty input is a no-op (contract)', async () => {
+      const store = new InMemoryJobStore();
+      const result = await store.putBatch([], new Date());
+      expect(result).toEqual({ inserted: 0 });
+      expect(store.snapshotSize).toBe(0);
+    });
+
+    it('putBatch defensive-copies the timestamp (mutating caller Date does not shift rows)', async () => {
+      const store = new InMemoryJobStore();
+      const ts = new Date('2026-04-27T10:00:00Z');
+      await store.putBatch([makeHealth(Site.LINKEDIN)], ts);
+      // Mutate the caller's Date AFTER putBatch — stored row must keep
+      // its original timestamp.
+      ts.setTime(0);
+      const rows = await store.listSince(new Date('2026-04-27T09:59:59Z'));
+      expect(rows).toHaveLength(1);
+      expect(rows[0].ts.toISOString()).toBe('2026-04-27T10:00:00.000Z');
+    });
+
+    it('listSince returns rows >= since, ascending by insertion order', async () => {
+      const store = new InMemoryJobStore();
+      const t1 = new Date('2026-04-27T10:00:00Z');
+      const t2 = new Date('2026-04-27T10:01:00Z');
+      const t3 = new Date('2026-04-27T10:02:00Z');
+      await store.putBatch([makeHealth(Site.LINKEDIN)], t1);
+      await store.putBatch([makeHealth(Site.INDEED)], t2);
+      await store.putBatch([makeHealth(Site.GLASSDOOR)], t3);
+
+      const rows = await store.listSince(t2);
+      expect(rows.map((r) => r.health.site)).toEqual([Site.INDEED, Site.GLASSDOOR]);
+    });
+
+    it('listSince filters by site when options.site is set', async () => {
+      const store = new InMemoryJobStore();
+      const t1 = new Date('2026-04-27T10:00:00Z');
+      const t2 = new Date('2026-04-27T10:01:00Z');
+      await store.putBatch(
+        [makeHealth(Site.LINKEDIN), makeHealth(Site.INDEED)],
+        t1,
+      );
+      await store.putBatch(
+        [makeHealth(Site.LINKEDIN), makeHealth(Site.INDEED)],
+        t2,
+      );
+
+      const rows = await store.listSince(t1, { site: Site.LINKEDIN });
+      expect(rows).toHaveLength(2);
+      expect(rows.every((r) => r.health.site === Site.LINKEDIN)).toBe(true);
+    });
+
+    it('listSince clamps an excessive limit at HEALTH_SNAPSHOT_QUERY_MAX_LIMIT', async () => {
+      const store = new InMemoryJobStore();
+      const ts = new Date('2026-04-27T10:00:00Z');
+      // Insert 50 rows under one ts.
+      const batch = Array.from({ length: 50 }, () => makeHealth(Site.LINKEDIN));
+      await store.putBatch(batch, ts);
+      const rows = await store.listSince(ts, { limit: 1_000_000 });
+      // The cap (10 000) is well above 50; we just confirm it doesn't NaN-error.
+      expect(rows.length).toBe(50);
+    });
+
+    it('latest returns the most recent SourceHealth for a site or null', async () => {
+      const store = new InMemoryJobStore();
+      expect(await store.latest(Site.LINKEDIN)).toBeNull();
+
+      await store.putBatch(
+        [makeHealth(Site.LINKEDIN, { successRate: 0.5 })],
+        new Date('2026-04-27T10:00:00Z'),
+      );
+      await store.putBatch(
+        [makeHealth(Site.LINKEDIN, { successRate: 0.9 })],
+        new Date('2026-04-27T10:01:00Z'),
+      );
+
+      const latest = await store.latest(Site.LINKEDIN);
+      expect(latest?.successRate).toBe(0.9);
+      expect(await store.latest(Site.INDEED)).toBeNull();
+    });
+
+    it('setSnapshotCap trims oldest rows when current size exceeds the new cap', async () => {
+      const store = new InMemoryJobStore();
+      const ts = new Date('2026-04-27T10:00:00Z');
+      await store.putBatch(
+        [
+          makeHealth(Site.LINKEDIN),
+          makeHealth(Site.INDEED),
+          makeHealth(Site.GLASSDOOR),
+        ],
+        ts,
+      );
+      expect(store.snapshotSize).toBe(3);
+      store.setSnapshotCap(2);
+      expect(store.snapshotSize).toBe(2);
+      // Oldest is dropped first — Site.LINKEDIN was first in the batch.
+      const all = await store.listSince(new Date(0));
+      expect(all.map((r) => r.health.site)).not.toContain(Site.LINKEDIN);
+    });
+
+    it('setSnapshotCap rejects non-positive / non-finite values', () => {
+      const store = new InMemoryJobStore();
+      expect(() => store.setSnapshotCap(0)).toThrow(RangeError);
+      expect(() => store.setSnapshotCap(-1)).toThrow(RangeError);
+      expect(() => store.setSnapshotCap(Number.NaN)).toThrow(RangeError);
+      expect(() => store.setSnapshotCap(Number.POSITIVE_INFINITY)).toThrow(RangeError);
+    });
+
+    it('clear() drops snapshot rows', async () => {
+      const store = new InMemoryJobStore();
+      await store.putBatch([makeHealth(Site.LINKEDIN)], new Date());
+      expect(store.snapshotSize).toBe(1);
+      store.clear();
+      expect(store.snapshotSize).toBe(0);
+    });
+  });
 });

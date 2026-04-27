@@ -1,12 +1,15 @@
 import 'reflect-metadata';
 import { DynamicModule, Module, Provider, Type } from '@nestjs/common';
 import {
+  HEALTH_SNAPSHOT_STORE_TOKEN,
+  IHealthSnapshotStore,
   IJobObservationStore,
   IJobStore,
   IStoreMetadata,
   JOB_OBSERVATION_STORE_TOKEN,
   JOB_STORE_TOKEN,
   STORE_PLUGIN_METADATA_KEY,
+  isHealthSnapshotStore,
 } from '@ever-jobs/models';
 import { StoreRegistry } from './store-registry.service';
 
@@ -49,6 +52,25 @@ export interface StoreModuleForActiveOptions {
    * and its source observations transactionally aligned.
    */
   readonly bindObservationStore?: boolean;
+
+  /**
+   * Bind the chosen backend to {@link HEALTH_SNAPSHOT_STORE_TOKEN} as
+   * well, IF the active instance satisfies
+   * {@link isHealthSnapshotStore} (Spec 005 / T09 / FR-8).
+   *
+   * Defaults to `true`. When the active backend doesn't implement
+   * the snapshot contract (sqlite-drizzle / postgres-prisma as of
+   * Spec 005 / T09), the token is left unbound — matching FR-8's
+   * "bypass when no store" wording. The cron `@Optional()`-injects
+   * the token and silently skips its tick.
+   *
+   * Set `false` to suppress auto-binding even when the backend
+   * supports the contract — useful for tests that wire a separate
+   * snapshot store, or for operators wanting canonical jobs in
+   * Postgres but snapshots in Redis (the operator binds Redis
+   * separately and disables the auto-binding).
+   */
+  readonly bindHealthSnapshotStore?: boolean;
 }
 
 /**
@@ -161,6 +183,7 @@ export class StoreModule {
 
     const backends = options.backends ?? [];
     const bindObservationStore = options.bindObservationStore !== false;
+    const bindHealthSnapshotStore = options.bindHealthSnapshotStore !== false;
 
     // Pre-validate `backends` before NestJS even constructs them — a
     // missing `@StorePlugin()` decorator is a programmer error that
@@ -244,12 +267,44 @@ export class StoreModule {
       });
     }
 
+    if (bindHealthSnapshotStore) {
+      /**
+       * Factory provider for {@link HEALTH_SNAPSHOT_STORE_TOKEN}
+       * (Spec 005 / T09 / FR-8).
+       *
+       * Unlike `JOB_OBSERVATION_STORE_TOKEN` (which Spec 004 makes a
+       * MUST-implement), the health-snapshot contract is OPTIONAL —
+       * sqlite-drizzle / postgres-prisma as of Spec 005 / T09 don't
+       * implement it. We runtime type-guard via
+       * {@link isHealthSnapshotStore} and return `null` for backends
+       * that don't satisfy the contract. The cron
+       * `@Optional()`-injects this token and treats `null` as
+       * "no store bound; bypass" — matching FR-8's
+       * "bypass when no store" wording exactly.
+       *
+       * Returning `null` (not `undefined`) is intentional: NestJS
+       * factory providers that return `undefined` are treated by
+       * some Nest internals as "no value" and synthesised into
+       * `MissingProvider` errors; `null` survives the DI graph
+       * cleanly and reaches the consumer's `@Optional()` slot.
+       */
+      providers.push({
+        provide: HEALTH_SNAPSHOT_STORE_TOKEN,
+        useFactory: (active: IJobStore): IHealthSnapshotStore | null =>
+          isHealthSnapshotStore(active) ? active : null,
+        inject: [JOB_STORE_TOKEN],
+      });
+    }
+
     const exports_: Array<string | symbol | Type<unknown>> = [
       JOB_STORE_TOKEN,
       StoreRegistry,
     ];
     if (bindObservationStore) {
       exports_.push(JOB_OBSERVATION_STORE_TOKEN);
+    }
+    if (bindHealthSnapshotStore) {
+      exports_.push(HEALTH_SNAPSHOT_STORE_TOKEN);
     }
 
     return {

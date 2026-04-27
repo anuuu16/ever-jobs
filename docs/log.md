@@ -5,6 +5,291 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #27 (Spec 005 Phase 5 — T09: `HealthSnapshotCron` periodic persistence; **Spec 005 complete**)
+
+**Scope:** land Spec 005 / Phase 5 / T09 — the periodic
+(`setInterval(60_000)`) cron that reads `breaker.list()` and
+persists `SourceHealth[]` via the new `IHealthSnapshotStore`
+sibling interface. Run #26's Notes-for-the-next-run pinned this
+default ("Spec 005 / Phase 5 — per-source breaker config
+persistence + `source_circuit_state` Gauge wiring; closes Spec
+005 entirely"). The actual mechanic differed slightly: T09's
+literal acceptance line is "Cron job snapshots health to active
+`IJobStore` every 60 s. Rows appear in chosen backend; bypass
+when no store" — and `IJobStore` only carries `CanonicalJob` CRUD
+methods, not health rows. Q-020 surfaces the design gap and
+locks in **Option A** on two axes (sibling interface, not
+`IJobStore` extension; `setInterval`, not `@nestjs/schedule`).
+
+**One new question opened this run — Q-020** (health-snapshot
+store interface shape: sibling vs extension vs canonical-coercion;
+scheduler implementation: `setInterval` vs `@nestjs/schedule`).
+Two-axis decision; default = **Option A on both**. The full
+options matrix and the load-bearing reasoning sit in
+`docs/questions.md` Q-020.
+
+**Five load-bearing decisions** weren't called out in `tasks.md`
+Notes-for-the-next-run and were locked into the source/test
+surface (per Q-020 + the in-run rename below):
+
+1. **`IHealthSnapshotStore` is a SIBLING interface, not a method
+   on `IJobStore`.** Spec 005 / FR-8's "active `IJobStore`"
+   wording is a specification artefact (the spec was authored
+   before Spec 004 / T01 split observations out as a separate
+   sibling). The spirit is "persist health snapshots via the
+   active store backend". Mirroring the
+   `IJobObservationStore` precedent keeps the architecture
+   coherent: health snapshots have different cardinality
+   (~172 800 rows / day @ 120 sites × 1-minute tick), different
+   lifecycle (append-only, NO upsert), different retention
+   (collapse to hourly aggregates after ~7 days). Forcing the
+   contract onto `IJobStore` would have polluted every existing
+   backend's interface and broken every existing `IJobStore`
+   stub fixture.
+2. **Method renamed from `putAll` → `putBatch` (in-run
+   adjustment).** Initial draft used `putAll(snapshots, ts)`
+   for symmetry with `IJobObservationStore.putAll(canonicalJobId,
+   observations)`. The collision becomes an issue the moment a
+   single class wants to implement both interfaces (the
+   in-memory reference backend a future spec ships will): the
+   two `putAll` overloads have non-overlapping signatures but
+   TypeScript can't disambiguate them at the call site without
+   a type assertion. Renaming this `IHealthSnapshotStore` method
+   to `putBatch` keeps the symmetric overload-free shape (one
+   class, two interfaces, two distinct method names — zero
+   ambiguity). The rename also touches the cron's internal
+   `'putAll-rejected'` reason tag → `'putBatch-rejected'` to
+   stay consistent with the wire shape operators see in logs.
+3. **In-memory reference backend ships a default
+   `IHealthSnapshotStore` implementation; sqlite/postgres remain
+   opt-in.** The initial draft was "no backend ships an impl
+   yet" (T10-deferred follow-up); revised in-run to ship the
+   in-memory backend's impl too because (a) it satisfies the
+   acceptance line "Rows appear in chosen backend" out of the
+   box for any deployment running `EVER_JOBS_STORE=memory`,
+   (b) the in-memory backend is the test-default for every
+   suite that doesn't override `EVER_JOBS_STORE`, so wiring
+   the snapshot contract there means every test that boots
+   `AppModule` exercises the full cron path end-to-end, and
+   (c) `StoreModule.forActive` runtime-type-guards via
+   `isHealthSnapshotStore(active)` and returns `null` for
+   backends without the contract — that's the literal "bypass
+   when no store" path, no special-casing needed. The
+   `bindHealthSnapshotStore: true` default in
+   `StoreModuleForActiveOptions` co-resides the snapshot store
+   with the canonical store on the same instance whenever
+   possible (Spec 005 §7's "single backend, two contracts"
+   posture, mirroring the `bindObservationStore` precedent).
+4. **`setInterval` (NOT `@nestjs/schedule`).** Spec 005 ships
+   exactly one timer; adding a 1.4 MB dep tree for a single
+   `setInterval(60_000)` is over-investment. The provider
+   stores the `NodeJS.Timeout` handle in a private field, calls
+   `unref()` so a stuck cron never blocks process exit, and
+   `clearInterval(...)` in `onApplicationShutdown()` so an
+   in-flight `putBatch()` isn't abandoned mid-write under
+   SIGTERM.
+5. **Errors are captured, NOT bubbled (NEVER re-thrown).**
+   Mirrors Spec 004 / T11's `maybePersist` pattern: a
+   persistent backend outage MUST NEVER take the cron offline.
+   The cron catches `breaker.list()` throws AND `store.putBatch()`
+   rejections, projects them to `{ code, message }`, logs at
+   `warn`, and continues. The next tick re-attempts. Operators
+   alert on the warn-level `ERR_HEALTH_SNAPSHOT_PERSIST_FAILED`
+   log lines (or the structured `.code` flowed through from a
+   backend rejection like `ERR_STORE_BACKEND_DOWN`).
+
+**Changes — code:**
+
+- `packages/models/src/interfaces/health-snapshot-store.interface.ts`
+  — new ~155 LOC. New sibling `IHealthSnapshotStore` interface
+  with `putBatch(snapshots, ts) / listSince(since, opts?) /
+  latest(site)`. New types `HealthSnapshotQuery`
+  (`{ site?, limit? }`), `HealthSnapshotRow` (`{ ts, health }`).
+  New constants `HEALTH_SNAPSHOT_QUERY_DEFAULT_LIMIT = 1_000`
+  (mirrors Spec 004's `JOB_STORE_QUERY_DEFAULT_LIMIT = 100`
+  but tuned for "last-1000-rows" dashboard queries),
+  `HEALTH_SNAPSHOT_QUERY_MAX_LIMIT = 10_000`,
+  `HEALTH_SNAPSHOT_STORE_TOKEN = 'HEALTH_SNAPSHOT_STORE'`. The
+  JSDoc on the interface explicitly cross-references Q-020 and
+  documents the `putAll` → `putBatch` rename rationale so a
+  future contributor doesn't try to rename it back.
+- `packages/models/src/interfaces/index.ts` — 1-line `export *
+  from './health-snapshot-store.interface'` addition.
+- `apps/api/src/jobs/health-snapshot.cron.ts` — new ~210 LOC.
+  `HealthSnapshotCron` provider implementing
+  `OnApplicationBootstrap` + `OnApplicationShutdown`.
+  Constructor `@Optional()`-injects three tokens —
+  `CIRCUIT_BREAKER_TOKEN`, `HEALTH_SNAPSHOT_STORE_TOKEN`,
+  `HEALTH_SNAPSHOT_INTERVAL_TOKEN` (test seam, defaults to
+  `60_000`). Public `snapshot()` returns a tagged
+  `HealthSnapshotResult` discriminated union for the test seam
+  — production timer ignores the resolved value via
+  `() => void this.snapshot()`. Private `normaliseInterval(raw)`
+  silently falls back to the default for negative / NaN /
+  zero / Infinity inputs (a misconfigured operator value MUST
+  NOT abort startup; the cron just runs at the default
+  cadence). `projectError(err)` mirrors Spec 004 / T11's
+  pattern: surface structured `.code` from rejection; fall
+  back to `ERR_HEALTH_SNAPSHOT_PERSIST_FAILED`. New exported
+  constants: `DEFAULT_HEALTH_SNAPSHOT_INTERVAL_MS = 60_000`,
+  `HEALTH_SNAPSHOT_INTERVAL_TOKEN = 'HEALTH_SNAPSHOT_INTERVAL_MS'`,
+  `ERR_HEALTH_SNAPSHOT_PERSIST_FAILED = 'ERR_HEALTH_SNAPSHOT_PERSIST_FAILED'`.
+- `apps/api/src/jobs/jobs.module.ts` — 3-line provider addition
+  (`HealthSnapshotCron` slotted under `PluginPolicyBootstrapper`
+  in the providers array; deliberately co-located so the
+  bootstrap order is "policy → cron" — the first
+  `breaker.list()` snapshot already reflects every plugin's
+  policy override from T08).
+- `packages/plugin/src/store/store.module.ts` — extended ~55
+  LOC. New `bindHealthSnapshotStore` option in
+  `StoreModuleForActiveOptions` (default `true`); new factory
+  provider for `HEALTH_SNAPSHOT_STORE_TOKEN` that runtime-type-
+  guards the active store via `isHealthSnapshotStore` and
+  returns `null` for backends that don't satisfy the contract;
+  extended `exports_` to include `HEALTH_SNAPSHOT_STORE_TOKEN`
+  when the binding is active. Co-resident binding pattern
+  mirrors `bindObservationStore` so a single `IJobStore`
+  instance can satisfy all three contracts when it implements
+  them.
+- `packages/plugins/store-memory/src/store-memory.service.ts`
+  — extended ~190 LOC. `InMemoryJobStore` now also implements
+  `IHealthSnapshotStore`. Append-only ring of `(ts, health)`
+  rows ordered by insertion order (== ts ASC by construction
+  because `HealthSnapshotCron` uses one fresh `Date()` per
+  tick); ~360 000-row default cap (24 h × 60 ticks/hour × 250
+  max sites = NFR-3 ceiling), trimmed oldest-first via
+  `splice(0, overflow)` to keep array identity stable for
+  concurrent `listSince` walkers. Defensive `new Date(ts.getTime())`
+  copy of the per-tick timestamp so a caller-mutated Date
+  cannot retroactively shift stored rows. Diagnostic surface
+  added: `snapshotSize` getter + `setSnapshotCap(cap)` test
+  seam (rejects non-positive / non-finite cap with
+  `RangeError`). `clear()` extended to drop snapshot rows
+  alongside canonicals + observations. New
+  `DEFAULT_SNAPSHOT_CAP = 360_000` exported constant; new
+  `resolveSnapshotLimit(...)` helper.
+
+**Changes — tests:**
+
+- `apps/api/src/jobs/__tests__/health-snapshot.cron.spec.ts` —
+  new ~310 LOC. **18 cases** across 6 describe-blocks:
+  (1) onApplicationBootstrap bypass paths — neither dep / only
+  breaker / only store (3 cases); (2) onApplicationBootstrap
+  happy path — interval scheduled at requested ms, 4 bad-value
+  fall-backs via `for` loop (2 cases); (3) snapshot() happy
+  path — `putBatch` called once with exact payload + Date
+  bracketing, empty list short-circuits without calling
+  `putBatch` (2 cases); (4) snapshot() failure isolation —
+  structured `.code` capture, bare `Error` fallback, non-Error
+  rejection (string), `breaker.list()` throw (4 cases);
+  (5) snapshot() defensive bypass — direct call without
+  bootstrap, only-breaker, only-store (3 cases);
+  (6) onApplicationShutdown — `clearInterval` called once,
+  idempotent across repeats, no-op without bootstrap (3 cases).
+  Plus 2 cases on the exported constants (`60_000` value,
+  literal error code string).
+- `packages/plugins/store-memory/__tests__/store-memory.spec.ts`
+  — extended ~150 LOC. New `describe('IHealthSnapshotStore
+  (Spec 005 / T09)')` block with **10 cases**: putBatch happy
+  path, empty short-circuit, defensive `ts` copy (caller
+  mutation doesn't shift stored rows), `listSince` ascending
+  order + site filter + limit clamp, `latest` hit / miss,
+  `setSnapshotCap` trim-on-shrink, `setSnapshotCap` rejects
+  non-positive / non-finite values, `clear()` drops snapshots.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/005-source-health-circuit-breaker/tasks.md` —
+  T09 graduates from "pending" to "done" with full
+  planned-vs-actual file list, five-decision rationale (sibling
+  interface / no-default-backend / setInterval / errors-captured
+  / putBatch rename), Q-020 cross-reference, and verification
+  numbers. Spec 005 graduates from "Phase 1+2+3+4 done
+  (T01–T08); Phase 5 pending" to "All phases done (T01–T09);
+  spec complete".
+- `.specify/specs/005-source-health-circuit-breaker/spec.md` —
+  `Status` flipped to `All phases done (T01–T09); spec
+  complete`; `Last updated` bumped to `2026-04-27 (run #27)`.
+- `docs/questions.md` — new Q-020 at the top with two axes,
+  three options each, default = Option A on both. Resolution =
+  pending. Run-tag `(run #27)`.
+- `docs/index.md` — Spec 005 row updated with new status string
+  ("All phases done … spec complete" with T09 → run #27
+  attribution); `Last revised` bumped to `2026-04-27 (run #27)`.
+- `CLAUDE.md` — run-tag bumped to #27 in the footer.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #27 sync line; **no upstream
+  commits** in any of the three tracked repos (seventeen
+  consecutive zero-churn runs).
+
+**Verification (local, against this commit):**
+
+- T09 ships TypeScript source + tests but cannot run them in
+  the sandbox: the test surface needs `@nestjs/common` resolved
+  through the workspace symlinks plus the resolved
+  `@ever-jobs/*` path aliases — all CI-only per `Agents.md`
+  §"Scheduled-task agents". The full unit-test bundle will
+  validate on CI push.
+- `npm run lint:docs` — clean ("✓ Doc-lint passed — no issues.")
+  after this run's edits.
+- Type-check via `npx tsc --project apps/api/tsconfig.build.json
+  --noEmit` — also CI-only (sandbox has no `node_modules`); the
+  edited `jobs.module.ts` only adds one new provider in the
+  array; the new `health-snapshot.cron.ts` only consumes
+  already-exported types from `@ever-jobs/models`.
+- No new dependencies; lockfile sync is NOT required this run
+  (a regression from run #26's lockfile-sync follow-up — the
+  cron deliberately uses the built-in `setInterval` rather
+  than `@nestjs/schedule` precisely to avoid this churn).
+
+**Notes & follow-ups:**
+
+- **Spec 005 is now complete.** All nine tasks across five
+  phases ship with full unit/integration coverage; per-source
+  circuit breakers + admin endpoints + per-plugin policy
+  overrides + 60-second health-snapshot persistence are wired
+  end-to-end.
+- **Specs 004 AND 005 are both complete as of run #27.** The
+  hourly schedule has caught the back-half of the persistence
+  + source-health backlog. The next high-leverage area is the
+  open `Ats-scrapers`-parity items in `competitor-watch.md §C`
+  (AC-1..AC-9) — which historically required persistent
+  breaker state for half-open recovery counters; that
+  prerequisite now exists (the cron persists the SourceHealth
+  shape into `IHealthSnapshotStore`-bound backends, and Spec
+  004's `IJobStore` covers canonical jobs). Run #28 should
+  open a new spec — candidate Spec 006 (`Ats-scrapers parity:
+  AC-1..AC-3`) — addressing the highest-priority three items
+  from the competitor-watch table.
+- The in-memory backend ships with a full
+  `IHealthSnapshotStore` impl as of this run; sqlite-drizzle
+  + postgres-prisma remain opt-in (deferred T10 candidate).
+  Operators wanting persistent snapshots in those backends
+  bind their own `IHealthSnapshotStore` implementation to
+  `HEALTH_SNAPSHOT_STORE_TOKEN` in their root module; the
+  cron's `@Optional()` injection picks it up without further
+  wiring. A future spec can add Drizzle / Prisma schemas +
+  conformance tests by mirroring this run's in-memory pattern.
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #26
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). **Seventeen** consecutive runs of zero-churn —
+  the Ats-scrapers-parity items in `competitor-watch.md §C`
+  remain the highest-leverage follow-up now that Spec 004 and
+  Spec 005 are both closed.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#26; not wired into
+  CI). Open fall-back follow-up.
+- Default for run #28 is **opening Spec 006 — `Ats-scrapers
+  parity: AC-1..AC-3`** (or whichever subset of the
+  `competitor-watch.md §C` items hasn't yet been spec'd).
+  Begin with `.specify/specs/006-ats-scrapers-parity/`
+  scaffold (spec.md + plan.md + tasks.md) per the
+  `002-docs-and-spec-kit-bootstrap` Spec Kit convention.
+
+---
+
 ## 2026-04-27 — Scheduled run #26 (Spec 004 Phase 5 — T12: `EVER_JOBS_STORE` env-var honoured at bootstrap; **Spec 004 complete**)
 
 **Scope:** land Spec 004 / Phase 5 / T12 — read `EVER_JOBS_STORE`

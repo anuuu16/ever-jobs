@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 005                                                  |
 | Slug           | source-health-circuit-breaker                        |
-| Status         | Phase 1+2+3+4 done (T01–T08); Phase 5 pending |
+| Status         | All phases done (T01–T09); spec complete             |
 | Owner          | scheduled-task agent                                 |
 | Created        | 2026-04-26                                           |
-| Last updated   | 2026-04-27 (run #16)                                 |
+| Last updated   | 2026-04-27 (run #27)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001, 003, 004                                        |
 

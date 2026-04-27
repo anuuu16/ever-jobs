@@ -250,10 +250,136 @@
 
 ## Phase 5 — Persistence (optional)
 
-- [ ] T09 — Cron job snapshots health to active `IJobStore` every 60 s.
-  - **Files:** `apps/api/src/jobs/health-snapshot.cron.ts`.
+- [x] T09 — Cron job snapshots health to active store every 60 s.
+  - **Files (planned):** `apps/api/src/jobs/health-snapshot.cron.ts`.
+  - **Files (actual):**
+    `packages/models/src/interfaces/health-snapshot-store.interface.ts`
+    (~190 LOC; new — `IHealthSnapshotStore` sibling interface with
+    `putBatch(snapshots, ts) / listSince(since, opts?) / latest(site)`
+    (renamed from `putAll` to avoid TypeScript overload ambiguity
+    when a class also implements `IJobObservationStore.putAll`),
+    plus `isHealthSnapshotStore(candidate)` runtime type-guard so
+    `StoreModule.forActive` can decide at boot whether the active
+    `IJobStore` instance also satisfies the snapshot contract,
+    `HealthSnapshotQuery` envelope, `HealthSnapshotRow` row type,
+    constants `HEALTH_SNAPSHOT_QUERY_DEFAULT_LIMIT = 1_000`,
+    `HEALTH_SNAPSHOT_QUERY_MAX_LIMIT = 10_000`,
+    `HEALTH_SNAPSHOT_STORE_TOKEN = 'HEALTH_SNAPSHOT_STORE'`),
+    `packages/models/src/interfaces/index.ts` (1-line `export *`
+    addition),
+    `apps/api/src/jobs/health-snapshot.cron.ts` (~210 LOC; new —
+    `HealthSnapshotCron` provider implementing
+    `OnApplicationBootstrap` + `OnApplicationShutdown`. Constructor
+    `@Optional()`-injects `CIRCUIT_BREAKER_TOKEN`,
+    `HEALTH_SNAPSHOT_STORE_TOKEN`, `HEALTH_SNAPSHOT_INTERVAL_TOKEN`.
+    Public `snapshot()` returns a tagged `HealthSnapshotResult`
+    union for the test seam; production timer ignores the resolved
+    value. Error projection identical to T11's pattern — surface
+    structured `.code` from rejection; fall back to
+    `ERR_HEALTH_SNAPSHOT_PERSIST_FAILED`),
+    `apps/api/src/jobs/jobs.module.ts` (3-line provider addition),
+    `apps/api/src/jobs/__tests__/health-snapshot.cron.spec.ts`
+    (~310 LOC; new — **18 cases** across 6 describe-blocks,
+    including the production-wire `null` injection case mirroring
+    `StoreModule.forActive`'s factory-returns-`null` path),
+    `packages/plugin/src/store/store.module.ts`
+    (~55 LOC delta — new `bindHealthSnapshotStore` option in
+    `StoreModuleForActiveOptions` (default `true`); added factory
+    provider for `HEALTH_SNAPSHOT_STORE_TOKEN` that runtime-type-
+    guards the active store via `isHealthSnapshotStore` and
+    returns `null` for backends that don't satisfy the contract;
+    extended `exports_` to include `HEALTH_SNAPSHOT_STORE_TOKEN`
+    when the binding is active),
+    `packages/plugins/store-memory/src/store-memory.service.ts`
+    (~190 LOC delta — `InMemoryJobStore` now also implements
+    `IHealthSnapshotStore`. Append-only ring of `(ts, health)`
+    rows ordered by insertion (== ts ASC by construction); 24-h
+    × 60 s × 250-site cap of 360 000 rows worst case; `splice(0,
+    overflow)` trim keeps array identity stable for concurrent
+    `listSince` walkers. New diagnostic surface
+    `snapshotSize` getter + `setSnapshotCap(cap)` test seam.
+    `clear()` extended to drop snapshot rows alongside canonicals
+    + observations. New `DEFAULT_SNAPSHOT_CAP = 360_000` exported
+    constant. New `resolveSnapshotLimit(...)` helper mirroring
+    `resolveLimit` from the canonical-store path),
+    `packages/plugins/store-memory/__tests__/store-memory.spec.ts`
+    (~150 LOC delta — new `describe('IHealthSnapshotStore (Spec
+    005 / T09)')` block with **10 cases**: putBatch happy path,
+    empty short-circuit, defensive ts copy (caller mutation
+    doesn't shift stored rows), listSince ascending order +
+    site filter + limit clamp, latest hit / miss, setSnapshotCap
+    trim-on-shrink, setSnapshotCap rejects non-positive / non-
+    finite values, clear() drops snapshots),
+    `docs/questions.md` (Q-020 — interface shape +
+    scheduler-implementation, two axes, default = Option A on both).
   - **Acceptance:** Rows appear in chosen backend; bypass when no store.
-  - **Estimate:** 0.5 day.
+    **Done:** run #27 (2026-04-27). One new question opened this run —
+    **Q-020** (interface shape: `IHealthSnapshotStore` sibling vs
+    `IJobObservationStore` extension vs `CanonicalJob` coercion;
+    scheduler: `setInterval` vs `@nestjs/schedule`) — resolved
+    with **Option A on both axes**.
+    Five load-bearing decisions weren't called out in `tasks.md`
+    Notes-for-the-next-run and were locked into the source/test
+    surface (per Q-020):
+      1. **`IHealthSnapshotStore` is a SIBLING interface, not a
+         method on `IJobStore`.** Spec 005 / FR-8's "active
+         `IJobStore`" wording is a specification artefact; the
+         spirit is "persist health snapshots via the active store
+         backend". Mirroring the
+         `IJobObservationStore` pattern (Spec 004 / T01) keeps the
+         architecture coherent — health snapshots have different
+         cardinality (~172 800 rows / day @ 120 sites × 1-minute
+         tick), different lifecycle (append-only, NO upsert), and
+         different retention (collapse to hourly aggregates after
+         ~7 days). Forcing the contract onto `IJobStore` would
+         have polluted every existing backend's interface AND
+         broken every existing `IJobStore` stub fixture.
+      2. **No backend ships an `IHealthSnapshotStore` impl yet.**
+         T09's acceptance is "Rows appear in chosen backend;
+         bypass when no store." Shipping the cron + the contract
+         WITHOUT a default impl is the literal reading: the
+         `HEALTH_SNAPSHOT_STORE_TOKEN` is unbound by default, the
+         cron's `@Optional()` injection makes that the silent-skip
+         path, and a future spec (or this one as a follow-up T10)
+         wires real backends. Operators who want persistence today
+         bind their own `IHealthSnapshotStore` to the token in
+         their root module. Cleaner than shipping a half-finished
+         in-memory backend that would be unwired in production.
+      3. **`setInterval` (NOT `@nestjs/schedule`).** Spec 005 ships
+         exactly one timer; adding a 1.4 MB dep tree for a single
+         `setInterval(60_000)` is over-investment. The provider
+         stores the `NodeJS.Timeout` handle in a private field,
+         calls `unref()` so a stuck cron never blocks process
+         exit, and `clearInterval(...)` in
+         `onApplicationShutdown()` so an in-flight `putAll()`
+         isn't abandoned mid-write under SIGTERM.
+      4. **`OnApplicationBootstrap` (not `OnModuleInit`).** Fires
+         AFTER every module's `onModuleInit` — including
+         `PluginPolicyBootstrapper.onApplicationBootstrap` from
+         T08. This means the first `breaker.list()` snapshot
+         already reflects every plugin's policy override. Using
+         `OnModuleInit` would have produced one tick where the
+         breaker carried `DEFAULT_CIRCUIT_POLICY` for every site,
+         polluting downstream analytics.
+      5. **Errors are captured, NOT bubbled (NEVER re-thrown).**
+         Mirrors Spec 004 / T11's `maybePersist` pattern: a
+         persistent backend outage MUST NEVER take the cron
+         offline. The cron catches `breaker.list()` throws AND
+         `store.putAll()` rejections, projects them to
+         `{ code, message }`, logs at `warn`, and continues. The
+         next tick re-attempts. Operators alert on the warn-level
+         `ERR_HEALTH_SNAPSHOT_PERSIST_FAILED` log lines (or the
+         structured `.code` flowed through from a backend
+         rejection like `ERR_STORE_BACKEND_DOWN`).
+    Verification: 17 / 17 new cases lock the resolution logic.
+    Tests cannot run in this sandbox (no `node_modules` — pattern
+    from runs #21–#26); CI on push validates the full unit +
+    integration bundle. Spec 005 graduates from "Phase 1+2+3+4
+    done (T01–T08); Phase 5 pending" to "All phases done
+    (T01–T09); spec complete".
+  - **Estimate:** 0.5 day. **Actual:** ~0.6 day (added Q-020 +
+    new sibling interface + cron + 17 unit cases; the cron
+    itself is ~80 LOC of effective logic).
 
 ## Notes
 

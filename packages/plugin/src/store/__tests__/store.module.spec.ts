@@ -3,6 +3,10 @@ import { Inject, Injectable, Module } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   CanonicalJob,
+  HEALTH_SNAPSHOT_STORE_TOKEN,
+  HealthSnapshotQuery,
+  HealthSnapshotRow,
+  IHealthSnapshotStore,
   IJobObservationStore,
   IJobStore,
   JobStorePage,
@@ -10,6 +14,8 @@ import {
   JOB_OBSERVATION_STORE_TOKEN,
   JOB_STORE_TOKEN,
   ERR_STORE_NOT_FOUND,
+  Site,
+  SourceHealth,
   SourceObservation,
 } from '@ever-jobs/models';
 import {
@@ -101,6 +107,33 @@ describe('StoreModule.forActive (Spec 004 / T04)', () => {
   @Injectable()
   class MemoryStubStore extends StubJobStore {
     readonly tag = 'memory';
+  }
+
+  /**
+   * Stub backend that ALSO implements `IHealthSnapshotStore` — used to
+   * exercise the `bindHealthSnapshotStore` factory path. Mirrors the
+   * in-memory plugin's "single class implements three interfaces"
+   * pattern.
+   */
+  @StorePlugin({ id: 'memory-snap', description: 'Snapshot-aware stub' })
+  @Injectable()
+  class SnapshotAwareStubStore
+    extends StubJobStore
+    implements IHealthSnapshotStore
+  {
+    readonly tag = 'memory-snap';
+    putBatch(): Promise<{ inserted: number }> {
+      return Promise.resolve({ inserted: 0 });
+    }
+    listSince(
+      _since: Date,
+      _opts?: HealthSnapshotQuery,
+    ): Promise<ReadonlyArray<HealthSnapshotRow>> {
+      return Promise.resolve([]);
+    }
+    latest(_site: Site): Promise<SourceHealth | null> {
+      return Promise.resolve(null);
+    }
   }
 
   @StorePlugin({ id: 'sqlite', description: 'SQLite + Drizzle' })
@@ -403,6 +436,84 @@ describe('StoreModule.forActive (Spec 004 / T04)', () => {
       expect(ERR_STORE_BACKEND_NOT_DECORATED).toBe(
         'ERR_STORE_BACKEND_NOT_DECORATED',
       );
+    });
+  });
+
+  describe('bindHealthSnapshotStore (Spec 005 / T09 / FR-8)', () => {
+    it('binds HEALTH_SNAPSHOT_STORE_TOKEN to the same instance when the active backend implements IHealthSnapshotStore', async () => {
+      testModule = await Test.createTestingModule({
+        imports: [
+          StoreModule.forActive('memory-snap', {
+            backends: [SnapshotAwareStubStore],
+          }),
+        ],
+      }).compile();
+
+      const job = testModule.get<IJobStore>(JOB_STORE_TOKEN);
+      const snap = testModule.get<IHealthSnapshotStore | null>(
+        HEALTH_SNAPSHOT_STORE_TOKEN,
+      );
+      expect(snap).not.toBeNull();
+      // Co-resident binding — the in-memory backend is the documented
+      // "single class implements three interfaces" pattern. A separate
+      // instance would risk divergence under partial-outage scenarios.
+      expect(snap).toBe(job);
+    });
+
+    it('binds HEALTH_SNAPSHOT_STORE_TOKEN to null when the active backend does NOT implement IHealthSnapshotStore', async () => {
+      testModule = await Test.createTestingModule({
+        imports: [
+          StoreModule.forActive('memory', { backends: [MemoryStubStore] }),
+        ],
+      }).compile();
+
+      // The plain MemoryStubStore satisfies IJobStore +
+      // IJobObservationStore but NOT IHealthSnapshotStore. The factory
+      // hands back `null` so the cron's `@Optional()` consumer sees a
+      // sentinel rather than a runtime "missing provider" throw.
+      const snap = testModule.get<IHealthSnapshotStore | null>(
+        HEALTH_SNAPSHOT_STORE_TOKEN,
+      );
+      expect(snap).toBeNull();
+    });
+
+    it('does NOT register the token at all when bindHealthSnapshotStore: false', async () => {
+      testModule = await Test.createTestingModule({
+        imports: [
+          StoreModule.forActive('memory-snap', {
+            backends: [SnapshotAwareStubStore],
+            bindHealthSnapshotStore: false,
+          }),
+        ],
+      }).compile();
+
+      // Operators wanting a separate snapshot backend (e.g. canonicals
+      // in Postgres, snapshots in Redis) opt out via the flag and bind
+      // their own provider — the global module's factory then plays no
+      // role at all.
+      expect(() => testModule!.get(HEALTH_SNAPSHOT_STORE_TOKEN)).toThrow();
+    });
+
+    it('does not break the existing JOB_STORE_TOKEN / JOB_OBSERVATION_STORE_TOKEN bindings', async () => {
+      testModule = await Test.createTestingModule({
+        imports: [
+          StoreModule.forActive('memory-snap', {
+            backends: [SnapshotAwareStubStore],
+          }),
+        ],
+      }).compile();
+
+      const job = testModule.get<IJobStore>(JOB_STORE_TOKEN);
+      const obs = testModule.get<IJobObservationStore>(
+        JOB_OBSERVATION_STORE_TOKEN,
+      );
+      const snap = testModule.get<IHealthSnapshotStore | null>(
+        HEALTH_SNAPSHOT_STORE_TOKEN,
+      );
+      // All three tokens point at the same backing instance — the
+      // co-resident pattern locked in for production deployments.
+      expect(obs).toBe(job);
+      expect(snap).toBe(job);
     });
   });
 

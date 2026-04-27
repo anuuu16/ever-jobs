@@ -10,6 +10,124 @@
 
 ---
 
+## Q-020 — Health-snapshot store interface shape; cron scheduler choice (Spec 005 / T09)
+
+**Context:** T09's acceptance is exactly two lines — "Cron job
+snapshots health to active `IJobStore` every 60 s" and "Rows appear
+in chosen backend; bypass when no store." Spec 005 / FR-8 says
+"Health snapshot persisted to active `IJobStore` every 60 s
+(best-effort)." Two latent design choices weren't called out in
+`tasks.md`:
+
+1. **Where do health snapshots actually live?** `IJobStore` only has
+   methods for `CanonicalJob` (Spec 004 §7.1 — `upsert / upsertMany
+   / getById / findByCanonicalId / listByQuery / delete`). There is
+   no `putHealthSnapshot` or equivalent. Three options:
+
+   - **Option A — new `IHealthSnapshotStore` sibling interface.**
+     Mirrors the `IJobObservationStore` pattern (Spec 004 / T01
+     introduced a separate sibling interface for `SourceObservation`
+     records under `JOB_OBSERVATION_STORE_TOKEN` because
+     observations have a different lifecycle from canonical jobs).
+     New token `HEALTH_SNAPSHOT_STORE_TOKEN`, new interface with
+     `putAll(snapshots) / listSince(since, opts?) / latest(site)`.
+     Backends implement it lazily — none ship by default; T09 ships
+     the cron + the contract, and a future spec (or this one as a
+     follow-up) wires real backends. The cron `@Optional()`-injects
+     the store and silently bypasses when unbound, matching FR-8's
+     "best-effort" wording exactly.
+   - **Option B — extend `IJobObservationStore` with
+     `putHealthSnapshot(site, health)`.** Reuses an existing token,
+     no new interface. But it forces every backend to implement an
+     unrelated method, and every existing test that stubs
+     `IJobObservationStore` (Spec 004 / T05–T10 ship four backends'
+     worth of conformance fixtures) breaks. Architectural drift —
+     observations are "facts about a canonical job"; health
+     snapshots are "facts about a source plugin". Different
+     dimensions.
+   - **Option C — coerce `SourceHealth` into `CanonicalJob`.**
+     Smallest diff possible (no new interface, no new token), but
+     fundamentally misuses the canonical-jobs table. Future
+     analytics queries like `SELECT … WHERE site='linkedin' AND
+     successRate < 0.9` would have to inner-join against the
+     health-shaped subset of jobs, and the `CanonicalJob` schema
+     (Spec 003 §7) doesn't carry `successRate / p95LatencyMs`
+     fields. Strongly negative.
+
+2. **Cron scheduler implementation.** NestJS has `@nestjs/schedule`
+   (an optional package wrapping `node-cron` + `@Cron()` decorators)
+   but it's NOT currently a dependency. Three options:
+
+   - **Option A — `setInterval` inside an `@Injectable()` provider
+     that implements `OnApplicationBootstrap` + `OnApplicationShutdown`.**
+     Zero new dependencies. The provider stores the
+     `NodeJS.Timeout` handle in a private field and calls
+     `clearInterval(...)` in `onApplicationShutdown()`. Test seam
+     is a constructor-injectable interval-ms value (default
+     `60_000`) so jest fake timers exercise the tick logic.
+     Downside: no cron-syntax expressiveness — but Spec 005 / FR-8
+     literally says "every 60 s", which is `setInterval`'s exact
+     contract.
+   - **Option B — add `@nestjs/schedule` and use `@Cron('*/60 *
+     * * * *')`.** Cleaner if multiple cron jobs land later; one
+     more devDependency + one more lockfile sync (`testcontainers`
+     in run #26 set the precedent — `npm install
+     --package-lock-only` is feasible in the sandbox). But Spec 005
+     ships only this one timer; adding a 1.4 MB dep tree for a
+     single `setInterval` is over-investment.
+   - **Option C — re-use NestJS's built-in `setTimeout`-style
+     `Logger`-attached interval.** No such facility exists; NestJS
+     defers all scheduling to `@nestjs/schedule`. Skip.
+
+**Default — proceeding with Option A on both axes (run #27).**
+
+Reasons (interface):
+- The `IJobObservationStore` precedent locks in the "sibling
+  interface per data shape" pattern. Spec 004 / T01 chose this for
+  observations vs canonical jobs; mirroring it here keeps the
+  architecture coherent.
+- Spec 005 / FR-8's "active `IJobStore`" wording is a specification
+  artefact (the spec was authored before T01 split observations
+  out as a separate interface). The spirit — "persist health
+  snapshots via the active store backend" — is honoured by Option A
+  with a separate token; Option B silently misreads "store" as "the
+  one and only store interface", and Option C inverts the data
+  model entirely.
+- Adding a new token is cheap: bootstrap (T12 / Spec 004 / Q-019
+  Option C) is "lazy resolve by id"; backends opt-in to
+  `HEALTH_SNAPSHOT_STORE_TOKEN` by including the token in their
+  module's `providers`. None do today; that's intentional —
+  **bypass when no store** is the literal acceptance line, and
+  Option A makes it the default behaviour rather than a special
+  case.
+
+Reasons (scheduler):
+- NFR-1 (interceptor overhead `< 100 µs`) and NFR-3 (memory per
+  source breaker `< 1 KB`) are about per-call cost; the cron's
+  cost is per-tick, dominated by `breaker.list()` and `store.putAll()`.
+  `setInterval(60_000)` adds zero hot-path cost.
+- Adding `@nestjs/schedule` would require a lockfile regenerate
+  (the run #26 pattern works but adds churn). One timer doesn't
+  justify a 1.4 MB dep tree.
+- The `OnApplicationBootstrap` lifecycle hook fires AFTER every
+  module's `onModuleInit` — including
+  `PluginPolicyBootstrapper.onApplicationBootstrap` from T08, which
+  pushes per-plugin policy overrides into the breaker. This means
+  the first `breaker.list()` snapshot already reflects every
+  plugin's policy. `OnApplicationShutdown` fires before NestJS
+  closes the HTTP listener, so no in-flight `store.putAll()` is
+  abandoned.
+
+**Resolution:** _pending_ — proceeding with Option A on both axes.
+Revisit if the interface-extension argument resurfaces from
+operator feedback (e.g. "we want one transactional `putAll`
+covering canonical + observation + health"); revisit the
+scheduler choice if a second cron-based feature lands and the
+investment in `@nestjs/schedule` is paid back across two
+consumers.
+
+---
+
 ## Q-019 — Default backend-fleet shape for `EVER_JOBS_STORE` bootstrap (Spec 004 / T12)
 
 **Context:** T12's acceptance is exactly two lines — "Bootstrap fails

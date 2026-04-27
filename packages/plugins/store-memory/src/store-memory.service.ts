@@ -2,12 +2,19 @@ import { Injectable } from '@nestjs/common';
 import {
   CanonicalJob,
   ERR_STORE_INVALID_CURSOR,
+  HEALTH_SNAPSHOT_QUERY_DEFAULT_LIMIT,
+  HEALTH_SNAPSHOT_QUERY_MAX_LIMIT,
+  HealthSnapshotQuery,
+  HealthSnapshotRow,
+  IHealthSnapshotStore,
   IJobObservationStore,
   IJobStore,
   JOB_STORE_QUERY_DEFAULT_LIMIT,
   JOB_STORE_QUERY_MAX_LIMIT,
   JobStorePage,
   JobStoreQuery,
+  Site,
+  SourceHealth,
   SourceObservation,
 } from '@ever-jobs/models';
 import { StorePlugin } from '@ever-jobs/plugin';
@@ -26,6 +33,23 @@ export const STORE_MEMORY_ID = 'memory';
  */
 export const STORE_MEMORY_DESCRIPTION =
   'In-memory reference store (Spec 004 — dev / tests, no persistence)';
+
+/**
+ * Default ceiling for the in-memory health-snapshot ring (Spec 005 /
+ * T09 / FR-8 / NFR-3). 24 hours × 60 ticks/hour × 250 max sites
+ * (Spec 005 / NFR-3 breaker pool ceiling) = 360 000 rows worst case.
+ * The ring trims oldest-first so the cron can run indefinitely
+ * without unbounded growth.
+ *
+ * Rationale for 24 h:
+ *   - Operator dashboards typically render last-1h to last-24h
+ *     rollups; anything older typically lives in a Postgres table.
+ *   - 24 h × 60 s = 1 440 ticks; at 250 sites that's 360 000 rows.
+ *     `SourceHealth` is ~120 bytes serialised → ~43 MB worst case
+ *     in v8 heap (with object overhead). Within the in-memory
+ *     reference backend's "dev / tests, no persistence" contract.
+ */
+export const DEFAULT_SNAPSHOT_CAP = 360_000;
 
 /**
  * Stable opaque-cursor envelope (base64-encoded JSON).
@@ -167,9 +191,24 @@ function compareForListing(a: CanonicalJob, b: CanonicalJob): number {
  */
 @StorePlugin({ id: STORE_MEMORY_ID, description: STORE_MEMORY_DESCRIPTION })
 @Injectable()
-export class InMemoryJobStore implements IJobStore, IJobObservationStore {
+export class InMemoryJobStore
+  implements IJobStore, IJobObservationStore, IHealthSnapshotStore
+{
   private readonly canonicals = new Map<string, CanonicalJob>();
   private readonly observations = new Map<string, SourceObservation[]>();
+  /**
+   * Append-only ring of `(ts, health)` rows ordered by insertion (== ts
+   * ASC by construction — `HealthSnapshotCron` uses one fresh `Date()`
+   * per tick). 24 hours at the default 60 s cadence × 250 max sites
+   * (Spec 005 / NFR-3 ceiling) = 360 000 rows ~ ~95 MB worst case.
+   * Capped at {@link MAX_SNAPSHOT_ROWS}; oldest rows drop first
+   * (`shift()`-style trim) so the cron can run indefinitely without
+   * unbounded growth. Override the cap by calling
+   * {@link InMemoryJobStore.setSnapshotCap} (test seam; production
+   * uses the default).
+   */
+  private readonly snapshots: { ts: Date; health: SourceHealth }[] = [];
+  private snapshotCap: number = DEFAULT_SNAPSHOT_CAP;
 
   // ----------------------------------------------------------------------
   // IJobStore
@@ -293,6 +332,108 @@ export class InMemoryJobStore implements IJobStore, IJobObservationStore {
   }
 
   // ----------------------------------------------------------------------
+  // IHealthSnapshotStore (Spec 005 / T09 / FR-8)
+  // ----------------------------------------------------------------------
+
+  /**
+   * Append a per-tick batch of `SourceHealth` snapshots to the ring.
+   *
+   * Empty batch short-circuits per the contract (`{ inserted: 0 }`,
+   * no Map mutation). The defensive `.slice()` on each entry would
+   * be wasteful — `SourceHealth` is a `readonly`-shaped DTO; we
+   * trust the caller-provided reference. The shared `ts` Date is
+   * stored *by value* (`new Date(ts.getTime())`) so a caller that
+   * later mutates the original Date (rare but possible) cannot
+   * retroactively change a stored row.
+   *
+   * Trimming to {@link snapshotCap} happens inline — `splice(0, N)`
+   * drops the N oldest rows when capacity is exceeded. The
+   * append-and-trim pattern is amortised O(1) per insert (V8 ring-
+   * buffer behaviour for arrays under ~1M elements).
+   */
+  async putBatch(
+    snapshots: ReadonlyArray<SourceHealth>,
+    ts: Date,
+  ): Promise<{ inserted: number }> {
+    if (snapshots.length === 0) {
+      return { inserted: 0 };
+    }
+    // Defensive copy of the timestamp so a caller mutating their
+    // original Date object doesn't retroactively shift stored rows.
+    const frozenTs = new Date(ts.getTime());
+    for (const health of snapshots) {
+      this.snapshots.push({ ts: frozenTs, health });
+    }
+    // Trim oldest-first when over the cap. Slice-and-replace would
+    // GC every retained reference; splice keeps the existing array
+    // identity so concurrent `listSince` walkers stay coherent.
+    const overflow = this.snapshots.length - this.snapshotCap;
+    if (overflow > 0) {
+      this.snapshots.splice(0, overflow);
+    }
+    return { inserted: snapshots.length };
+  }
+
+  /**
+   * Read every snapshot whose `ts >= since`, optionally narrowed by
+   * site, sorted ascending by `(ts, site)`.
+   *
+   * Implementation walks the ring from the end backwards (newest-
+   * first) until it sees the first row strictly older than `since`;
+   * everything before that point is necessarily older too because
+   * the ring is sorted by insertion order (== ts ASC by construction
+   * — `HealthSnapshotCron` uses one fresh `Date()` per tick). We
+   * then reverse-sort the collected window to match the contract's
+   * ascending order.
+   *
+   * `limit` clamps at {@link HEALTH_SNAPSHOT_QUERY_MAX_LIMIT}; values
+   * `<= 0` fall back to {@link HEALTH_SNAPSHOT_QUERY_DEFAULT_LIMIT}.
+   * The clamp-and-continue posture matches `JobStoreQuery` precedent.
+   */
+  async listSince(
+    since: Date,
+    options?: HealthSnapshotQuery,
+  ): Promise<ReadonlyArray<HealthSnapshotRow>> {
+    const sinceMs = since.getTime();
+    const siteFilter = options?.site;
+    const limit = resolveSnapshotLimit(options?.limit);
+
+    // Walk newest-first, gather matching rows until we hit `since` OR
+    // the limit. Reverse at the end so the contract's ascending order
+    // is honoured.
+    const collected: HealthSnapshotRow[] = [];
+    for (let i = this.snapshots.length - 1; i >= 0; i--) {
+      const row = this.snapshots[i];
+      if (row.ts.getTime() < sinceMs) break;
+      if (siteFilter !== undefined && row.health.site !== siteFilter) continue;
+      collected.push({ ts: row.ts, health: row.health });
+      if (collected.length >= limit) break;
+    }
+    collected.reverse();
+    return collected;
+  }
+
+  /**
+   * Latest recorded snapshot for `site`, or `null` when this site
+   * has never been snapshotted.
+   *
+   * Newest-first scan; bails on first hit. O(N_total) worst case,
+   * O(1) typical (the cron writes every active site each tick, so
+   * the latest entry for any active site is the most recent tail
+   * entry). A future ring keyed by site would optimise the
+   * worst-case `null` lookup, but the in-memory backend's contract
+   * is "dev / tests, no persistence" — premature.
+   */
+  async latest(site: Site): Promise<SourceHealth | null> {
+    for (let i = this.snapshots.length - 1; i >= 0; i--) {
+      if (this.snapshots[i].health.site === site) {
+        return this.snapshots[i].health;
+      }
+    }
+    return null;
+  }
+
+  // ----------------------------------------------------------------------
   // Test / debug surface (not part of either interface contract).
   // ----------------------------------------------------------------------
 
@@ -306,14 +447,56 @@ export class InMemoryJobStore implements IJobStore, IJobObservationStore {
   }
 
   /**
-   * Drop every row + observation. Tests use this between cases when
-   * the same instance is shared across `it()` blocks; `factory()` in
-   * the conformance suite returns a fresh instance per case so prod
-   * code SHOULD not call this.
+   * Drop every row + observation + snapshot. Tests use this between
+   * cases when the same instance is shared across `it()` blocks;
+   * `factory()` in the conformance suite returns a fresh instance per
+   * case so prod code SHOULD not call this.
    */
   clear(): void {
     this.canonicals.clear();
     this.observations.clear();
+    this.snapshots.length = 0;
   }
+
+  /**
+   * Total snapshot rows currently stored. Diagnostic-only seam; the
+   * contract surface is `listSince` / `latest`.
+   */
+  get snapshotSize(): number {
+    return this.snapshots.length;
+  }
+
+  /**
+   * Override the snapshot ring cap. Test seam — production code uses
+   * the {@link DEFAULT_SNAPSHOT_CAP} default. Trims immediately if
+   * the current ring exceeds the new cap so callers can verify
+   * trim-on-overflow behaviour with smaller, faster fixtures.
+   */
+  setSnapshotCap(cap: number): void {
+    if (typeof cap !== 'number' || !Number.isFinite(cap) || cap <= 0) {
+      throw new RangeError(
+        `setSnapshotCap requires a positive finite number (got ${String(cap)})`,
+      );
+    }
+    this.snapshotCap = Math.floor(cap);
+    const overflow = this.snapshots.length - this.snapshotCap;
+    if (overflow > 0) {
+      this.snapshots.splice(0, overflow);
+    }
+  }
+}
+
+/**
+ * Resolve the effective `limit` for {@link InMemoryJobStore.listSince}.
+ * Mirrors {@link resolveLimit} but uses the snapshot-specific
+ * defaults / clamps. Pulled into a standalone function for symmetry
+ * with the existing job-store helper and to keep the method bodies
+ * readable.
+ */
+function resolveSnapshotLimit(limit: number | undefined): number {
+  if (typeof limit !== 'number' || !Number.isFinite(limit) || limit <= 0) {
+    return HEALTH_SNAPSHOT_QUERY_DEFAULT_LIMIT;
+  }
+  return Math.min(Math.floor(limit), HEALTH_SNAPSHOT_QUERY_MAX_LIMIT);
 }
 
