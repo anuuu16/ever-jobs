@@ -552,9 +552,11 @@
 
 ## Phase 6 — Closeout
 
-- [ ] T13 — Spec 006 graduates; backlog rolled forward.
-  - **Files:** `.specify/specs/006-ats-scrapers-parity-batch-1/{spec.md,tasks.md}`,
+- [x] T13 — Spec 006 graduates; backlog rolled forward.
+  - **Files (planned):** `.specify/specs/006-ats-scrapers-parity-batch-1/{spec.md,tasks.md}`,
     `docs/log.md`, `docs/index.md`, `competitor-watch.md`.
+  - **Files (actual):** matched plan exactly. Plus `CLAUDE.md`
+    footer bump (run-tag → #36).
   - **Acceptance:** Spec status flipped to "All phases done
     (T01–T13); spec complete". `competitor-watch.md §C` rows AC-1,
     AC-2, AC-3 marked **DONE** with run-tag attributions. Notes
@@ -562,29 +564,58 @@
     next subset of `competitor-watch.md §C` (AC-4 = Oracle HCM
     Cloud / AC-5 = Mercor / AC-6 = Tesla, **OR** AC-7 = European
     salary parser as a fast small-spec interlude **OR** AC-8 =
-    seed-companies refresh).
-  - **Estimate:** 0.25 day.
+    seed-companies refresh). ✅ **Done:** run #36 (2026-04-27).
+    Status flipped; AC-1/AC-2/AC-3 rows in `competitor-watch.md §C`
+    rewritten with **DONE (runs #28..#36)** prefix + a one-line
+    summary of the shipped capability per row + the ✅ glyph in
+    the Owner column. Run #37's pinned default is **AC-7
+    (European-style salary parser)** — see Q-024 in this run's
+    log entry for the choice rationale (small-spec interlude
+    that exercises the Spec 003 normalisation surface without
+    adding new plugin scaffolding; AC-4..AC-6 deferred to a later
+    batch run).
+  - **Estimate:** 0.25 day. **Actual:** ~0.2 day.
 
-## Notes-for-the-next-run (pinned default for run #36)
+## Notes-for-the-next-run (pinned default for run #37)
 
-- Default = **Spec 006 / Phase 6 / T13** — Spec 006 closeout. With
-  T01..T12 all green, the only remaining work is the spec graduation:
-  flip Status → "All phases done (T01–T13); spec complete"; mark
-  `competitor-watch.md §C` rows AC-1, AC-2, AC-3 as **DONE** with
-  run-tag attributions (#29..#35); and pin a new default for run
-  #37 pointing at the next batch from `competitor-watch.md §C`
-  (candidates: AC-4 = Oracle HCM Cloud / AC-5 = Mercor / AC-6 =
-  Tesla, **OR** AC-7 = European salary parser as a fast small-spec
-  interlude **OR** AC-8 = seed-companies refresh). Reasoning: T13
-  is small (status flips + a single sweep of the backlog table), so
-  it slots cleanly into one scheduled run.
-- After T13 lands, the natural next batch is **AC-4..AC-6** (three
-  more ATS scrapers: Oracle HCM Cloud / Mercor / Tesla). Same
-  registration topology as Avature / Gem / Join.com, same
-  authoring rhythm; bundling them keeps the cold-start and
-  scaffolding-vs-business-logic ratio sane (Spec 006's load-bearing
-  rationale carries forward). Estimate ~5 scheduled runs (T01..T13)
-  by analogy to Spec 006's actual cost.
+- Default = **AC-7 — Spec 012 "European-style salary parser"**
+  (per Q-024 in run #36's log entry). Acceptance: extend the
+  existing `extractSalary` golden-set fixture corpus
+  (`packages/plugins/dedup-hybrid/src/extract-salary*` +
+  `packages/plugins/dedup-hybrid/__tests__/extract-salary*`)
+  with EU-currency + EU-format strings (€ vs €/$/£/CHF prefix
+  conventions; `60.000` thousands-separator convention used in
+  DACH; `60 000` space-separator convention used in FR / SE /
+  NO; `42k €` shortened-form variants), plus a `parseCurrency`
+  helper that maps the symbol → ISO 4217 (`EUR / GBP / CHF /
+  SEK / NOK / DKK / PLN`). Three load-bearing decisions deferred
+  to that spec's Q-024:
+    1. Whether to absorb into Spec 003 normalisation (cheap, but
+       blurs the boundary between dedup and parsing) OR open
+       a fresh Spec 012 (clean, but adds spec count). Default:
+       **fresh Spec 012** — keeps the dedup / canonicalisation
+       boundary clean.
+    2. ISO 4217 mapping for ambiguous symbols (e.g. `$` → USD
+       vs CAD vs AUD vs SGD vs HKD). Default: **caller-supplied
+       country hint via `ScraperInputDto.countryCode`** falls
+       through to USD when unset.
+    3. Numeric-format normalisation (decimal-comma vs decimal-
+       period). Default: **single regex per locale family**
+       (Continental EU = `\d+(?:\.\d{3})*(?:,\d+)?` for
+       comma-decimal; Anglosphere = `\d+(?:,\d{3})*(?:\.\d+)?`
+       for period-decimal); locale dispatch via the same
+       country hint.
+- A future bundled batch — **AC-4..AC-6** (Oracle HCM Cloud /
+  Mercor / Tesla) — follows AC-7. Same registration topology as
+  Avature / Gem / Join.com, same authoring rhythm. Estimate ~5
+  scheduled runs (T01..T13) by analogy to Spec 006's actual
+  cost. AC-8 (seed-companies refresh) and AC-9 (Workable diff)
+  follow that batch — both are quick interludes that don't add
+  new plugin scaffolding.
+- AC-9 candidate (Workable diff against upstream commit
+  `312c7b6`) ships as a small focused run after AC-4..AC-6 —
+  Spec 006's experience suggests bundling in a multi-plugin
+  spec is cheaper than three independent specs.
 
 ## Notes-for-the-prior-run (pinned default for run #34, completed run #35)
 

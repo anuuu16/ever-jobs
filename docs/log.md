@@ -5,6 +5,106 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #36 (Spec 006 / Phase 6 — T13: Spec 006 closeout; **Spec 006 complete**)
+
+**Scope:** land Spec 006 / Phase 6 / T13 — the spec closeout.
+With T01..T12 all shipped + green over runs #29..#35, T13's
+job is the spec graduation: flip the Status header to "All
+phases done", mark `competitor-watch.md §C` rows AC-1 / AC-2 /
+AC-3 as **DONE** with run-tag attributions, and pin a default
+for run #37 (the next backlog item from §C / AC-4..AC-9). Run
+#35's Notes-for-the-next-run pinned this default ("Spec 006 /
+Phase 6 / T13 — Spec 006 closeout. Status flips + sweep
+`competitor-watch.md §C`; small mechanical change").
+
+**One new question opened this run — Q-024** (next-batch
+backlog selection: AC-4..AC-6 bundled spec vs AC-7 European
+salary parser vs AC-8 seed refresh vs AC-9 Workable diff).
+Default = **Option B (AC-7)** as a small-spec interlude
+between the just-closed Spec 006 and the future AC-4..AC-6
+ATS-batch. The full options matrix and the load-bearing
+reasoning sit in `docs/questions.md` Q-024; the short version
+is "different code-shape than Spec 006 keeps the agent from
+drifting into a plugin-scaffolding rut, smallest-spec-first
+gives visible progress in 2 runs, and Spec 012 keeps the
+dedup / canonicalisation boundary clean".
+
+**Three load-bearing decisions** weren't called out in run
+#35's Notes-for-the-next-run and were locked into the spec
+surface (per Q-024):
+
+1. **AC-7 chosen over AC-4..AC-6 for the next default.**
+   AC-4..AC-6 (Oracle HCM Cloud / Mercor / Tesla) is the
+   "obvious" next step (same plugin pattern as Spec 006);
+   AC-7 (European salary parser) is the "different
+   code-shape" pick. Run #35's notes deliberately left the
+   choice open ("AC-4..AC-6 OR AC-7 OR AC-8"); Q-024 picks
+   AC-7 to give the agent a parser-work interlude before
+   the next plugin-work batch. The AC-4..AC-6 bundle
+   follows AC-7 — tracked as the "future bundled batch"
+   in `tasks.md` Notes.
+2. **Fresh Spec 012, not absorb-into-Spec-003.**
+   Q-024's Option B explicitly chooses a fresh spec (rather
+   than extending Spec 003 normalisation in-place) because
+   the parser concerns (currency-symbol → ISO 4217 mapping,
+   decimal-comma vs decimal-period locale dispatch) live at
+   a different abstraction layer than canonicalisation. A
+   future contributor grepping for `parseCurrency` finds it
+   in one place.
+3. **AC-8 / AC-9 deferred to short interlude runs.** Both
+   are mechanical (~1 run each); bundling them as separate
+   short runs after AC-4..AC-6 keeps the spec count low
+   without losing the work.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/006-ats-scrapers-parity-batch-1/tasks.md` —
+  T13 graduates from "pending" to "done" with full
+  planned-vs-actual file list, acceptance verification, and
+  Q-024 cross-reference. "Notes-for-the-next-run" rewritten
+  to point at AC-7 / Spec 012 with three sub-decisions
+  deferred to that spec's future Q file.
+- `.specify/specs/006-ats-scrapers-parity-batch-1/spec.md` —
+  `Status` flipped to `All phases done (T01..T13 runs
+  #29..#36); spec complete`; `Last updated` bumped to
+  `2026-04-27 (run #36)`.
+- `docs/index.md` — Spec 006 row updated with new status
+  string; `Last revised` bumped to `2026-04-27 (run #36)`.
+- `docs/questions.md` — new Q-024 at the top with four
+  options, default = Option B. Resolution = pending.
+- `CLAUDE.md` — run-tag → #36.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #36 sync line; **no upstream
+  commits** (twenty-three consecutive zero-churn runs). §C
+  rows AC-1 / AC-2 / AC-3 rewritten with **DONE (runs
+  #28..#36)** prefix + ✅ glyph in the Owner column.
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean ("✓ Doc-lint passed — no
+  issues.") after this run's edits.
+- No source / test code touched.
+
+**Notes & follow-ups:**
+
+- **Spec 006 is now complete.** All thirteen tasks across
+  six phases ship with full unit + integration + e2e +
+  perf-bench coverage, plus `docs/ATS_INTEGRATIONS.md` /
+  `docs/COMPANY_SLUG_DIRECTORY.md` documentation. The three
+  new ATS plugins are wired into `ALL_SOURCE_MODULES` and
+  exercised through every layer of the API stack.
+- Default for run #37 is **AC-7 — Spec 012 "European-style
+  salary parser"**. The spec scaffold lands in run #37.
+- Specs **004 / 005 / 006** are all complete as of this
+  run. The active backlog is `competitor-watch.md §C /
+  AC-4..AC-9` — six items totalling ~7..8 scheduled runs.
+- External research repos: no new commits since run #35.
+  Twenty-three consecutive zero-churn runs.
+- Pre-existing dedup-hybrid red tests unchanged from runs
+  #11–#35; not wired into CI.
+
+---
+
 ## 2026-04-27 — Scheduled run #35 (Spec 006 / Phase 5 — T12: per-plugin perf benches for Avature / Gem / Join.com)
 
 **Scope:** land Spec 006 / Phase 5 / T12 — three new performance

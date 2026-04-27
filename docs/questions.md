@@ -10,6 +10,83 @@
 
 ---
 
+## Q-024 — Next-batch backlog selection: which `competitor-watch.md §C` row drives run #37 (Spec 006 / T13)
+
+**Context:** Spec 006 closes in run #36 with all three plugins
+shipped + tested + benched + documented. The remaining
+`competitor-watch.md §C` rows are AC-4..AC-9, six items spanning
+three categories: more ATS / source plugins (AC-4 / AC-5 / AC-6),
+a parser enhancement (AC-7), and two infrastructure-style sweeps
+(AC-8 / AC-9). T13's acceptance line says "pin next-run default";
+it doesn't pre-decide which row runs first.
+
+**Options:**
+
+- **Option A — AC-4..AC-6 bundled spec (Oracle HCM Cloud /
+  Mercor / Tesla).** Same registration topology as Spec 006,
+  same authoring rhythm; bundling keeps cold-start +
+  scaffolding-vs-business-logic ratio sane. Estimate: ~5
+  scheduled runs to close (Spec 006 took 9 runs end-to-end:
+  T01..T13). Adds three more vendor plugins, expanding source
+  coverage by a meaningful chunk.
+- **Option B — AC-7 (European-style salary parser, fresh Spec
+  012).** Small-spec interlude: extends the existing
+  `extractSalary` golden-set + adds a `parseCurrency` helper
+  for EUR / GBP / CHF / SEK / NOK / DKK / PLN. Estimate: ~2
+  scheduled runs end-to-end. Touches Spec 003's normalisation
+  surface, NOT the plugin layer — a different code-shape from
+  Spec 006, which gives the next batch a cleaner plan-vs-implement
+  rhythm. Lower scope risk: golden-set extension is mechanical.
+- **Option C — AC-8 (seed-companies refresh).** Refresh
+  Greenhouse / Lever / Workable / SmartRecruiters seed lists
+  from upstream CSVs. Estimate: ~1 run (mostly mechanical).
+  Pure docs-and-data, no source code. Useful but low-leverage:
+  the existing plugins already work; this just expands the
+  documented coverage table.
+- **Option D — AC-9 (Workable diff against upstream commit
+  `312c7b6`).** A single targeted code-diff against the
+  upstream Python's recent `Workable` changes; absorb relevant
+  bug-fix / behaviour. Estimate: ~1 run (focused). Quality-of-
+  life win but narrow blast radius.
+
+**Default — proceeding with Option B (AC-7) for run #37.**
+Reasons:
+- **Different code-shape than Spec 006.** Six runs of
+  Avature / Gem / Join.com plugin work has trained the
+  scheduled-task agent on the plugin pattern; switching to
+  parser work for one short spec exercises the dedup /
+  normalisation surface (Spec 003) before AC-4..AC-6 take it
+  back to the plugin layer for another ~5 runs. Variety in
+  the work mix keeps the agent from drifting into a "plugin
+  scaffolding" rut.
+- **Smallest-spec-first principle.** AC-7 is ~2 scheduled
+  runs end-to-end vs ~5 for AC-4..AC-6. Closing AC-7 first
+  means `competitor-watch.md §C` shows a one-row delta after
+  ~2 runs (visible progress); the AC-4..AC-6 batch then runs
+  uninterrupted for ~5 runs without intermediate context
+  switches.
+- **Spec 012 vs absorb-into-Spec-003.** Defaulting to a
+  fresh Spec 012 (rather than extending Spec 003 in-place)
+  keeps the dedup / canonicalisation boundary clean; the
+  parser decisions (currency-symbol → ISO 4217 mapping,
+  decimal-comma vs decimal-period locale dispatch) live in
+  one place a future contributor can grep.
+- **AC-8 / AC-9 deferred.** Both are short and mechanical;
+  bundling them after the AC-4..AC-6 plugin batch keeps the
+  spec count low. AC-8 fits naturally as a follow-up
+  alongside the next ATS-batch's `COMPANY_SLUG_DIRECTORY.md`
+  refresh; AC-9 is a one-off Workable diff that doesn't
+  warrant a separate spec.
+
+**Resolution:** _pending_ — proceeding with Option B for run
+#37 (open Spec 012 + extend `extractSalary` golden set + add
+`parseCurrency`). Revisit if operator feedback shows AC-7 is
+not the highest-leverage next step (e.g. a specific customer
+needs Oracle HCM Cloud coverage NOW), in which case the
+AC-4..AC-6 batch jumps the queue.
+
+---
+
 ## Q-023 — Gem GraphQL response shape, future-proofing (Spec 006 / T05)
 
 **Context:** Gem's public GraphQL endpoint at
