@@ -5,6 +5,159 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #46 (Spec 013 / Phase 2 / T03 — Oracle service landed)
+
+**Scope:** land Spec 013 / Phase 2 / T03 —
+`OracleService.scrape(input)` REST + finder-string implementation
+against `/hcmRestApi/resources/latest/recruitingCEJobRequisitions`.
+Three new files
+(`packages/plugins/source-ats-oracle/src/oracle.{constants,types,service}.ts`)
+plus a barrel re-export refresh and a stub-test bump from 3 → 4
+cases. Real network calls are wired through
+`@ever-jobs/common.createHttpClient`; sentinel codes
+`ERR_ORACLE_BAD_TENANT` / `ERR_ORACLE_FINDER_REJECTED` recorded via
+`Logger.warn`. Same shape as Spec 006 / T03 (Avature service, run
+#30). Estimated 0.5 day per tasks.md; landed in a single
+scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #45's sync). Thirtieth consecutive zero-churn
+run in `OTHERS/`.
+
+**No new questions opened this run.** Q-028..Q-031 stay open
+with their pinned defaults; their resolutions land alongside
+the implementation tasks (T05 / T07 / T09) over the next several
+runs. Q-026 / Q-027 retain their **Spec 014 candidate** label.
+
+**Three load-bearing decisions** were resolved during T03's
+implementation pass (full prose in Spec 013 § 10):
+
+1. **Finder-string separator divergence from FR-2.** spec.md /
+   FR-2 + tasks.md / T03 both documented an all-semicolon variant
+   (`siteNumber=…;facetsList=…;limit=…`). The upstream Python
+   client uses **commas** between finder params and **semicolons**
+   only inside the facet list. The live Oracle CandidateExperience
+   API rejects the all-semicolon variant. Decision: implement per
+   upstream Python's wire format; document the divergence in
+   spec.md § 10 + tasks.md / T03 acceptance text. FR-2's prose
+   stays as-is for high-level intent; the actual separator scheme
+   is now authoritative in `oracle.constants.ts`.
+2. **`offset=0` omitted from finder string on the first page.**
+   Upstream Python conditionally appends `offset=` only when
+   `offset > 0`. Match upstream's canonical request shape to
+   avoid surprising request-fingerprint divergences for tenants
+   with rate-limit heuristics keyed on URL hash.
+3. **`companySlug` interpreted as `<subdomain>-<region>` splitting
+   on the LAST dash.** Per FR-3 / Q-030 the slug is documented
+   as `<subdomain>-<region>` (e.g. `eeho-us2`). Splitting on the
+   LAST `-` lets multi-segment subdomains like
+   `careers-portal-us2` resolve to subdomain=`careers-portal` /
+   region=`us2`. Single-segment slugs missing the region half
+   are unrecoverable without operator intervention; resolver
+   returns `null` and bad-tenant sentinel fires.
+
+**Changes — source / test:**
+
+- `packages/plugins/source-ats-oracle/src/oracle.constants.ts`
+  — NEW. ~80 LOC. Exports `ORACLE_DEFAULT_SITE_NUMBER` (`'CX_45001'`
+  per Q-030), `ORACLE_RECORDS_PER_PAGE` (= 100 per FR-2),
+  `ORACLE_DEFAULT_RESULTS_WANTED` (= 100), `ORACLE_MAX_PAGES`
+  (= 50), `ORACLE_DEFAULT_SORT_BY` (`'POSTING_DATES_DESC'`),
+  the documented eight-facet list (`LOCATIONS`, `WORK_LOCATIONS`,
+  `WORKPLACE_TYPES`, `TITLES`, `CATEGORIES`, `ORGANIZATIONS`,
+  `POSTING_DATES`, `FLEX_FIELDS`), the upstream `expand=` query
+  parameter, the `findReqs` finder name and the REST resource
+  path. Plus `ORACLE_HEADERS` (browser-shaped UA + `Accept:
+  application/json`) and the two sentinel error codes.
+- `packages/plugins/source-ats-oracle/src/oracle.types.ts` —
+  NEW. ~50 LOC. Narrow internal types mirroring the live API's
+  JSON envelope: `OracleRequisition` (Id / Title /
+  PrimaryLocation / PostedDate / EmployerName / ExternalUrl /
+  ExternalUrlSeo / RequisitionNumber); `OracleRequisitionWrapper`
+  (TotalJobsCount / requisitionList[]); `OracleJobsResponse`
+  (items[]); plus `OracleTenantContext` for the resolved
+  tenant metadata.
+- `packages/plugins/source-ats-oracle/src/oracle.service.ts` —
+  REWRITTEN from T02 stub. ~200 LOC. Real `scrape(input)`
+  implementation: tenant resolution (companyUrl → companySlug
+  → null), finder URL composition matching upstream Python's
+  exact wire format, pagination loop honouring `resultsWanted`
+  + `ORACLE_MAX_PAGES`, error catch with sentinel logging,
+  `JobPostDto` mapping (`oracle-${Id}` ID, `EmployerName`-or-
+  fallback companyName, `PrimaryLocation` → `LocationDto.city`,
+  `PostedDate` → `datePosted`, isRemote heuristic on
+  PrimaryLocation lowercase substring).
+- `packages/plugins/source-ats-oracle/src/index.ts` — barrel
+  refreshed to re-export the constants and types modules so
+  T04's fixture authors can import the same literals.
+- `packages/plugins/source-ats-oracle/__tests__/oracle.service.spec.ts`
+  — bumped from 3 → 4 cases. New constants-pin case asserts
+  the eight-facet list and the `CX_45001` default. The
+  empty-stub case formerly asserted the unconditional empty
+  return; now exercises the bad-tenant guard returning empty
+  via `ERR_ORACLE_BAD_TENANT`. Behavioural sweep (≥ 6 cases —
+  happy path / empty `requisitionList[]` / HTTP 500 /
+  resultsWanted cap / `companyUrl` override / custom
+  `siteNumber`) lands in T04 alongside fixtures.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  T03 row flipped from `[ ]` to `[x]` with "Landed run #46"
+  annotation; finder-string text updated to reflect the comma /
+  semicolon split (matches the actual implementation);
+  Notes-for-the-next-run pinned default updated to **Spec 013 /
+  Phase 2 / T04** (≥ 6-case behavioural sweep + fixtures).
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  Status flipped from "Phase 1 done (T01..T02 runs #44..#45);
+  T03..T15 pending" to "T03 landed run #46; T04..T15 pending";
+  Last-updated bumped to run #46; new entry appended to § 10
+  Decisions covering the three load-bearing choices above.
+- `docs/index.md` — Spec 013 row status updated to match
+  spec.md; footer bumped to run #46.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #46.
+- `/competitor-watch.md` — run #46 sync line appended at top
+  of Sync Log; AC-4 row prefix updated to "Spec 013 / Phase 2 /
+  T03 landed run #46; T04..T15 pending"; AC-5 / AC-6 prefixes
+  unchanged (Phase 3 / 4 — Mercor + Tesla — still pending).
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean.
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` —
+  clean (CI's typecheck path).
+- `npx jest --testPathPatterns 'packages/plugins/source-ats-oracle'`
+  — 4 cases pass, 0 failures.
+
+**Notes & follow-ups:**
+
+- **Default for run #47** = Spec 013 / Phase 2 / T04 — extend
+  `__tests__/oracle.service.spec.ts` to ≥ 6 cases (happy path
+  with fixture, empty `requisitionList[]`, HTTP 500,
+  `resultsWanted` cap with ≥ 200-job fixture, `companyUrl`
+  override, custom `siteNumber`). Add
+  `__tests__/fixtures/oracle-page-1.json` (sanitised `eeho-us2`
+  corpus). Mirror the Avature spec's `axios`-mock helper
+  pattern. Estimated 0.5 day.
+- **Out-of-scope reminders for run #47:** Stay strictly inside
+  `packages/plugins/source-ats-oracle/__tests__/`. Do NOT
+  touch the service or constants — those settled in this run.
+  Do NOT add e2e or integration tests yet — those land in T11
+  / T12. Detail-page enrichment for Oracle is deferred to
+  candidate Spec 016 (per Spec 013 § 3 non-goals).
+- **Active backlog after Spec 013 closes:** Spec 014
+  candidates = Q-026/Q-027 salary residuals OR AC-8
+  (seed-companies refresh) OR AC-9 (Workable diff). Pick at
+  Spec 013 / T15 closeout based on upstream signal.
+- Specs **004 / 005 / 006 / 012** stay complete as of this
+  run; **001 / 003** retain their statuses unchanged. Spec
+  **013** advances from "Phase 1 done" to "T03 landed; T04..T15
+  pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #45 (Spec 013 / Phase 1 / T02 — Plugin scaffolds landed)
 
 **Scope:** land Spec 013 / Phase 1 / T02 — scaffold the four new

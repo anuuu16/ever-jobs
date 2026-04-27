@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | Phase 1 done (T01..T02 runs #44..#45); T03..T15 pending |
+| Status         | T03 landed run #46; T04..T15 pending                 |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-28 (run #45)                                 |
+| Last updated   | 2026-04-28 (run #46)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -332,6 +332,54 @@ records.)
   'detail-all'` with `'detail-25'` the default).
 
 ## 10. Decisions
+
+- **2026-04-28 (run #46 / T03)** — `OracleService.scrape(input)`
+  shipped against the live `recruitingCEJobRequisitions` REST
+  endpoint with the upstream Python's exact wire format. Three
+  load-bearing decisions resolved during implementation:
+  (1) **Finder-string separator divergence from FR-2.** Spec.md /
+  FR-2 + tasks.md / T03 both documented an all-semicolon variant
+  (`siteNumber=…;facetsList=…;limit=…`). The upstream Python
+  client (`OTHERS/Ats-scrapers/oracle/scripts/oracle_ats_client/api_client.py`
+  line 137) uses **commas** between finder params and **semicolons**
+  only inside the facet list. The live Oracle CandidateExperience
+  API rejects the all-semicolon variant. Decision: implement per
+  upstream Python's wire format; document the divergence here so
+  T04's fixtures and the eventual integration spec (T11) honour
+  the same scheme. FR-2's prose stays as-is for high-level intent
+  ("paginate via offset/limit"); the actual separator is now
+  authoritative in `oracle.constants.ts`.
+  (2) **`offset=0` omitted from finder string.** Upstream Python
+  conditionally appends `offset=` only when `offset > 0`. We
+  honour that conditional verbatim — Oracle's API tolerates the
+  presence of `offset=0` but the canonical request shape lacks
+  it on the first page, and matching the canonical shape avoids
+  surprising request-fingerprint divergences for tenants with
+  rate-limit heuristics keyed on URL hash.
+  (3) **`companySlug` interpreted as `<subdomain>-<region>`,
+  splitting on the LAST dash.** Per FR-3 / Q-030 the slug form
+  is documented as `<subdomain>-<region>` (e.g. `eeho-us2`). The
+  service splits on the LAST `-` so multi-segment subdomains like
+  `careers-portal-us2` resolve to subdomain=`careers-portal` /
+  region=`us2`. Single-segment slugs without a `-` (e.g. just
+  `eeho`) are treated as bad-tenant — Oracle requires both halves
+  to compose a valid base URL, and a slug missing the region
+  half is unrecoverable without operator intervention. The
+  `composeUrlFromSlug()` helper returns `null` and the resolver
+  falls through to the `ERR_ORACLE_BAD_TENANT` sentinel.
+
+  Side-effect: the package barrel (`packages/plugins/source-ats-oracle/src/index.ts`)
+  now exports the constants and types modules so T04's fixture
+  authors can import the same `ORACLE_DEFAULT_FACETS` /
+  `ORACLE_DEFAULT_SITE_NUMBER` literals when constructing test
+  URLs — avoids the typical "fixture drifts from production
+  constants" bug class. Stub tests (`__tests__/oracle.service.spec.ts`)
+  updated from 3 → 4 cases: DI resolution, bad-tenant guard
+  (formerly empty-stub assertion; now exercises the real
+  resolver returning `null`), `Site.ORACLE` literal pin, and a
+  new constants-pin case asserting the eight-facet list and the
+  CX_45001 default. Behavioural sweep (≥ 6 cases) remains T04's
+  scope.
 
 - **2026-04-28 (run #45 / T02)** — Four new plugin packages
   scaffolded under `packages/plugins/`: `source-ats-oracle`,

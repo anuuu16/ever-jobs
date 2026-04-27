@@ -54,15 +54,19 @@
 
 ## Phase 2 — Oracle HCM Cloud
 
-- [ ] T03 — `OracleService.scrape(input)` REST + finder-string path.
+- [x] T03 — `OracleService.scrape(input)` REST + finder-string path.
+  **Landed run #46.**
   - **Files (planned):** `packages/plugins/source-ats-oracle/src/oracle.service.ts`,
     `…/oracle.types.ts`, `…/oracle.constants.ts`.
   - **Acceptance (FR-1 / FR-2 / FR-3 / FR-4):**
     - URL composition: `companyUrl` (full URL override) ⇒ used verbatim;
       `companySlug` (`<subdomain>-<region>` form) ⇒ composed to
       `https://<subdomain>.fa.<region>.oraclecloud.com`.
-    - Finder string: `siteNumber=<value>;facetsList=<facets>;limit=100;offset=N;sortBy=POSTING_DATES_DESC`
-      with the upstream's documented facet list:
+    - Finder string: `siteNumber=<value>,facetsList=<facets>,limit=100,offset=N,sortBy=POSTING_DATES_DESC`
+      (commas between params, semicolons between facets — matches the
+      live API's wire format per upstream Python; spec.md / FR-2's
+      all-semicolon variant was wrong, see § 10 Decisions log).
+      Documented facet list:
       `LOCATIONS;WORK_LOCATIONS;WORKPLACE_TYPES;TITLES;CATEGORIES;ORGANIZATIONS;POSTING_DATES;FLEX_FIELDS`.
     - Pagination: increment `offset` by `100` until
       `requisitionList[]` empty OR `resultsWanted` cap.
@@ -271,18 +275,23 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #46** = Spec 013 / Phase 2 / T03 —
-  `OracleService.scrape(input)` REST + finder-string path. Land
-  `oracle.service.ts` (real implementation), `oracle.types.ts`,
-  `oracle.constants.ts`. URL composition rules: `companyUrl`
-  override is canonical; `companySlug` (`<subdomain>-<region>` form)
-  composes to `https://<subdomain>.fa.<region>.oraclecloud.com`.
-  Finder string per FR-2:
-  `siteNumber=<value>;facetsList=LOCATIONS;WORK_LOCATIONS;WORKPLACE_TYPES;TITLES;CATEGORIES;ORGANIZATIONS;POSTING_DATES;FLEX_FIELDS;limit=100;offset=N;sortBy=POSTING_DATES_DESC`.
-  `siteNumber` defaults to `'CX_45001'` (Q-030) when undefined.
-  HTTP via `@ever-jobs/common.createHttpClient`; errors caught →
-  empty `JobResponseDto` with sentinel `ERR_ORACLE_BAD_TENANT` /
-  `ERR_ORACLE_FINDER_REJECTED` recorded. Estimated 0.5 day.
+- **Default for run #47** = Spec 013 / Phase 2 / T04 — extend
+  `__tests__/oracle.service.spec.ts` to ≥ 6 cases (happy path /
+  empty `requisitionList[]` / HTTP 500 / `resultsWanted` cap /
+  `companyUrl` override / custom `siteNumber`) plus
+  `__tests__/fixtures/oracle-page-1.json` (sanitised `eeho-us2`
+  corpus, ≥ 200 jobs to exercise the cap). The shape of the tests
+  mirrors `packages/plugins/source-ats-avature/__tests__/avature.service.spec.ts`
+  — `axios`-mocked happy-path / empty / 500 / cap, plus Oracle-only
+  cases for `companyUrl` and `siteNumber` overrides. Estimated 0.5
+  day.
+- **Default for run #46 (DONE — landed run #46)** = Spec 013 /
+  Phase 2 / T03 — `OracleService.scrape(input)` REST + finder-string
+  path. Real `oracle.service.ts` + `oracle.types.ts` +
+  `oracle.constants.ts` shipped; sentinel codes
+  `ERR_ORACLE_BAD_TENANT` / `ERR_ORACLE_FINDER_REJECTED` recorded
+  via `Logger.warn`. Wire format follows upstream Python's exact
+  comma+semicolon scheme (see § 10 Decisions log).
 - **Default for run #45 (DONE — landed run #45)** = Spec 013 /
   Phase 1 / T02 — scaffold the four new plugin packages and
   append three (Oracle / Mercor / Tesla) to `ALL_SOURCE_MODULES`.

@@ -1,17 +1,31 @@
 import 'reflect-metadata';
 import { Test } from '@nestjs/testing';
 import { JobResponseDto, ScraperInputDto, Site } from '@ever-jobs/models';
-import { OracleModule, OracleService } from '../src';
+import {
+  ORACLE_DEFAULT_FACETS,
+  ORACLE_DEFAULT_SITE_NUMBER,
+  OracleModule,
+  OracleService,
+} from '../src';
 
 /**
- * Spec 013 / T02 — `OracleService` stub tests.
+ * Spec 013 / T03 — `OracleService` registration + bad-tenant smoke
+ * tests.
  *
- * Behavioural tests (≥ 6 cases — happy path / empty `requisitionList[]` /
- * HTTP 500 / `resultsWanted` cap / `companyUrl` override / custom
- * `siteNumber`) land alongside the implementation in Spec 013 / T04.
- * This file pins the registration scaffolding only.
+ * The full behavioural sweep (≥ 6 cases — happy path / empty
+ * `requisitionList[]` / HTTP 500 / `resultsWanted` cap / `companyUrl`
+ * override / custom `siteNumber`) lands in Spec 013 / T04 alongside a
+ * `__tests__/fixtures/oracle-page-1.json` corpus and the canonical
+ * `axios`-mocked helper. This file pins:
+ *   - Four-place registration (DI resolves `OracleService` via
+ *     `OracleModule` / `Site.ORACLE` / tsconfig path / jest mapper).
+ *   - The bad-tenant guard returns an empty `JobResponseDto`
+ *     synchronously without making any HTTP call (no `companyUrl`,
+ *     no `companySlug`).
+ *   - Constants exported from the package barrel match the values
+ *     the next-phase plugin authors will import.
  */
-describe('OracleService (Spec 013 / T02 — stub)', () => {
+describe('OracleService (Spec 013 / T03 — REST + finder-string)', () => {
   it('resolves through OracleModule via NestJS DI', async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [OracleModule],
@@ -22,11 +36,10 @@ describe('OracleService (Spec 013 / T02 — stub)', () => {
     await moduleRef.close();
   });
 
-  it('scrape() returns an empty JobResponseDto until T03 lands', async () => {
+  it('returns an empty JobResponseDto when neither companyUrl nor companySlug supplied (ERR_ORACLE_BAD_TENANT)', async () => {
     const service = new OracleService();
     const input: ScraperInputDto = {
       site: [Site.ORACLE],
-      companySlug: 'eeho-us2',
     } as ScraperInputDto;
     const result = await service.scrape(input);
     expect(result).toBeInstanceOf(JobResponseDto);
@@ -35,5 +48,19 @@ describe('OracleService (Spec 013 / T02 — stub)', () => {
 
   it('exports the Site.ORACLE = "oracle" enum value', () => {
     expect(Site.ORACLE).toBe('oracle');
+  });
+
+  it('exports the documented eight-facet list and the CX_45001 default', () => {
+    expect(ORACLE_DEFAULT_SITE_NUMBER).toBe('CX_45001');
+    expect([...ORACLE_DEFAULT_FACETS]).toEqual([
+      'LOCATIONS',
+      'WORK_LOCATIONS',
+      'WORKPLACE_TYPES',
+      'TITLES',
+      'CATEGORIES',
+      'ORGANIZATIONS',
+      'POSTING_DATES',
+      'FLEX_FIELDS',
+    ]);
   });
 });
