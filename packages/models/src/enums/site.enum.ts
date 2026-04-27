@@ -183,6 +183,10 @@ export enum Site {
   // Phase 27: Asia-Pacific & US tech expansion
   JOBSDB = 'jobsdb',
   TECHCAREERS = 'techcareers',
+  // Phase 28: Spec 006 — ATS-Scrapers Parity, Batch 1
+  AVATURE = 'avature',
+  GEM = 'gem',
+  JOIN_COM = 'join_com',
 }
 
 /**

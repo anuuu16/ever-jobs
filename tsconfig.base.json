@@ -189,7 +189,10 @@
       "@ever-jobs/source-clojurejobs": ["packages/plugins/source-clojurejobs/src/index.ts"],
       "@ever-jobs/source-ecojobs": ["packages/plugins/source-ecojobs/src/index.ts"],
       "@ever-jobs/source-jobsdb": ["packages/plugins/source-jobsdb/src/index.ts"],
-      "@ever-jobs/source-techcareers": ["packages/plugins/source-techcareers/src/index.ts"]
+      "@ever-jobs/source-techcareers": ["packages/plugins/source-techcareers/src/index.ts"],
+      "@ever-jobs/source-ats-avature": ["packages/plugins/source-ats-avature/src/index.ts"],
+      "@ever-jobs/source-ats-gem": ["packages/plugins/source-ats-gem/src/index.ts"],
+      "@ever-jobs/source-ats-joincom": ["packages/plugins/source-ats-joincom/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

@@ -173,6 +173,9 @@ module.exports = {
     '^@ever-jobs/source-powertofly$': '<rootDir>/packages/plugins/source-powertofly/src/index.ts',
     '^@ever-jobs/source-clojurejobs$': '<rootDir>/packages/plugins/source-clojurejobs/src/index.ts',
     '^@ever-jobs/source-ecojobs$': '<rootDir>/packages/plugins/source-ecojobs/src/index.ts',
+    '^@ever-jobs/source-ats-avature$': '<rootDir>/packages/plugins/source-ats-avature/src/index.ts',
+    '^@ever-jobs/source-ats-gem$': '<rootDir>/packages/plugins/source-ats-gem/src/index.ts',
+    '^@ever-jobs/source-ats-joincom$': '<rootDir>/packages/plugins/source-ats-joincom/src/index.ts',
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.base.json' }],

@@ -15,6 +15,7 @@ import { ArbeitnowModule } from './source-arbeitnow';
 import { ArbeitsagenturModule } from './source-arbeitsagentur';
 import { AdpModule } from './source-ats-adp';
 import { AshbyModule } from './source-ats-ashby';
+import { AvatureModule } from './source-ats-avature';
 import { BambooHRModule } from './source-ats-bamboohr';
 import { BreezyHRModule } from './source-ats-breezyhr';
 import { BullhornModule } from './source-ats-bullhorn';
@@ -23,6 +24,7 @@ import { CrelateModule } from './source-ats-crelate';
 import { DeelModule } from './source-ats-deel';
 import { FountainModule } from './source-ats-fountain';
 import { FreshteamModule } from './source-ats-freshteam';
+import { GemModule } from './source-ats-gem';
 import { GreenhouseModule } from './source-ats-greenhouse';
 import { HiringThingModule } from './source-ats-hiringthing';
 import { HomerunModule } from './source-ats-homerun';
@@ -32,6 +34,7 @@ import { JazzHRModule } from './source-ats-jazzhr';
 import { JobScoreModule } from './source-ats-jobscore';
 import { JobviteModule } from './source-ats-jobvite';
 import { JobylonModule } from './source-ats-jobylon';
+import { JoinComModule } from './source-ats-joincom';
 import { LeverModule } from './source-ats-lever';
 import { LoxoModule } from './source-ats-loxo';
 import { ManatalModule } from './source-ats-manatal';
@@ -176,6 +179,7 @@ export const ALL_SOURCE_MODULES = [
   ArbeitsagenturModule,
   AdpModule,
   AshbyModule,
+  AvatureModule,
   BambooHRModule,
   BreezyHRModule,
   BullhornModule,
@@ -184,6 +188,7 @@ export const ALL_SOURCE_MODULES = [
   DeelModule,
   FountainModule,
   FreshteamModule,
+  GemModule,
   GreenhouseModule,
   HiringThingModule,
   HomerunModule,
@@ -193,6 +198,7 @@ export const ALL_SOURCE_MODULES = [
   JobScoreModule,
   JobviteModule,
   JobylonModule,
+  JoinComModule,
   LeverModule,
   LoxoModule,
   ManatalModule,

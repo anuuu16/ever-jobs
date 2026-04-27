@@ -5,6 +5,128 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #29 (Spec 006 / Phase 1 — T01 + T02: Site enum + three plugin scaffolds for Avature / Gem / Join.com)
+
+**Scope:** land Spec 006 / Phase 1 / T01 + T02 — the registration
+scaffolding plus three empty plugin packages
+(`source-ats-avature`, `source-ats-gem`, `source-ats-joincom`).
+Run #28's Notes-for-the-next-run pinned this default ("Spec 006 /
+Phase 1 / T01 + T02 — Site enum additions and three empty plugin
+packages scaffolded with stubs").
+
+**No new questions opened this run** — Q-021 was already opened in
+run #28 alongside the spec scaffold (slug-naming convention for
+Join.com, default Option A: enum value `JOIN_COM = 'join_com'`,
+folder name `source-ats-joincom`). No latent questions surfaced
+during the implementation.
+
+**Five load-bearing decisions** all came from run #28's
+Notes-for-the-next-run; this run honoured them exactly:
+
+1. **`Site.JOIN_COM = 'join_com'`** (underscore in the enum value),
+   `source-ats-joincom` (no underscore in the folder name).
+2. **`AvatureService` accepts both `companyUrl` and `companySlug`**
+   — flagged in JSDoc; resolution logic deferred to T03.
+3. **No new external deps.** Cheerio import will land in T03 with
+   the actual HTML scrape; this run only adds @nestjs/common +
+   @ever-jobs/models + @ever-jobs/plugin imports (all existing).
+4. **`DEFAULT_CIRCUIT_POLICY` inherited** for all three services —
+   no `getCircuitBreakerPolicy()` override yet.
+5. **Four-place registration** locked in by 9 unit cases (3 cases
+   × 3 services): NestJS DI resolution via the corresponding
+   module, stub `scrape()` returning empty `JobResponseDto`, and
+   the literal `Site` enum value.
+
+**Changes — code:**
+
+- `packages/models/src/enums/site.enum.ts` — extended ~5 LOC. New
+  `Phase 28: Spec 006 — ATS-Scrapers Parity, Batch 1` group
+  comment; three new entries (`AVATURE = 'avature'`,
+  `GEM = 'gem'`, `JOIN_COM = 'join_com'`).
+- `tsconfig.base.json` — extended ~3 LOC. Three new `paths`
+  entries pointing at the new package src indices.
+- `jest.config.js` — extended ~3 LOC. Three new `moduleNameMapper`
+  entries mirroring the tsconfig paths.
+- `packages/plugins/source-ats-avature/{package.json,tsconfig.json,src/{index.ts,avature.module.ts,avature.service.ts}}`
+  — new ~70 LOC across 5 files. `AvatureService` decorated with
+  `@SourcePlugin({ site: Site.AVATURE, name: 'Avature', category:
+  'ats', isAts: true })` plus `@Injectable()`. `scrape(input)`
+  is a stub: logs at `debug` level + returns
+  `new JobResponseDto([])`. JSDoc cross-references T03 as the
+  landing point for the actual HTML scrape.
+- `packages/plugins/source-ats-gem/{package.json,tsconfig.json,src/{index.ts,gem.module.ts,gem.service.ts}}`
+  — new ~70 LOC across 5 files. Same shape as Avature, with
+  `Site.GEM` and T05 cross-reference.
+- `packages/plugins/source-ats-joincom/{package.json,tsconfig.json,src/{index.ts,joincom.module.ts,joincom.service.ts}}`
+  — new ~75 LOC across 5 files. Same shape as Avature, with
+  `Site.JOIN_COM` and T07 cross-reference. JSDoc explicitly
+  documents the slug-naming convention (enum underscore vs folder
+  hyphen) so a future contributor doesn't try to "normalise" the
+  apparent inconsistency.
+- `packages/plugins/index.ts` — extended ~6 LOC. Three new imports
+  (alphabetical insertions), three new `ALL_SOURCE_MODULES`
+  entries (also alphabetical).
+
+**Changes — tests:**
+
+- `packages/plugins/source-ats-avature/__tests__/avature.service.spec.ts`
+  — new ~50 LOC. **3 cases**: NestJS DI resolution via
+  `AvatureModule`, stub `scrape()` returns empty
+  `JobResponseDto`, `Site.AVATURE === 'avature'` literal.
+- `packages/plugins/source-ats-gem/__tests__/gem.service.spec.ts`
+  — new ~40 LOC. **3 cases**: same shape as Avature, with
+  `GemModule` / `Site.GEM === 'gem'`.
+- `packages/plugins/source-ats-joincom/__tests__/joincom.service.spec.ts`
+  — new ~40 LOC. **3 cases**: same shape, with `JoinComModule` /
+  `Site.JOIN_COM === 'join_com'`.
+
+Total: 9 new unit cases. Behavioural tests (≥ 5 / ≥ 4 / ≥ 5
+covering happy path, empty responses, HTTP 500, custom-domain
+override / response-order tolerance / regex-miss bypass) land
+alongside T03 / T05 / T07 in their respective phases.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/006-ats-scrapers-parity-batch-1/tasks.md` —
+  T01 + T02 graduate from "pending" to "done" with full
+  planned-vs-actual file lists, five-decision rationale, and
+  verification numbers.
+- `.specify/specs/006-ats-scrapers-parity-batch-1/spec.md` —
+  `Status` flipped to `Phase 1 done (T01..T02 run #29);
+  T03..T13 pending`; `Last updated` bumped to `2026-04-27 (run #29)`.
+- `docs/index.md` — Spec 006 row updated with new status string;
+  `Last revised` bumped to `2026-04-27 (run #29)`.
+- `CLAUDE.md` — run-tag bumped to #29 in the footer.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #29 sync line; **no upstream
+  commits** in any of the three tracked repos (eighteen
+  consecutive zero-churn runs).
+
+**Verification (local, against this commit):**
+
+- T01 + T02 ship TypeScript source + tests but cannot run them in
+  the sandbox: the test surface needs `@nestjs/common`,
+  `@nestjs/testing`, jest, and the resolved `@ever-jobs/*` path
+  aliases — all CI-only per `Agents.md` §"Scheduled-task agents".
+- `npm run lint:docs` — clean after this run's edits.
+- No new dependencies; lockfile sync NOT required.
+
+**Notes & follow-ups:**
+
+- Default for run #30 is **Spec 006 / Phase 2 / T03** —
+  `AvatureService.scrape(input)` HTML-scrape implementation.
+  Cheerio is already in `@ever-jobs/common`; no lockfile churn
+  expected. T04 (Avature unit tests with HTML fixtures)
+  typically lands alongside T03 if the diff stays reviewable.
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #28.
+  **Eighteen** consecutive runs of zero-churn.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#28; not wired into CI).
+
+---
+
 ## 2026-04-27 — Scheduled run #28 (Spec 006 scaffold opened — ATS-Scrapers Parity, Batch 1: Avature / Gem / Join.com)
 
 **Scope:** Open Spec 006 — three new ATS plugins (Avature, Gem,

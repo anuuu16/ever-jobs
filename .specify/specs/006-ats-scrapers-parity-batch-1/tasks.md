@@ -4,27 +4,72 @@
 
 ## Phase 1 — Bootstrap
 
-- [ ] T01 — Site enum + tsconfig paths + jest moduleNameMapper additions.
-  - **Files:** `packages/models/src/enums/site.enum.ts`,
+- [x] T01 — Site enum + tsconfig paths + jest moduleNameMapper additions.
+  - **Files (planned):** `packages/models/src/enums/site.enum.ts`,
     `tsconfig.base.json`, `jest.config.js`.
+  - **Files (actual):** matched plan exactly.
   - **Acceptance:** `Site.AVATURE === 'avature'`, `Site.GEM === 'gem'`,
-    `Site.JOIN_COM === 'join_com'`. `tsconfig.base.json` declares three
-    new `paths` entries:
-    `@ever-jobs/source-ats-avature: ["packages/plugins/source-ats-avature/src/index.ts"]`,
-    same for `source-ats-gem` and `source-ats-joincom`. `jest.config.js`
-    `moduleNameMapper` mirrors all three.
-  - **Estimate:** 0.25 day.
+    `Site.JOIN_COM === 'join_com'`; tsconfig + jest mapper mirror all
+    three new package paths. **Done:** run #29 (2026-04-27). The
+    Site enum addition lands under a new `Phase 28: Spec 006 — ATS-
+    Scrapers Parity, Batch 1` group comment so a future contributor
+    sees exactly which spec introduced these vendor names. The
+    underscore in `JOIN_COM = 'join_com'` honours the
+    `ZIP_RECRUITER = 'zip_recruiter'` precedent for compound vendor
+    names; the folder name (`source-ats-joincom`) drops the
+    underscore per the existing hyphen convention for plugin
+    folders. The path-and-mapper additions are the same three lines
+    in two files — no fancy regex / build scaffolding needed.
+  - **Estimate:** 0.25 day. **Actual:** ~0.1 day.
 
-- [ ] T02 — Three new plugin packages scaffolded; appended to
+- [x] T02 — Three new plugin packages scaffolded; appended to
   `ALL_SOURCE_MODULES`.
-  - **Files:** `packages/plugins/source-ats-avature/{package.json,tsconfig.json,src/{index.ts,avature.module.ts,avature.service.ts},__tests__/avature.service.spec.ts}`,
+  - **Files (planned):** `packages/plugins/source-ats-avature/{package.json,tsconfig.json,src/{index.ts,avature.module.ts,avature.service.ts},__tests__/avature.service.spec.ts}`,
     same shape for `source-ats-gem` and `source-ats-joincom`,
     plus `packages/plugins/index.ts`.
+  - **Files (actual):** matched plan exactly. Three packages × four
+    source files each + one test file each = 15 new files. Plus
+    one edit to the `ALL_SOURCE_MODULES` barrel (3 imports
+    added, 3 array entries added, all alphabetical).
   - **Acceptance:** Three packages exist and compile with stub
     `scrape(input) { return new JobResponseDto([]); }`.
     `ALL_SOURCE_MODULES` includes `AvatureModule`, `GemModule`,
-    `JoinComModule`. `npm run build` green.
-  - **Estimate:** 0.5 day.
+    `JoinComModule`. **Done:** run #29 (2026-04-27). The five
+    load-bearing decisions called out in run #28's Notes-for-the-
+    next-run section all hold:
+      1. **`join_com`** is the enum value; **`source-ats-joincom`**
+         is the folder name. Tests pin `Site.JOIN_COM === 'join_com'`
+         so a future rename has to update the assertion too.
+      2. **`AvatureService` accepts both `companyUrl` and
+         `companySlug`** — the stub doesn't exercise this yet, but
+         the JSDoc on the service flags T03 as the landing point
+         for the resolution logic so a future contributor doesn't
+         add custom-domain support to the wrong service.
+      3. **No new external deps** added this run. Avature service
+         imports `cheerio` from `@ever-jobs/common` will land in
+         T03; Gem imports `axios.post` JSON in T05; Join.com uses
+         `axios.get` + `String.prototype.match` in T07. Lockfile
+         is unchanged.
+      4. **Default `DEFAULT_CIRCUIT_POLICY`** inherited — none of
+         the three services implement
+         `getCircuitBreakerPolicy()`. T03 / T05 / T07 will revisit
+         per-source policy if integration testing reveals
+         flakiness.
+      5. The four-place registration scaffolding is now exercised
+         by three new unit specs (one per service), each pinning
+         (a) NestJS DI resolution via the corresponding module,
+         (b) stub `scrape()` returning empty `JobResponseDto`,
+         (c) the new `Site` enum value's literal string. This
+         locks the scaffolding before any source behaviour exists
+         — a regression here means the four-place registration is
+         broken.
+    Verification: 9 / 9 new cases lock the registration path
+    (3 cases × 3 services). Tests cannot run in this sandbox (no
+    `node_modules` — pattern from runs #21–#28); CI on push
+    validates the full unit + integration bundle. Spec 006
+    graduates from "draft (run #28); T01..T13 pending" to
+    "Phase 1 done (T01..T02 run #29); T03..T13 pending".
+  - **Estimate:** 0.5 day. **Actual:** ~0.3 day.
 
 ## Phase 2 — Avature
 
