@@ -10,6 +10,123 @@
 
 ---
 
+## Q-023 — Gem GraphQL response shape, future-proofing (Spec 006 / T05)
+
+**Context:** Gem's public GraphQL endpoint at
+`https://jobs.gem.com/api/public/graphql/batch` currently returns
+`oatsExternalJobPostings.jobPostings[]` directly (flat array of job
+postings inside the operation envelope). GraphQL boards in the wider
+ecosystem (e.g. Greenhouse JobBoard API, Workday's RaaS adapter)
+increasingly Relay-style-wrap the same shape as `nodes[]` inside a
+`Connection` envelope to support cursor pagination. If Gem ever
+ships that reshape, our parser breaks silently (returns empty).
+
+Three options:
+
+- **Option A — current shape only; treat any Relay reshape as a
+  separate spec.** `GemService` reads `data.oatsExternalJobPostings.jobPostings[]`
+  literally. If upstream ships `nodes[]`, the parser returns empty
+  and operators see the per-source breaker's `successRate` drop
+  (Spec 005 / FR-5). A new spec (candidate Spec 016 — "Gem GraphQL
+  Relay reshape adapter") then ships an updated parser. This is
+  the lowest-risk now and preserves the explicit version-pin
+  contract.
+- **Option B — pre-emptively support both `jobPostings[]` and
+  `nodes[]`.** Slightly more code (try `jobPostings` first, fall
+  back to `nodes` second), zero runtime cost on the happy path,
+  but speculative. We don't know what Relay-shape Gem would adopt
+  (`pageInfo.endCursor`? `edges[].node`? both?), so this risks
+  drift between what we anticipate and what ships. Negative.
+- **Option C — abstract the parser via a `JobBoardListResponseShape`
+  enum.** Heaviest. Future-proofs against arbitrary reshapes but
+  introduces ceremony for one current shape. Strongly negative
+  for a single-vendor plugin.
+
+**Default — proceeding with Option A (run #28).** Pin to the
+current shape; defer Relay reshape to a separate spec when (if)
+upstream ships it. The breaker's per-source health metrics surface
+the regression within ~5 min (NFR-2) so detection is fast.
+
+**Resolution:** pending.
+
+---
+
+## Q-022 — Avature tenant resolution: `companyUrl` vs `companySlug` (Spec 006 / T03)
+
+**Context:** Avature ATS is multi-tenant via two distinct URL
+shapes:
+1. **Subdomain-style** — `https://<tenant>.avature.net/careers/SearchJobs/`
+   (the canonical default; e.g. `bloomberg.avature.net`).
+2. **Custom-domain** — `https://careers.<tenant>.com/<lang>/careers/SearchJobs/`
+   (e.g. `careers.ibm.com/en_US/careers/SearchJobs/`).
+
+`ScraperInputDto` already carries `companySlug` (used by every
+existing ATS plugin) but lacks a `companyUrl` field for full-URL
+overrides. Three options:
+
+- **Option A — accept both `companyUrl` (override) and `companySlug`
+  (fallback to `https://<slug>.avature.net`).** Zero new DTO field
+  required if `companyUrl` is already in `ScraperInputDto`; if not,
+  add it as optional. Avature is the first plugin needing custom
+  domain support; the field is forward-compatible (Workday will
+  want it too).
+- **Option B — require `companyUrl` always; deprecate `companySlug`
+  for Avature.** Forces operators to know the full URL, which is
+  hostile UX for the 80% of tenants on `*.avature.net`. Negative.
+- **Option C — host two distinct plugins (`source-ats-avature-cloud`
+  vs `source-ats-avature-custom`).** Doubles registration cost,
+  doubles spec/test surface; slug taxonomy gets crowded. Strongly
+  negative.
+
+**Default — proceeding with Option A (run #28).** `companyUrl` ?
+`companyUrl` : `https://${companySlug}.avature.net`. The plugin
+parses `companyUrl` to extract company name (Bloomberg / IBM)
+mirroring the upstream Python's `extract_company_name(url)` helper.
+
+**Resolution:** pending.
+
+---
+
+## Q-021 — Spec packaging: 1 batched spec vs 3 per-plugin specs (Spec 006 scope)
+
+**Context:** `competitor-watch.md §C` lists AC-1..AC-3 as three
+distinct ATS-plugin adoption tasks (Avature, Gem, Join.com). Each
+could be its own spec (Spec 006 = Avature, Spec 007 = Gem,
+Spec 008 = Join.com) or all three could be batched into one spec
+("Spec 006 — ATS-Scrapers Parity, Batch 1"). Run #27's
+Notes-for-the-next-run pinned the default to "Spec 006
+(`Ats-scrapers parity: AC-1..AC-3`)" — i.e. batched.
+
+Three options:
+
+- **Option A — single batched spec (this spec, Spec 006).** One
+  spec.md / plan.md / tasks.md trio covering all three plugins
+  in six phases (bootstrap → Avature → Gem → Join.com →
+  integration → closeout). Amortises the registration scaffolding
+  across the three plugins (one `Site`-enum bump, one
+  `tsconfig.base.json` + `jest.config.js` round, one
+  `ALL_SOURCE_MODULES` rebuild).
+- **Option B — three separate specs (Spec 006/007/008).** Cleaner
+  per-plugin lifecycle (each can be paused / resumed / dropped
+  independently). Heavier docs scaffold (3× spec.md / plan.md /
+  tasks.md).
+- **Option C — single spec, three sub-numbered (006a, 006b, 006c).**
+  Worst of both: still three docs but with non-standard
+  numbering. Strongly negative — breaks the doc-lint expectation
+  that spec IDs are numeric.
+
+**Default — proceeding with Option A (run #28, this spec).** Run
+#27's pinned default carries the load-bearing reasoning: the three
+plugins share registration topology and authoring rhythm, so
+batching is the right granularity. If a plugin's behaviour
+diverges materially in the future (e.g. Gem ships GraphQL Relay
+reshape per Q-023), it can be lifted into its own spec at that
+point.
+
+**Resolution:** pending.
+
+---
+
 ## Q-020 — Health-snapshot store interface shape; cron scheduler choice (Spec 005 / T09)
 
 **Context:** T09's acceptance is exactly two lines — "Cron job

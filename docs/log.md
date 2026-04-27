@@ -5,6 +5,151 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #28 (Spec 006 scaffold opened — ATS-Scrapers Parity, Batch 1: Avature / Gem / Join.com)
+
+**Scope:** Open Spec 006 — three new ATS plugins (Avature, Gem,
+Join.com) bundled into a single batched spec per run #27's pinned
+default ("Spec 006 — Ats-scrapers parity: AC-1..AC-3"). Specs 004
+and 005 graduated to "complete" in runs #26 and #27 respectively;
+the highest-leverage backlog entries are now `competitor-watch.md
+§C` AC-1..AC-9, of which AC-1..AC-3 are the three new ATS plugins
+covered by this spec.
+
+This run lands ONLY the spec/plan/tasks scaffold + Q-021/Q-022/Q-023
+in `docs/questions.md` + index/log/competitor-watch updates. No code
+changes. T01 (Site enum + tsconfig + jest registration) and T02
+(three new package skeletons appended to `ALL_SOURCE_MODULES`) are
+the pinned default for run #29 — bootstrap scaffolding before
+business logic to keep the diff reviewable.
+
+**Three new questions opened this run — Q-021, Q-022, Q-023:**
+
+- **Q-021** — Spec packaging: 1 batched spec vs 3 per-plugin specs.
+  Default = **Option A** (batched, this spec). Run #27's pinned
+  default carried the load-bearing reasoning: the three plugins
+  share registration topology and authoring rhythm, so batching is
+  the right granularity. If a plugin's behaviour diverges
+  materially in the future (e.g. Gem ships GraphQL Relay reshape
+  per Q-023), it can be lifted into its own spec at that point.
+- **Q-022** — Avature tenant resolution: `companyUrl` vs
+  `companySlug`. Default = **Option A** (accept both;
+  `companyUrl` overrides; fall back to subdomain construction
+  `https://<slug>.avature.net` otherwise). The plugin parses
+  `companyUrl` to extract company name (Bloomberg / IBM)
+  mirroring the upstream Python's `extract_company_name(url)`
+  helper.
+- **Q-023** — Gem GraphQL response shape future-proofing.
+  Default = **Option A** (current shape only; treat any Relay
+  reshape as a separate spec). Pin to
+  `data.oatsExternalJobPostings.jobPostings[]`; the per-source
+  breaker's `successRate` drop will surface a regression within
+  ~5 min if upstream ships a reshape.
+
+**Five load-bearing decisions** locked into the spec/plan/tasks
+surface (deferred to T01..T13 implementation runs):
+
+1. **Slug for Join.com is `join_com`, not `joincom` / `join`.**
+   Matches upstream Python directory `join_com/` and the `Site`
+   enum convention of underscore-snake-case for compound vendor
+   names (cf. `ZIP_RECRUITER = 'zip_recruiter'`).
+2. **Plugin folder name is `source-ats-joincom`** (no underscore
+   — matches the existing `source-ats-greenhouse` /
+   `source-ats-lever` hyphen convention; the underscore lives
+   only in the enum value).
+3. **`AvatureService` accepts both `companyUrl` and `companySlug`**;
+   prefer `companyUrl` if present (custom-domain tenants like
+   `careers.ibm.com`); fall back to subdomain construction
+   `https://<slug>.avature.net` otherwise (Q-022 / Option A).
+4. **No new external deps**: Avature uses `cheerio` (already in
+   `@ever-jobs/common` via Greenhouse); Gem uses `axios.post`
+   w/ JSON; Join.com uses `axios.get` + `String.prototype.match`.
+   Lockfile sync is a no-op for this spec.
+5. **Default circuit-breaker policy** (Spec 005 /
+   `DEFAULT_CIRCUIT_POLICY`) inherited; no
+   `getCircuitBreakerPolicy()` override unless evidence of
+   flakiness emerges in T09 / T10.
+
+**Changes — code:**
+
+- (none this run; spec scaffold only.)
+
+**Changes — tests:**
+
+- (none this run; test plan documented in spec.md §8 + tasks.md
+  T04/T06/T08/T09/T10/T12.)
+
+**Changes — docs / specs:**
+
+- `.specify/specs/006-ats-scrapers-parity-batch-1/spec.md` — new
+  ~225 LOC. Full functional spec across 11 sections: problem
+  statement, goals, non-goals, user stories, FR-1..FR-16,
+  NFR-1..NFR-5, contracts (Site enum additions + per-plugin
+  service shapes + ScraperInputDto fields consumed table + error
+  codes), test plan (unit / integration / e2e / perf), open
+  questions (Q-021/Q-022/Q-023 cross-references), references.
+- `.specify/specs/006-ats-scrapers-parity-batch-1/plan.md` — new
+  ~115 LOC. Six-phase plan (Bootstrap → Avature → Gem →
+  Join.com → Integration & docs → Closeout) with packages-touched
+  matrix + risks + acceptance gates.
+- `.specify/specs/006-ats-scrapers-parity-batch-1/tasks.md` — new
+  ~205 LOC. Thirteen tasks (T01..T13) across the six phases.
+  Each task carries: files-touched list, acceptance criteria,
+  estimate. Notes-for-the-next-run pinned to "Spec 006 / Phase 1
+  / T01 + T02" for run #29.
+- `docs/index.md` — Spec 006 row added with status "draft (run
+  #28); T01..T13 pending"; `Last revised` bumped to `2026-04-27
+  (run #28)`.
+- `docs/questions.md` — three new questions Q-021, Q-022, Q-023
+  added at the top with full Options A/B/C + Default + Resolution
+  =pending. Run-tag `(run #28)`.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #28 sync line; **no upstream
+  commits** in any of the three tracked repos (eighteen
+  consecutive zero-churn runs).
+- `CLAUDE.md` — run-tag bumped to #28 in the footer.
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — green (run before commit).
+- No TypeScript code changes; no type-check needed.
+- No new dependencies; lockfile sync NOT required this run.
+- Spec/plan/tasks files cross-checked against
+  `.specify/templates/spec.template.md` /
+  `plan.template.md` / `tasks.template.md` — same section
+  ordering and frontmatter table format.
+- Doc-lint health-check the four new files — every relative link
+  (`../.specify/...`, `./questions.md`, `./ATS_INTEGRATIONS.md`,
+  etc.) resolves to an existing path.
+
+**Notes & follow-ups:**
+
+- **Pinned default for run #29 = Spec 006 / Phase 1 / T01 + T02.**
+  Site enum additions (`AVATURE`, `GEM`, `JOIN_COM`) + tsconfig
+  paths + jest moduleNameMapper + three empty plugin packages
+  scaffolded with stubs (return `new JobResponseDto([])`). This
+  bootstrap-only sub-step keeps CI green while landing all four-place
+  registrations, before any business logic ships.
+- **Spec 006 is intentionally batched (Q-021 / Option A).** If a
+  plugin's behaviour diverges materially in the future (e.g. Gem
+  ships a Relay-style reshape per Q-023), it can be lifted into
+  its own spec at that point.
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #27
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). **Eighteen** consecutive runs of zero-churn.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#27; not wired into CI).
+  Open fall-back follow-up.
+- After Spec 006 / T13 lands, the next high-leverage area is
+  `competitor-watch.md §C` AC-4..AC-9. Candidates for batching:
+  AC-4 (Oracle HCM Cloud) + AC-5 (Mercor) + AC-6 (Tesla) →
+  Spec 007; AC-7 (European salary parser) → Spec 012; AC-8
+  (seed-companies refresh) → Spec 014; AC-9 (Workable scraper
+  diff) → fold into existing `source-ats-workable`.
+
+---
+
 ## 2026-04-27 — Scheduled run #27 (Spec 005 Phase 5 — T09: `HealthSnapshotCron` periodic persistence; **Spec 005 complete**)
 
 **Scope:** land Spec 005 / Phase 5 / T09 — the periodic
