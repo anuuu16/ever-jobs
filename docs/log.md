@@ -5,6 +5,183 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #30 (Spec 006 / Phase 2 — T03 + T04: AvatureService HTML-scrape + 8 unit cases)
+
+**Scope:** land Spec 006 / Phase 2 / T03 + T04 — the
+`AvatureService.scrape()` HTML-pagination path (cheerio-based,
+five-selector cascade plus link-text fallback, Apply-decoy
+filtering, polite-pacing 0.5 s, custom-domain support via
+`companyUrl`) and its 8-case unit suite (5 mandated by T04 + 2
+carry-over scaffolding cases from T02 + 1 extra "neither slug
+nor URL" no-op case). Run #29's Notes-for-the-next-run pinned
+this default ("Spec 006 / Phase 2 / T03 — `AvatureService.scrape(input)`
+HTML-scrape implementation. Cheerio is already in
+`@ever-jobs/common`; no lockfile churn expected. T04 (Avature
+unit tests with HTML fixtures) typically lands alongside T03 if
+the diff stays reviewable."). The diff did stay reviewable — T03
++ T04 together touch nine files (six plugin source/test/fixture
+files, one cross-cutting DTO, three doc updates).
+
+**No new questions opened this run.** Q-022 (Avature tenant
+resolution `companyUrl` vs `companySlug`) was already opened in
+run #28 with **Option A** as the pinned default; this run made
+the option concrete by adding `companyUrl` to `ScraperInputDto`.
+Q-021/Q-023 (spec packaging, Gem GraphQL response-shape future-
+proofing) remain open but unchanged.
+
+**One new load-bearing decision graduated this run:**
+
+- **`companyUrl` is now a first-class field on
+  `ScraperInputDto`** (Q-022 / Option A). Reasoning: Avature is
+  the first ATS plugin in the catalogue that meaningfully
+  supports custom-domain career portals (Bloomberg uses the
+  default `bloomberg.avature.net` subdomain pattern, but IBM
+  uses `careers.ibm.com` — different host entirely, same
+  Avature backend). The `Workday` plugin already had its own
+  URL helper for a similar case but exposed it via a different
+  convention (`workdayUrl` in plugin auth). A first-class
+  `companyUrl` field on the canonical DTO lets future ATS
+  plugins (Phenom, Eightfold, SuccessFactors when the SAP
+  custom-domain edge case lands) reuse the same override
+  without each inventing its own equivalent.
+
+**Changes — code:**
+
+- `packages/models/src/dtos/scraper-input.dto.ts` — extended
+  ~9 LOC. New `@ApiPropertyOptional`-decorated optional
+  `companyUrl?: string` field with cross-reference to Spec 006
+  / Q-022 in the JSDoc. No constructor change (the new field
+  defaults to `undefined`, same as every other optional field).
+- `packages/plugins/source-ats-avature/src/avature.service.ts`
+  — full rewrite from stub (~210 LOC). Implements the full
+  `IScraper.scrape(input)` contract: `resolveTenant` → either
+  parses `input.companyUrl` directly or builds
+  `https://<companySlug>.avature.net`; `tenantFromUrl` parses
+  out a recognised locale prefix (`/en_US` etc.) per upstream
+  Python's `extract_base_url`; `extractCompanyName` casefolds
+  the host segment (`bloomberg.avature.net` → `Bloomberg`,
+  `careers-eu.tesla.com` → `Tesla`); `parseListings` runs the
+  five-cascade selector chain plus the `/JobDetail/`-link
+  fallback; `parseElement` extracts title/location/department
+  with three-way title precedence (h2 > h3 > `.job-title|.position-title|.title`)
+  and re-checks the Apply-decoy filter against the title (so
+  decoys can't slip through under either branch). Default
+  circuit-breaker policy inherited from Spec 005 — no
+  `getCircuitBreakerPolicy()` override.
+- `packages/plugins/source-ats-avature/src/avature.constants.ts`
+  — new ~50 LOC. `AVATURE_RECORDS_PER_PAGE` (= 12),
+  `AVATURE_RATE_DELAY_SECONDS` (= 0.5),
+  `AVATURE_DEFAULT_RESULTS_WANTED` (= 100),
+  `AVATURE_MAX_PAGES` (= 50, runaway-loop guard), `AVATURE_HEADERS`
+  (browser-shaped User-Agent / Accept), `AVATURE_APPLY_DECOY_TEXTS`
+  (`ReadonlySet<string>` with the 6 decoy phrases),
+  `AVATURE_LOCALE_PREFIXES` (`ReadonlySet<string>` with the 6
+  locale codes upstream Python recognises).
+- `packages/plugins/source-ats-avature/src/avature.types.ts`
+  — new ~30 LOC. `AvatureParsedJob` (intermediate parsed shape)
+  and `AvatureTenantContext` (resolved baseUrl / domain /
+  companyName).
+
+**Changes — tests / fixtures:**
+
+- `packages/plugins/source-ats-avature/__tests__/avature.service.spec.ts`
+  — full rewrite from 3 stubs to 8 cases (~140 LOC). Mocks
+  `@ever-jobs/common`'s `createHttpClient` with a Jest factory
+  that returns `{ get: mockGet, setHeaders: mockSetHeaders }`,
+  letting each test feed a controlled fixture chain via
+  `mockGet.mockResolvedValueOnce(...)`. **8 cases**:
+    1. NestJS DI resolution via `AvatureModule` (carried from T02).
+    2. `Site.AVATURE === 'avature'` literal pin (carried from T02).
+    3. Happy path — 12 anchors in the fixture, 1 Apply-decoy
+       filtered out, 11 `JobPostDto` rows; pins title/id/url/
+       company/location/department/`isRemote=false`. Also pins
+       remote detection on the SRE row (id=12347, "Remote —
+       Americas" → `isRemote=true`).
+    4. Empty board (page 1 = empty fixture → empty
+       `JobResponseDto`, exactly 1 HTTP call).
+    5. HTTP 500 caught (mock rejects → empty
+       `JobResponseDto`, no thrown error).
+    6. `resultsWanted=5` mid-page cap (12 anchors, take 5,
+       skip the second pagination request entirely).
+    7. Custom-domain override — `companyUrl =
+       'https://careers.ibm.com/en_US'` → request URL starts
+       with `https://careers.ibm.com/en_US/careers/SearchJobs/`
+       (locale prefix preserved).
+    8. Neither `companyUrl` nor `companySlug` supplied → empty
+       `JobResponseDto`, zero HTTP calls (warning branch).
+- `packages/plugins/source-ats-avature/__tests__/fixtures/avature-page-1.html`
+  — new ~85 LOC. 12 `<article class="job">` elements, one of
+  which is an Apply-decoy (anchor text = "Apply Now", no h2/h3,
+  filtered out by the decoy-text check). One row's location
+  ("Remote — Americas") drives the remote-detection assertion.
+- `packages/plugins/source-ats-avature/__tests__/fixtures/avature-page-empty.html`
+  — new ~15 LOC. Empty-state fixture (no `<article class="job">`
+  elements). Used by both the "empty board" test and as page 2
+  of the happy-path test (page 1 = populated, page 2 = empty,
+  loop breaks).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/006-ats-scrapers-parity-batch-1/tasks.md` —
+  T03 + T04 graduate from "pending" to "done" with full
+  planned-vs-actual file lists and acceptance-criteria check-off.
+  Notes-for-the-next-run section repinned for **run #31** to
+  Spec 006 / Phase 3 / T05 + T06 (Gem GraphQL-batch
+  implementation + ≥ 4 unit cases).
+- `.specify/specs/006-ats-scrapers-parity-batch-1/spec.md` —
+  Status flipped to `Phase 1+2 done (T01..T04 run #30); T05..T13
+  pending`; `Last updated` bumped to `2026-04-27 (run #30)`.
+- `docs/index.md` — Spec 006 row updated with new status string;
+  `Last revised` bumped to `2026-04-27 (run #30)`.
+- `CLAUDE.md` — run-tag bumped to #30 in the footer.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #30 sync line. **No upstream
+  commits** in any of the three tracked repos (nineteen
+  consecutive zero-churn runs).
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns 'packages/plugins/source-ats-avature'`
+  reports `Test Suites: 1 passed, 1 total · Tests: 8 passed, 8
+  total · exit 0`.
+- `npx jest --testPathPatterns 'packages/plugins/source-'`
+  reports `Test Suites: 1 skipped, 120 passed, 120 of 121 total
+  · Tests: 12 skipped, 318 passed, 330 total · exit 0`. The 318
+  passing total is +5 vs run #29's baseline of 313 (= 8 new
+  cases minus the 3 carry-over T02 stubs that the new spec
+  subsumes). The 1 skipped suite remains the pre-existing
+  `dedup-hybrid/__tests__/minhash-strategy.spec.ts` (red since
+  run #11; not wired into CI).
+- No new dependencies; lockfile sync NOT required (cheerio
+  was already in `@ever-jobs/common`'s dependency graph;
+  axios + reflect-metadata + nestjs/testing were all already
+  resolved by jest).
+- `npm run lint:docs` — clean after this run's edits.
+
+**Notes & follow-ups:**
+
+- Default for run #31 is **Spec 006 / Phase 3 / T05 + T06** —
+  `GemService.scrape()` GraphQL-batch implementation plus its
+  ≥ 4 unit cases (happy path, empty `jobPostings`, HTTP 500,
+  response-order tolerance — Theme first vs List first). Gem
+  is the only one of the three plugins that's a single-request
+  scrape (no pagination), so the diff stays reviewable when
+  bundled with its tests.
+- T07 + T08 (Join.com — two-step REST scrape with regex-
+  extracted company ID and 0.5 s polite pacing between pages)
+  is the second-smallest and is the next default after
+  T05 + T06.
+- T09..T13 (integration / e2e / docs / bench / closeout) wait
+  until all three plugin behaviours land.
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #28.
+  **Nineteen** consecutive runs of zero-churn.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#29; not wired into CI).
+
+---
+
 ## 2026-04-27 — Scheduled run #29 (Spec 006 / Phase 1 — T01 + T02: Site enum + three plugin scaffolds for Avature / Gem / Join.com)
 
 **Scope:** land Spec 006 / Phase 1 / T01 + T02 — the registration

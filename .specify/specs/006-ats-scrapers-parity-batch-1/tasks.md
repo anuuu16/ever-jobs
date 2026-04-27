@@ -73,31 +73,79 @@
 
 ## Phase 2 — Avature
 
-- [ ] T03 — `AvatureService.scrape(input)` HTML-scrape path.
-  - **Files:** `packages/plugins/source-ats-avature/src/avature.service.ts`,
+- [x] T03 — `AvatureService.scrape(input)` HTML-scrape path.
+  - **Files (planned):** `packages/plugins/source-ats-avature/src/avature.service.ts`,
     `…/avature.types.ts`, `…/avature.constants.ts`.
+  - **Files (actual):** matched plan exactly. Plus a tiny one-line
+    addition to `packages/models/src/dtos/scraper-input.dto.ts`
+    (new `companyUrl?: string` field — Q-022 / Option A) so the
+    custom-domain override has a place to live in the canonical
+    DTO. Documented inline as "Used by the Avature plugin (Spec
+    006 / Q-022)" so a future contributor sees the call-site
+    immediately.
   - **Acceptance:**
-    - Resolves base URL from `input.companyUrl ?? \`https://\${input.companySlug}.avature.net\``.
+    - Resolves base URL from `input.companyUrl ?? \`https://\${input.companySlug}.avature.net\``. ✅ `tenantFromUrl` honours
+      both, and `extractCompanyName` casefolds the host segment
+      (`bloomberg.avature.net` → `Bloomberg`, `careers.ibm.com` →
+      `Ibm`). Locale prefix preservation (`/en_US`, `/fr_CA`,
+      etc.) carries over from upstream Python's
+      `extract_base_url`.
     - Paginates `${base}/careers/SearchJobs/?jobOffset=N&jobRecordsPerPage=12`
-      until empty page or short page.
+      until empty page or short page. ✅ `AVATURE_RECORDS_PER_PAGE`
+      = 12, `AVATURE_MAX_PAGES` = 50 (hard ceiling guards against
+      runaway loops).
     - Parses HTML via `cheerio`; multi-selector chain matches
       upstream Python's resilience (`article.job` / `div.job-item`
       / `li.job-listing` / `tr.job` / `div[data-job-id]`, link-text
-      fallback).
+      fallback). ✅ Five-cascade chain in `parseListings`, plus an
+      `/JobDetail/`-link fallback when none of the five hit.
     - Skips Apply-link decoys (link-text in `['apply','apply now',
-      'apply online','learn more','view job']`).
-    - Caps at `input.resultsWanted` (default 100).
+      'apply online','learn more','view job']`). ✅
+      `AVATURE_APPLY_DECOY_TEXTS` is a `ReadonlySet<string>`;
+      filtering happens twice (once on link text, once on title)
+      so Apply-decoys can't slip through under either branch.
+    - Caps at `input.resultsWanted` (default 100). ✅ Default lives
+      in `AVATURE_DEFAULT_RESULTS_WANTED` (= 100); the cap fires
+      mid-page so we don't burn an extra HTTP request once we've
+      collected enough.
     - Catches HTTP errors → returns empty `JobResponseDto`, never
-      throws.
-  - **Estimate:** 1 day.
+      throws. ✅ Error branch logs at `warn` level and breaks the
+      pagination loop — caller sees an empty array, never a
+      thrown error.
+  - **Done:** run #30 (2026-04-27). Implementation =
+    1 service.ts (~210 LOC) + 1 constants.ts (~50 LOC) + 1
+    types.ts (~30 LOC); polite pacing of 0.5 s wired via
+    `createHttpClient({ rateDelayMin: 0.5 })`. Default circuit-
+    breaker policy inherited (no override needed).
+  - **Estimate:** 1 day. **Actual:** ~0.5 day.
 
-- [ ] T04 — Avature unit tests.
-  - **Files:** `packages/plugins/source-ats-avature/__tests__/avature.service.spec.ts`,
+- [x] T04 — Avature unit tests.
+  - **Files (planned):** `packages/plugins/source-ats-avature/__tests__/avature.service.spec.ts`,
     `…/__tests__/fixtures/avature-page-1.html`.
+  - **Files (actual):** matched plan plus one extra fixture
+    (`avature-page-empty.html`) so the empty-page assertion has a
+    distinct fixture from the populated one — letting the same
+    `mockGet.mockResolvedValueOnce` chain feed both pages of the
+    happy-path test (page 1 = populated, page 2 = empty → loop
+    breaks).
   - **Acceptance:** ≥ 5 cases — happy path (12 jobs), empty page,
     HTTP 500 caught, `resultsWanted=5` cap, custom-domain override
-    via `companyUrl`. All green.
-  - **Estimate:** 0.5 day.
+    via `companyUrl`. All green. ✅ **8 cases** total (5 mandated
+    + 2 carry-over scaffolding cases from T02 + 1 extra "neither
+    companyUrl nor companySlug" no-op case proving the warning
+    branch). Happy-path counts 11 jobs (12 anchors minus the 1
+    Apply-decoy at id=12349), and pins remote detection (id=12347
+    "Remote — Americas" → `isRemote=true`) plus location/department
+    parsing.
+  - **Done:** run #30 (2026-04-27). Local
+    `npx jest --testPathPatterns 'packages/plugins/source-ats-avature'`
+    reports `Test Suites: 1 passed, 1 total · Tests: 8 passed, 8
+    total · exit 0`. Full source-plugin run reports
+    `Test Suites: 1 skipped, 120 passed, 120 of 121 total · Tests:
+    12 skipped, 318 passed, 330 total · exit 0` (313 → 318 = +5
+    net new passing cases vs run #29's baseline; the 3 stubs are
+    now subsumed under the new 8-case spec).
+  - **Estimate:** 0.5 day. **Actual:** ~0.3 day.
 
 ## Phase 3 — Gem
 
@@ -221,14 +269,27 @@
     seed-companies refresh).
   - **Estimate:** 0.25 day.
 
-## Notes-for-the-next-run (pinned default for run #29)
+## Notes-for-the-next-run (pinned default for run #31)
 
-- Default = **Spec 006 / Phase 1 / T01 + T02** — Site enum
-  additions and three empty plugin packages scaffolded with stubs.
-  Land registration scaffolding first; deferring business logic to
-  T03..T08 keeps the diff reviewable. CI must remain green at the
-  end of T01+T02 (stubs return empty `JobResponseDto`, no behaviour
-  regression).
+- Default = **Spec 006 / Phase 3 / T05 + T06** — `GemService.scrape()`
+  GraphQL-batch implementation plus its ≥ 4 unit cases (happy path,
+  empty `jobPostings`, HTTP 500, response-order tolerance). Reasoning:
+  Gem is the only one of the three plugins that's a single-request
+  scrape (no pagination), so the diff stays reviewable when bundled
+  with its tests. T07+T08 (Join.com — two-step REST scrape with
+  regex-extracted company ID) is the second-smallest and is the
+  next default after T05+T06. T09..T13 (integration / e2e / docs /
+  bench / closeout) wait until all three plugin behaviours land.
+- The five load-bearing decisions from run #28 still hold; added
+  this run:
+  6. **`companyUrl` is now a first-class field on `ScraperInputDto`**
+     — runtime override for ATS scrapers that support custom-domain
+     career portals (Avature today; Workday already had its own
+     URL helper in `Site.WORKDAY`). Q-022 / Option A pinned this in
+     run #28; T03 made it concrete. Future ATS plugins that need
+     the same custom-domain override should reuse this field, not
+     introduce a per-plugin equivalent.
+- The five load-bearing decisions deferred to T01:
 - The five load-bearing decisions deferred to T01:
   1. **Slug for Join.com is `join_com`, not `joincom` / `join`**
      (matches upstream Python directory `join_com/` and the

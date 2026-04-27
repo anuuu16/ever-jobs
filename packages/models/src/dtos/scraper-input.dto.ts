@@ -129,6 +129,14 @@ export class ScraperInputDto {
   @IsString()
   companySlug?: string;
 
+  @ApiPropertyOptional({
+    description:
+      'Custom-domain career portal URL (e.g., "https://careers.ibm.com" or "https://bloomberg.avature.net"). When set, ATS scrapers prefer this over `companySlug`-derived subdomain construction. Used by the Avature plugin (Spec 006 / Q-022).',
+  })
+  @IsOptional()
+  @IsString()
+  companyUrl?: string;
+
   @ApiPropertyOptional({ description: 'Maximum concurrent company scrapes for ATS sources', default: 5 })
   @IsOptional()
   @IsNumber()
