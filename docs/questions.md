@@ -10,6 +10,87 @@
 
 ---
 
+## Q-017 — Admin force-open / force-reset endpoint: route shape, auth strictness, response payload, invalid-site code (Spec 005 / T07)
+
+**Context:** T07's acceptance is exactly two lines —
+"Add `POST /api/sources/:site/circuit/{open,reset}` (auth-required)"
+and "Force-open succeeds with valid API key; 401 otherwise." Four
+latent design choices aren't called out in `tasks.md`:
+
+1. **Where does the route live?** Two reasonable homes:
+   - Same `SourcesHealthController` (`@Controller('api/sources')`)
+     so the URL surface stays grouped under one controller and one DI
+     graph (the breaker is already injected here).
+   - A separate `SourcesAdminController` so the read-only `GET health`
+     stays logically distinct from mutating writes.
+2. **How is "auth-required" enforced when the global `ApiKeyGuard` is
+   currently a no-op?** Today the guard returns `true` whenever
+   `auth.enabled=false` **or** `apiKeys.length === 0`. That's fine for
+   read-mostly routes but an attacker could force-open every source in
+   a deploy that hasn't set `ENABLE_API_KEY_AUTH=true`. The route
+   contract needs a stricter, per-route override. Three shapes:
+   - **Reflector-driven `@AdminAuth()` decorator** + the existing
+     `ApiKeyGuard` reads metadata. When the route is marked admin, it
+     **always** validates a key (ignoring `auth.enabled`); when no
+     keys are configured at all, it returns 503 (admin disabled by
+     misconfiguration) rather than silently allowing the request.
+   - A second guard (`AdminApiKeyGuard`) wired with `@UseGuards()` on
+     the route only. Cleaner separation, but two guards now read the
+     same `ConfigService` config-tree.
+   - A `requireAuth: true` flag wired into `ApiKeyGuard` via a
+     class-level prop. Doesn't compose with multiple admin routes that
+     could live in different controllers.
+3. **What does the admin endpoint return?** Two natural choices:
+   - 200 + `{ ok: true, site, health: SourceHealth }` — operator
+     dashboards can re-render the per-site row from the same payload.
+   - 204 No Content — smaller wire, but the dashboard then has to
+     issue a follow-up `GET /api/sources/health` to confirm the state.
+4. **What status code for an unknown `:site`?** Two natural choices:
+   - 404 Not Found ("URL identifies no such source").
+   - 400 Bad Request ("path param is not a `Site` enum value").
+
+**Options:**
+
+- **Option A — Same controller, `@AdminAuth()` decorator + Reflector
+  read in `ApiKeyGuard`, 200 + `{ ok, site, health }`, 404 for unknown
+  site.** Adds one new file (`apps/api/src/auth/admin-auth.decorator.ts`)
+  and one new branch in `ApiKeyGuard.canActivate`. The existing
+  `health.controller.ts` grows two methods. The 401-on-missing /
+  401-on-invalid contract is exact (T07 acceptance: "401 otherwise"
+  — both branches throw `UnauthorizedException`). Misconfigured
+  deploys with `apiKeys=[]` get 503, which is operator-fixable.
+- **Option B — Separate `SourcesAdminController` + dedicated
+  `AdminApiKeyGuard` via `@UseGuards()`, 204 No Content, 400 for
+  unknown site.** Cleanest physical separation; two new files. The
+  204 path means the e2e test for "valid key force-opens the breaker"
+  has to issue a second request to verify state, which is brittle if
+  another test interleaves a `forceReset`. The 503-on-misconfigure
+  branch is the same.
+- **Option C — Same controller, in-place `requireAuth` flag on
+  `ApiKeyGuard`, 200 + bare `SourceHealth`, 400 for unknown site.**
+  Lowest-LOC, but the in-place flag doesn't compose if a future
+  controller needs admin auth in another module — the flag is a
+  global instance property.
+
+**Default — proceeding with Option A (run #16).** Reasons:
+- Reflector-driven decorator composes cleanly with future admin
+  routes in any controller (e.g. a future `POST /api/plugins/:id/disable`
+  re-uses `@AdminAuth()` with no extra wiring).
+- Returning the full `SourceHealth` after the action lets dashboards
+  re-render the per-site row from one round-trip — matches operator
+  workflow ("force-open → confirm in UI").
+- 404 for unknown `:site` matches REST conventions: the URL points
+  to a resource (the source) that doesn't exist.
+- The same controller keeps the DI graph shallow — both routes need
+  the breaker that's already injected.
+
+**Resolution:** _pending_ — proceeding with Option A. Revisit if a
+future feature requires multiple admin tiers (e.g. read-only ops vs
+full admin), at which point the Reflector key would graduate from
+`AdminAuth` to a roles-based `RequireRole(...)` decorator.
+
+---
+
 ## Q-016 — Per-plugin `getCircuitBreakerPolicy()` discovery: where does the bootstrap live, when does it run, what about hot-swap (Spec 005 / T08)
 
 **Context:** T08's acceptance is just "Plugin-defined policy wins over

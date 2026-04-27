@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 005                                                  |
 | Slug           | source-health-circuit-breaker                        |
-| Status         | Phase 1+2+3 done (T01–T06); Phase 4 partial (T08 done; T07 pending); Phase 5 pending |
+| Status         | Phase 1+2+3+4 done (T01–T08); Phase 5 pending |
 | Owner          | scheduled-task agent                                 |
 | Created        | 2026-04-26                                           |
-| Last updated   | 2026-04-27                                           |
+| Last updated   | 2026-04-27 (run #16)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001, 003, 004                                        |
 
@@ -146,6 +146,22 @@ export interface ICircuitBreakerService {
   to `@Res({ passthrough: true })` so `LoggingInterceptor` can still
   attach `X-Process-Time` without colliding with `res.end()`. Q-015
   resolved Option A (proceeding default).
+- 2026-04-27 (run #16): Phase 4 / T07 — admin force-open / force-reset
+  routes ship at `POST /api/sources/:site/circuit/{open,reset}` (FR-7)
+  on the existing `SourcesHealthController`. Auth strictness raised
+  via a new Reflector-driven `@AdminAuth()` decorator: the global
+  `ApiKeyGuard` reads metadata and dispatches per-tier — standard
+  routes preserve the legacy "no-op when `auth.enabled=false`" fast
+  path, admin routes always validate a key and throw 401
+  `UnauthorizedException` on missing/invalid (distinct from the
+  standard 403) — exactly per the T07 acceptance. Misconfigured
+  deploys with no `API_KEYS` get 503; unknown `:site` returns 404.
+  Successful actions return `{ ok, site, health: SourceHealth }` so a
+  dashboard can re-render the per-site row from one round-trip
+  (Q-017 / Option A). Spec 005 graduates to "Phase 1+2+3+4 done
+  (T01–T08); Phase 5 pending"; only T09 (60-second cron-driven
+  health snapshots into `IJobStore`) remains, and that is gated
+  behind Spec 004 Phase 5.
 - 2026-04-27 (run #15): Phase 4 / T08 — per-plugin
   `getCircuitBreakerPolicy()` discovery wired through a new
   `PluginPolicyBootstrapper` provider in `apps/api/src/jobs/`. Runs at

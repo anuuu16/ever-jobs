@@ -143,11 +143,50 @@
 
 ## Phase 4 — Admin endpoints & per-plugin override
 
-- [ ] T07 — Add `POST /api/sources/:site/circuit/{open,reset}` (auth-required).
-  - **Files:** `apps/api/src/jobs/health.controller.ts`,
+- [x] T07 — Add `POST /api/sources/:site/circuit/{open,reset}` (auth-required).
+  - **Files (planned):** `apps/api/src/jobs/health.controller.ts`,
     `apps/api/__tests__/e2e/health-admin.e2e-spec.ts`.
+  - **Files (actual):** `apps/api/src/jobs/health.controller.ts`,
+    `apps/api/src/auth/admin-auth.decorator.ts` (new),
+    `apps/api/src/auth/api-key.guard.ts` (extended for admin tier),
+    `apps/api/src/auth/__tests__/api-key.guard.spec.ts` (new),
+    `apps/api/src/jobs/__tests__/sources-admin.controller.spec.ts` (new),
+    `apps/api/__tests__/e2e/sources-admin.e2e-spec.ts` (new — name
+    differs from plan because the file sits next to
+    `sources-health.e2e-spec.ts` and the `sources-` prefix groups them).
   - **Acceptance:** Force-open succeeds with valid API key; 401 otherwise.
-  - **Estimate:** 0.5 day.
+  - **Done:** run #16 (2026-04-27). Two routes added to the existing
+    `SourcesHealthController` (Q-017 / Option A — same controller, the
+    breaker is already injected). Auth strictness raised via a new
+    `@AdminAuth()` decorator (Reflector metadata key
+    `'ever-jobs:admin-auth'`); the existing global `ApiKeyGuard` reads
+    the metadata and dispatches: standard routes keep the legacy
+    "no-op when `auth.enabled=false`" fast-path, admin routes always
+    validate a key and return 401 (`UnauthorizedException`) on
+    missing/invalid — distinct from the standard 403 — exactly per
+    the T07 acceptance text. Misconfigured deploys (no
+    `API_KEYS` configured) get 503 (`ServiceUnavailableException`)
+    rather than silently allowing the request — operator-fixable.
+    Unknown `:site` returns 404.
+
+    Successful action returns `{ ok: true, site, health: SourceHealth }`
+    so the dashboard can re-render the per-site row from a single
+    round-trip (no follow-up `GET /api/sources/health` needed). The
+    breaker's `health(site)` is O(1).
+
+    **Tests (all green):** 11-case unit suite drives `ApiKeyGuard`
+    directly with a stub `ConfigService` + `Reflector` (covers the
+    standard ↔ admin fork, the 503 / 401 / 403 dispatch, custom
+    header name, and class-level `@AdminAuth()`). 9-case unit suite
+    drives the controller methods directly with a stub breaker
+    (covers happy path, unknown site, missing breaker, plus the
+    enum-validation matrix including empty string and
+    case-mismatched). 13-case e2e suite bootstraps the **full** Nest
+    app three times with different `process.env` so the global guard
+    sees each configuration (no-keys/disabled, keys/disabled,
+    keys/enabled). Full Spec 005 regression suite: 89 / 89 across 12
+    suites; `tsc --noEmit` clean; `nest build` succeeds.
+  - **Estimate:** 0.5 day. **Actual:** ~0.5 day.
 
 - [x] T08 — Honour per-plugin `getCircuitBreakerPolicy()` override.
   - **Files (planned):** `packages/plugin/src/circuit-breaker/circuit-breaker.service.ts`.
