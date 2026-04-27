@@ -184,6 +184,32 @@ export interface ICircuitBreakerService {
   Q-014 (resolved Option A). The endpoint is subject to the global
   `ApiKeyGuard` (no-op when `auth.enabled=false`); the explicit-auth
   admin paths (FR-7) remain pending in T07.
+- 2026-04-27 (run #27): Phase 5 / T09 — `HealthSnapshotCron` ships at
+  `apps/api/src/jobs/health-snapshot.cron.ts` as a NestJS provider
+  implementing `OnApplicationBootstrap` + `OnApplicationShutdown`. A
+  60-second `setInterval` (NOT `@nestjs/schedule`, per Q-020 / Option
+  A on the scheduler axis) reads `breaker.list()` and persists the
+  resulting `SourceHealth[]` via `IHealthSnapshotStore.putBatch(...)`
+  — a NEW sibling interface in `@ever-jobs/models` (Q-020 / Option A
+  on the interface axis, mirroring the `IJobObservationStore` precedent
+  Spec 004 / T01 introduced). The cron is a no-op when either the
+  breaker or the snapshot store is unbound (FR-8: "best-effort" /
+  "bypass when no store"). `StoreModule.forActive(...)` gained a new
+  `bindHealthSnapshotStore` option (default `true`) that runtime-type-
+  guards the active backend via `isHealthSnapshotStore` and binds
+  `HEALTH_SNAPSHOT_STORE_TOKEN` to the SAME instance as `JOB_STORE_TOKEN`
+  when satisfied — `null` otherwise. The in-memory backend
+  (`@ever-jobs/store-memory`) implements all three contracts on a
+  single class via an append-only ring (24-hour cap of 360 000 rows
+  worst case; oldest-first trim keeps array identity stable for
+  concurrent `listSince` walkers). sqlite-drizzle / postgres-prisma
+  intentionally don't implement `IHealthSnapshotStore` yet — the
+  cron silently bypasses for those deployments and Spec 015 (or this
+  spec as follow-up T10) will add them. Errors are captured, NEVER
+  re-thrown — a persistent backend outage MUST NEVER take the cron
+  offline (mirrors Spec 004 / T11's `maybePersist` pattern). Q-020
+  resolved Option A on both axes (proceeding default). Spec 005
+  graduates to "All phases done (T01–T09); spec complete".
 
 ## 11. References
 

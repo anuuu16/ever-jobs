@@ -118,7 +118,27 @@ Reasons (scheduler):
   closes the HTTP listener, so no in-flight `store.putAll()` is
   abandoned.
 
-**Resolution:** _pending_ — proceeding with Option A on both axes.
+**Resolution:** _pending_ — proceeding with Option A on both axes
+(adopted in run #27). Two in-run refinements lock alongside the
+default:
+1. The interface's primary insert method is named `putBatch`
+   (NOT `putAll`) so a single class implementing both
+   `IJobObservationStore` (Spec 004 / T01) AND
+   `IHealthSnapshotStore` (this run) doesn't suffer
+   method-overload ambiguity at the call site —
+   `IJobObservationStore.putAll(canonicalJobId, observations)`
+   keeps its name, the snapshot-store sibling uses the distinct
+   `putBatch(snapshots, ts)`. The in-memory reference backend
+   implements all three contracts on a single class.
+2. The in-memory reference backend ships an
+   `IHealthSnapshotStore` impl as part of T09 itself (deviating
+   from the initial draft "no backend ships an impl yet"),
+   wired via `StoreModule.forActive`'s new
+   `bindHealthSnapshotStore: true` default and the runtime
+   type-guard `isHealthSnapshotStore(active)`. sqlite-drizzle
+   and postgres-prisma intentionally remain opt-in; the cron
+   silently bypasses for those deployments.
+
 Revisit if the interface-extension argument resurfaces from
 operator feedback (e.g. "we want one transactional `putAll`
 covering canonical + observation + health"); revisit the

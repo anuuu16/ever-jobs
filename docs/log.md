@@ -196,6 +196,28 @@ surface (per Q-020 + the in-run rename below):
   order + site filter + limit clamp, `latest` hit / miss,
   `setSnapshotCap` trim-on-shrink, `setSnapshotCap` rejects
   non-positive / non-finite values, `clear()` drops snapshots.
+- `packages/plugin/src/store/__tests__/store.module.spec.ts` —
+  extended ~80 LOC. New `describe('bindHealthSnapshotStore
+  (Spec 005 / T09 / FR-8)')` block with **4 cases** —
+  co-resident binding when active backend implements
+  `IHealthSnapshotStore` (`SnapshotAwareStubStore` fixture
+  introduced for this purpose), `null` binding when it doesn't
+  (plain `MemoryStubStore`), opt-out via
+  `bindHealthSnapshotStore: false`, and co-residence preserves
+  the existing `JOB_STORE_TOKEN` / `JOB_OBSERVATION_STORE_TOKEN`
+  bindings (all three tokens point at the same instance).
+- `apps/api/__tests__/integration/health-snapshot.spec.ts` —
+  new ~145 LOC. **6 cases** wiring **real** `CircuitBreakerService`
+  × **real** `InMemoryJobStore` × **real** `HealthSnapshotCron`
+  (no stubs): per-tick row-per-site with `state` reflecting the
+  breaker's live state, `latest(site)` hit / miss, empty-list
+  short-circuit, `null` snapshot-store bypass (production
+  `StoreModule.forActive` factory return path), no-breaker
+  bypass (defensive), and append-only behaviour across repeated
+  ticks. The final case drives the breaker into `open` state by
+  exhausting the default 5-failure threshold and verifies the
+  cron captures `state: 'open'` faithfully — proves the
+  end-to-end "what the breaker says, the snapshot records" loop.
 
 **Changes — docs / specs:**
 

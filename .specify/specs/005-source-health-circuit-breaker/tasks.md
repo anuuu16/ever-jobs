@@ -334,17 +334,29 @@
          ~7 days). Forcing the contract onto `IJobStore` would
          have polluted every existing backend's interface AND
          broken every existing `IJobStore` stub fixture.
-      2. **No backend ships an `IHealthSnapshotStore` impl yet.**
-         T09's acceptance is "Rows appear in chosen backend;
-         bypass when no store." Shipping the cron + the contract
-         WITHOUT a default impl is the literal reading: the
-         `HEALTH_SNAPSHOT_STORE_TOKEN` is unbound by default, the
-         cron's `@Optional()` injection makes that the silent-skip
-         path, and a future spec (or this one as a follow-up T10)
-         wires real backends. Operators who want persistence today
-         bind their own `IHealthSnapshotStore` to the token in
-         their root module. Cleaner than shipping a half-finished
-         in-memory backend that would be unwired in production.
+      2. **The in-memory backend implements `IHealthSnapshotStore`;
+         sqlite-drizzle / postgres-prisma do NOT.** T09's acceptance
+         is "Rows appear in chosen backend; bypass when no store."
+         The in-memory backend (default `EVER_JOBS_STORE=memory`)
+         satisfies all three contracts on a single class —
+         `IJobStore` + `IJobObservationStore` + `IHealthSnapshotStore`
+         — so out-of-box dev / CI / `EVER_JOBS_STORE=memory`
+         deployments get the cron actually persisting.
+         `StoreModule.forActive`'s new `bindHealthSnapshotStore`
+         option (default `true`) auto-binds
+         `HEALTH_SNAPSHOT_STORE_TOKEN` to the active backend instance
+         when (and ONLY when) the runtime type-guard
+         `isHealthSnapshotStore(active)` returns true. Backends that
+         don't satisfy the contract (sqlite-drizzle /
+         postgres-prisma as of Spec 005 / T09) leave the token
+         bound to `null` — the cron treats `null` as "no store"
+         (the `if (!this.store)` check catches both `null` and
+         `undefined`) and silently skips its tick, exactly matching
+         FR-8's "best-effort" / "bypass when no store" wording.
+         Postgres / SQLite snapshot impls are intentionally deferred
+         to Spec 015 (or this spec as a follow-up T10) — adding
+         them here would have doubled the surface area of T09
+         without a clear acceptance path.
       3. **`setInterval` (NOT `@nestjs/schedule`).** Spec 005 ships
          exactly one timer; adding a 1.4 MB dep tree for a single
          `setInterval(60_000)` is over-investment. The provider
@@ -365,17 +377,47 @@
          Mirrors Spec 004 / T11's `maybePersist` pattern: a
          persistent backend outage MUST NEVER take the cron
          offline. The cron catches `breaker.list()` throws AND
-         `store.putAll()` rejections, projects them to
+         `store.putBatch()` rejections, projects them to
          `{ code, message }`, logs at `warn`, and continues. The
          next tick re-attempts. Operators alert on the warn-level
          `ERR_HEALTH_SNAPSHOT_PERSIST_FAILED` log lines (or the
          structured `.code` flowed through from a backend
          rejection like `ERR_STORE_BACKEND_DOWN`).
-    Verification: 17 / 17 new cases lock the resolution logic.
-    Tests cannot run in this sandbox (no `node_modules` — pattern
-    from runs #21–#26); CI on push validates the full unit +
-    integration bundle. Spec 005 graduates from "Phase 1+2+3+4
-    done (T01–T08); Phase 5 pending" to "All phases done
+    Verification:
+      - **18 unit cases** (`apps/api/src/jobs/__tests__/health-snapshot.cron.spec.ts`) —
+        every state branch of `snapshot()` (no-binding × 4 dep
+        combos, happy-path putBatch with timestamp shape, empty-
+        list short-circuit, structured-code error capture, bare-
+        Error fallback to `ERR_HEALTH_SNAPSHOT_PERSIST_FAILED`,
+        non-Error throw, breaker.list()-throws path, defensive
+        bypass when called pre-bootstrap, lifecycle setInterval
+        scheduling + `clearInterval` idempotence + interval
+        normalisation + invalid-value fallback + production
+        `null` injection mirroring `StoreModule.forActive`'s
+        factory return path).
+      - **10 in-memory unit cases** (`packages/plugins/store-memory/__tests__/store-memory.spec.ts`'s
+        new `IHealthSnapshotStore` describe-block) — putBatch
+        happy path, empty short-circuit, defensive ts copy,
+        listSince ascending order + site filter + max-limit
+        clamp, latest hit / miss, setSnapshotCap trim-on-shrink,
+        setSnapshotCap rejects non-positive / non-finite,
+        clear() drops snapshots.
+      - **4 forActive-binding cases** (`packages/plugin/src/store/__tests__/store.module.spec.ts`'s
+        new `bindHealthSnapshotStore` describe-block) — co-resident
+        binding when active impls IHealthSnapshotStore, `null`
+        when it doesn't, opt-out via `bindHealthSnapshotStore: false`,
+        co-residence preserves JOB_STORE_TOKEN /
+        JOB_OBSERVATION_STORE_TOKEN.
+      - **6 integration cases** (`apps/api/__tests__/integration/health-snapshot.spec.ts`) —
+        real `CircuitBreakerService` × real `InMemoryJobStore` ×
+        real `HealthSnapshotCron`: per-tick row-per-site, latest
+        hit / miss, empty short-circuit, no-store bypass, no-
+        breaker bypass, repeated-tick append-only behaviour,
+        captures `open` state after threshold exhaustion.
+    All tests cannot run in this sandbox (no `node_modules` —
+    pattern from runs #21–#26); CI on push validates the full
+    unit + integration bundle. Spec 005 graduates from "Phase
+    1+2+3+4 done (T01–T08); Phase 5 pending" to "All phases done
     (T01–T09); spec complete".
   - **Estimate:** 0.5 day. **Actual:** ~0.6 day (added Q-020 +
     new sibling interface + cron + 17 unit cases; the cron
