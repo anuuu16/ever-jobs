@@ -1,5 +1,10 @@
-import { extractSalary, convertToAnnual, parseSalaryCurrency } from '@ever-jobs/common';
+import { extractSalary, convertToAnnual, parseSalaryCurrency, parseSalaryNumber } from '@ever-jobs/common';
 import { Country } from '@ever-jobs/models';
+// Spec 012 / T02 — `pickLocale` is module-private (Notes-for-the-next-run
+// decision 1). The `__INTERNAL_TEST_ONLY__` shim is exported solely so
+// this test file can pin the documented acceptance cases without
+// promoting `pickLocale` to the public package surface.
+import { __INTERNAL_TEST_ONLY__ } from '../src/utils/helpers';
 
 describe('extractSalary', () => {
   it('should return nulls for null input', () => {
@@ -210,5 +215,148 @@ describe('parseSalaryCurrency (Spec 012 / T01)', () => {
     // word. With a country hint, falls through to country branch.
     expect(result.code).toBe('EUR');
     expect(result.confidence).toBe('country');
+  });
+});
+
+/**
+ * Spec 012 / T02 — `parseSalaryNumber()` locale-aware numeric parser.
+ *
+ * Pins the two locale branches documented in Spec 012 / § 7.3:
+ *   - `'continental'` — decimal `,`, thousands `.` or U+00A0.
+ *   - `'anglo'` — decimal `.`, thousands `,` or U+00A0; tolerates
+ *     Swiss `'`-thousands per FR-12.
+ *
+ * Each test asserts the exact numeric output (or `null`) so a future
+ * refactor that quietly demotes a parse (e.g. by mis-ordering the
+ * replace pass) trips a failure here, not silently downstream in
+ * `extractSalary()` once T03 wires the dispatcher together.
+ */
+describe('parseSalaryNumber (Spec 012 / T02)', () => {
+  it('parses continental period-thousands integer', () => {
+    expect(parseSalaryNumber('45.000', 'continental')).toBe(45000);
+  });
+
+  it('parses anglo comma-thousands + period-decimal', () => {
+    expect(parseSalaryNumber('45,000.50', 'anglo')).toBe(45000.5);
+  });
+
+  it('parses continental space-thousands + comma-decimal', () => {
+    expect(parseSalaryNumber('1 234,56', 'continental')).toBe(1234.56);
+  });
+
+  it('tolerates Swiss apostrophe-thousands under anglo (FR-12)', () => {
+    expect(parseSalaryNumber("90'000", 'anglo')).toBe(90000);
+  });
+
+  it('tolerates the Swiss apostrophe under continental too', () => {
+    // FR-12 says the apostrophe is tolerated as a thousands separator;
+    // both locales strip it up-front so the locale branch never sees it.
+    expect(parseSalaryNumber("1'234'567,89", 'continental')).toBe(1234567.89);
+  });
+
+  it('parses U+00A0 (non-breaking) thousands under continental', () => {
+    // Common in Nordic / French job ads — Stepstone / NoFluffJobs
+    // emit U+00A0 between thousand groups.
+    const raw = `450 000,50`;
+    expect(parseSalaryNumber(raw, 'continental')).toBe(450000.5);
+  });
+
+  it('parses deeply-grouped continental amount with mixed thousands', () => {
+    expect(parseSalaryNumber('1.234.567,89', 'continental')).toBe(1234567.89);
+  });
+
+  it('parses deeply-grouped anglo amount', () => {
+    expect(parseSalaryNumber('1,234,567.89', 'anglo')).toBe(1234567.89);
+  });
+
+  it('returns null for non-numeric input', () => {
+    expect(parseSalaryNumber('not a number', 'anglo')).toBeNull();
+  });
+
+  it('returns null for empty / whitespace input', () => {
+    expect(parseSalaryNumber('', 'anglo')).toBeNull();
+    expect(parseSalaryNumber('   ', 'anglo')).toBeNull();
+  });
+
+  it('returns null for null / undefined input', () => {
+    expect(parseSalaryNumber(null, 'anglo')).toBeNull();
+    expect(parseSalaryNumber(undefined, 'continental')).toBeNull();
+  });
+
+  it('returns null when anglo input has stray double-decimals', () => {
+    // `'45.000.50'` parsed under anglo would leave two periods after
+    // the strip pass — invalid number, must return null (not 45.000).
+    expect(parseSalaryNumber('45.000.50', 'anglo')).toBeNull();
+  });
+
+  it('handles negative amounts (defensive — salaries shouldn\'t be negative)', () => {
+    expect(parseSalaryNumber('-1.234,56', 'continental')).toBe(-1234.56);
+    expect(parseSalaryNumber('-1,234.56', 'anglo')).toBe(-1234.56);
+  });
+
+  it('handles a bare integer in either locale', () => {
+    expect(parseSalaryNumber('500000', 'continental')).toBe(500000);
+    expect(parseSalaryNumber('500000', 'anglo')).toBe(500000);
+  });
+});
+
+/**
+ * Spec 012 / T02 — `pickLocale()` country → locale dispatch.
+ *
+ * `pickLocale` is module-private (Notes-for-the-next-run decision 1);
+ * we reach it through the `__INTERNAL_TEST_ONLY__` shim so the
+ * acceptance cases in tasks.md can be pinned without exporting at
+ * the package barrel.
+ *
+ * Cases follow the spec § 7.3 table verbatim plus the `undefined`
+ * fallback (preserves USD-mode behaviour byte-for-byte) and the
+ * "unmapped country falls through to anglo default" guard.
+ */
+describe('pickLocale (Spec 012 / T02, internal)', () => {
+  const { pickLocale } = __INTERNAL_TEST_ONLY__;
+
+  it('maps Continental EU countries to "continental"', () => {
+    expect(pickLocale(Country.GERMANY)).toBe('continental');
+    expect(pickLocale(Country.FRANCE)).toBe('continental');
+    expect(pickLocale(Country.SPAIN)).toBe('continental');
+    expect(pickLocale(Country.ITALY)).toBe('continental');
+    expect(pickLocale(Country.POLAND)).toBe('continental');
+    expect(pickLocale(Country.SWEDEN)).toBe('continental');
+    expect(pickLocale(Country.NORWAY)).toBe('continental');
+    expect(pickLocale(Country.DENMARK)).toBe('continental');
+    expect(pickLocale(Country.NETHERLANDS)).toBe('continental');
+    expect(pickLocale(Country.BELGIUM)).toBe('continental');
+    expect(pickLocale(Country.AUSTRIA)).toBe('continental');
+    expect(pickLocale(Country.FINLAND)).toBe('continental');
+    expect(pickLocale(Country.IRELAND)).toBe('continental');
+  });
+
+  it('maps Anglosphere countries to "anglo"', () => {
+    expect(pickLocale(Country.UK)).toBe('anglo');
+    expect(pickLocale(Country.USA)).toBe('anglo');
+    expect(pickLocale(Country.CANADA)).toBe('anglo');
+    expect(pickLocale(Country.AUSTRALIA)).toBe('anglo');
+    expect(pickLocale(Country.NEWZEALAND)).toBe('anglo');
+    expect(pickLocale(Country.SINGAPORE)).toBe('anglo');
+    expect(pickLocale(Country.INDIA)).toBe('anglo');
+  });
+
+  it('maps Switzerland to "anglo" (apos-thousands handled by parseSalaryNumber)', () => {
+    // Spec 012 / § 7.3 row 3 + Notes-for-the-next-run decision 2.
+    expect(pickLocale(Country.SWITZERLAND)).toBe('anglo');
+  });
+
+  it('returns "anglo" default when no country hint is supplied', () => {
+    // Preserves the existing USD-only `extractSalary` behaviour
+    // byte-for-byte (FR-7 / FR-10 pre-validation).
+    expect(pickLocale(undefined)).toBe('anglo');
+  });
+
+  it('returns "anglo" for any unmapped country (defensive default)', () => {
+    // Countries not in the SALARY_LOCALE_MAP fall through to anglo —
+    // safe-by-default so a forgotten enum addition doesn't crash.
+    expect(pickLocale(Country.JAPAN)).toBe('anglo');
+    expect(pickLocale(Country.BRAZIL)).toBe('anglo');
+    expect(pickLocale(Country.WORLDWIDE)).toBe('anglo');
   });
 });

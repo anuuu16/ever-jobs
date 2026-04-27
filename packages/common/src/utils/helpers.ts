@@ -249,6 +249,189 @@ function isWordChar(ch: string): boolean {
 }
 
 /**
+ * Spec 012 / § 7.3 — country → locale dispatch table for {@link pickLocale}.
+ *
+ * Continental rows use decimal-comma + period-thousands (`45.000,50`);
+ * anglo rows use decimal-period + comma-thousands (`45,000.50`).
+ * Switzerland intentionally lands on `'anglo'` and relies on the
+ * apostrophe-thousands tolerance baked into {@link parseSalaryNumber}
+ * (see Spec 012 / Notes-for-the-next-run decision 2 — a third
+ * `'swiss'` locale was rejected as over-engineering for one edge).
+ *
+ * Countries not listed fall through to the documented `'anglo'`
+ * default (see {@link pickLocale}). Adding a new country is the only
+ * place to amend; both helpers branch off this single table.
+ */
+const SALARY_LOCALE_MAP: ReadonlyMap<Country, SalaryLocale> = new Map<
+  Country,
+  SalaryLocale
+>([
+  // Continental EU + extended (Spec 012 / § 7.3 row 1).
+  [Country.AUSTRIA, 'continental'],
+  [Country.BELGIUM, 'continental'],
+  [Country.CZECHREPUBLIC, 'continental'],
+  [Country.DENMARK, 'continental'],
+  [Country.FINLAND, 'continental'],
+  [Country.FRANCE, 'continental'],
+  [Country.GERMANY, 'continental'],
+  [Country.HUNGARY, 'continental'],
+  [Country.IRELAND, 'continental'],
+  [Country.ITALY, 'continental'],
+  [Country.LUXEMBOURG, 'continental'],
+  [Country.NETHERLANDS, 'continental'],
+  [Country.NORWAY, 'continental'],
+  [Country.POLAND, 'continental'],
+  [Country.PORTUGAL, 'continental'],
+  [Country.ROMANIA, 'continental'],
+  [Country.SPAIN, 'continental'],
+  [Country.SWEDEN, 'continental'],
+  // Anglosphere (Spec 012 / § 7.3 row 2).
+  [Country.AUSTRALIA, 'anglo'],
+  [Country.CANADA, 'anglo'],
+  [Country.HONGKONG, 'anglo'],
+  [Country.INDIA, 'anglo'],
+  [Country.MALAYSIA, 'anglo'],
+  [Country.NEWZEALAND, 'anglo'],
+  [Country.PHILIPPINES, 'anglo'],
+  [Country.SINGAPORE, 'anglo'],
+  [Country.SOUTHAFRICA, 'anglo'],
+  [Country.UK, 'anglo'],
+  [Country.USA, 'anglo'],
+  // Switzerland — anglo with apostrophe-thousands tolerance
+  // (Spec 012 / § 7.3 row 3 + Notes-for-the-next-run decision 2).
+  [Country.SWITZERLAND, 'anglo'],
+]);
+
+/**
+ * Pick the {@link SalaryLocale} for a given `country` hint.
+ *
+ *   - Maps Continental EU + extended → `'continental'`.
+ *   - Maps Anglosphere + Switzerland → `'anglo'`.
+ *   - `undefined` (no hint) → `'anglo'` (preserves existing USD
+ *     behaviour byte-for-byte; Spec 012 / § 7.3 row 4).
+ *   - Any unmapped country (e.g. JAPAN, BRAZIL) → `'anglo'` default.
+ *
+ * Module-private per Spec 012 / Notes-for-the-next-run decision 1
+ * ("`pickLocale` stays private"); consumers should pass `country`
+ * to {@link parseSalaryNumber} via the eventual `extractSalary()`
+ * dispatcher (Spec 012 / T03) rather than calling this directly.
+ *
+ * Re-exported solely through {@link __INTERNAL_TEST_ONLY__} so the
+ * acceptance cases listed in tasks.md (Phase 2 / T02) can be pinned.
+ */
+function pickLocale(country: Country | undefined): SalaryLocale {
+  if (country === undefined) return 'anglo';
+  return SALARY_LOCALE_MAP.get(country) ?? 'anglo';
+}
+
+/**
+ * Spec 012 / § 7.3 — locale-aware numeric parser. Strips
+ * locale-appropriate thousands separators, normalises the decimal
+ * separator to `'.'`, and returns a JavaScript `number`.
+ *
+ * Locale dispatch (FR-6, FR-9, FR-12):
+ *
+ *   - **`'continental'`** — decimal `,`, thousands `.` or U+00A0.
+ *     Examples: `'45.000'` → `45000`; `'1 234,56'` → `1234.56`;
+ *     `'1.234.567,89'` → `1234567.89`.
+ *   - **`'anglo'`** — decimal `.`, thousands `,` or U+00A0.
+ *     Examples: `'45,000.50'` → `45000.50`; `'1,234,567.89'` →
+ *     `1234567.89`.
+ *
+ * Both locales tolerate the Swiss apostrophe-thousands convention
+ * (`"90'000"` → `90000`) per FR-12 — the apostrophe is stripped
+ * up-front before either branch runs, so it never collides with
+ * the decimal separator.
+ *
+ * Returns `null` (NEVER throws) for any input that isn't parseable
+ * as a number under the chosen locale: empty string, non-numeric
+ * text, or a string with multiple decimal separators / mismatched
+ * separator pattern.
+ *
+ * Bench target (NFR-1): ≤ 0.5 ms p95 on a 200-char input. Pure
+ * `String.prototype.replace` + one `parseFloat`; no `RegExp`
+ * compilation per call (the validating regex literals are compiled
+ * once at module-load).
+ *
+ * @param raw    — the raw numeric substring (typically already
+ *                 plucked out of a wider salary string by the
+ *                 dispatcher in {@link extractSalary}).
+ * @param locale — `'continental'` or `'anglo'`. Use {@link pickLocale}
+ *                 (private) or pass through from the caller's
+ *                 explicit `Country` hint.
+ */
+export function parseSalaryNumber(
+  raw: string | null | undefined,
+  locale: SalaryLocale,
+): number | null {
+  if (raw === null || raw === undefined) return null;
+
+  // Up-front normalisation applied to both locales:
+  //   - U+00A0 (non-breaking space) → regular space, so the same
+  //     `' '` strip handles both.
+  //   - Swiss thousands apostrophe → empty, per FR-12.
+  //   - Trim outer whitespace.
+  let s = String(raw).replace(/ /g, ' ').replace(/'/g, '').trim();
+  if (!s) return null;
+
+  // Reject anything that isn't a digit / `.` / `,` / space / leading
+  // sign before doing the locale-specific replace pass. Cheap regex
+  // bail-out — keeps the hot path on parseable inputs.
+  if (!SALARY_NUMBER_PRE_PATTERN.test(s)) return null;
+
+  if (locale === 'continental') {
+    // Continental: `.` and ` ` are thousands; `,` is the decimal.
+    s = s.replace(/[. ]/g, '').replace(',', '.');
+  } else {
+    // Anglo: `,` and ` ` are thousands; `.` is the decimal.
+    s = s.replace(/[, ]/g, '');
+  }
+
+  // Final numeric validation — exactly one optional decimal, optional
+  // sign, all digits otherwise. Catches stray double-decimals like
+  // `'45.000.50'` parsed under `'anglo'`.
+  if (!SALARY_NUMBER_POST_PATTERN.test(s)) return null;
+
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Pre-strip validating regex for {@link parseSalaryNumber}. Allows
+ * a leading sign, digits, `.`, `,`, and ASCII space (U+00A0 has
+ * already been normalised by the time we reach this check).
+ */
+const SALARY_NUMBER_PRE_PATTERN = /^-?[\d., ]+$/;
+
+/**
+ * Post-strip validating regex for {@link parseSalaryNumber}. After
+ * the locale-specific replace pass, the result MUST be a clean
+ * `[-]digits[.digits]` shape — anything else (multiple decimals,
+ * trailing punctuation) means the input wasn't a real number.
+ */
+const SALARY_NUMBER_POST_PATTERN = /^-?\d+(\.\d+)?$/;
+
+/**
+ * @internal — single test-shim symbol so the unit-test suite can
+ * pin the {@link pickLocale} acceptance cases listed in
+ * `.specify/specs/012-european-salary-parser/tasks.md` (Phase 2 /
+ * T02) without exporting the helper at the public package barrel.
+ *
+ * Production code MUST NOT consume this object. The symbol name
+ * (`__INTERNAL_TEST_ONLY__`) plus the leading-double-underscore
+ * convention should make stray imports easy to spot in code review.
+ *
+ * Why a shim instead of a normal `export`? Spec 012's
+ * Notes-for-the-next-run decision 1 keeps `pickLocale` "private"
+ * for the same reason T01's `matchIsoCode` / `isWordChar` are
+ * private — it's an implementation detail of the eventual
+ * `extractSalary()` dispatcher (Spec 012 / T03). Exposing it via
+ * a clearly-flagged shim preserves that intent while still giving
+ * the test suite a way to anchor the acceptance assertions.
+ */
+export const __INTERNAL_TEST_ONLY__ = Object.freeze({ pickLocale });
+
+/**
  * Extract email addresses from text.
  * Replaces Python's extract_emails_from_text().
  */

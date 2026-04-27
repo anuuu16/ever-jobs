@@ -76,7 +76,7 @@
 | 004 | [Persistence & Storage Plugins](../.specify/specs/004-persistence-storage-plugins/spec.md) — [plan](../.specify/specs/004-persistence-storage-plugins/plan.md) — [tasks](../.specify/specs/004-persistence-storage-plugins/tasks.md) | All phases done (T01 run #17, T02 run #18, T03 run #19, T04 run #20, T05+T06 run #21, T07+T08 run #22, T09 run #23, T10 run #24, T11 run #25, T12 run #26); spec complete |
 | 005 | [Source Health & Circuit Breaker](../.specify/specs/005-source-health-circuit-breaker/spec.md) — [plan](../.specify/specs/005-source-health-circuit-breaker/plan.md) — [tasks](../.specify/specs/005-source-health-circuit-breaker/tasks.md) | All phases done (T01–T08 runs #10–#16; T09 run #27); spec complete |
 | 006 | [ATS-Scrapers Parity, Batch 1 (Avature / Gem / Join.com)](../.specify/specs/006-ats-scrapers-parity-batch-1/spec.md) — [plan](../.specify/specs/006-ats-scrapers-parity-batch-1/plan.md) — [tasks](../.specify/specs/006-ats-scrapers-parity-batch-1/tasks.md) | All phases done (T01..T13 runs #29..#36); spec complete |
-| 012 | [European-style Salary Parser](../.specify/specs/012-european-salary-parser/spec.md) — [plan](../.specify/specs/012-european-salary-parser/plan.md) — [tasks](../.specify/specs/012-european-salary-parser/tasks.md) | Phase 1 done (T01 run #38); T02..T05 pending |
+| 012 | [European-style Salary Parser](../.specify/specs/012-european-salary-parser/spec.md) — [plan](../.specify/specs/012-european-salary-parser/plan.md) — [tasks](../.specify/specs/012-european-salary-parser/tasks.md) | Phases 1–2 done (T01 run #38, T02 run #39); T03..T05 pending |
 
 ## 8. Templates
 
@@ -88,4 +88,4 @@
 
 ---
 
-_Last revised: 2026-04-27 (run #38)._
+_Last revised: 2026-04-27 (run #39)._

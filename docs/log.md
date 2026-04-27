@@ -5,6 +5,137 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #39 (Spec 012 / Phase 2 — T02: `parseSalaryNumber()` + private `pickLocale()`)
+
+**Scope:** land Spec 012 / Phase 2 / T02 — extend
+`packages/common/src/utils/helpers.ts` with the
+locale-aware numeric parser `parseSalaryNumber(raw, locale)`
+plus the module-private `pickLocale(country)` helper and its
+backing `SALARY_LOCALE_MAP` lookup table. Run #38's
+Notes-for-the-next-run pinned this default ("Spec 012 /
+Phase 2 / T02 — `parseSalaryNumber()` + private `pickLocale()`").
+
+**No new questions opened this run.** Q-025 (the `'kr'`
+no-hint default) remains the only Spec 012 question; T02
+doesn't touch currency dispatch (that's T01's surface).
+
+**Two load-bearing decisions** locked in this run, both met
+run #38's Notes-for-the-next-run expectations:
+
+1. **`pickLocale` stays private** — module-level function in
+   `helpers.ts`, NOT exported from the public surface.
+   Re-exported via the `__INTERNAL_TEST_ONLY__` shim (a frozen
+   one-property object) so the unit-test suite can pin the
+   acceptance cases listed in tasks.md without polluting the
+   `@ever-jobs/common` package barrel. JSDoc + the
+   double-underscore prefix flag stray imports in code review.
+2. **Switzerland → `'anglo'` with apostrophe-thousands
+   tolerance** — `SALARY_LOCALE_MAP` maps
+   `Country.SWITZERLAND` to `'anglo'`; `parseSalaryNumber`
+   strips `'` characters up-front (before either locale
+   branch runs), so the apostrophe never collides with the
+   decimal separator. No third `'swiss'` locale value
+   introduced (over-engineering for a single edge per
+   Spec 012 / § 7.3 row 3).
+
+**Changes — code:**
+
+- `packages/common/src/utils/helpers.ts` — extended ~165 LOC.
+  Five new module-level symbols:
+    - `SALARY_LOCALE_MAP: ReadonlyMap<Country, SalaryLocale>` —
+      30 entries covering Continental EU + extended (18 rows)
+      and Anglosphere + Switzerland (12 rows). Single-source
+      table; both helpers branch off it.
+    - `pickLocale(country)` — module-private function
+      returning `'continental' | 'anglo'`. Defaults to
+      `'anglo'` for `undefined` (preserves USD-mode
+      byte-for-byte) and for any unmapped country (defensive).
+    - `parseSalaryNumber(raw, locale)` — exported function.
+      Up-front normalisation (U+00A0 → space, strip `'`,
+      trim), `SALARY_NUMBER_PRE_PATTERN` validity bail-out,
+      locale-specific replace pass (continental: strip `.`/` `
+      then `,` → `.`; anglo: strip `,`/` `),
+      `SALARY_NUMBER_POST_PATTERN` final shape check, then
+      `parseFloat`. NEVER throws; returns `null` for
+      unparseable input.
+    - `SALARY_NUMBER_PRE_PATTERN` / `SALARY_NUMBER_POST_PATTERN`
+      — module-level regex literals compiled once at module-load
+      (NFR-2 / NFR-4: zero per-call allocation).
+    - `__INTERNAL_TEST_ONLY__: Readonly<{ pickLocale }>` —
+      frozen test-shim export so the test file can reach
+      `pickLocale` without exporting it from the package
+      barrel. Production code MUST NOT consume.
+
+**Changes — tests:**
+
+- `packages/common/__tests__/helpers.spec.ts` — extended
+  ~140 LOC. Two new `describe` blocks:
+    - `parseSalaryNumber (Spec 012 / T02)` — **14 cases**
+      covering: continental period-thousands, anglo
+      comma-thousands + period-decimal, continental
+      space-thousands + comma-decimal, Swiss
+      apostrophe-thousands under both locales, U+00A0
+      (non-breaking space) thousands, deeply-grouped
+      continental + anglo numbers, non-numeric input rejection,
+      empty / whitespace input, null / undefined input,
+      anglo double-decimal rejection, defensive negative-amount
+      handling, bare integer in either locale.
+    - `pickLocale (Spec 012 / T02, internal)` — **5 cases**
+      covering: Continental EU country → `'continental'`,
+      Anglosphere → `'anglo'`, Switzerland → `'anglo'`,
+      `undefined` → `'anglo'` default, unmapped country (Japan
+      / Brazil / Worldwide) → `'anglo'` defensive default.
+  Plus the new `__INTERNAL_TEST_ONLY__` import via relative
+  path (`../src/utils/helpers`) — explicit signal that the
+  test is reaching for an implementation detail.
+
+Verification: `npx jest --testPathPatterns 'packages/common/__tests__/helpers'`
+locally → `Test Suites: 1 passed · Tests: 44 passed (25
+existing + 19 new) · exit 0` in 11.5 s. The 11 existing
+USD-only `extractSalary` cases stay green byte-for-byte
+(FR-10 pre-validation; the actual `extractSalary` regex
+isn't rewired until T03). The 25 T01 `parseSalaryCurrency`
+cases also stay green byte-for-byte (no regression).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/012-european-salary-parser/tasks.md` —
+  T02 graduates from "pending" to "done" with full
+  planned-vs-actual file lists and per-bullet acceptance
+  verification. "Notes-for-the-next-run" rewritten to point
+  at T03 (rewire `extractSalary()` to call both helpers)
+  with three load-bearing decisions deferred to that run.
+- `.specify/specs/012-european-salary-parser/spec.md` —
+  `Status` flipped to `Phases 1–2 done (T01 run #38, T02
+  run #39); T03..T05 pending`; `Last updated` bumped to
+  `2026-04-27 (run #39)`.
+- `docs/index.md` — Spec 012 row + footer bumped to run #39.
+- `CLAUDE.md` — run-tag → #39.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #39 sync line; **no upstream
+  commits** (twenty-fifth consecutive zero-churn run from
+  Ats-scrapers / JobSpy / Jobspy-api).
+
+**Notes & follow-ups:**
+
+- Default for run #40 is **Spec 012 / Phase 3 / T03** — rewire
+  `extractSalary()` to call the two new helpers
+  (`parseSalaryCurrency` from T01 + `parseSalaryNumber` from
+  T02). Dispatcher refactor: extract the existing
+  `\$(\d+...)` regex into a per-currency template indexed by
+  symbol, plumb `options.country?: Country` and
+  `options.locale?: SalaryLocale` through, dispatch to the
+  right symbol-template + locale-aware number-parse pair.
+  All 11 existing USD cases must stay green byte-for-byte
+  (FR-10).
+- External research repos: no new commits since run #38.
+  Twenty-five consecutive zero-churn runs (Ats-scrapers @
+  `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4`).
+- Pre-existing dedup-hybrid red tests unchanged from runs
+  #11–#38; not wired into CI.
+
+---
+
 ## 2026-04-27 — Scheduled run #38 (Spec 012 / Phase 1 — T01: `parseSalaryCurrency()` + lookup tables)
 
 **Scope:** land Spec 012 / Phase 1 / T01 — extend

@@ -59,22 +59,55 @@
 
 ## Phase 2 — Number parsing
 
-- [ ] T02 — `parseSalaryNumber()` + private `pickLocale()`.
+- [x] T02 — `parseSalaryNumber()` + private `pickLocale()`.
   - **Files (planned):** `packages/common/src/utils/helpers.ts`
     (extend), `packages/common/src/index.ts` (barrel re-export
     of `parseSalaryNumber` only — `pickLocale` stays private).
+  - **Files (actual):** `packages/common/src/utils/helpers.ts`
+    (extended ~165 LOC: `SALARY_LOCALE_MAP` + `pickLocale`
+    private function + `parseSalaryNumber` exported function +
+    `SALARY_NUMBER_PRE_PATTERN` / `SALARY_NUMBER_POST_PATTERN`
+    module-private regex literals + `__INTERNAL_TEST_ONLY__`
+    test-shim export). Barrel re-export comes for free via the
+    existing `export * from './helpers'` in `utils/index.ts` —
+    no edit to `packages/common/src/index.ts` needed.
+    `packages/common/__tests__/helpers.spec.ts` extended
+    (~140 LOC, two new `describe` blocks: 14 cases for
+    `parseSalaryNumber` + 5 cases for `pickLocale`).
   - **Acceptance:**
-    - `parseSalaryNumber('45.000', 'continental')` → `45000`.
-    - `parseSalaryNumber('45,000.50', 'anglo')` → `45000.50`.
-    - `parseSalaryNumber('1 234,56', 'continental')` → `1234.56`.
+    - `parseSalaryNumber('45.000', 'continental')` → `45000`. ✅
+    - `parseSalaryNumber('45,000.50', 'anglo')` → `45000.50`. ✅
+    - `parseSalaryNumber('1 234,56', 'continental')` → `1234.56`. ✅
     - `parseSalaryNumber("90'000", 'anglo')` → `90000`
-      (apostrophe-thousands tolerance per FR-12).
-    - `parseSalaryNumber('not a number', 'anglo')` → `null`.
+      (apostrophe-thousands tolerance per FR-12). ✅
+    - `parseSalaryNumber('not a number', 'anglo')` → `null`. ✅
     - `pickLocale(Country.GERMANY)` → `'continental'`;
       `pickLocale(Country.UK)` → `'anglo'`;
       `pickLocale(Country.SWITZERLAND)` → `'anglo'`;
-      `pickLocale(undefined)` → `'anglo'`.
-  - **Estimate:** 0.3 day.
+      `pickLocale(undefined)` → `'anglo'`. ✅
+  - **Done:** run #39 (2026-04-27). Two load-bearing decisions
+    from run #38's Notes-for-the-next-run met:
+      1. **`pickLocale` stays private** — module-level function,
+         not exported from `helpers.ts`. The
+         `__INTERNAL_TEST_ONLY__` shim (frozen object) re-exports
+         it as a clearly-flagged test symbol; production code
+         must not consume it. JSDoc + the `__` prefix flag
+         stray imports in code review.
+      2. **Switzerland → `'anglo'` with apostrophe-thousands
+         tolerance** — `SALARY_LOCALE_MAP` maps
+         `Country.SWITZERLAND` to `'anglo'`; `parseSalaryNumber`
+         strips `'` characters up-front (before either locale
+         branch runs), so the apostrophe never collides with
+         the decimal separator. No third `'swiss'` locale
+         introduced.
+    Verification: `npx jest packages/common/__tests__/helpers`
+    reports `Test Suites: 1 passed · Tests: 44 passed (25
+    existing T01 + 14 new `parseSalaryNumber` + 5 new
+    `pickLocale`) · exit 0`. The 11 existing USD-only
+    `extractSalary` cases stay green byte-for-byte (FR-10
+    pre-validation; the actual `extractSalary` regex isn't
+    rewired until T03).
+  - **Estimate:** 0.3 day. **Actual:** ~0.25 day.
 
 ## Phase 3 — Dispatcher refactor
 
@@ -180,34 +213,38 @@
   p95 / p99` summary. Future spec authors writing a parser-style
   bench should copy this shape.
 
-## Notes-for-the-next-run (pinned default for run #39)
+## Notes-for-the-next-run (pinned default for run #40)
 
-- Default = **Spec 012 / Phase 2 / T02** —
-  `parseSalaryNumber(raw, locale)` + private `pickLocale(country)`
-  in `packages/common/src/utils/helpers.ts`. T02 is the locale-
-  dispatch counterpart to T01's currency dispatch:
-  `parseSalaryNumber('45.000', 'continental')` → `45000`,
-  `parseSalaryNumber('45,000.50', 'anglo')` → `45000.50`,
-  `parseSalaryNumber("90'000", 'anglo')` → `90000` (Swiss
-  apostrophe-thousands tolerance per FR-12). The unit-test
-  verification lands as ≥ 5 targeted cases plus a `pickLocale`
-  case for each of the documented `Country` → locale mappings
-  (Continental EU vs Anglosphere vs default).
-- Out-of-scope reminders for run #39:
-  - No `extractSalary()` regex refactoring this run either —
-    that's T03's job. T02 still only adds a helper.
-  - No bench file this run — that's T04.
-  - No `PERFORMANCE_TUNING.md` doc bump this run — that's T05.
-- Two load-bearing decisions deferred to T02:
-  1. **`pickLocale` stays private.** Same reasoning as T01's
-     `matchIsoCode` / `isWordChar` — the locale picker is an
-     implementation detail; consumers pass `country` to
-     `extractSalary()` and let the helper dispatch internally.
-     Public surface stays one function (`parseSalaryNumber`)
-     plus the existing `SalaryLocale` type already exported in
-     run #38.
-  2. **Switzerland gets `'anglo'` with apostrophe-thousands
-     tolerance** rather than a third `'swiss'` locale value.
-     The spec's § 7.3 documents this; T02 implements it as a
-     two-line regex tweak inside the `'anglo'` branch (allow
-     `'` between thousand groups in addition to `,`).
+- Default = **Spec 012 / Phase 3 / T03** — rewire `extractSalary()`
+  in `packages/common/src/utils/helpers.ts` to call the two new
+  helpers (`parseSalaryCurrency` from T01 + `parseSalaryNumber`
+  from T02). The dispatcher refactor extracts the existing
+  `\$(\d+...)` regex into a per-currency template indexed by
+  symbol, plumbs `options.country?: Country` and
+  `options.locale?: SalaryLocale` through, and dispatches to
+  the right symbol-template + locale-aware number-parse pair.
+  All 11 existing USD-only `extractSalary` cases must stay
+  green byte-for-byte (FR-10 — already pinned in
+  helpers.spec.ts cases #1–11). Currency-detection precedence
+  (Spec 012 / § 7.2) holds: explicit symbol > explicit ISO >
+  country fallback > default.
+- Out-of-scope reminders for run #40:
+  - No new currency cases yet — that's T04 (≥ 14 cross-cutting
+    cases + the bench file).
+  - No `PERFORMANCE_TUNING.md` doc bump — that's T05.
+  - No `competitor-watch.md §C / AC-7` flip — that's T05's
+    closeout.
+- Three load-bearing decisions deferred to T03:
+  1. **One regex per currency, dispatched by symbol-or-ISO.**
+     The existing USD branch keeps its dollar-anchored regex
+     verbatim; new branches (EUR / GBP / CHF / kr / zł) each
+     get their own regex literal compiled once at module-load.
+     The dispatcher selects the branch via `parseSalaryCurrency`
+     output's `symbol` field.
+  2. **`options.locale` overrides `options.country`-derived
+     locale** — explicit caller intent wins. Both options remain
+     optional; when neither is set, locale defaults to `'anglo'`
+     (preserves USD-mode byte-for-byte).
+  3. **`enforceAnnualSalary` semantics unchanged** — the
+     2080 / 12 / 52 / 260 multipliers apply currency-agnostically;
+     T03 doesn't touch the annualisation path.
