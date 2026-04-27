@@ -1,4 +1,5 @@
-import { extractSalary, convertToAnnual } from '@ever-jobs/common';
+import { extractSalary, convertToAnnual, parseSalaryCurrency } from '@ever-jobs/common';
+import { Country } from '@ever-jobs/models';
 
 describe('extractSalary', () => {
   it('should return nulls for null input', () => {
@@ -113,5 +114,101 @@ describe('convertToAnnual', () => {
     expect(data.interval).toBe('yearly');
     expect(data.minAmount).toBe(100000);
     expect(data.maxAmount).toBe(150000);
+  });
+});
+
+/**
+ * Spec 012 / T01 — `parseSalaryCurrency()` precedence cases.
+ *
+ * Pins the five resolution branches documented in Spec 012 / § 7.2:
+ * symbol → ISO → ambiguous-symbol-via-country → country-fallback →
+ * default. Each test asserts both the resolved `code` AND the
+ * `confidence` value so a future refactor that quietly demotes a
+ * detection from `'symbol'` to `'default'` (e.g. by mis-ordering the
+ * lookup table) trips a failure here, not silently downstream.
+ */
+describe('parseSalaryCurrency (Spec 012 / T01)', () => {
+  it('resolves the EUR symbol from a Continental-format string', () => {
+    const result = parseSalaryCurrency('45.000 €');
+    expect(result).toEqual({
+      code: 'EUR',
+      symbol: '€',
+      confidence: 'symbol',
+    });
+  });
+
+  it('resolves an explicit ISO code with a leading prefix', () => {
+    const result = parseSalaryCurrency('NOK 500000');
+    expect(result.code).toBe('NOK');
+    expect(result.confidence).toBe('iso');
+    expect(result.symbol).toBeNull();
+  });
+
+  it('disambiguates the shared "kr" symbol via the country hint', () => {
+    const result = parseSalaryCurrency('500 kr', { country: Country.DENMARK });
+    expect(result).toEqual({
+      code: 'DKK',
+      symbol: 'kr',
+      confidence: 'symbol',
+    });
+  });
+
+  it('falls back to country-derived currency when no symbol / ISO is present', () => {
+    const result = parseSalaryCurrency('approximate compensation', {
+      country: Country.GERMANY,
+    });
+    expect(result).toEqual({
+      code: 'EUR',
+      symbol: null,
+      confidence: 'country',
+    });
+  });
+
+  it('falls back to USD by default when nothing else resolves', () => {
+    const result = parseSalaryCurrency('foo bar');
+    expect(result).toEqual({
+      code: 'USD',
+      symbol: null,
+      confidence: 'default',
+    });
+  });
+
+  it('honours the defaultCode override on the default branch', () => {
+    const result = parseSalaryCurrency('foo bar', { defaultCode: 'EUR' });
+    expect(result).toEqual({
+      code: 'EUR',
+      symbol: null,
+      confidence: 'default',
+    });
+  });
+
+  it('treats null / empty input as the default branch', () => {
+    expect(parseSalaryCurrency(null)).toEqual({
+      code: 'USD',
+      symbol: null,
+      confidence: 'default',
+    });
+    expect(parseSalaryCurrency('')).toEqual({
+      code: 'USD',
+      symbol: null,
+      confidence: 'default',
+    });
+  });
+
+  it('uses SEK as the no-hint default for "kr" (Q-025)', () => {
+    const result = parseSalaryCurrency('500 kr');
+    expect(result.code).toBe('SEK');
+    expect(result.symbol).toBe('kr');
+    expect(result.confidence).toBe('symbol');
+  });
+
+  it('rejects an ISO-like substring inside an identifier (word-boundary)', () => {
+    const result = parseSalaryCurrency('the JPYUSD pair', {
+      country: Country.GERMANY,
+    });
+    // Neither `'JPY'` nor `'USD'` should match — both are inside a
+    // word. With a country hint, falls through to country branch.
+    expect(result.code).toBe('EUR');
+    expect(result.confidence).toBe('country');
   });
 });

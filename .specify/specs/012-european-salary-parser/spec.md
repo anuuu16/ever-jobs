@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 012                                                                         |
 | Slug           | european-salary-parser                                                      |
-| Status         | draft (run #37); T01..T05 pending                                           |
+| Status         | Phase 1 done (T01 run #38); T02..T05 pending                                |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-27 (run #37)                                                        |
-| Last updated   | 2026-04-27 (run #37)                                                        |
+| Last updated   | 2026-04-27 (run #38)                                                        |
 | Supersedes     | (none — extends Spec 003 normalisation surface in `@ever-jobs/common`)      |
 | Related specs  | 003 (Job Deduplication Engine), 006 (ATS-Scrapers Parity, Batch 1)          |
 

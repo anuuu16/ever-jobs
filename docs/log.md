@@ -5,6 +5,104 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #38 (Spec 012 / Phase 1 — T01: `parseSalaryCurrency()` + lookup tables)
+
+**Scope:** land Spec 012 / Phase 1 / T01 — extend
+`packages/common/src/utils/helpers.ts` with the
+`parseSalaryCurrency(text, opts?)` helper and four private
+lookup tables (ISO codes, unique symbols, ambiguous symbols
+disambiguated by country, country → currency primary). Run
+#37's Notes-for-the-next-run pinned this default ("Spec 012 /
+Phase 1 / T01 — `parseSalaryCurrency()` helper + symbol / ISO
+/ country lookup tables").
+
+**No new questions opened this run.** Q-025 (the `'kr'`
+no-hint default) is honoured by the implementation: Q-025
+defaults to SEK; T01's `SALARY_AMBIGUOUS_SYMBOLS` map encodes
+that fallback verbatim, and the test suite pins it via the
+case `uses SEK as the no-hint default for "kr" (Q-025)`.
+
+**One in-run refinement** vs run #37's planned acceptance:
+
+1. **`parseSalaryCurrency('500 kr', { country: Country.DENMARK })`
+   reports `confidence: 'symbol'`, NOT `'country'`** (the
+   tasks.md draft used `'country'` in its example, but the
+   precedence rule documented in spec § 7.2 / rule 3 — "ambiguous
+   symbol disambiguated by country hint" — fires under the
+   `'symbol'` branch because the symbol *was* the trigger.
+   The country hint disambiguates the symbol's ISO mapping; it
+   doesn't change the detection path. Test asserts the rule,
+   not the loose example.
+
+**Changes — code:**
+
+- `packages/common/src/utils/helpers.ts` — extended ~210 LOC.
+  New `Country` import (along the existing
+  `@ever-jobs/common` → `@ever-jobs/models` edge — no cycle).
+  New exported types: `SalaryLocale` (string-literal union
+  `'continental' | 'anglo'`), `ParseSalaryCurrencyResult`
+  (`{ code, symbol, confidence }` shape). Four module-private
+  lookup tables: `SALARY_ISO_CODES` (8 entries),
+  `SALARY_UNIQUE_SYMBOLS` (`€` → EUR, `£` → GBP, `zł` → PLN,
+  `Fr.` → CHF), `SALARY_AMBIGUOUS_SYMBOLS` (`kr` → fallback
+  SEK + `byCountry` map for SE / NO / DK), and
+  `SALARY_COUNTRY_TO_CURRENCY` (18 country → currency
+  entries covering Eurozone + UK + USA + Switzerland +
+  Nordics + Poland). Two private helpers: `matchIsoCode`
+  (with strict word-boundary check via a manual char-class
+  `isWordChar` test rather than a `\b` regex) and `isWordChar`.
+  The `parseSalaryCurrency` function NEVER throws and NEVER
+  returns `null` for `code` (FR-13 pinned).
+
+**Changes — tests:**
+
+- `packages/common/__tests__/helpers.spec.ts` — extended
+  ~95 LOC. New `describe('parseSalaryCurrency (Spec 012 /
+  T01)')` block with **9 cases**: EUR-from-symbol,
+  ISO-prefix, country-disambiguated `'kr'` (Denmark),
+  country-fallback (Germany → EUR), default-USD,
+  defaultCode-override, null/empty input, Q-025 SEK fallback
+  for `'kr'`, ISO-substring word-boundary rejection. Plus
+  the new `Country` import for the country-hint cases.
+
+Verification: `npx jest --testPathPatterns
+'packages/common/__tests__/helpers'` locally → `Test Suites:
+1 passed · Tests: 25 passed (16 existing + 9 new) · exit 0`.
+The 11 existing USD-only `extractSalary` cases stay green
+byte-for-byte (FR-10 pre-validation).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/012-european-salary-parser/tasks.md` —
+  T01 graduates from "pending" to "done" with full
+  planned-vs-actual file lists and per-bullet acceptance
+  verification. "Notes-for-the-next-run" rewritten to point
+  at T02 (`parseSalaryNumber` + private `pickLocale`).
+- `.specify/specs/012-european-salary-parser/spec.md` —
+  `Status` flipped to `Phase 1 done (T01 run #38);
+  T02..T05 pending`; `Last updated` bumped to
+  `2026-04-27 (run #38)`.
+- `docs/index.md` — Spec 012 row + footer bumped to run #38.
+- `CLAUDE.md` — run-tag → #38.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #38 sync line; **no upstream
+  commits** (twenty-four consecutive zero-churn runs).
+
+**Notes & follow-ups:**
+
+- Default for run #39 is **Spec 012 / Phase 2 / T02** —
+  `parseSalaryNumber(raw, locale)` + private
+  `pickLocale(country)`. ≥ 5 unit cases plus a `pickLocale`
+  case for each `Country` → `SalaryLocale` mapping. T03
+  rewires `extractSalary()` to call both helpers; T04 lands
+  the cross-cutting cases + bench file; T05 closes Spec 012.
+- External research repos: no new commits since run #37.
+  Twenty-four consecutive zero-churn runs.
+- Pre-existing dedup-hybrid red tests unchanged from runs
+  #11–#37; not wired into CI.
+
+---
+
 ## 2026-04-27 — Scheduled run #37 (Spec 012 scaffold — European-style salary parser, draft)
 
 **Scope:** open Spec 012 / `european-salary-parser` per Q-024
