@@ -187,6 +187,11 @@ export enum Site {
   AVATURE = 'avature',
   GEM = 'gem',
   JOIN_COM = 'join_com',
+  // Phase 29: Spec 013 — ATS-Scrapers Parity, Batch 2 (Oracle HCM / Mercor / Tesla)
+  ORACLE = 'oracle',
+  MERCOR = 'mercor',
+  TESLA = 'tesla',
+  TESLA_PLAYWRIGHT = 'tesla_playwright',
 }
 
 /**

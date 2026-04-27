@@ -176,6 +176,10 @@ module.exports = {
     '^@ever-jobs/source-ats-avature$': '<rootDir>/packages/plugins/source-ats-avature/src/index.ts',
     '^@ever-jobs/source-ats-gem$': '<rootDir>/packages/plugins/source-ats-gem/src/index.ts',
     '^@ever-jobs/source-ats-joincom$': '<rootDir>/packages/plugins/source-ats-joincom/src/index.ts',
+    '^@ever-jobs/source-ats-oracle$': '<rootDir>/packages/plugins/source-ats-oracle/src/index.ts',
+    '^@ever-jobs/source-ats-mercor$': '<rootDir>/packages/plugins/source-ats-mercor/src/index.ts',
+    '^@ever-jobs/source-tesla$': '<rootDir>/packages/plugins/source-tesla/src/index.ts',
+    '^@ever-jobs/source-tesla-playwright$': '<rootDir>/packages/plugins/source-tesla-playwright/src/index.ts',
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.base.json' }],

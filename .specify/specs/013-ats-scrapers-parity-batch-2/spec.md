@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | draft (run #43); T01..T13 pending                    |
+| Status         | T01 landed run #44; T02..T15 pending                 |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-27 (run #43)                                 |
+| Last updated   | 2026-04-27 (run #44)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -333,7 +333,22 @@ records.)
 
 ## 10. Decisions
 
-(Empty until T01 lands. Append-only.)
+- **2026-04-27 (run #44 / T01)** — Site enum extended with the four
+  new literal values (`ORACLE = 'oracle'`, `MERCOR = 'mercor'`,
+  `TESLA = 'tesla'`, `TESLA_PLAYWRIGHT = 'tesla_playwright'`) under a
+  new `// Phase 29` group comment. `tsconfig.base.json` + `jest.config.js`
+  gained matching path / `moduleNameMapper` entries for all four
+  packages (the OPTIONAL `source-tesla-playwright` package is mapped
+  even though it stays out of `ALL_SOURCE_MODULES` per FR-13 — the
+  alias is needed for `__tests__/` imports inside the package itself
+  once T09 lands). `ScraperInputDto` gained two new optional fields:
+  `siteNumber?: string` (Q-030 default `'CX_45001'` enforced inside
+  the Oracle plugin at T03) and `descriptionDepth?: 'board' |
+  'detail-25' | 'detail-all'` (Q-031 default `'detail-25'` enforced
+  inside the Tesla plugin at T07). Both decorated with
+  `@ApiPropertyOptional` + `@IsOptional()` + `@IsString()` matching
+  `companyUrl`'s decoration style. Pure scaffolding pass; no source
+  / test code touched (per Spec 006 / T01 precedent at run #29).
 
 ## 11. References
 

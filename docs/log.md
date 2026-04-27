@@ -5,6 +5,146 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #44 (Spec 013 / Phase 1 / T01 — Bootstrap landed)
+
+**Scope:** land Spec 013 / Phase 1 / T01 — pure scaffolding pass
+adding the `Site` enum literals, `tsconfig.base.json` paths,
+`jest.config.js` `moduleNameMapper` entries, and two new
+`ScraperInputDto` optional fields for the upcoming
+Oracle / Mercor / Tesla / Tesla-Playwright plugins. Same shape as
+Spec 006 / T01 at run #29 (the precedent for batched-spec
+phase-1 enum scaffolding). Estimated 0.25 day per tasks.md;
+landed in a single scheduled-run cycle as predicted.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #43's sync). Twenty-eight consecutive
+zero-churn runs in `OTHERS/`.
+
+**No new questions opened this run.** Q-028..Q-031 (opened in
+run #43's scaffolding pass) stay open with their pinned
+defaults; their resolutions land alongside the implementation
+tasks (T03 / T05 / T07 / T09) over the next several runs.
+Q-026 / Q-027 retain their **Spec 014 candidate** label
+unchanged from run #43.
+
+**Three load-bearing structural choices** were honoured during
+T01's edit pass:
+
+1. **The four enum values land under a new `// Phase 29` group
+   comment.** Mirrors Spec 006 / T01's `// Phase 28` comment;
+   keeps the per-spec batch boundary visible in `git blame`
+   without needing to consult the spec ID. The optional
+   `TESLA_PLAYWRIGHT = 'tesla_playwright'` value lands in the
+   same Phase 29 group even though the optional companion plugin
+   stays out of `ALL_SOURCE_MODULES` (FR-13) — the value itself
+   is non-optional from the dispatch table's perspective once
+   the operator opts in.
+2. **`source-tesla-playwright`'s `moduleNameMapper` + tsconfig
+   path land NOW even though the package itself is scaffolded
+   in T02.** Ahead-of-time aliasing is harmless (jest tolerates
+   missing module-mapper targets until a test actually imports
+   them) and keeps the four-place registration (per AGENTS.md
+   §5) atomic — splitting it across two runs would surface a
+   half-registered fifth place at run #45's mid-point.
+3. **`ScraperInputDto.descriptionDepth` typed as a literal-union
+   string (`'board' | 'detail-25' | 'detail-all'`) rather than
+   an enum.** Matches `descriptionFormat`'s existing pattern
+   (literal-union typed via JSDoc + `@ApiProperty.enum`); avoids
+   adding a new enum file just for three values that exist
+   exclusively for one plugin (Tesla / FR-11).
+
+**Changes — source / test:**
+
+- `packages/models/src/enums/site.enum.ts` — four new enum
+  values added under a new `// Phase 29: Spec 013 — ATS-Scrapers
+  Parity, Batch 2 (Oracle HCM / Mercor / Tesla)` group comment:
+  `ORACLE = 'oracle'`, `MERCOR = 'mercor'`, `TESLA = 'tesla'`,
+  `TESLA_PLAYWRIGHT = 'tesla_playwright'`. `mapStringToSite()`
+  handles all four via the existing case-insensitive lookup —
+  no fallthrough edits needed.
+- `packages/models/src/dtos/scraper-input.dto.ts` — two new
+  optional fields with `@ApiPropertyOptional` + `@IsOptional()` +
+  `@IsString()` decoration:
+  - `siteNumber?: string` — Oracle's
+    `recruitingCEJobRequisitions` finder parameter;
+    Spec 013 / Q-030 / FR-4. Defaults to `'CX_45001'` inside
+    the Oracle plugin (T03).
+  - `descriptionDepth?: 'board' | 'detail-25' | 'detail-all'` —
+    Tesla's per-job detail-fetch budget; Spec 013 / Q-031 /
+    FR-11. Defaults to `'detail-25'` inside the Tesla plugin
+    (T07). `@ApiProperty.enum` lists all three permitted values.
+- `tsconfig.base.json` — four new `paths` entries under
+  `compilerOptions.paths`: `@ever-jobs/source-ats-oracle`,
+  `@ever-jobs/source-ats-mercor`, `@ever-jobs/source-tesla`,
+  `@ever-jobs/source-tesla-playwright`.
+- `jest.config.js` — four matching `moduleNameMapper` entries
+  mirroring the tsconfig paths.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  T01 row flipped from `[ ]` to `[x]` with "Landed run #44"
+  annotation; Notes-for-the-next-run pinned default updated to
+  **Spec 013 / Phase 1 / T02** (four plugin packages scaffolded
+  + `ALL_SOURCE_MODULES` updated).
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  Status flipped from "draft (run #43); T01..T15 pending" to
+  "T01 landed run #44; T02..T15 pending"; Last-updated bumped
+  to run #44; new entry appended to § 10 Decisions.
+- `docs/index.md` — Spec 013 row status updated to match
+  spec.md; footer bumped to run #44.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #44.
+- `/competitor-watch.md` — run #44 sync line appended at top
+  of Sync Log; AC-4 / AC-5 / AC-6 row prefixes updated from
+  "T01..T15 pending" → "T01 landed run #44; T02..T15 pending".
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — pending (run before commit).
+- `npx tsc --noEmit -p tsconfig.base.json` — pending.
+- `npm test -- --testPathPatterns 'packages/models'` —
+  pending (existing model tests must still pass after enum
+  + DTO additions).
+- No new unit tests this run — T01 acceptance pins via the
+  enum / DTO literal values themselves; the first new tests
+  land at T02 (per-plugin DI-resolution + literal-pin tests).
+
+**Notes & follow-ups:**
+
+- **Default for run #45** = Spec 013 / Phase 1 / T02 — four
+  plugin packages scaffolded under `packages/plugins/`
+  (`source-ats-oracle`, `source-ats-mercor`, `source-tesla`,
+  `source-tesla-playwright`). Each gets `package.json`,
+  `tsconfig.json`, `src/{index.ts,<plugin>.module.ts,
+  <plugin>.service.ts}`, and `__tests__/<plugin>.service.spec.ts`
+  (≥ 3 cases pinning DI resolution + stub `scrape()` + the new
+  `Site` enum literal). `packages/plugins/index.ts` gains
+  three appends to `ALL_SOURCE_MODULES` (Oracle / Mercor /
+  Tesla — but **NOT** Tesla-Playwright per FR-13). Estimated
+  ~0.5 day; comfortable headroom in one scheduled-run cycle.
+- **Out-of-scope reminders for run #45:** Stub `scrape()`
+  bodies return `new JobResponseDto([])` only — no upstream
+  HTTP, no fixture parsing, no error sentinels yet. Service
+  shells exist but real implementations land at T03 / T05 /
+  T07 / T09. Tesla-Playwright's `package.json` declares
+  `"playwright"` as `peerDependency` + `optionalDependency`
+  (T09 acceptance), but the package's source code does NOT
+  import `playwright` until T09 — the package compiles
+  without `playwright` installed, by design.
+- **Active backlog after Spec 013 closes:** Spec 014
+  candidates = Q-026/Q-027 salary residuals OR AC-8
+  (seed-companies refresh) OR AC-9 (Workable diff). Pick at
+  Spec 013 / T15 closeout based on upstream signal.
+- Specs **004 / 005 / 006 / 012** stay complete as of this
+  run; **001 / 003** retain their "FR-6 in-progress" / "All
+  phases done" statuses unchanged. Spec **013** advances from
+  draft to "T01 landed; T02..T15 pending".
+- Pre-existing dedup-hybrid red tests unchanged.
+
+---
+
 ## 2026-04-27 — Scheduled run #43 (Spec 013 — ATS-Scrapers Parity, Batch 2: scaffold)
 
 **Scope:** open Spec 013 — `ats-scrapers-parity-batch-2`

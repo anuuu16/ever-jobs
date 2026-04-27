@@ -142,6 +142,24 @@ export class ScraperInputDto {
   @IsNumber()
   maxConcurrentCompanies?: number;
 
+  @ApiPropertyOptional({
+    description:
+      'Oracle HCM Cloud `siteNumber` finder parameter. Defaults to "CX_45001" inside the Oracle plugin (Spec 013 / Q-030 / FR-4) when unset; override only for the residual ~5 % of tenants using a non-default site number.',
+  })
+  @IsOptional()
+  @IsString()
+  siteNumber?: string;
+
+  @ApiPropertyOptional({
+    enum: ['board', 'detail-25', 'detail-all'],
+    description:
+      'Tesla per-job description fetch budget (Spec 013 / Q-031 / FR-11). `board` skips per-job GETs (descriptions remain empty); `detail-25` (default) caps follow-ups at 25 to honour NFR-2; `detail-all` fetches every job (multi-hour cost — opt-in only).',
+    default: 'detail-25',
+  })
+  @IsOptional()
+  @IsString()
+  descriptionDepth?: 'board' | 'detail-25' | 'detail-all';
+
   @ApiPropertyOptional({ description: 'Number of retries for failed requests', default: 3 })
   @IsOptional()
   @IsNumber()

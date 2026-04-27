@@ -192,7 +192,11 @@
       "@ever-jobs/source-techcareers": ["packages/plugins/source-techcareers/src/index.ts"],
       "@ever-jobs/source-ats-avature": ["packages/plugins/source-ats-avature/src/index.ts"],
       "@ever-jobs/source-ats-gem": ["packages/plugins/source-ats-gem/src/index.ts"],
-      "@ever-jobs/source-ats-joincom": ["packages/plugins/source-ats-joincom/src/index.ts"]
+      "@ever-jobs/source-ats-joincom": ["packages/plugins/source-ats-joincom/src/index.ts"],
+      "@ever-jobs/source-ats-oracle": ["packages/plugins/source-ats-oracle/src/index.ts"],
+      "@ever-jobs/source-ats-mercor": ["packages/plugins/source-ats-mercor/src/index.ts"],
+      "@ever-jobs/source-tesla": ["packages/plugins/source-tesla/src/index.ts"],
+      "@ever-jobs/source-tesla-playwright": ["packages/plugins/source-tesla-playwright/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

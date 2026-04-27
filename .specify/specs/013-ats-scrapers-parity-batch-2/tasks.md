@@ -4,8 +4,9 @@
 
 ## Phase 1 — Bootstrap
 
-- [ ] T01 — Site enum + tsconfig paths + jest moduleNameMapper additions;
+- [x] T01 — Site enum + tsconfig paths + jest moduleNameMapper additions;
   `ScraperInputDto` extended with `siteNumber` + `descriptionDepth`.
+  **Landed run #44.**
   - **Files (planned):** `packages/models/src/enums/site.enum.ts`,
     `packages/models/src/dtos/scraper-input.dto.ts`,
     `tsconfig.base.json`, `jest.config.js`.
@@ -258,11 +259,22 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #44** = Spec 013 / Phase 1 / T01 (Site enum +
-  tsconfig paths + jest moduleNameMapper + `ScraperInputDto`
-  extensions). Pure scaffolding — same shape as Spec 006 / T01 (run
-  #29). Estimated ~0.25 day; one full scheduled-run cycle is
-  comfortable headroom.
+- **Default for run #45** = Spec 013 / Phase 1 / T02 — scaffold the
+  four new plugin packages (`source-ats-oracle`, `source-ats-mercor`,
+  `source-tesla`, `source-tesla-playwright`) under
+  `packages/plugins/`. Each package gets `package.json`,
+  `tsconfig.json`, `src/{index.ts,<plugin>.module.ts,<plugin>.service.ts}`,
+  and `__tests__/<plugin>.service.spec.ts` (≥ 3 cases per package
+  per T02 acceptance). Stub `scrape(input)` returns
+  `new JobResponseDto([])`. Edit `packages/plugins/index.ts` to
+  append `OracleModule`, `MercorModule`, `TeslaModule` to
+  `ALL_SOURCE_MODULES` — but **NOT** `TeslaPlaywrightModule`
+  (FR-13 / opt-in companion). Estimated ~0.5 day; still one full
+  scheduled-run cycle.
+- **Default for run #44 (DONE — landed run #44)** = Spec 013 /
+  Phase 1 / T01 (Site enum + tsconfig paths + jest moduleNameMapper
+  + `ScraperInputDto` extensions). Pure scaffolding pass; same
+  shape as Spec 006 / T01 (run #29).
 - **Out-of-scope reminders for future runs:**
   - Tesla-Playwright is OPT-IN. Do NOT add it to
     `ALL_SOURCE_MODULES` even when the package compiles.
