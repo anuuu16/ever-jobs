@@ -461,16 +461,116 @@
 
 ## Phase 4 — `store-postgres-prisma`
 
-- [ ] T09 — Scaffold + Prisma schema for `canonical_job`, `source_observation`.
-  - **Files:** `prisma/schema.prisma`, `prisma/migrations/<ts>_init/migration.sql`.
+- [x] T09 — Scaffold + Prisma schema for `canonical_job`, `source_observation`.
+  - **Files (planned):** `prisma/schema.prisma`,
+    `prisma/migrations/<ts>_init/migration.sql`.
+  - **Files (actual):**
+    `packages/plugins/store-postgres-prisma/package.json` (mirrors
+    `store-sqlite-drizzle` shape — `@ever-jobs/store-postgres-prisma@0.1.0`,
+    `main`/`types` → `src/index.ts`),
+    `packages/plugins/store-postgres-prisma/tsconfig.json` (extends
+    `tsconfig.base.json`; `outDir → dist/packages/store-postgres-prisma`),
+    `packages/plugins/store-postgres-prisma/prisma/schema.prisma`
+    (~75 LOC; Prisma DSL schema with `CanonicalJob` and
+    `SourceObservation` models, Postgres-native types — `Timestamptz(6)`
+    for `mergedAt`/`observedAt`, `JsonB` for `fields`/`sources`,
+    composite PK on observations, FK with `onDelete: Cascade`),
+    `packages/plugins/store-postgres-prisma/prisma/migrations/migration_lock.toml`
+    (Prisma migration provider = `postgresql`),
+    `packages/plugins/store-postgres-prisma/prisma/migrations/0_init/migration.sql`
+    (~95 LOC; hand-authored migration matching the Prisma schema, plus
+    `CREATE EXTENSION pg_trgm` and three GIN-trigram indexes that the
+    Prisma DSL can't currently express),
+    `tsconfig.base.json` (added path alias
+    `@ever-jobs/store-postgres-prisma → packages/plugins/store-postgres-prisma/src/index.ts`),
+    `jest.config.js` (mirror `moduleNameMapper` entry),
+    `package.json` (added `@prisma/client@^6.5.0` to `dependencies`,
+    `prisma@^6.5.0` to `devDependencies` — latest stable per
+    AGENTS.md §1 / Hard Rule §5).
   - **Acceptance:** `prisma migrate dev` works in CI Pg container.
-  - **Estimate:** 0.5 day.
+    **Done:** run #23 (2026-04-27). Schema ships:
+      - `canonical_job` — `canonical_job_id` PK (`text`); flat fields
+        for `title`/`company`/`location`/`description`/`url`;
+        `merged_at` as `timestamptz(6)`; `fields_json`/`sources_json`
+        as `jsonb` with default `{}`/`[]`. Composite index
+        `idx_canonical_job_merged_at_id` on `(merged_at DESC,
+        canonical_job_id ASC)` backs both deterministic listing order
+        and the keyset-cursor seek (NFR-1 < 50 ms p95).
+      - `source_observation` — composite PK `(canonical_job_id, site,
+        source_job_id)` (FR-2 / 1-N relationship + double-write guard);
+        FK on `canonical_job_id` with `ON DELETE CASCADE` + `ON UPDATE
+        CASCADE` (FR-1 / FR-2; Postgres enforces FKs unconditionally —
+        no PRAGMA toggle, unlike SQLite).
+      - Three GIN trigram indexes on `company`, `title`, `location`
+        backed by the `pg_trgm` extension (FR-7: case-insensitive
+        substring search via `ILIKE '%term%'` stays O(log N) instead
+        of degrading to seq scan; this is the canonical Postgres
+        pattern for substring search).
+    Three load-bearing decisions weren't called out in `tasks.md` Notes
+    and are pinned in the schema/migration source rather than as new
+    questions:
+      1. **No case-folded shadow columns.** The Drizzle SQLite backend
+         (T07) ships `company_lc`/`title_lc`/`location_lc` so a B-tree
+         index can satisfy case-insensitive substring filters; on
+         Postgres, `pg_trgm` GIN indexes give us the same speedup
+         directly against the unfolded columns via `ILIKE`. Three
+         options considered: (a) mirror the SQLite shadow columns —
+         doubles storage on every text field, no faster than (b);
+         (b) `pg_trgm` GIN indexes on the original columns — canonical
+         Postgres pattern, supports both `LIKE` and `ILIKE`; (c) a
+         materialised view over case-folded copies — adds a refresh
+         hop and fragments the contract. Picked (b). Documented in
+         the schema header.
+      2. **`jsonb` over `json`.** Three options: (a) `text` —
+         requires application-layer JSON parsing on every read,
+         loses Postgres's native JSON operators; (b) `json` — preserves
+         exact byte equality but no GIN index support; (c) `jsonb` —
+         binary representation, GIN-indexable, faster reads, slightly
+         slower writes (we write much less often than we read at the
+         persistence layer). Picked (c) — community default; matches
+         every JSON-bearing column in the canonical NestJS / Prisma
+         stack.
+      3. **Hand-authored migration over `prisma migrate dev` output.**
+         Three reasons: (i) Prisma 5.x / 6.x cannot currently emit the
+         `gin_trgm_ops` opclass through schema DSL — `@@index(type:
+         Gin)` is supported but the trigram opclass requires raw SQL;
+         (ii) `CREATE EXTENSION IF NOT EXISTS pg_trgm` MUST run BEFORE
+         the GIN indexes, and we want both in the same migration so a
+         clean-install Postgres comes up with both at once; (iii)
+         operators reviewing the migration see exactly what their
+         database will gain — no hidden codegen between the schema
+         file and the SQL applied. A future `prisma migrate dev` that
+         supports trigram opclasses MUST produce byte-identical SQL
+         save for whitespace and the `_prisma_migrations` bookkeeping.
+    **NOT** in this run (deferred to T10): `src/index.ts`,
+    `src/store-postgres-prisma.module.ts`,
+    `src/store-postgres-prisma.service.ts`,
+    `__tests__/store-postgres-prisma.spec.ts`. The path alias added
+    to `tsconfig.base.json` + `jest.config.js` points at
+    `src/index.ts` which doesn't exist yet — inert until T10 lands
+    the implementation (no consumer imports the alias). Same pattern
+    as T07 (which deferred its own src/ files to T08).
+  - **Estimate:** 0.5 day. **Actual:** ~0.5 day.
 
 - [ ] T10 — Implement `IJobStore` over Prisma.
   - **Files:** `src/store-postgres-prisma.service.ts`,
     `__tests__/store-postgres-prisma.spec.ts` (Testcontainers).
   - **Acceptance:** Conformance + NFR-1/NFR-2.
   - **Estimate:** 1 day.
+  - **Notes for the next run:** T10 cannot land verifiably in the
+    scheduled-task sandbox (which has no `node_modules` and cannot
+    run `npm install` / `prisma generate`) — the typed `PrismaClient`
+    is a code-gen artefact. The next run SHOULD: (a) author the service
+    + module + barrel against `@prisma/client`, (b) re-use the shared
+    `runStoreConformance(label, factory)` from T06 with the `upsert`
+    preamble fix from T08, (c) add a Testcontainers-based factory that
+    spins up `postgres:16` per test, runs the `0_init/migration.sql`
+    via `prisma migrate deploy` against the fresh DB, then constructs
+    `new PostgresPrismaJobStore(...)`, (d) gate the suite on
+    `RUN_PG_TESTS=1` per Spec 004 / Phase 4 Notes so dev runs stay
+    fast, (e) add backend-specific tests for the Postgres-only
+    `pg_trgm`/GIN code path (e.g. `ILIKE` substring filter on a 100k-row
+    seed, asserting the planner uses the GIN index via `EXPLAIN`).
 
 ## Phase 5 — Wire into aggregator
 

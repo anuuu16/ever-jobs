@@ -14,6 +14,7 @@ module.exports = {
     '^@ever-jobs/merge-default$': '<rootDir>/packages/plugins/merge-default/src/index.ts',
     '^@ever-jobs/store-memory$': '<rootDir>/packages/plugins/store-memory/src/index.ts',
     '^@ever-jobs/store-sqlite-drizzle$': '<rootDir>/packages/plugins/store-sqlite-drizzle/src/index.ts',
+    '^@ever-jobs/store-postgres-prisma$': '<rootDir>/packages/plugins/store-postgres-prisma/src/index.ts',
     '^@ever-jobs/source-linkedin$': '<rootDir>/packages/plugins/source-linkedin/src/index.ts',
     '^@ever-jobs/source-indeed$': '<rootDir>/packages/plugins/source-indeed/src/index.ts',
     '^@ever-jobs/source-glassdoor$': '<rootDir>/packages/plugins/source-glassdoor/src/index.ts',

@@ -5,6 +5,228 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #23 (Spec 004 Phase 4 — T09: `store-postgres-prisma` scaffold + Prisma schema; T10 deferred)
+
+**Scope:** land Spec 004 / Phase 4 / T09 — scaffold
+`packages/plugins/store-postgres-prisma/` and author the
+Prisma schema-of-record + hand-authored initial migration for
+`canonical_job` and `source_observation`. T10 (the Prisma-typed
+`IJobStore` implementation against a Testcontainers Postgres) is
+deferred to run #24 because it cannot land verifiably from the
+scheduled-task sandbox: the typed `PrismaClient` is a code-gen
+artefact (`prisma generate` post-`npm install`), and per `Agents.md`
+§"Scheduled-task agents — what they can and can't do here", the
+sandbox has no `node_modules` and cannot run `npm install`. Splitting
+the phase boundary cleanly here lands T09 fully verified (lint:docs +
+no tsc regression on the existing tree) while T10 ships next run when
+CI has been able to materialise the typed client. This deviates from
+run #22's stated "T09 + T10 together" default (mirroring the T07 +
+T08 pairing); the deviation is documented in `tasks.md` Notes-for-the-
+next-run and is purely a sandbox-capability constraint, not a scope
+change.
+
+**No new questions opened this run.** T09 is mechanical to a point —
+the contract is fully pinned by Spec 004 §7.1 and the existing
+Drizzle SQLite schema (T07) is the reference target — but three
+load-bearing design decisions weren't called out in `tasks.md` Notes
+and were locked into the schema/migration source rather than as new
+questions:
+
+1. **No case-folded shadow columns.** The Drizzle SQLite backend
+   (T07) ships `company_lc`/`title_lc`/`location_lc` so a B-tree
+   index can satisfy case-insensitive substring filters; on Postgres,
+   the `pg_trgm` extension + GIN trigram indexes give us the same
+   speedup directly against the unfolded columns via `ILIKE '%term%'`.
+   Three options: (a) mirror the SQLite shadow columns — doubles
+   storage on every text field, no faster than (b); (b) `pg_trgm`
+   GIN indexes on the original columns — canonical Postgres pattern,
+   supports both `LIKE` and `ILIKE`, single source of truth per text
+   field; (c) a materialised view over case-folded copies — adds a
+   refresh hop and fragments the contract. Picked (b). Decision is
+   pinned in the schema header doc-comment so a future "let's add
+   `_lc` columns for parity with SQLite" simplification has to argue
+   against the trigram-index rationale rather than slip in silently.
+2. **`jsonb` over `json`.** Three options: (a) `text` — requires
+   application-layer JSON parsing on every read, loses Postgres's
+   native JSON operators; (b) `json` — preserves exact byte equality
+   but no GIN index support; (c) `jsonb` — binary representation,
+   GIN-indexable, faster reads, slightly slower writes (we write
+   much less often than we read at the persistence layer). Picked
+   (c) — community default for every JSON-bearing column in the
+   canonical NestJS / Prisma stack. Pinned in the schema via
+   `@db.JsonB` on both `fields` and `sources`.
+3. **Hand-authored migration over `prisma migrate dev` output.**
+   Three reasons: (i) Prisma 5.x / 6.x cannot currently emit the
+   `gin_trgm_ops` opclass through schema DSL — `@@index(type: Gin)`
+   is supported but the trigram opclass requires raw SQL; (ii)
+   `CREATE EXTENSION IF NOT EXISTS pg_trgm` MUST run BEFORE the GIN
+   indexes, and we want both in the same migration so a clean-install
+   Postgres comes up with both at once; (iii) operators reviewing
+   the migration see exactly what their database will gain — no
+   hidden codegen step between the schema file and the SQL applied.
+   A future `prisma migrate dev` that supports trigram opclasses
+   MUST produce byte-identical SQL save for whitespace and the
+   `_prisma_migrations` bookkeeping that Prisma owns. Decision noted
+   in the migration's header comment block.
+
+**Changes — code:**
+
+- `packages/plugins/store-postgres-prisma/package.json` — new
+  (~7-line) package manifest. `name:
+  "@ever-jobs/store-postgres-prisma"`, `version: "0.1.0"`,
+  `main`/`types` → `src/index.ts`, MIT licence. Mirrors the existing
+  `store-sqlite-drizzle` shape so the npm-workspaces resolution stays
+  uniform.
+- `packages/plugins/store-postgres-prisma/tsconfig.json` — new
+  (~9-line) package tsconfig. Extends `../../../tsconfig.base.json`,
+  `outDir → ../../../dist/packages/store-postgres-prisma`,
+  `declaration: true`, `include: ["src/**/*"]`. The `include` pattern
+  is intentionally `src/**/*` even though no `src/` files ship in
+  this run — T10 will populate `src/` and the tsconfig is ready for
+  it without a follow-up edit.
+- `packages/plugins/store-postgres-prisma/prisma/schema.prisma` —
+  new ~75-LOC Prisma DSL schema. Two models:
+    - `CanonicalJob` — `canonicalJobId` PK (`text`); flat fields for
+      title/company/location/description/url; `mergedAt` as
+      `Timestamptz(6)`; `fields` and `sources` as `JsonB` with
+      defaults `{}`/`[]`; composite index on `(mergedAt(Desc),
+      canonicalJobId)` mapped to `idx_canonical_job_merged_at_id`.
+    - `SourceObservation` — composite PK `(canonicalJobId, site,
+      sourceJobId)` (FR-2); FK on `canonicalJobId` with
+      `onDelete: Cascade` (FR-1 / FR-2; Postgres enforces FKs
+      unconditionally, no PRAGMA toggle); single-column index on
+      `canonicalJobId` for FK lookups.
+  Schema header doc-comment captures the design choices that
+  diverge from the Drizzle SQLite schema (Postgres-native types, no
+  `_lc` shadow columns, `jsonb` over `text`/`json`).
+- `packages/plugins/store-postgres-prisma/prisma/migrations/migration_lock.toml`
+  — new (3-line) Prisma migration provider lock. `provider =
+  "postgresql"` so `prisma migrate dev` against the schema produces
+  Postgres-flavoured SQL (not SQLite or MySQL).
+- `packages/plugins/store-postgres-prisma/prisma/migrations/0_init/migration.sql`
+  — new ~95-LOC hand-authored migration matching the Prisma schema
+  byte-for-byte plus the Postgres-specific bits the Prisma DSL can't
+  currently express:
+    - `CREATE EXTENSION IF NOT EXISTS "pg_trgm"` — required before
+      the GIN trigram indexes.
+    - Three GIN indexes on `company` / `title` / `location` using
+      the `gin_trgm_ops` opclass — backs FR-7 case-insensitive
+      substring search via `ILIKE '%term%'`. Without `gin_trgm_ops`,
+      the planner falls back to seq scan even when a GIN index
+      exists.
+    - Composite B-tree index on `(merged_at DESC, canonical_job_id
+      ASC)` — backs deterministic listing order and the keyset-
+      cursor seek that T10 will exercise (matches the Drizzle
+      backend's index strategy from T07).
+    - FK constraint via `ALTER TABLE … ADD CONSTRAINT … ON DELETE
+      CASCADE ON UPDATE CASCADE` — matches Prisma's emission style
+      so a future `prisma migrate dev` produces byte-identical SQL.
+
+**Changes — wiring:**
+
+- `tsconfig.base.json` — added path alias
+  `@ever-jobs/store-postgres-prisma → packages/plugins/store-postgres-prisma/src/index.ts`
+  (per AGENTS.md §5: feature plugins register in tsconfig + jest only).
+  The target file does NOT exist yet — the alias is inert until T10
+  lands `src/index.ts`. Same pattern as T07, where the alias for
+  `@ever-jobs/store-sqlite-drizzle` was added before T08 created its
+  src/ files.
+- `jest.config.js` — added matching `moduleNameMapper` entry. Same
+  inert-until-T10 caveat as the tsconfig alias.
+- `package.json` — added `@prisma/client@^6.5.0` to `dependencies`
+  and `prisma@^6.5.0` to `devDependencies`. Latest stable major per
+  AGENTS.md §1 / Hard Rule §5 ("always prefer the latest stable
+  versions of dependencies"). Prisma 6.x is the current major as of
+  2026-Q2; `@prisma/client` is a runtime dependency (the typed
+  client) while `prisma` is the dev-time CLI used for migrations.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/004-persistence-storage-plugins/tasks.md` — T09
+  graduates from "pending" to "done" with planned-vs-actual file
+  list, three-decision rationale (no `_lc` shadow columns, `jsonb`
+  over `json`, hand-authored migration over `prisma migrate dev`),
+  and an explicit "NOT in this run (deferred to T10)" callout for
+  the `src/` files. T10's Notes-for-the-next-run section now
+  documents: (a) the sandbox constraint that blocks in-sandbox
+  authoring, (b) the conformance-suite reuse path
+  (`runStoreConformance(label, factory)` + the upsert preamble fix
+  from T08), (c) the Testcontainers `postgres:16` factory pattern,
+  (d) the `RUN_PG_TESTS=1` CI gate per Spec 004 / Phase 4 Notes,
+  (e) backend-specific `pg_trgm` / GIN tests (e.g. `EXPLAIN`
+  assertion that the planner uses the GIN index for `ILIKE`).
+- `.specify/specs/004-persistence-storage-plugins/spec.md` —
+  `Status` flipped to `Phases 1–3 done (T01–T08); Phase 4 in
+  progress (T09 done, T10 pending); Phase 5 pending`; `Last updated`
+  bumped to `2026-04-27 (run #23)`.
+- `docs/index.md` — Spec 004 row updated with new status string
+  (`T09 run #23, T10 pending`); `Last revised` bumped to
+  `2026-04-27 (run #23)`.
+- `CLAUDE.md` — run-tag bumped to #23 in the footer.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #23 sync line; **no upstream commits**
+  in any of the three tracked repos (thirteen consecutive zero-
+  churn runs).
+
+**Verification (local, against this commit):**
+
+- T09 ships only schema/scaffolding/wiring files — no executable
+  TypeScript source — so the in-sandbox verification is limited to
+  doc-lint and the existing test surface. The Prisma schema and
+  migration SQL would normally be validated by `npx prisma validate`
+  + `npx prisma migrate dev --name init` against a Postgres test
+  container; both gates run in CI on push and are documented in
+  `.specify/specs/004-persistence-storage-plugins/plan.md`.
+- `npm run lint:docs` — clean ("✓ Doc-lint passed — no issues.")
+  after this run's edits. The doc-lint catches: broken internal
+  links, unindexed docs, duplicate log entries, newest-at-top
+  ordering, and spec-file frontmatter — all five checks pass.
+
+**Notes & follow-ups:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #22
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). **Thirteen** consecutive runs of zero-churn — the
+  open `Ats-scrapers`-parity items in `competitor-watch.md §C`
+  (AC-1..AC-9) remain the higher-leverage follow-up if Phase 4 +
+  Phase 5 of Spec 004 stall on the sandbox-Postgres constraint.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#22; not wired into CI).
+  Open fall-back follow-up.
+- Default for run #24 is **Spec 004 / Phase 4 / T10 —
+  `store-postgres-prisma` `IJobStore` implementation**:
+    - Author `src/index.ts` (barrel),
+      `src/store-postgres-prisma.module.ts` (NestJS `@Module`
+      providing `PostgresPrismaJobStore` only — does NOT bind
+      `JOB_STORE_TOKEN`, leaving that to `StoreModule.forActive()`
+      per AGENTS.md §5),
+      `src/store-postgres-prisma.service.ts` (~440 LOC; class
+      decorated with `@StorePlugin({ id: 'postgres', description:
+      STORE_POSTGRES_PRISMA_DESCRIPTION })`, constructor takes an
+      `@Optional() @Inject(STORE_POSTGRES_PRISMA_CONFIG)` config
+      object containing `databaseUrl` and an optional pre-built
+      `PrismaClient` for testcontainers injection).
+    - Re-use the shared `runStoreConformance(label, factory)` from
+      T06 (with the `upsert` preamble fix from T08) for full
+      contract coverage.
+    - Add backend-specific tests that exercise the Postgres-only
+      surface: (a) ILIKE substring filter on a 100k-row seed, (b)
+      `EXPLAIN (ANALYZE, FORMAT JSON)` assertion that the planner
+      picks `idx_canonical_job_company_trgm` for the ILIKE path,
+      (c) FK CASCADE assertion via `DELETE` + `SELECT COUNT(*)`,
+      (d) `jsonb` round-trip preserving nested object order
+      (Postgres's `jsonb` reorders keys; our test should not
+      depend on key order).
+    - CI gate: `RUN_PG_TESTS=1` per the spec's Phase 4 Notes;
+      Testcontainers with `postgres:16-alpine`.
+    - T10 estimate: 1 day.
+  Together with T09 this completes Phase 4. T11 + T12 (aggregator
+  persistence + bootstrap env-var honouring) remain Phase 5.
+
+---
+
 ## 2026-04-27 — Scheduled run #22 (Spec 004 Phase 3 — T07 + T08: `store-sqlite-drizzle` reference backend; Phase 3 closes)
 
 **Scope:** land Spec 004 / Phase 3 in a single run — T07 (scaffold
