@@ -5,6 +5,166 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #48 (Spec 013 / Phase 3 / T05 — Mercor service landed)
+
+**Scope:** land Spec 013 / Phase 3 / T05 —
+`MercorService.scrape(input)` single GET implementation against
+`https://aws.api.mercor.com/work/listings-explore-page`. Three new
+files (`packages/plugins/source-ats-mercor/src/mercor.{constants,types,service}.ts`)
+plus barrel re-export refresh and stub-test bump from 3 → 5 cases.
+Real network calls flow through `@ever-jobs/common.createHttpClient`;
+sentinel codes `ERR_MERCOR_ENVELOPE` / `ERR_MERCOR_FETCH_FAILED`
+recorded via `Logger.warn`. Mercor is **catalogue-wide** by design
+(per Q-029) — no per-company URL segmentation, no pagination; the
+single GET returns the entire public catalogue and slug post-filter
+narrows client-side. Estimated 0.4 day per tasks.md; landed in a
+single scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #47's sync). Thirty-second consecutive
+zero-churn run in `OTHERS/`.
+
+**No new questions opened this run.** Q-028 / Q-031 stay open
+with their pinned defaults pending T07 / T09 implementation. Q-029
+(Mercor catalogue-wide input semantics = hybrid empty-slug full /
+populated-slug post-filter) is now exercised by the live service —
+its resolution graduates from "open / agent default" to
+"implementation-ratified" in the next docs touch (T15 closeout).
+Q-030 was resolved in run #46. Q-026 / Q-027 retain their **Spec
+014 candidate** label.
+
+**Three load-bearing decisions** were resolved during T05's
+implementation pass (full prose in Spec 013 § 10):
+
+1. **Two-sentinel error model.** Original FR-7 acceptance text
+   named only `ERR_MERCOR_ENVELOPE`. Implementation surfaced a
+   second failure mode (HTTP errors during the GET) needing
+   separate logging. Adopted Oracle's two-sentinel pattern:
+   `ERR_MERCOR_ENVELOPE` for response-shape failure,
+   `ERR_MERCOR_FETCH_FAILED` for network-layer failure. The
+   second sentinel is documented in spec.md § 10 + tasks.md /
+   T05 acceptance text; it'll be appended to spec.md § 7.3 in
+   the T15 closeout pass.
+2. **`resultsWanted` cap applied AFTER the slug post-filter.**
+   Per FR-7 the cap follows the filter so a 5-row Stripe slice
+   is genuinely 5 Stripe rows. Diverges from the typical "cap
+   then filter" pipeline order; the user-story intent
+   (operator wants Stripe's 5 most recent listings, not "first
+   5 of all 200 trimmed to whatever Stripe occupies") justifies
+   the inversion. Pinned in spec.md § 10 so future editors
+   don't accidentally swap.
+3. **Compensation mapping included on initial implementation.**
+   Mercor's `rateMin / rateMax / payRateFrequency` triple is
+   already in the explore-page envelope (no detail fetch
+   required), so we map directly into `CompensationDto` —
+   matches the Greenhouse / Lever / Workday convention.
+   Default currency is `USD`; missing `payRateFrequency` falls
+   back to `HOURLY`. This is one of the few cases in Spec 013
+   where we go BEYOND upstream Python (their `format_job_data()`
+   keeps the rate fields as raw dict entries).
+
+**Changes — source / test:**
+
+- `packages/plugins/source-ats-mercor/src/mercor.constants.ts`
+  — NEW. ~50 LOC. Exports `MERCOR_API_BASE_URL`
+  (`https://aws.api.mercor.com`), `MERCOR_EXPLORE_PATH`
+  (`/work/listings-explore-page`), `MERCOR_PUBLIC_ORIGIN`
+  (`https://work.mercor.com` — used both as headers AND as the
+  base for constructed `JobPostDto.jobUrl` values),
+  `MERCOR_DEFAULT_RESULTS_WANTED` (= 100), `MERCOR_HEADERS` (the
+  full eight-header dictionary including the literal
+  `Authorization: Bearer` empty token per FR-8 plus the
+  `Origin` / `Referer` pair the API gateway requires), and
+  the two sentinel codes.
+- `packages/plugins/source-ats-mercor/src/mercor.types.ts` —
+  NEW. ~40 LOC. Narrow internal types mirroring the explore-page
+  envelope: `MercorListing` (listingId / title / companyName /
+  location / postedAt / rateMin / rateMax / payRateFrequency /
+  listingDomain / commitment); `MercorListingsResponse` (top
+  envelope with optional `listings[]` for the
+  `ERR_MERCOR_ENVELOPE` guard).
+- `packages/plugins/source-ats-mercor/src/mercor.service.ts` —
+  REWRITTEN from T02 stub. ~140 LOC. Real `scrape(input)`
+  implementation: single GET, optional slug post-filter,
+  `resultsWanted` cap applied after filter, error catch with
+  sentinel logging, `JobPostDto` mapping (`mercor-${listingId}`
+  ID, slug-decorative jobUrl construction, location → city,
+  postedAt → datePosted, isRemote heuristic, full
+  `CompensationDto` from rate triple).
+- `packages/plugins/source-ats-mercor/src/index.ts` — barrel
+  refreshed to re-export the constants and types modules so
+  T06's fixture authors can import the same literals.
+- `packages/plugins/source-ats-mercor/__tests__/mercor.service.spec.ts`
+  — bumped from 3 → 5 cases. Mocks `createHttpClient` at the
+  factory boundary (matches the Avature/Oracle pattern). New
+  cases: DI resolution (carry-over), `Site.MERCOR` literal
+  pin (carry-over), single-GET wire-format assertion (verifies
+  URL + `MERCOR_HEADERS` including the literal `Authorization:
+  Bearer`), envelope-guard returning empty when `listings[]`
+  missing, HTTP-failure catching 500 and returning empty.
+  Behavioural sweep (≥ 5 cases — happy path with full
+  catalogue, slug post-filter narrowing, empty `listings[]`,
+  HTTP 500, `resultsWanted` cap mid-catalogue) lands in T06
+  alongside `__tests__/fixtures/mercor-explore.json` (≥ 50
+  listings spanning ≥ 10 distinct `companyName` values).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  T05 row flipped from `[ ]` to `[x]` with "Landed run #48"
+  annotation; acceptance text updated to mention both
+  `ERR_MERCOR_ENVELOPE` and the new `ERR_MERCOR_FETCH_FAILED`
+  sentinel; Notes-for-the-next-run pinned default updated to
+  **Spec 013 / Phase 3 / T06** (≥ 5-case behavioural sweep +
+  fixtures).
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  Status flipped to "T05 landed run #48; T06..T15 pending";
+  Last-updated bumped to run #48; new entry appended to § 10
+  Decisions covering the three load-bearing choices above plus
+  five shape notes carried forward to T06.
+- `docs/index.md` — Spec 013 row status updated; footer
+  bumped to run #48.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #48.
+- `/competitor-watch.md` — run #48 sync line appended at top
+  of Sync Log; AC-5 row prefix updated to "Spec 013 / Phase 3
+  / T05 landed run #48; T06..T15 pending"; AC-4 unchanged
+  (Phase 2 complete); AC-6 unchanged (Phase 4 still pending).
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean.
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` —
+  clean (CI's typecheck path).
+- `npx jest --testPathPatterns 'packages/plugins/source-ats-mercor'`
+  — 5 cases pass, 0 failures.
+
+**Notes & follow-ups:**
+
+- **Default for run #49** = Spec 013 / Phase 3 / T06 — extend
+  `__tests__/mercor.service.spec.ts` to ≥ 5 behavioural cases
+  (happy path with full catalogue, slug post-filter narrowing,
+  empty `listings[]`, HTTP 500, `resultsWanted` cap
+  mid-catalogue). Add `__tests__/fixtures/mercor-explore.json`
+  with ≥ 50 listings spanning ≥ 10 distinct `companyName`
+  values. Mirror the Oracle T04 pattern. Estimated 0.5 day.
+- **Out-of-scope reminders for run #49:** Stay strictly inside
+  `packages/plugins/source-ats-mercor/__tests__/`. Do NOT
+  touch the service or constants — those settled in this run.
+  Detail-page enrichment for Mercor (richer
+  `JobPostDto.description`, `applicationUrl`, etc.) is
+  deferred to candidate Spec 016.
+- **Active backlog after Spec 013 closes:** Spec 014
+  candidates = Q-026/Q-027 salary residuals OR AC-8
+  (seed-companies refresh) OR AC-9 (Workable diff). Pick at
+  Spec 013 / T15 closeout.
+- Specs **004 / 005 / 006 / 012** stay complete; **001 / 003**
+  retain their statuses unchanged. Spec **013** advances from
+  "Phase 2 done" to "T05 landed; T06..T15 pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #47 (Spec 013 / Phase 2 / T04 — Oracle behavioural test sweep landed)
 
 **Scope:** land Spec 013 / Phase 2 / T04 — extend

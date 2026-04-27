@@ -98,7 +98,8 @@
 
 ## Phase 3 — Mercor
 
-- [ ] T05 — `MercorService.scrape(input)` single GET path.
+- [x] T05 — `MercorService.scrape(input)` single GET path.
+  **Landed run #48.**
   - **Files (planned):** `packages/plugins/source-ats-mercor/src/mercor.service.ts`,
     `…/mercor.types.ts`, `…/mercor.constants.ts`.
   - **Acceptance (FR-5 / FR-6 / FR-7 / FR-8):**
@@ -112,7 +113,10 @@
     - `resultsWanted` cap applied AFTER post-filter.
     - HTTP via `@ever-jobs/common.createHttpClient`.
     - Errors caught → empty `JobResponseDto`; sentinel
-      `ERR_MERCOR_ENVELOPE` recorded when response lacks `listings[]`.
+      `ERR_MERCOR_ENVELOPE` recorded when response lacks `listings[]`;
+      sentinel `ERR_MERCOR_FETCH_FAILED` recorded on HTTP failure
+      (added during implementation — not in original spec text but
+      necessary symmetry with Oracle's two-sentinel pattern).
   - **Estimate:** 0.4 day.
 
 - [ ] T06 — Mercor unit tests (≥ 5 cases).
@@ -285,20 +289,24 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #48** = Spec 013 / Phase 3 / T05 —
-  `MercorService.scrape(input)` single GET path against
-  `https://aws.api.mercor.com/work/listings-explore-page`. Implement
-  in `packages/plugins/source-ats-mercor/src/mercor.service.ts`
-  (alongside `mercor.types.ts` and `mercor.constants.ts`). Honour
-  the literal `Authorization: Bearer` empty-token header per
-  upstream Python; client-side post-filter on `companyName`
-  (lower-cased substring match) when `companySlug` supplied.
-  `resultsWanted` cap applied AFTER the post-filter. Errors caught
-  → empty `JobResponseDto`; sentinel codes
-  `ERR_MERCOR_HTTP_FAILURE` / `ERR_MERCOR_BAD_PAYLOAD` recorded
-  via `Logger.warn`. Same shape as Spec 013 / T03 (Oracle service,
-  run #46) — single-GET variant rather than paginated. Estimated
-  0.5 day.
+- **Default for run #49** = Spec 013 / Phase 3 / T06 — Mercor
+  behavioural unit-test sweep. Extend
+  `__tests__/mercor.service.spec.ts` to ≥ 5 cases (happy path with
+  full catalogue, slug post-filter narrowing, empty `listings[]`,
+  HTTP 500, `resultsWanted` cap mid-catalogue). Add
+  `__tests__/fixtures/mercor-explore.json` with ≥ 50 listings
+  spanning ≥ 10 distinct `companyName` values so post-filter can
+  be exercised meaningfully. Same shape as Oracle T04 (run #47).
+  Estimated 0.5 day.
+- **Default for run #48 (DONE — landed run #48)** = Spec 013 /
+  Phase 3 / T05 — `MercorService.scrape(input)` single GET path
+  against `https://aws.api.mercor.com/work/listings-explore-page`.
+  Real `mercor.service.ts` + `mercor.types.ts` +
+  `mercor.constants.ts` shipped; literal `Authorization: Bearer`
+  empty-token header per FR-8; client-side `companyName`
+  substring post-filter; `resultsWanted` cap applied AFTER filter;
+  sentinel codes `ERR_MERCOR_ENVELOPE` /
+  `ERR_MERCOR_FETCH_FAILED` recorded via `Logger.warn`.
 - **Default for run #47 (DONE — landed run #47)** = Spec 013 /
   Phase 2 / T04 — Oracle behavioural unit-test sweep. Spec file
   grew from 4 → 10 cases; `__tests__/fixtures/oracle-page-1.json`

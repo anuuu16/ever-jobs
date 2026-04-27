@@ -77,7 +77,7 @@
 | 005 | [Source Health & Circuit Breaker](../.specify/specs/005-source-health-circuit-breaker/spec.md) — [plan](../.specify/specs/005-source-health-circuit-breaker/plan.md) — [tasks](../.specify/specs/005-source-health-circuit-breaker/tasks.md) | All phases done (T01–T08 runs #10–#16; T09 run #27); spec complete |
 | 006 | [ATS-Scrapers Parity, Batch 1 (Avature / Gem / Join.com)](../.specify/specs/006-ats-scrapers-parity-batch-1/spec.md) — [plan](../.specify/specs/006-ats-scrapers-parity-batch-1/plan.md) — [tasks](../.specify/specs/006-ats-scrapers-parity-batch-1/tasks.md) | All phases done (T01..T13 runs #29..#36); spec complete |
 | 012 | [European-style Salary Parser](../.specify/specs/012-european-salary-parser/spec.md) — [plan](../.specify/specs/012-european-salary-parser/plan.md) — [tasks](../.specify/specs/012-european-salary-parser/tasks.md) | All phases done (T01..T05 runs #38..#42); spec complete |
-| 013 | [ATS-Scrapers Parity, Batch 2 (Oracle HCM Cloud / Mercor / Tesla)](../.specify/specs/013-ats-scrapers-parity-batch-2/spec.md) — [plan](../.specify/specs/013-ats-scrapers-parity-batch-2/plan.md) — [tasks](../.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md) | Phase 2 done (T01..T04 runs #44..#47); T05..T15 pending |
+| 013 | [ATS-Scrapers Parity, Batch 2 (Oracle HCM Cloud / Mercor / Tesla)](../.specify/specs/013-ats-scrapers-parity-batch-2/spec.md) — [plan](../.specify/specs/013-ats-scrapers-parity-batch-2/plan.md) — [tasks](../.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md) | T01..T05 landed runs #44..#48; T06..T15 pending |
 
 ## 8. Templates
 
@@ -89,4 +89,4 @@
 
 ---
 
-_Last revised: 2026-04-28 (run #47)._
+_Last revised: 2026-04-28 (run #48)._

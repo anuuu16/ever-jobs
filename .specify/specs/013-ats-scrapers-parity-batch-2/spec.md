@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | Phase 2 done (T01..T04 runs #44..#47); T05..T15 pending |
+| Status         | T05 landed run #48; T06..T15 pending                 |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-28 (run #47)                                 |
+| Last updated   | 2026-04-28 (run #48)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -332,6 +332,74 @@ records.)
   'detail-all'` with `'detail-25'` the default).
 
 ## 10. Decisions
+
+- **2026-04-28 (run #48 / T05)** — `MercorService.scrape(input)`
+  shipped against the live `/work/listings-explore-page`
+  catalogue endpoint. Three load-bearing decisions resolved during
+  implementation:
+
+  (1) **Two-sentinel error model (`ERR_MERCOR_ENVELOPE` +
+  `ERR_MERCOR_FETCH_FAILED`).** The original FR-7 acceptance text
+  named only `ERR_MERCOR_ENVELOPE` (response missing `listings[]`).
+  Implementation surfaced a second failure mode that needed
+  separate logging: HTTP errors during the GET. We adopt the same
+  two-sentinel pattern Oracle (T03) uses — envelope-shape failure
+  vs network-layer failure — so operators reading logs can tell
+  the difference without parsing exception messages.
+  `ERR_MERCOR_FETCH_FAILED` is appended to spec.md § 7.3 in the
+  next docs touch (T15 closeout); for now the constant lives in
+  `mercor.constants.ts` and the divergence is documented here.
+
+  (2) **`resultsWanted` cap applied AFTER the slug post-filter.**
+  Per FR-7 the cap follows the filter so a 5-row Stripe slice is
+  genuinely 5 Stripe rows (not "first 5 of all 200 listings,
+  trimmed to whatever subset Stripe happens to occupy"). This
+  matches the user-story intent ("get me Stripe's 5 most
+  recent listings") but diverges from the typical "cap then
+  filter" pipeline order. The semantic difference is significant
+  enough to call out: a strict implementation of FR-16 ("respect
+  `input.resultsWanted` and stop fetching once the cap is
+  reached") would suggest cap-first; the spec.md text in § 7.2
+  resolves the ambiguity by listing FR-7 first, but pinning the
+  ordering here so future editors don't accidentally swap.
+
+  (3) **Compensation mapping included on initial implementation.**
+  Mercor exposes `rateMin / rateMax / payRateFrequency` directly
+  in the explore-page envelope (unlike Oracle which requires the
+  separate `recruitingCEJobRequisitionDetails` finder for
+  compensation). We map them into `CompensationDto` immediately —
+  no detail fetch, no future-spec deferral — because the data is
+  already in the single GET. Default currency is `USD`
+  (`CompensationDto`'s built-in default; matches Mercor's
+  marketplace baseline). `payRateFrequency` falls back to
+  `HOURLY` when missing, matching upstream's marketplace default.
+  This is one of the few cases in Spec 013 where we go BEYOND
+  upstream Python's behaviour (their `format_job_data()` retains
+  the rate fields as raw dictionary entries; we synthesise the
+  full `CompensationDto`). The richer-than-upstream mapping is
+  internally consistent — Greenhouse, Lever, and Workday plugins
+  already map their inline compensation data into
+  `CompensationDto`; Mercor would be the lone outlier if we
+  didn't.
+
+  Additional shape notes carried forward to T06's fixture
+  authoring:
+  - `JobPostDto.id = 'mercor-' + listingId` for stable
+    `(site, externalId)` tuples per FR-20.
+  - `JobPostDto.jobUrl = 'https://work.mercor.com/jobs/' +
+    listingId + '/' + slug(title)` — slug is decorative
+    (`listingId` is the stable identifier upstream).
+  - `JobPostDto.companyName` falls back to literal `'Mercor'`
+    when the upstream listing lacks a `companyName` (rare;
+    mostly Mercor's own internally-posted talent searches).
+  - Slug-empty input → full catalogue capped by
+    `resultsWanted` (default 100). Slug-populated → filter
+    applied first, cap second.
+  - `Origin` + `Referer` headers (`https://work.mercor.com` and
+    its trailing-slash variant) are required — the API gateway
+    rejects requests without the public-origin pair. Easy to
+    miss when copying the curl from devtools; the constant
+    block (`MERCOR_HEADERS`) bakes them in.
 
 - **2026-04-28 (run #47 / T04)** — Oracle behavioural unit-test
   sweep landed. Spec file grew from 4 cases (T03 registration
