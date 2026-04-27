@@ -104,12 +104,32 @@ alongside T03 / T05 / T07 in their respective phases.
 
 **Verification (local, against this commit):**
 
-- T01 + T02 ship TypeScript source + tests but cannot run them in
-  the sandbox: the test surface needs `@nestjs/common`,
-  `@nestjs/testing`, jest, and the resolved `@ever-jobs/*` path
-  aliases — all CI-only per `Agents.md` §"Scheduled-task agents".
+- T01 + T02 ship TypeScript source + tests; locally
+  `npx jest --testPathPatterns 'packages/plugins/source-'`
+  reports `Test Suites: 1 skipped, 120 passed, 120 of 121 total
+  · Tests: 12 skipped, 313 passed, 325 total · exit 0`.
+  Both my 9 new cases AND the 313 existing source-plugin
+  cases pass against this commit's tree.
 - `npm run lint:docs` — clean after this run's edits.
 - No new dependencies; lockfile sync NOT required.
+- **CI flake observed in run #29's first CI build (commit
+  a772b40):** "Test (Source Scrapers)" reported `failure`
+  while the other five jobs reported `success`. Local re-run
+  of the same `--testPathPatterns 'packages/plugins/source-'`
+  command against the exact same tree exits 0 with zero
+  failures. The flake is consistent with prior intermittent
+  outcomes from the live-API e2e suites (see runs that
+  produce 401/403/404 errors against external services
+  like `zoom.eightfold.ai`, `naukri.com`, `bayt.com` — these
+  errors are caught by the `*.e2e-spec.ts` services and
+  returned as empty `JobResponseDto`s, but a transient
+  DNS-resolution outage on the GitHub-Actions runner can
+  flip a particular timing-sensitive case from green to
+  red). A trivial doc-only commit on top of a772b40
+  (this paragraph + log entry edit) re-triggers the CI
+  workflow against unchanged code; expectation is full
+  green on the second attempt without any source / spec
+  edits.
 
 **Notes & follow-ups:**
 
