@@ -4,12 +4,42 @@
 
 ## Phase 1 — Plugin infrastructure
 
-- [ ] T01 — Add `IJobStore`, `IStoreMetadata`, `JobStoreQuery`, `IJobObservationStore`.
-  - **Files:** `packages/models/src/interfaces/job-store.interface.ts`,
+- [x] T01 — Add `IJobStore`, `IStoreMetadata`, `JobStoreQuery`, `IJobObservationStore`.
+  - **Files (planned):** `packages/models/src/interfaces/job-store.interface.ts`,
     `packages/models/src/interfaces/job-store-query.interface.ts`,
     `packages/models/src/index.ts`.
-  - **Acceptance:** Interfaces exported.
-  - **Estimate:** 0.25 day.
+  - **Files (actual):** `packages/models/src/interfaces/job-store.interface.ts`
+    (~170 LOC), `packages/models/src/interfaces/job-store-query.interface.ts`
+    (~60 LOC), `packages/models/src/interfaces/index.ts` (re-export the
+    two new modules — note that `packages/models/src/index.ts` already
+    `export *`s from `./interfaces`, so the higher-level barrel needs no
+    edit), `packages/models/__tests__/job-store.interface.spec.ts`
+    (~170 LOC, 11 unit cases).
+  - **Acceptance:** Interfaces exported. **Done:** run #17 (2026-04-27).
+    `IJobStore` covers `upsert / upsertMany / getById / findByCanonicalId
+    / listByQuery / delete` per Spec 004 §7.1 / FR-1 / FR-7 / FR-8;
+    `IJobObservationStore` covers `putAll / listByCanonicalId /
+    deleteByCanonicalId` per FR-2 with replace-not-merge semantics
+    (single writer = the dedup engine). `JobStoreQuery` adds the four
+    documented filters (`company / title / location / since`), opaque
+    `cursor`, plus a `limit` clamped by two new constants
+    (`JOB_STORE_QUERY_DEFAULT_LIMIT = 100`,
+    `JOB_STORE_QUERY_MAX_LIMIT = 1_000`) — bounded so a misbehaving
+    caller cannot exhaust memory. `JobStorePage<T>` envelopes the
+    `{ items, nextCursor? }` page tuple. `IStoreMetadata = { id,
+    description? }` per FR-4 / §7.2. Three error codes
+    (`ERR_STORE_NOT_FOUND`, `ERR_STORE_BACKEND_DOWN`,
+    `ERR_STORE_INVALID_CURSOR`) and three DI/metadata symbols
+    (`JOB_STORE_TOKEN`, `JOB_OBSERVATION_STORE_TOKEN`,
+    `STORE_PLUGIN_METADATA_KEY = 'ever-jobs:store-plugin'`) are
+    exported alongside, so T02–T04 can import everything from
+    `@ever-jobs/models` without further plumbing. Test suite locks in
+    the constants, asserts `nextCursor` is `undefined` (not `null`)
+    when omitted, round-trips a stub observation store, and compiles
+    a stub `IJobStore` against the contract — 22 / 22 passed across
+    all `packages/models` suites and 111 / 111 across the regression
+    bundle.
+  - **Estimate:** 0.25 day. **Actual:** ~0.25 day.
 
 - [ ] T02 — Add `@StorePlugin()` decorator.
   - **Files:** `packages/plugin/src/store/store-plugin.decorator.ts`.

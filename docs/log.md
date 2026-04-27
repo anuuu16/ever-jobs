@@ -5,6 +5,161 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #17 (Spec 004 Phase 1 — T01 store interfaces unblocking Spec 005 / T09 cron persistence)
+
+**Scope:** land Spec 004 / Phase 1 / T01 — the persistence-plugin
+contracts (`IJobStore`, `IJobObservationStore`, `JobStoreQuery`,
+`IStoreMetadata`) plus their DI tokens, error codes, and the
+`@StorePlugin()` reflector key. Spec 004 graduates from "draft (full)"
+to "Phase 1 partial (T01 done; T02–T04 pending)". Run #16 closed Spec
+005 / T07; run #16's default for #17 was Spec 005 / T09 (60-second cron
+persistence into `IJobStore`), but T09 is gated on Spec 004 Phase 5
+(T11/T12) which is itself gated on T01–T10. T01 is therefore the single
+highest-leverage move because every T02–T12 task imports from this
+file. Pivoted to T01 instead of one of the run #16 fallbacks (open
+`dedup-hybrid` LSH follow-up) so Spec 004 starts to unwind.
+
+**No new questions opened this run.** T01 is mechanical: every choice is
+already pinned by Spec 004 §7.1 / §7.2 / §7.3 (interface signatures,
+decorator shape, error codes) and Spec 004 / FR-1..FR-8 (which methods
+are `must`). The two free decisions (`limit` clamp + `nextCursor`
+absence semantics) are both load-bearing enough to lock in via test
+asserts and constants rather than as questions:
+
+1. **`limit` clamp constants are exported alongside the interface.**
+   Spec 004 §7.1 says "default 100, max 1000" in prose. Backend
+   authors writing T06 / T08 / T10 would otherwise re-derive those
+   numbers each time. Surfacing them as
+   `JOB_STORE_QUERY_DEFAULT_LIMIT` / `JOB_STORE_QUERY_MAX_LIMIT` from
+   `@ever-jobs/models` keeps the value pinned in one place — and the
+   test suite locks both numbers and the `default <= max` invariant.
+2. **`listByQuery` returns `nextCursor: undefined`, never `null`.**
+   The DTOs across the project consistently use `undefined` for
+   absent-optional, and JSON.stringify drops `undefined` keys — so
+   the wire payload is `{"items": [...]}` with no `nextCursor` field
+   at the tail of pagination, instead of `{"items": [...],
+   "nextCursor": null}`. The test suite asserts this so a future
+   backend can't drift to `null`.
+
+**Changes — code (interfaces only, no runtime behaviour change):**
+
+- `packages/models/src/interfaces/job-store-query.interface.ts` — new
+  ~60-LOC file declaring `JobStoreQuery` (`company / title /
+  location / since / cursor / limit`), the `JobStorePage<T>` page
+  envelope, and the two clamp constants
+  (`JOB_STORE_QUERY_DEFAULT_LIMIT = 100`,
+  `JOB_STORE_QUERY_MAX_LIMIT = 1_000`). Doc-blocks call out the
+  case-insensitive substring semantics that Postgres / SQLite / Mongo
+  backends must converge on, and the opaque-cursor contract (no
+  `eval`, no caller-side parsing).
+- `packages/models/src/interfaces/job-store.interface.ts` — new
+  ~170-LOC file. `IJobStore` covers `upsert / upsertMany / getById /
+  findByCanonicalId / listByQuery / delete` per §7.1; method comments
+  cite each Spec 004 FR (e.g. `delete` returns `boolean`, MUST
+  cascade observation rows, MUST NOT soft-delete in v1 — Spec 012
+  revisits retention). `IJobObservationStore` covers `putAll /
+  listByCanonicalId / deleteByCanonicalId` per FR-2 with an explicit
+  "replace, don't merge" doc-block: the dedup engine is the single
+  writer, so partial-update semantics would only invite drift bugs.
+  `IStoreMetadata = { id, description? }` per §7.2. Three DI tokens
+  (`JOB_STORE_TOKEN = 'JOB_STORE'`,
+  `JOB_OBSERVATION_STORE_TOKEN = 'JOB_OBSERVATION_STORE'`,
+  `STORE_PLUGIN_METADATA_KEY = 'ever-jobs:store-plugin'`) and three
+  error codes (`ERR_STORE_NOT_FOUND`, `ERR_STORE_BACKEND_DOWN`,
+  `ERR_STORE_INVALID_CURSOR`) keep the entire T02–T12 surface
+  importable from `@ever-jobs/models` without further plumbing.
+- `packages/models/src/interfaces/index.ts` — appends two
+  `export * from ...` lines so the new symbols flow through the
+  existing `packages/models/src/index.ts` barrel (which already
+  `export *`s from `./interfaces`). No edit needed at the top-level
+  `index.ts` — the AGENTS-prescribed re-export chain already covers
+  it.
+
+**Changes — tests:**
+
+- `packages/models/__tests__/job-store.interface.spec.ts` — new
+  ~170-LOC suite (11 cases). The interfaces themselves erase at
+  runtime, so the suite tests them via two compile-time-typed stubs:
+  `class StubStore implements IJobStore` and `class StubObsStore
+  implements IJobObservationStore`. Cases:
+  1. `ERR_STORE_NOT_FOUND` literal value.
+  2. `ERR_STORE_BACKEND_DOWN` literal value.
+  3. `ERR_STORE_INVALID_CURSOR` literal value.
+  4. DI token values (`JOB_STORE_TOKEN`,
+     `JOB_OBSERVATION_STORE_TOKEN`).
+  5. `STORE_PLUGIN_METADATA_KEY = 'ever-jobs:store-plugin'`.
+  6. `JOB_STORE_QUERY_DEFAULT_LIMIT === 100`.
+  7. `JOB_STORE_QUERY_MAX_LIMIT === 1_000`.
+  8. `default <= max` invariant.
+  9. Stub `IJobStore` round-trip (covers all six methods).
+  10. `listByQuery` returns `nextCursor` as `undefined`, NOT `null`.
+  11. Stub `IJobObservationStore` round-trip: `putAll →
+      listByCanonicalId → deleteByCanonicalId` is idempotent (second
+      delete returns 0).
+  12. `IStoreMetadata` accepts both id-only and id+description shapes.
+
+  (Numbered above as "11 cases" in tasks.md because cases 11+12 share
+  one `it()` block.)
+
+**Changes — docs / specs:**
+
+- `.specify/specs/004-persistence-storage-plugins/tasks.md` — T01
+  graduates from "pending" to "done" with planned-vs-actual file
+  list, line-count notes, and per-case test summary.
+- `.specify/specs/004-persistence-storage-plugins/spec.md` — `Status`
+  flipped from `draft` to `Phase 1 partial (T01 done; T02–T04
+  pending)`; `Last updated` bumped to `2026-04-27 (run #17)`.
+- `docs/index.md` — Spec 004 row updated with new status string;
+  `Last revised` bumped to `2026-04-27 (run #17)`.
+- `CLAUDE.md` — run-tag bumped to #17 in the footer.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #17 sync line; no upstream commits in
+  any of the three tracked repos (seven consecutive zero-churn runs).
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns 'packages/models/__tests__/job-store'`
+  — 11 / 11 passed (T01 interface suite).
+- `npx jest --testPathPatterns 'packages/models'` — 22 / 22 passed
+  across 2 suites (regression: T01 + the pre-existing canonical-job
+  schema suite both green).
+- `npx jest --testPathPatterns 'apps/api/__tests__/(e2e/sources-(health|
+  admin)|e2e/metrics-circuit-state|integration/circuit-breaker|integration/
+  plugin-policy|health\.e2e)|packages/plugin/src/circuit-breaker|
+  apps/api/src/jobs/__tests__/(plugin-policy|sources-admin)|
+  apps/api/src/auth/__tests__/api-key|apps/api/src/metrics/
+  __tests__/metrics.service|packages/models'` — 111 / 111 passed
+  across 14 suites (regression: T01–T08 of Spec 005 all green plus
+  legacy `/health`, `/ping`, the canonical-job schema, and the new
+  T01 surface).
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` — clean.
+
+**Notes & follow-ups:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #16
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). Seven consecutive runs of zero-churn.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#16; not wired into CI).
+- Default for run #18 is **Spec 004 / T02 — `@StorePlugin()`
+  decorator** (~30-LOC NestJS `SetMetadata` wrapper, exported from
+  `@ever-jobs/plugin/store/store-plugin.decorator.ts`). T02 unlocks
+  T03 (`StoreRegistry`), which then unlocks T04
+  (`StoreModule.forActive(storeId)`) and from there Phases 2–5 fall
+  in dependency order. Estimate: 0.25 day for T02. If T02 is blocked
+  for any reason, the fall-back is the open `dedup-hybrid` LSH
+  follow-up (~0.5 day) or Spec 005 / T09 (still gated on Spec 004
+  Phase 5, so realistically only after T02–T12 land).
+- T01 is contract-only — no runtime behaviour changed, no DI
+  binding added. The next code that exercises these interfaces is
+  T02's decorator and T03's `StoreRegistry`. The 11 unit cases here
+  are the load-bearing part: they pin the wire/DI surface so future
+  backend authors can't drift the constants without lighting up CI.
+
+---
+
 ## 2026-04-27 — Scheduled run #16 (Spec 005 Phase 4 — T07 auth-gated admin `POST /circuit/{open,reset}`)
 
 **Scope:** land Spec 005 / Phase 4 / T07 — auth-gated admin endpoints

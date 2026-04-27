@@ -5,3 +5,5 @@ export * from './canonical-job.interface';
 export * from './dedup-engine.interface';
 export * from './merge-resolver.interface';
 export * from './circuit-breaker.interface';
+export * from './job-store-query.interface';
+export * from './job-store.interface';

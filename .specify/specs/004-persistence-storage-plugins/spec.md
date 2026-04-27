@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 004                                                  |
 | Slug           | persistence-storage-plugins                          |
-| Status         | draft                                                |
+| Status         | Phase 1 partial (T01 done; T02–T04 pending)          |
 | Owner          | scheduled-task agent                                 |
 | Created        | 2026-04-26                                           |
-| Last updated   | 2026-04-26                                           |
+| Last updated   | 2026-04-27 (run #17)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001, 003, 005                                        |
 
