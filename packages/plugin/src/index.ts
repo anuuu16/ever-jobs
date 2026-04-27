@@ -24,3 +24,9 @@ export {
 export { CircuitBreakerService } from './circuit-breaker/circuit-breaker.service';
 export { CircuitBreakerInterceptor } from './circuit-breaker/circuit-breaker.interceptor';
 export { CircuitBreakerModule } from './circuit-breaker/circuit-breaker.module';
+
+// Persistence-store plugin (Spec 004)
+export {
+  StorePlugin,
+  STORE_PLUGIN_METADATA_KEY,
+} from './store/store-plugin.decorator';

@@ -41,10 +41,34 @@
     bundle.
   - **Estimate:** 0.25 day. **Actual:** ~0.25 day.
 
-- [ ] T02 — Add `@StorePlugin()` decorator.
-  - **Files:** `packages/plugin/src/store/store-plugin.decorator.ts`.
-  - **Acceptance:** Decorator attaches metadata via `SetMetadata`.
-  - **Estimate:** 0.25 day.
+- [x] T02 — Add `@StorePlugin()` decorator.
+  - **Files (planned):** `packages/plugin/src/store/store-plugin.decorator.ts`.
+  - **Files (actual):** `packages/plugin/src/store/store-plugin.decorator.ts`
+    (~40 LOC; thin `SetMetadata(STORE_PLUGIN_METADATA_KEY, …)` wrapper +
+    re-export of the metadata-key constant so plugin authors can import it
+    from `@ever-jobs/plugin` without reaching back into `@ever-jobs/models`),
+    `packages/plugin/src/index.ts` (added two exports — `StorePlugin`,
+    `STORE_PLUGIN_METADATA_KEY`),
+    `packages/plugin/src/store/__tests__/store-plugin.decorator.spec.ts`
+    (~120 LOC, 8 unit cases).
+  - **Acceptance:** Decorator attaches metadata via `SetMetadata`. **Done:**
+    run #18 (2026-04-27). Validation of `id` (kebab-case, non-empty,
+    duplicate-id) is intentionally deferred to `StoreRegistry` (T03)
+    — mirrors `@SourcePlugin()` deferring `Site` uniqueness to
+    `PluginDiscoveryService`. Decoration runs at class-load time before
+    the logger is wired, so a thrown error there would surface as a
+    cryptic stack instead of a structured registry log line. Test suite
+    asserts: (1) the re-exported key string equals
+    `'ever-jobs:store-plugin'` and is referentially identical to the
+    `@ever-jobs/models` constant; (2) the decorator round-trips
+    `{ id, description }` and id-only metadata via `Reflector.get`;
+    (3) raw `Reflect.getMetadata` returns the same value (dev tooling
+    that doesn't import Nest still works); (4) undecorated classes
+    return `undefined`; (5) `@StorePlugin()` and `@SourcePlugin()` use
+    distinct keys; (6) class identity / `instanceof` / `.name` are
+    preserved; (7) two distinct classes carry independent metadata
+    objects (no shared-prototype leak). 8 / 8 passed.
+  - **Estimate:** 0.25 day. **Actual:** ~0.25 day.
 
 - [ ] T03 — Add `StoreRegistry`.
   - **Files:** `packages/plugin/src/store/store-registry.service.ts`,

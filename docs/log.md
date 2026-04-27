@@ -5,6 +5,148 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #18 (Spec 004 Phase 1 — T02 `@StorePlugin()` decorator unblocking T03 `StoreRegistry`)
+
+**Scope:** land Spec 004 / Phase 1 / T02 — the `@StorePlugin()` class
+decorator that backends advertise their `IStoreMetadata` through. Spec
+004 graduates from "Phase 1 partial (T01 done; T02–T04 pending)" to
+"Phase 1 partial (T01–T02 done; T03–T04 pending)". This was run #17's
+explicit default for #18 ("~30-LOC NestJS `SetMetadata` wrapper");
+implemented as planned without deviation. T02 is the choke point that
+unlocks T03 (`StoreRegistry`), which in turn unlocks T04
+(`StoreModule.forActive(storeId)`); from there Phases 2–5 fall in
+dependency order. The eventual gate on Spec 005 / T09 (60-second cron
+persisting health snapshots into `IJobStore`) remains in place.
+
+**No new questions opened this run.** T02 is mechanical: every choice
+is already pinned by Spec 004 §7.2 (decorator shape) and by T01's
+already-exported `STORE_PLUGIN_METADATA_KEY` / `IStoreMetadata`
+constants. The only free decision was *where to enforce id
+validation* — and that was load-bearing enough to lock in via the
+test suite and a doc-block comment rather than as a question:
+
+1. **`id` validation lives in `StoreRegistry` (T03), NOT in the
+   decorator.** This mirrors the existing `@SourcePlugin()` pattern
+   where `Site`-uniqueness is enforced by `PluginDiscoveryService`,
+   not the decorator itself. Decoration runs at class-load time
+   *before* the NestJS logger is wired up, so a thrown error inside
+   the decorator surfaces as a cryptic stack trace pointing at the
+   class declaration site rather than as a structured registry log
+   line operators can grep for. T03 will reject empty / non-kebab-case
+   / duplicate ids with `ERR_STORE_NOT_FOUND` / a registry-specific
+   `Logger.error(...)` line — those error paths are exercised by T03's
+   conformance tests, not T02's.
+
+**Changes — code:**
+
+- `packages/plugin/src/store/store-plugin.decorator.ts` — new ~40-LOC
+  file. The decorator itself is a one-liner —
+  `SetMetadata(STORE_PLUGIN_METADATA_KEY, metadata)` — plus an
+  ergonomic re-export of `STORE_PLUGIN_METADATA_KEY` so plugin authors
+  importing `@ever-jobs/plugin` don't have to also reach into
+  `@ever-jobs/models` for the key. Doc-block cites Spec 004 / FR-4 /
+  T02 / T03 / T04 and explains the decoration-time-vs-registry-time
+  validation split.
+- `packages/plugin/src/index.ts` — appends
+  `export { StorePlugin, STORE_PLUGIN_METADATA_KEY }` from
+  `./store/store-plugin.decorator` under a new
+  `// Persistence-store plugin (Spec 004)` group, mirroring the
+  existing `// Circuit breaker (Spec 005)` block. No other line
+  changed; existing exports order preserved.
+
+**Changes — tests:**
+
+- `packages/plugin/src/store/__tests__/store-plugin.decorator.spec.ts`
+  — new ~120-LOC suite (8 cases). Covers:
+  1. `STORE_PLUGIN_METADATA_KEY` re-exported from `@ever-jobs/plugin`
+     equals the `@ever-jobs/models` symbol AND the literal string
+     `'ever-jobs:store-plugin'` (single source of truth — locks both
+     packages against drift).
+  2. `@StorePlugin({ id, description })` round-trips both fields via
+     `Reflector.get` (the registry's read path).
+  3. `@StorePlugin({ id })`-only round-trips with `description ===
+     undefined` (matches `IStoreMetadata`'s optional field).
+  4. `Reflect.getMetadata(KEY, Class)` (raw, no Nest) returns the same
+     object — pins us to the plain `reflect-metadata` API so dev
+     tooling that doesn't import `@nestjs/core` still works.
+  5. Undecorated classes return `undefined` (no proto-leak).
+  6. `@StorePlugin()` and `@SourcePlugin()` use distinct keys —
+     `SOURCE_PLUGIN_METADATA` is `undefined` on a `@StorePlugin`'d
+     class, and vice-versa. Pre-empts a future contributor accidentally
+     unifying the two metadata namespaces.
+  7. Class identity preserved (`instanceof`, `.name`, constructor still
+     callable) — pins us against a future contributor swapping in a
+     proxy wrapper that would break Nest DI.
+  8. Two `@StorePlugin`'d classes carry independent metadata objects
+     — no shared-prototype leak between sibling backends.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/004-persistence-storage-plugins/tasks.md` — T02
+  graduates from "pending" to "done" with planned-vs-actual file
+  list, decorator-vs-registry validation rationale, line-count notes,
+  and per-case test summary.
+- `.specify/specs/004-persistence-storage-plugins/spec.md` — `Status`
+  flipped to `Phase 1 partial (T01–T02 done; T03–T04 pending)`;
+  `Last updated` bumped to `2026-04-27 (run #18)`.
+- `docs/index.md` — Spec 004 row updated with new status string;
+  `Last revised` bumped to `2026-04-27 (run #18)`.
+- `CLAUDE.md` — run-tag bumped to #18 in the footer.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #18 sync line; **no upstream commits**
+  in any of the three tracked repos (eight consecutive zero-churn
+  runs).
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns
+  'packages/plugin/src/store/__tests__/store-plugin.decorator'` —
+  **8 / 8 passed** (T02 decorator suite).
+- `npx jest --testPathPatterns
+  'packages/models|packages/plugin/__tests__|packages/plugin/src/store'`
+  — **50 / 50 passed across 5 suites** (regression: T01 + T02 +
+  pre-existing canonical-job + disabled-sources + plugin-discovery
+  tests all green).
+- `npx jest --testPathPatterns
+  'apps/api/__tests__/(e2e/sources-(health|admin)|e2e/metrics-circuit-state|integration/circuit-breaker|integration/plugin-policy|health\.e2e)|packages/plugin/src/circuit-breaker|apps/api/src/jobs/__tests__/(plugin-policy|sources-admin)|apps/api/src/auth/__tests__/api-key|apps/api/src/metrics/__tests__/metrics.service|packages/models|packages/plugin/__tests__|packages/plugin/src/store'`
+  — **139 / 139 passed across 17 suites** (full regression bundle:
+  Spec 005 / T01–T08, legacy `/health` + `/ping`, Spec 004 / T01–T02,
+  canonical-job schema, disabled-sources, plugin-discovery, api-key
+  guard, metrics service).
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` — clean.
+
+**Notes & follow-ups:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #17
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). Eight consecutive runs of zero-churn — at this point the
+  signal is "all three repos are in long-term maintenance mode," not
+  "we're checking too often."
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#17; not wired into CI). Open
+  fall-back follow-up.
+- Default for run #19 is **Spec 004 / T03 — `StoreRegistry`**
+  (~120-LOC NestJS provider that scans for `@StorePlugin()`'d
+  providers via `DiscoveryService` + `MetadataScanner`, indexes them
+  by `id`, and exposes `register / get(id) / listIds()` with a
+  duplicate-id guard that throws on collision). T03 is where the
+  validation deferred from T02 actually lives — it MUST reject empty
+  ids, non-kebab-case ids, and duplicate ids per Spec 004 §7.3 /
+  `ERR_STORE_NOT_FOUND`. Estimate: 0.5 day. T03 unlocks T04
+  (`StoreModule.forActive(storeId)`) and from there Phases 2–5 fall
+  in dependency order. If T03 is blocked for any reason, the
+  fall-back is the open `dedup-hybrid` LSH follow-up (~0.5 day).
+- T02 is contract-only — no runtime behaviour changed, no provider
+  registered, no DI binding added. The 8 unit cases here are the
+  load-bearing part: they pin the wire/DI surface (key string, raw
+  vs. Nest-mediated reflection equivalence, key independence from
+  `@SourcePlugin`) so future backend authors can't drift the contract
+  without lighting up CI.
+
+---
+
 ## 2026-04-27 — Scheduled run #17 (Spec 004 Phase 1 — T01 store interfaces unblocking Spec 005 / T09 cron persistence)
 
 **Scope:** land Spec 004 / Phase 1 / T01 — the persistence-plugin
