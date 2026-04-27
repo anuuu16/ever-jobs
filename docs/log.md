@@ -5,6 +5,136 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #43 (Spec 013 — ATS-Scrapers Parity, Batch 2: scaffold)
+
+**Scope:** open Spec 013 — `ats-scrapers-parity-batch-2`
+(Oracle HCM Cloud / Mercor / Tesla) per run #42's
+Notes-for-the-next-run pin. Pure docs / Spec-Kit scaffolding;
+NO source code touched. Three new artefacts under
+`.specify/specs/013-ats-scrapers-parity-batch-2/` (spec.md +
+plan.md + tasks.md). `docs/index.md` row added; `docs/log.md`
+appended (this entry); `docs/questions.md` extended with four
+new questions (Q-028..Q-031) and Q-026/Q-027 resolution text
+renumbered from "Spec 013" to **Spec 014 candidate**.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #42's sync). Twenty-seven consecutive
+zero-churn runs in `OTHERS/`.
+
+**Four load-bearing decisions** were resolved during this
+scaffold pass and pinned in the new questions:
+
+1. **Q-028 default = Option A.** Tesla ships in two flavours:
+   `source-tesla` (default, pure-HTTP, no Playwright dep) +
+   `source-tesla-playwright` (OPTIONAL companion, lazy-imports
+   `playwright` at first `scrape()` call, NOT in
+   `ALL_SOURCE_MODULES` by default). Defensive default: 99% of
+   operators won't run Tesla, so the default install MUST NOT
+   ship ~280 MB Chromium. NFR-6 explicitly marks the optional
+   plugin's cold-start as "unbounded; deferred via lazy
+   `import()`". FR-12 spells out the pure-HTTP path's contract:
+   Akamai 403 / 503 / HTML body → empty `JobResponseDto` with
+   sentinel `ERR_TESLA_AKAMAI_CHALLENGE`.
+2. **Q-029 default = Option C (hybrid).** Mercor's
+   explore-page endpoint returns the FULL public catalogue;
+   no per-company filter exists upstream. Default behaviour:
+   empty `companySlug` → full catalogue capped by
+   `resultsWanted`; populated `companySlug` → post-filter
+   `listings[]` by case-insensitive substring match on
+   `companyName`. Preserves the existing
+   `JobsService.searchJobs(companySlug)` dispatch contract
+   while honouring upstream's catalogue-wide design.
+3. **Q-030 default = Option A (`CX_45001`).** Oracle HCM
+   Cloud's `siteNumber` finder parameter defaults to
+   `CX_45001` (upstream parity; ≥ 95% tenant coverage per
+   upstream Python team's claim). New optional field
+   `ScraperInputDto.siteNumber` provides the override
+   (FR-4) for the residual ~5% of tenants.
+4. **Q-031 default = Option A (`'detail-25'`).** Tesla's
+   board endpoint emits `description: ""` for most rows;
+   detail population requires per-job follow-up GETs.
+   Default `descriptionDepth: 'detail-25'` caps follow-ups
+   at 25 to keep NFR-2 < 12 s on the happy path. New
+   optional field `ScraperInputDto.descriptionDepth: 'board' |
+   'detail-25' | 'detail-all'` provides the override (FR-11).
+
+**Cross-spec coordination — Spec 013 vs Q-026/Q-027:**
+Q-026/Q-027 (Spec 012 / T04 spillover) were tentatively
+flagged "Spec 013" in their default text written in run #41,
+but run #42's Notes-for-the-next-run pinned Spec 013 to
+AC-4..AC-6 (Oracle / Mercor / Tesla) per Q-024 Option A's
+"future bundled batch" line. Resolution: Q-026/Q-027 default
+text updated to point at **Spec 014 candidate** instead;
+salary-parser residuals will receive their own future spec
+(Spec 014 or later, whichever currency-domain spec runs first).
+Spec 013 § 3 Non-Goals explicitly call out the renumbering so
+future agents don't re-conflate them.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  NEW. ~480 LOC. 11 sections per the spec.template.md scheme;
+  20 functional requirements (FR-1..FR-20); 6 non-functional
+  requirements (NFR-1..NFR-6); 5 error sentinels (Oracle bad
+  tenant, Oracle finder rejected, Mercor envelope, Tesla
+  Akamai challenge, Tesla-Playwright unavailable); 3-section
+  test plan (unit / integration / e2e); references to the
+  upstream Python implementations under
+  `OTHERS/Ats-scrapers/{oracle,mercor,tesla}/`.
+- `.specify/specs/013-ats-scrapers-parity-batch-2/plan.md` —
+  NEW. ~210 LOC. 7 phases (Bootstrap → Oracle → Mercor →
+  Tesla → Tesla-Playwright → Integration & docs → Closeout);
+  15 tasks (T01..T15); explicit "Packages touched" matrix
+  + "Risks" matrix + "Acceptance gates" checklist.
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  NEW. ~290 LOC. 15 tasks with planned-files lists +
+  acceptance bullets + estimates. Notes-for-the-next-run
+  pinned to **Spec 013 / Phase 1 / T01** (run #44 default).
+- `docs/index.md` — Spec 013 row added (Section 7 / Specs);
+  footer bumped to run #43.
+- `docs/log.md` — this entry.
+- `docs/questions.md` — four new questions
+  (Q-028 / Q-029 / Q-030 / Q-031) prepended at the top per the
+  "newest at top" convention; Q-026 / Q-027 resolution text
+  edited to renumber "Spec 013" → "Spec 014 candidate".
+- `CLAUDE.md` — run-tag → #43.
+- `/competitor-watch.md` — run #43 sync line appended at the
+  top of the Sync Log; AC-4 / AC-5 / AC-6 rows in §C marked
+  with "Spec 013 scaffolded run #43 (T01..T15 pending)" prefix.
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean (no source / test code touched
+  this run; all changes are markdown).
+- No source / test code modified — pure scaffolding pass.
+
+**Notes & follow-ups:**
+
+- **Default for run #44** = Spec 013 / Phase 1 / T01 — Site
+  enum + tsconfig paths + jest moduleNameMapper additions for
+  `ORACLE` / `MERCOR` / `TESLA` / `TESLA_PLAYWRIGHT`, plus
+  `ScraperInputDto` extension with `siteNumber?: string` +
+  `descriptionDepth?: 'board' | 'detail-25' | 'detail-all'`.
+  Estimated ~0.25 day; pure scaffolding (same shape as Spec
+  006 / T01 at run #29).
+- **Out-of-scope reminders:** Tesla-Playwright is OPT-IN —
+  do NOT add to `ALL_SOURCE_MODULES` even when the package
+  compiles. `playwright` dep is declared on
+  `source-tesla-playwright`'s `package.json` ONLY; root
+  `package.json` does NOT declare it.
+- **Active backlog after Spec 013 closes:** Spec 014
+  candidates = Q-026/Q-027 salary residuals OR AC-8
+  (seed-companies refresh) OR AC-9 (Workable diff). Pick at
+  Spec 013 / T15 closeout based on upstream signal.
+- Specs **004 / 005 / 006 / 012** stay complete as of this
+  run; **001 / 003** retain their "FR-6 in-progress" / "All
+  phases done" statuses unchanged. Spec **013** is NEW
+  (draft).
+- Pre-existing dedup-hybrid red tests unchanged.
+
+---
+
 ## 2026-04-27 — Scheduled run #42 (Spec 012 / Phase 5 — T05: closeout pass; **Spec 012 complete**)
 
 **Scope:** land Spec 012 / Phase 5 / T05 — the spec

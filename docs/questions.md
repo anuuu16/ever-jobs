@@ -10,6 +10,233 @@
 
 ---
 
+## Q-031 — Tesla detail-fetch budget when `descriptionDepth` is unset (Spec 013 / FR-11)
+
+**Context:** Tesla's board endpoint
+(`/cua-api/apps/careers/state`) returns ≤ 5 000 jobs with
+empty `description` strings; the only way to populate
+`JobPostDto.description` is the per-job
+`/cua-api/careers/job/{id}` endpoint. Following every job is
+N+1 and torpedoes NFR-2 (a full-board `description: 'detail-all'`
+run takes ~1.5 h per upstream Python's measurement). A small
+budget keeps the happy-path within NFR-2's 12 s ceiling for
+Tesla but withholds descriptions from most rows.
+
+**Options:**
+
+- **Option A — `descriptionDepth: 'detail-25'` default
+  (cap at 25 follow-up GETs).** First 25 jobs get descriptions;
+  remainder get `description: null`. Aligns with NFR-2's 12 s
+  Tesla ceiling (~0.4 s per detail GET via Tesla's typical
+  `cua-api` latency × 25 = 10 s + ~2 s for the board GET).
+  Operators that want full descriptions opt into
+  `'detail-all'` explicitly (acknowledging the latency cost).
+  Operators that want zero detail GETs (board-only) opt into
+  `'board'`.
+- **Option B — `'detail-all'` default.** Mirrors upstream
+  Python's behaviour exactly (the upstream caches descriptions
+  across runs, so the 1.5 h cost is one-time). Ever Jobs has
+  no equivalent cache layer in this batch — caching is Spec
+  003's `dedup-hybrid` engine + future Spec 016 detail-page
+  enrichment, not a per-plugin concern. Default `'detail-all'`
+  would force every operator into a multi-hour first run.
+- **Option C — `'board'` default (zero detail GETs).** Cheapest
+  per call; matches Greenhouse / Lever / Workday default
+  behaviour (all three return descriptions inline on the board
+  endpoint, so they don't have this knob). But Tesla's board
+  endpoint genuinely emits `description: ""`, so a `'board'`
+  default would produce empty descriptions for every Tesla
+  row — surprising for callers expecting parity with other
+  plugins.
+
+**Default:** **A — `'detail-25'`.** The 25-row budget keeps
+NFR-2 < 12 s on the happy path, populates descriptions for the
+"top of the list" (Tesla's board endpoint sorts by posting
+date desc), and exposes the cost knob to operators who need
+finer control. The 25 number is round + matches the typical
+"first page" UX cap on dashboards.
+
+**Resolution:** _open — agent default = A. Pinned in Spec 013
+/ FR-11; revisit in Spec 016 (detail-page enrichment) if
+detail-fetch caching ships._
+
+---
+
+## Q-030 — Oracle HCM Cloud `siteNumber` default (Spec 013 / FR-4)
+
+**Context:** Oracle HCM Cloud's recruiting API requires a
+`siteNumber` parameter in the finder string (e.g.
+`siteNumber=CX_45001`). The upstream Python's
+`OracleRecruitingClient.__init__` defaults to `"CX_45001"` —
+that is Oracle's own careers-site number. Different tenants
+may use different `siteNumber`s (typically `CX_45001` /
+`CX_45002` / `CX_45003` etc., one per careers-site
+configuration), but the upstream Python team's empirical claim
+is that ≥ 95% of tenants share `CX_45001`. Picking a default
+matters because the parameter is mandatory; without one, the
+plugin can't form a valid request.
+
+**Options:**
+
+- **Option A — default `CX_45001` (upstream parity).** Matches
+  upstream Python; covers the empirically-dominant case.
+  Operators with non-default tenants pass
+  `ScraperInputDto.siteNumber` to override.
+- **Option B — require explicit `siteNumber` (no default).**
+  Forces the caller to know the tenant's site number;
+  reduces silent mis-fetches for the ~5% of tenants that use
+  a non-default. Cost: every Oracle plugin invocation must
+  carry the parameter, increasing config complexity for the
+  common case.
+- **Option C — auto-discover via a probe GET.** Issue a
+  `siteNumber=CX_45001` request first; if it returns
+  `requisitionList[]` empty + `code: 'INVALID_SITE_NUMBER'`,
+  retry with `CX_45002`, etc. up to a small set. Adds
+  latency + magic; rejected as too clever for a default.
+
+**Default:** **A — `CX_45001`** (upstream parity).
+Reasoning:
+- **Empirically dominant.** ≥ 95% coverage of upstream tenant
+  list per the upstream Python team's claim.
+- **Override-able.** `ScraperInputDto.siteNumber` provides the
+  escape hatch (FR-4) for the residual ~5% of tenants.
+- **No probing.** Probe-and-retry would add latency to every
+  Oracle plugin call for the rare-case minority; not worth the
+  cost.
+- **Documented.** The default is documented in
+  `docs/ATS_INTEGRATIONS.md`'s Oracle row (T13) so tenants
+  hitting `INVALID_SITE_NUMBER` know where to look.
+
+**Resolution:** _open — agent default = A. Pinned in Spec 013
+/ FR-4; revisit if telemetry shows ≥ 5% of Oracle plugin calls
+returning `INVALID_SITE_NUMBER` errors at runtime._
+
+---
+
+## Q-029 — Mercor's catalogue-wide input semantics (Spec 013 / FR-7)
+
+**Context:** Unlike every other ATS plugin in the catalogue,
+Mercor's public API
+(`https://aws.api.mercor.com/work/listings-explore-page`) does
+NOT accept a per-company filter. It returns the entire current
+explore-page catalogue (~1 000 listings spanning ~50 distinct
+companies) on every GET. This breaks the catalogue's existing
+`companySlug` contract: every other plugin treats `companySlug`
+as a URL component (subdomain construction or path segment);
+Mercor would have to do something different.
+
+**Options:**
+
+- **Option A — post-filter on `companyName` (case-insensitive
+  substring match).** Single GET, then filter `listings[]`
+  client-side. `companySlug=stripe` matches `companyName:
+  'Stripe Inc.'`. Simple, deterministic. Cost: one GET per
+  call regardless of slug, even if the slug is missing from
+  the catalogue (returns empty `JobResponseDto` after the
+  filter).
+- **Option B — reject calls without `companySlug`.** Forces
+  the caller to provide a slug; behaviour matches every other
+  ATS plugin. Cost: reduces functionality (caller can't ask
+  Mercor for "everything"), and the "everything" is the
+  natural default for an explore-page endpoint.
+- **Option C — empty `companySlug` returns full catalogue;
+  populated `companySlug` post-filters.** Hybrid of A and B.
+  Empty slug → full catalogue capped by `resultsWanted`;
+  populated slug → A's post-filter behaviour.
+
+**Default:** **C — hybrid.** Reasoning:
+- **Mirrors the upstream's natural shape.** The endpoint
+  returns the full catalogue; offering "everything" matches
+  the upstream's design intent.
+- **Preserves slug-driven dispatch.** When the operator does
+  pass a slug, the plugin still narrows results to that
+  company — preserving the existing `JobsService.searchJobs(
+  companySlug)` contract.
+- **Cheap to implement.** One conditional in `MercorService`;
+  no extra HTTP traffic.
+- **Tests pin both paths.** T06's `≥ 5 cases` includes both
+  the full-catalogue path (no slug) and the post-filtered
+  path (slug supplied).
+
+**Resolution:** _open — agent default = C. Pinned in Spec 013
+/ FR-7; revisit if dedup-engine load tests show post-filter
+allocations dominating Mercor's memory footprint (in which
+case Option A's force-slug-required becomes attractive)._
+
+---
+
+## Q-028 — Tesla Playwright dependency strategy (Spec 013 / FR-9..FR-13)
+
+**Context:** Tesla's careers site is fronted by Akamai Bot
+Manager. Pure-HTTP requests (`axios.get('.../cua-api/.../state')`)
+return either a 200-OK JSON body OR a 403 / 503 / Akamai
+HTML challenge body — the latter increases over time as Akamai
+fingerprints the request signatures. Upstream Python defeats
+the challenge with Playwright + a real Chromium session. Adding
+Playwright as a dependency to the default Ever Jobs install
+adds ~280 MB of Chromium binaries + cold-start cost of ~500ms
+to every plugin's module-graph init (lazy `import('playwright')`
+mitigates the latter but not the former).
+
+**Options:**
+
+- **Option A — ship pure-HTTP `source-tesla` by default; lazy
+  Playwright bypass behind opt-in `source-tesla-playwright`
+  companion plugin.** `source-tesla` is registered in
+  `ALL_SOURCE_MODULES` (always on); `source-tesla-playwright`
+  is registered in tsconfig + jest mapper ONLY (compiles +
+  testable but not auto-imported). Operators install the
+  optional dep + flip a config flag to enable Akamai bypass.
+  Default install size unchanged. Cost: pure-HTTP path
+  degrades to empty `JobResponseDto` whenever Akamai
+  challenges fire.
+- **Option B — ship `source-tesla` with Playwright as an
+  always-loaded peer dep.** Akamai bypass works out-of-the-box;
+  every operator gets ~280 MB Chromium. Cold-start NFR-1
+  regresses for the 99% of operators not running Tesla. Cost:
+  install footprint + cold-start overhead borne universally.
+- **Option C — drop Tesla from Spec 013 entirely; replace
+  with another ATS (e.g. SAP SuccessFactors).** Keeps the
+  default install lean; defers Tesla to a later spec where
+  the Playwright cost-benefit can be re-litigated. Cost: AC-6
+  stays open another spec cycle.
+
+**Default:** **A — pure-HTTP default + opt-in Playwright
+companion.**
+Reasoning:
+- **Defensive default.** 99% of operators don't run Tesla.
+  Forcing them to ship 280 MB of Chromium for a plugin they'll
+  never invoke is a footgun.
+- **Lazy `import()` keeps the optional plugin's cold-start
+  cost out of the default module-graph.** When
+  `source-tesla-playwright` IS opted in, the `import('playwright')`
+  call happens at first `scrape()` invocation, not at module
+  load time — cold-start NFR-1 untouched (NFR-6 explicitly
+  marks the optional plugin's cold-start as "unbounded;
+  deferred via lazy `import()`").
+- **Pure-HTTP path is best-effort by design.** FR-12 spells
+  out the contract: Akamai 403 / 503 / HTML body → empty
+  `JobResponseDto` with sentinel
+  `ERR_TESLA_AKAMAI_CHALLENGE`. Operators that NEED Tesla
+  data install the companion plugin. Operators that need
+  best-effort run fine without it.
+- **`peerDependencies: { playwright }` + `optionalDependencies`
+  on `source-tesla-playwright`'s `package.json`.** Standard
+  npm pattern for opt-in deps; root `package.json` does NOT
+  declare `playwright` so the default install lockfile is
+  unchanged.
+- **Spec 014/015 can re-litigate.** If real-world Akamai
+  challenge rate rises above (say) 50% of pure-HTTP calls,
+  flipping the default to "Playwright always-on" becomes
+  attractive — but that decision wants telemetry, not a
+  speculative default at scaffold time.
+
+**Resolution:** _open — agent default = A. Pinned in Spec 013
+/ FR-9..FR-13; revisit when operational telemetry on the pure-HTTP
+path's Akamai-failure rate is available._
+
+---
+
 ## Q-027 — `$` not registered as USD unique-symbol; apostrophe in salary regex (Spec 012 / T04 spillover)
 
 **Context:** Two related gaps surfaced by the Spec 012 / T04
@@ -68,10 +295,14 @@ The substitute T04 cases retain coverage for FR-1 precedence
 (via `€`) and CHF anglo (via comma-thousands), so no
 acceptance bit is dark in the meantime.
 
-**Resolution:** _open — agent default = B. Will be addressed
-either by a dedicated Spec 013 launched after T05 lands, or
-absorbed into the next pending currency-domain spec (whichever
-runs first)._
+**Resolution:** _open — agent default = B. Renumbered from
+"Spec 013" to **Spec 014 candidate** in run #43 — Spec 013 was
+allocated to AC-4..AC-6 (Oracle / Mercor / Tesla) per Q-024
+Option A's "future bundled batch" line and run #42's
+Notes-for-the-next-run pin. Will be addressed either by a
+dedicated Spec 014 launched after Spec 013 closes, or absorbed
+into the next pending currency-domain spec (whichever runs
+first)._
 
 ---
 
@@ -119,15 +350,17 @@ bare-number gap. The literal spec § 8 case waits here.
   fixtures), so dropping coverage here would leave a
   meaningful slice of EU dedup-engine inputs un-canonicalised.
 
-**Default:** **B (bundle into Spec 013)** — same rationale as
+**Default:** **B (bundle into Spec 014)** — same rationale as
 Q-027 (keeps T05 clean; one new spec covers all the deferred
 T04 spillover). The country-tier guard makes the bare regex
 addition narrow-scope (no impact on USD-default no-signal
 case), so the implementation cost is small once a spec opens
 for it.
 
-**Resolution:** _open — agent default = B. Tracked alongside
-Q-027 for Spec 013 inclusion._
+**Resolution:** _open — agent default = B. Renumbered from
+"Spec 013" to **Spec 014 candidate** in run #43 (Spec 013 was
+allocated to AC-4..AC-6 per Q-024). Tracked alongside Q-027
+for Spec 014 inclusion._
 
 ---
 
