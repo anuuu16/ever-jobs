@@ -2,7 +2,7 @@
 
 > A curated list of verified company slugs organized by ATS platform. Use these with the `companySlug` parameter to search jobs at specific companies.
 
-**Last Updated:** 2026-02-23
+**Last Updated:** 2026-04-27
 
 ---
 
@@ -23,7 +23,7 @@ curl -X POST http://localhost:3001/api/jobs/search \
 npm run cli -- search --company-slug stripe --site greenhouse
 ```
 
-When `companySlug` is provided without `siteType`, all 28 ATS scrapers run concurrently and return results from whichever platform the company uses.
+When `companySlug` is provided without `siteType`, all 41 ATS scrapers run concurrently and return results from whichever platform the company uses.
 
 ---
 
@@ -246,6 +246,71 @@ Bullhorn slugs follow the pattern `{cls}:{corpToken}` (found in career portal Ja
 | ------- | ---- | -------- |
 | (Discover from staffing agency career portal source code) | | |
 
+## Avature
+
+Avature slugs are the subdomain used in `<slug>.avature.net` (default-tenant pattern). For custom-domain tenants like `careers.ibm.com`, pass the full URL via `companyUrl` instead of a slug. Slugs sampled from the upstream `OTHERS/Ats-scrapers/avature/avature_companies.csv` reference list.
+
+| Company | Slug | Industry |
+| ------- | ---- | -------- |
+| Bloomberg | `bloomberg` | Financial Data |
+| KPMG Ireland | `kpmgireland` | Professional Services |
+| Deloitte (PNG) | `deloittepng` | Professional Services |
+| Maximus | `maximus` | Government Services |
+| Plante Moran | `plantemoran` | Accounting |
+| NVA (Vet Group) | `nva` | Veterinary |
+| Delta | `delta` | Aviation |
+| One800Flowers | `one800flowers` | Retail / E-commerce |
+| Ally | `ally` | Banking / Finance |
+| Astellas | `astellas` | Pharmaceuticals |
+| Bupa ANZ | `bupaanz` | Healthcare / Insurance |
+| CBRE Global | `cbreglobal` | Real Estate |
+| GPS Hospitality | `gpshospitality` | Restaurants / Franchising |
+| Monadelphous | `monadelphous` | Engineering / Construction |
+| Resource Bank | `resourcebank` | Financial Services |
+
+## Gem
+
+Gem boards are hosted at `jobs.gem.com/<slug>`. Slugs sampled from the upstream `OTHERS/Ats-scrapers/gem/gem_companies.csv` reference list — the corpus skews towards venture-backed and AI-first companies.
+
+| Company | Slug | Industry |
+| ------- | ---- | -------- |
+| Accel | `accel` | Venture Capital |
+| 43North | `43north` | Startup Accelerator |
+| 8020 Consulting | `8020-consulting` | Consulting |
+| A16Z Speedrun | `a16z-speedrun` | Venture Capital |
+| Acre | `acre` | Climate / Sustainability |
+| Agora | `agora` | Real Estate Tech |
+| Airframe | `airframe` | Developer Tools |
+| Alex and Ani | `alex-and-ani` | Retail / Jewelry |
+| 11X AI | `11x-ai` | AI / SaaS |
+| 10X Construction AI | `10xconstruction-ai` | Construction Tech |
+| Aarden AI | `aarden-ai` | AI / Sales |
+| Acely | `acely` | Education Tech |
+| Afterquery | `afterquery` | AI / Data |
+| Agenta AI | `agenta-ai` | LLM Ops |
+
+## Join.com
+
+Join.com career pages live at `join.com/companies/<slug>`. Slugs sampled from the upstream `OTHERS/Ats-scrapers/join_com/join_companies.csv` reference list — the corpus skews towards European (especially DACH) tech and consumer brands.
+
+| Company | Slug | Industry |
+| ------- | ---- | -------- |
+| Awork | `awork` | Productivity / SaaS |
+| Alteos | `alteos` | Insurance Tech |
+| Aitad | `aitad` | AI / Data |
+| Capitalmind | `capitalmind` | Asset Management |
+| Brandcircle | `brandcircle` | Marketing / E-commerce |
+| Cinnamood | `cinnamood` | Food / Hospitality |
+| Brandneo | `brandneo` | Marketing |
+| Brunathelabel | `brunathelabel` | Fashion / Apparel |
+| Allunity | `allunity` | Crypto / DeFi |
+| Citychickennhas490 | `citychickennhas490` | Restaurants / QSR |
+| Caiz | `caiz` | Crypto / Fintech |
+| Cannaleo | `cannaleo` | Cannabis Retail |
+| Big City Beats | `bigcitybeats` | Music / Events |
+| AXSOL | `axsol` | Power / Energy Storage |
+| Career Sancovia | `career-sancovia` | Career Services |
+
 ---
 
 ## Tips for Finding Company Slugs
@@ -270,6 +335,15 @@ Check the career page URL for `icims.com` — look for the company portal identi
 
 ### Phenom
 Check if the company's career site uses `jobs.{company}.com` — Phenom-powered sites have a consistent API pattern.
+
+### Avature
+Check the career page URL for `*.avature.net` (default tenant) — the slug is the leftmost subdomain. For custom-domain tenants (e.g. `careers.ibm.com`), pass the full URL via the `companyUrl` input override; the plugin handles both.
+
+### Gem
+Visit `jobs.gem.com/{slug}` directly. The slug appears in the URL path; multi-word company names use hyphens (e.g. `alex-and-ani`).
+
+### Join.com
+Visit `join.com/companies/{slug}`. The slug is the URL path segment after `/companies/`. The plugin then issues a public-API call to fetch the numeric `companyId` automatically.
 
 ### General Strategy
 1. Go to the company's career page

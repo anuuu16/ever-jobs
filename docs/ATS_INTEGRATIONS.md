@@ -1,6 +1,6 @@
 # ATS Integrations
 
-Ever Jobs integrates directly with **38 applicant tracking systems** that power career pages at thousands of companies worldwide. When a recruiter publishes a new role through any supported ATS, Ever Jobs detects the posting at the source — often hours before it appears on aggregated job boards like LinkedIn or Indeed.
+Ever Jobs integrates directly with **41 applicant tracking systems** that power career pages at thousands of companies worldwide. When a recruiter publishes a new role through any supported ATS, Ever Jobs detects the posting at the source — often hours before it appears on aggregated job boards like LinkedIn or Indeed.
 
 ## How ATS Integration Works
 
@@ -24,7 +24,7 @@ curl -X POST http://localhost:3001/api/jobs/search \
   -d '{"companySlug": "notion"}'
 ```
 
-When `companySlug` is provided without an explicit `siteType`, all 38 ATS scrapers run concurrently. Each one independently checks whether the company exists on its platform and returns results accordingly.
+When `companySlug` is provided without an explicit `siteType`, all 41 ATS scrapers run concurrently. Each one independently checks whether the company exists on its platform and returns results accordingly.
 
 ---
 
@@ -274,6 +274,35 @@ Enterprise talent experience platform powering career sites for 900+ large enter
 - **Auth**: None (public per-company career site)
 - **Data Format**: JSON
 - **Notable Users**: Boeing, Hilton, Nestle, Comcast, Verizon
+
+### Avature
+
+Enterprise-grade talent acquisition and CRM platform for global enterprises. Avature emphasizes flexible workflow configuration and is widely used in financial services, energy, and global staffing. Career portals are reachable both at standard subdomains and at custom-domain tenants (e.g. Bloomberg, IBM).
+
+- **Method**: HTML scrape with cheerio (`*.avature.net/careers/SearchJobs/?jobOffset=N&jobRecordsPerPage=12`)
+- **Auth**: None (public career portal)
+- **Data Format**: HTML — five-cascade selector chain (`article.job` / `div.job-item` / `li.job-listing` / `tr.job` / `div[data-job-id]`) plus an `/JobDetail/`-link fallback
+- **Custom Domains**: Supported via the `companyUrl` input override (e.g. `https://careers.ibm.com`)
+- **Notable Users**: Bloomberg, KPMG (Ireland / NL), Deloitte (PNG), Maximus, Plante Moran, NVA, Delta, One800Flowers
+
+### Gem
+
+Modern recruiting platform combining ATS + CRM, popular with high-growth technology companies and venture-backed startups. Gem boards are hosted at `jobs.gem.com/<companySlug>` with a single batched GraphQL endpoint that returns the entire board in one round-trip.
+
+- **Method**: Single batched GraphQL POST (`https://jobs.gem.com/api/public/graphql/batch`) carrying both `JobBoardTheme` + `JobBoardList` operations
+- **Auth**: None (public board)
+- **Data Format**: JSON — `data.oatsExternalJobPostings.jobPostings[]` per envelope; response-order tolerant (Theme first or List first)
+- **Notable Users**: Accel, Alex and Ani, A16Z Speedrun, 43North, Acre, Agora, Airframe
+
+### Join.com
+
+European-focused recruiting platform with strong adoption in Germany, Austria, and Switzerland. Join.com career pages live at `join.com/companies/<slug>`; the public REST API exposes paginated jobs at 50 per page with optional aggregations.
+
+- **Method**: Two-step REST flow — Step 1: HTML scrape `join.com/companies/<slug>` to regex-extract numeric `companyId` (primary `"company":{"id":N` shape, fallback `"companyId":N` for skinned tenants); Step 2: paginated `GET /api/public/companies/<id>/jobs?locale=en-us&page=N&pageSize=50&withAggregations=true&sort=+title` until `pagination.totalPages` is reached or `items[]` is empty
+- **Auth**: None (public `/api/public` namespace)
+- **Data Format**: JSON with `items[]`, `pagination`, optional aggregations
+- **Polite Pacing**: 0.5 s between paginated calls (matches upstream Python's `time.sleep(0.5)`)
+- **Notable Users**: Awork, Alteos, Aitad, Capitalmind, Brandcircle, Cinnamood, Brandneo, Brunathelabel, Allunity, Citychickennhas490
 
 ---
 

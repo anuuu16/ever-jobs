@@ -434,13 +434,34 @@
          zero pairs).
   - **Estimate:** 0.5 day. **Actual:** ~0.3 day.
 
-- [ ] T11 — Coverage docs update.
-  - **Files:** `docs/ATS_INTEGRATIONS.md`,
+- [x] T11 — Coverage docs update.
+  - **Files (planned):** `docs/ATS_INTEGRATIONS.md`,
     `docs/COMPANY_SLUG_DIRECTORY.md`.
+  - **Files (actual):** matched plan exactly.
   - **Acceptance:** Three new matrix rows; ≥ 10 seed slugs per
     plugin (sampled from upstream `OTHERS/Ats-scrapers/<id>/<id>_companies.csv`).
-    `npm run lint:docs` green.
-  - **Estimate:** 0.25 day.
+    `npm run lint:docs` green. ✅ **Done:** run #34 (2026-04-27).
+    Three new sections under "Supported Platforms" in
+    `ATS_INTEGRATIONS.md` (Avature / Gem / Join.com), each
+    documenting Method, Auth, Data Format, and Notable Users
+    sampled from the upstream CSVs. The intro count bumped
+    from "38 ATSes" → "41 ATSes" in two places.
+    `COMPANY_SLUG_DIRECTORY.md` gains three new tables —
+    Avature (15 slugs), Gem (14 slugs), Join.com (15 slugs)
+    — sourced from `avature_companies.csv` /
+    `gem_companies.csv` / `join_companies.csv` respectively.
+    Slug-only count: Avature = 15, Gem = 14, Join.com = 15
+    (all ≥ 10 mandated). Plus a new "Tips for Finding Company
+    Slugs" subsection per plugin documenting the URL pattern
+    (`<slug>.avature.net` / `jobs.gem.com/<slug>` /
+    `join.com/companies/<slug>`) and the `companyUrl` override
+    for Avature custom-domain tenants. The "Last Updated"
+    footer bumped from `2026-02-23` to `2026-04-27`. The
+    "all 28 ATS scrapers run concurrently" wording bumped to
+    "all 41" to match the integrations doc. Verification:
+    `npx ts-node ... scripts/docs-lint.ts` exits 0 with
+    "✓ Doc-lint passed — no issues."
+  - **Estimate:** 0.25 day. **Actual:** ~0.25 day.
 
 - [ ] T12 — Per-plugin perf bench.
   - **Files:** `packages/plugins/source-ats-avature/__tests__/avature.bench.ts`,

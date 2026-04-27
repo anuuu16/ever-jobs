@@ -5,6 +5,86 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #34 (Spec 006 / Phase 5 — T11: coverage docs update for Avature / Gem / Join.com)
+
+**Scope:** land Spec 006 / Phase 5 / T11 — coverage docs update
+across `docs/ATS_INTEGRATIONS.md` + `docs/COMPANY_SLUG_DIRECTORY.md`.
+Run #33's Notes-for-the-next-run pinned this default ("Spec 006 /
+Phase 5 / T11 — coverage docs update for `docs/ATS_INTEGRATIONS.md`
++ `docs/COMPANY_SLUG_DIRECTORY.md`. Acceptance: ≥ 10 seed slugs
+per plugin sampled from upstream
+`OTHERS/Ats-scrapers/<id>/<id>_companies.csv`").
+
+**No new questions opened this run.**
+
+**Changes — docs:**
+
+- `docs/ATS_INTEGRATIONS.md` — extended ~50 LOC. Three new
+  sections under "Supported Platforms":
+    - **Avature** — HTML scrape + cheerio + custom-domain
+      override; sampled Notable Users from `avature_companies.csv`.
+    - **Gem** — single batched GraphQL POST against
+      `https://jobs.gem.com/api/public/graphql/batch`; Notable
+      Users sampled from `gem_companies.csv` (Accel, Alex and Ani,
+      A16Z Speedrun, 43North, Acre, Agora, Airframe).
+    - **Join.com** — REST two-step flow with regex extraction;
+      polite pacing 0.5 s; Notable Users sampled from
+      `join_companies.csv` (Awork, Alteos, Aitad, Capitalmind,
+      Brandcircle, etc.).
+  Intro count bumped: "38 ATSes" → "41 ATSes" in two places
+  (the headline and the "all N ATS scrapers run concurrently"
+  paragraph).
+- `docs/COMPANY_SLUG_DIRECTORY.md` — extended ~80 LOC. Three
+  new tables — Avature (15 rows), Gem (14 rows), Join.com
+  (15 rows) — all ≥ 10 seed slugs as mandated by T11. Slugs
+  sourced verbatim from the upstream CSVs at
+  `OTHERS/Ats-scrapers/<id>/<id>_companies.csv`. Three new
+  paragraphs under "Tips for Finding Company Slugs"
+  documenting the URL pattern (`<slug>.avature.net` /
+  `jobs.gem.com/<slug>` / `join.com/companies/<slug>`) plus
+  the `companyUrl` override for Avature custom-domain tenants.
+  "Last Updated" footer bumped from `2026-02-23` to
+  `2026-04-27`. The "all 28 ATS scrapers run concurrently"
+  wording bumped to "all 41" to match the integrations doc.
+
+**Changes — specs:**
+
+- `.specify/specs/006-ats-scrapers-parity-batch-1/tasks.md` —
+  T11 graduates from "pending" to "done" with full
+  planned-vs-actual file lists and acceptance verification.
+- `.specify/specs/006-ats-scrapers-parity-batch-1/spec.md` —
+  `Status` → `Phase 1+2+3+4 done (T01..T08 runs #29..#32);
+  Phase 5 / T09+T10 done (run #33); T11 done (run #34);
+  T12+T13 pending`.
+- `docs/index.md` — Spec 006 row + footer bumped to run #34.
+- `CLAUDE.md` — run-tag → #34.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #34 sync line; **no upstream
+  commits** (twenty-two consecutive zero-churn runs).
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean ("✓ Doc-lint passed — no issues.")
+  after this run's edits.
+- No source / test code touched; no need to re-run the unit
+  bundle. CI will validate on push.
+
+**Notes & follow-ups:**
+
+- Default for run #35 is **Spec 006 / Phase 5 / T12** —
+  per-plugin perf benches at
+  `packages/plugins/source-ats-avature/__tests__/avature.bench.ts`,
+  `…/source-ats-gem/__tests__/gem.bench.ts`,
+  `…/source-ats-joincom/__tests__/joincom.bench.ts`. Acceptance:
+  each bench file establishes a baseline against NFR-2 ceilings
+  on the fixture corpus and outputs a JSON line at
+  `dist/bench/<plugin>.json`. T13 (Spec 006 closeout) follows.
+- External research repos: no new commits since run #33.
+  Twenty-two consecutive zero-churn runs.
+- Pre-existing dedup-hybrid red tests unchanged.
+
+---
+
 ## 2026-04-27 — Scheduled run #33 (Spec 006 / Phase 5 — T09 + T10: cross-plugin integration + E2E specs)
 
 **Scope:** land Spec 006 / Phase 5 / T09 + T10 — the live
