@@ -5,6 +5,147 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #47 (Spec 013 / Phase 2 / T04 — Oracle behavioural test sweep landed)
+
+**Scope:** land Spec 013 / Phase 2 / T04 — extend
+`packages/plugins/source-ats-oracle/__tests__/oracle.service.spec.ts`
+from 4 cases (T03 registration smoke) → 10 cases (4 carry-over +
+6 behavioural per the acceptance line). New on-disk fixture
+`__tests__/fixtures/oracle-page-1.json` ships a sanitised five-row
+`eeho-us2` corpus exercising the five `JobPostDto` mapping
+branches. The ≥ 200-job `resultsWanted` corpus is synthesised
+in-test via `buildSyntheticPage(count, startId)` so the fixture
+file stays compact. Same shape as Spec 006 / T04 (Avature
+behavioural sweep, run #31). Estimated 0.5 day per tasks.md;
+landed in a single scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #46's sync). Thirty-first consecutive
+zero-churn run in `OTHERS/`.
+
+**No new questions opened this run.** Q-028..Q-031 stay open
+with their pinned defaults; their resolutions land alongside
+the implementation tasks (T05 / T07 / T09) over the next several
+runs. Q-026 / Q-027 retain their **Spec 014 candidate** label.
+
+**Three load-bearing decisions** were resolved during T04's
+test-authoring pass (full prose in Spec 013 § 10):
+
+1. **`createHttpClient` mocked at the factory boundary, not at
+   the network layer.** Mirrors Spec 006 / T04 (Avature) precedent
+   — `jest.mock('@ever-jobs/common', …)` substitutes a stubbed
+   `createHttpClient` returning an object with mock `get` /
+   `setHeaders`. Keeps the test surface identical across ATS
+   plugins; insulates against a future swap of the underlying
+   client (`undici`, `node:fetch`) inside `@ever-jobs/common`.
+2. **`oracle-page-1.json` ships with five hand-crafted
+   representative requisitions, not 200.** The acceptance line
+   reads "fixture w/ ≥ 200 jobs" but a literal 200-row JSON
+   would bloat the package by ~80 KB and obscure the five mapping
+   branches we actually need to pin. Decision: ship a five-row
+   sanitised corpus for shape assertions, and synthesise the
+   200-row corpus in-test via `buildSyntheticPage(count,
+   startId)` for the cap exercise. Same rationale that drives
+   table-driven tests over file-driven tests when rows are
+   homogeneous.
+3. **Fixture `ExternalUrl` uses the reserved `.example` TLD
+   (RFC 2606).** Makes it unambiguous that this is fixture data;
+   if the URL ever leaks into production logs or analytics, it's
+   instantly identifiable as a sanitised value. The
+   `ExternalUrlSeo` slug path is more common in real Oracle
+   tenants, so the test covers the rare-but-real `ExternalUrl`
+   override branch with a URL that can never collide with a live
+   tenant's domain.
+
+**Changes — source / test:**
+
+- `packages/plugins/source-ats-oracle/__tests__/fixtures/oracle-page-1.json`
+  — NEW. ~50 LOC. Sanitised `eeho-us2` corpus with five
+  representative requisitions: (1) standard hire with
+  PrimaryLocation+EmployerName, (2) explicit remote
+  PrimaryLocation, (3) `ExternalUrl` override, (4)
+  `ExternalUrlSeo` slug for jobUrl composition, (5) missing
+  EmployerName falling back to `tenant.companyName`. JSON
+  envelope shape matches the upstream Python's `search_jobs()`
+  response (`items[0].requisitionList[]`).
+- `packages/plugins/source-ats-oracle/__tests__/oracle.service.spec.ts`
+  — REWRITTEN from 4 cases (T03 registration smoke) → 10 cases.
+  Mock helper `buildSyntheticPage(count, startId)` synthesises
+  homogeneous corpus pages for the cap test. Behavioural cases:
+  happy path (5-row fixture → 5 JobPostDto rows with field-level
+  mapping assertions, including remote detection on row 2,
+  `ExternalUrl` override on row 3, EmployerName-fallback on row
+  5), empty `requisitionList[]` (single GET, no further
+  pagination), HTTP 500 (caught, returns empty), `resultsWanted`
+  cap (200-job synthetic corpus, cap=5, mockGet called once),
+  `companyUrl` override (custom-tenant URL used verbatim, default
+  `siteNumber=CX_45001` appears in finder string), custom
+  `siteNumber` override (`CX_99999` appears verbatim, replaces
+  default; first-page `offset=` absent per upstream Python
+  conditional-append).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  T04 row flipped from `[ ]` to `[x]` with "Landed run #47"
+  annotation + actual-files line; Notes-for-the-next-run pinned
+  default updated to **Spec 013 / Phase 3 / T05** (Mercor
+  service single-GET path).
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  Status flipped from "T03 landed run #46; T04..T15 pending" to
+  "Phase 2 done (T01..T04 runs #44..#47); T05..T15 pending";
+  Last-updated bumped to run #47; new entry appended to § 10
+  Decisions covering the three load-bearing test-authoring
+  choices.
+- `docs/index.md` — Spec 013 row status updated to match
+  spec.md; footer bumped to run #47.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #47.
+- `/competitor-watch.md` — run #47 sync line appended at top
+  of Sync Log; AC-4 row prefix updated to "Spec 013 / Phase 2
+  done (T01..T04 runs #44..#47); T05..T15 pending"; AC-5 / AC-6
+  prefixes unchanged (Phase 3 / 4 — Mercor + Tesla — still
+  pending).
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean.
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` —
+  clean (CI's typecheck path).
+- `npx jest --testPathPatterns 'packages/plugins/source-ats-oracle'`
+  — 10 cases pass, 0 failures.
+
+**Notes & follow-ups:**
+
+- **Default for run #48** = Spec 013 / Phase 3 / T05 — implement
+  `MercorService.scrape(input)` against the
+  `/work/listings-explore-page` single-GET endpoint. Files:
+  `packages/plugins/source-ats-mercor/src/mercor.service.ts`
+  plus new `mercor.types.ts` and `mercor.constants.ts`. Honour
+  the literal `Authorization: Bearer` empty-token header per
+  upstream Python; client-side post-filter on `companyName`
+  (lower-cased substring match) when `companySlug` supplied;
+  `resultsWanted` cap applied AFTER the post-filter. Sentinel
+  codes `ERR_MERCOR_HTTP_FAILURE` / `ERR_MERCOR_BAD_PAYLOAD`
+  recorded via `Logger.warn`. Estimated 0.5 day.
+- **Out-of-scope reminders for run #48:** Stay strictly inside
+  `packages/plugins/source-ats-mercor/src/`. Do NOT touch
+  Oracle's service / constants / types — those settled in run
+  #46. Do NOT touch the Oracle test suite — it settled in this
+  run. Do NOT add Mercor unit tests yet — those land in T06
+  (mirrors the T03 → T04 split for Oracle, run #46 → run #47).
+- **Active backlog after Spec 013 closes:** Spec 014
+  candidates = Q-026/Q-027 salary residuals OR AC-8
+  (seed-companies refresh) OR AC-9 (Workable diff). Pick at
+  Spec 013 / T15 closeout based on upstream signal.
+- Specs **004 / 005 / 006 / 012** stay complete as of this
+  run; **001 / 003** retain their statuses unchanged. Spec
+  **013** advances from "T03 landed; T04..T15 pending" to
+  "Phase 2 done (T01..T04 runs #44..#47); T05..T15 pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #46 (Spec 013 / Phase 2 / T03 — Oracle service landed)
 
 **Scope:** land Spec 013 / Phase 2 / T03 —

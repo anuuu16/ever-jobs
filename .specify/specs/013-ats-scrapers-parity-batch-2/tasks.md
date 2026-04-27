@@ -75,16 +75,26 @@
       `ERR_ORACLE_BAD_TENANT` / `ERR_ORACLE_FINDER_REJECTED` recorded.
   - **Estimate:** 0.5 day.
 
-- [ ] T04 — Oracle unit tests (≥ 6 cases).
+- [x] T04 — Oracle unit tests (≥ 6 cases).
+  **Landed run #47.**
   - **Files (planned):** `packages/plugins/source-ats-oracle/__tests__/oracle.service.spec.ts`
     (extend), `…/__tests__/fixtures/oracle-page-1.json`.
+  - **Files (actual):** matched plan exactly. The spec file grew
+    from 4 cases (T03 registration smoke) → 10 cases (4 carry-over
+    + 6 behavioural). Fixture is a sanitised five-requisition
+    `eeho-us2` corpus exercising the five mapping branches
+    (PrimaryLocation/EmployerName, remote, `ExternalUrl`,
+    `ExternalUrlSeo`, EmployerName-fallback). The ≥ 200-job
+    `resultsWanted` corpus is synthesised in-test via
+    `buildSyntheticPage()` so the on-disk fixture stays small.
   - **Acceptance:**
     - Cases: happy path, empty `requisitionList[]`, HTTP 500,
       `resultsWanted` cap (fixture w/ ≥ 200 jobs), `companyUrl`
       override (custom-tenant URL), custom `siteNumber` override.
     - Fixture sourced from Oracle's own careers site (sanitised
       `eeho-us2` corpus).
-  - **Estimate:** 0.5 day.
+  - **Estimate:** 0.5 day. **Actual:** ~0.3 day (matches Spec 006 /
+    T04 actual at run #31).
 
 ## Phase 3 — Mercor
 
@@ -275,16 +285,27 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #47** = Spec 013 / Phase 2 / T04 — extend
-  `__tests__/oracle.service.spec.ts` to ≥ 6 cases (happy path /
-  empty `requisitionList[]` / HTTP 500 / `resultsWanted` cap /
-  `companyUrl` override / custom `siteNumber`) plus
-  `__tests__/fixtures/oracle-page-1.json` (sanitised `eeho-us2`
-  corpus, ≥ 200 jobs to exercise the cap). The shape of the tests
-  mirrors `packages/plugins/source-ats-avature/__tests__/avature.service.spec.ts`
-  — `axios`-mocked happy-path / empty / 500 / cap, plus Oracle-only
-  cases for `companyUrl` and `siteNumber` overrides. Estimated 0.5
-  day.
+- **Default for run #48** = Spec 013 / Phase 3 / T05 —
+  `MercorService.scrape(input)` single GET path against
+  `https://aws.api.mercor.com/work/listings-explore-page`. Implement
+  in `packages/plugins/source-ats-mercor/src/mercor.service.ts`
+  (alongside `mercor.types.ts` and `mercor.constants.ts`). Honour
+  the literal `Authorization: Bearer` empty-token header per
+  upstream Python; client-side post-filter on `companyName`
+  (lower-cased substring match) when `companySlug` supplied.
+  `resultsWanted` cap applied AFTER the post-filter. Errors caught
+  → empty `JobResponseDto`; sentinel codes
+  `ERR_MERCOR_HTTP_FAILURE` / `ERR_MERCOR_BAD_PAYLOAD` recorded
+  via `Logger.warn`. Same shape as Spec 013 / T03 (Oracle service,
+  run #46) — single-GET variant rather than paginated. Estimated
+  0.5 day.
+- **Default for run #47 (DONE — landed run #47)** = Spec 013 /
+  Phase 2 / T04 — Oracle behavioural unit-test sweep. Spec file
+  grew from 4 → 10 cases; `__tests__/fixtures/oracle-page-1.json`
+  shipped (sanitised `eeho-us2` 5-row corpus + in-test
+  `buildSyntheticPage()` for the ≥ 200-job `resultsWanted` cap
+  exercise). `axios` factory mocked at `@ever-jobs/common.createHttpClient`
+  per the Avature pattern.
 - **Default for run #46 (DONE — landed run #46)** = Spec 013 /
   Phase 2 / T03 — `OracleService.scrape(input)` REST + finder-string
   path. Real `oracle.service.ts` + `oracle.types.ts` +

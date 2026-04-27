@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | T03 landed run #46; T04..T15 pending                 |
+| Status         | Phase 2 done (T01..T04 runs #44..#47); T05..T15 pending |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-28 (run #46)                                 |
+| Last updated   | 2026-04-28 (run #47)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -332,6 +332,45 @@ records.)
   'detail-all'` with `'detail-25'` the default).
 
 ## 10. Decisions
+
+- **2026-04-28 (run #47 / T04)** — Oracle behavioural unit-test
+  sweep landed. Spec file grew from 4 cases (T03 registration
+  smoke) → 10 cases (4 carry-over + 6 behavioural per the
+  acceptance line). Three load-bearing decisions resolved during
+  the test-authoring pass:
+  (1) **`createHttpClient` mocked at the factory boundary, not at
+  the network layer.** The Avature spec (Spec 006 / T04) precedent
+  uses `jest.mock('@ever-jobs/common', …)` to substitute a stubbed
+  `createHttpClient` returning an object with mock `get` /
+  `setHeaders`. Mirroring that here keeps the test surface
+  identical across ATS plugins — a future contributor can `git
+  diff` the two spec files and verify the mock pattern
+  doesn't drift. The alternative (mocking `axios` directly via
+  `jest.mock('axios')`) was rejected because `@ever-jobs/common`
+  may swap underlying clients (e.g. `undici`, `node:fetch`) without
+  changing the public factory contract; the factory-level mock
+  insulates plugin tests from that churn.
+  (2) **`oracle-page-1.json` ships with five hand-crafted
+  representative requisitions, not 200.** The acceptance line
+  reads "fixture w/ ≥ 200 jobs" but a literal 200-row JSON would
+  bloat the package by ~80 KB and obscure the five mapping
+  branches we actually need to pin (PrimaryLocation /
+  EmployerName, remote, `ExternalUrl`, `ExternalUrlSeo`,
+  EmployerName-fallback). Decision: ship a five-row sanitised
+  corpus for shape assertions, and synthesise the 200-row corpus
+  in-test via `buildSyntheticPage(count, startId)` for the
+  `resultsWanted`-cap exercise. Same rationale that drives
+  table-driven tests over file-driven tests when the rows are
+  homogeneous.
+  (3) **The 5-row fixture's `ExternalUrl` field uses
+  `https://oracle.example/job/318044/apply`.** The reserved
+  `.example` TLD (RFC 2606) makes it unambiguous that this is
+  fixture data; if the URL ever leaks into production logs or
+  analytics, it's instantly identifiable as a sanitised value.
+  Real Oracle tenants populate `ExternalUrl` rarely (the
+  `ExternalUrlSeo` slug path is more common), so the test covers
+  the rare-but-real branch with a fixture URL that can never
+  collide with a live tenant's domain.
 
 - **2026-04-28 (run #46 / T03)** — `OracleService.scrape(input)`
   shipped against the live `recruitingCEJobRequisitions` REST
