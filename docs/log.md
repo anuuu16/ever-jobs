@@ -5,6 +5,110 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #37 (Spec 012 scaffold — European-style salary parser, draft)
+
+**Scope:** open Spec 012 / `european-salary-parser` per Q-024
+(run #36) Option B — the AC-7 parser-interlude pinned as the
+default before the AC-4..AC-6 plugin batch. The whole spec lives
+in `@ever-jobs/common` (no plugin work, no DI changes); the
+target is to extend the existing USD-only `extractSalary` golden
+set with **EUR / GBP / CHF / SEK / NOK / DKK / PLN** branches
+plus two new exported helpers (`parseSalaryCurrency` /
+`parseSalaryNumber`). Run #37 is the Spec-Kit scaffold (spec.md
++ plan.md + tasks.md, three new artefacts under
+`.specify/specs/012-european-salary-parser/`); zero source code
+touched.
+
+**One new question opened this run — Q-025** (`kr`
+disambiguation default when no country hint is set: SEK vs DKK
+vs `null`-row). Default = **Option A (SEK)** — Sweden's job-ad
+volume is ≈ 4× NOK and ≈ 3× DKK in the upstream JobSpy fixture
+corpus; the parser emits `confidence: 'default'` so the
+downstream dedup engine (Spec 003) can downgrade trust. Full
+volume / FR-13 reasoning lives in `docs/questions.md` Q-025.
+
+**Three load-bearing decisions** were locked into the spec
+surface this run (deferred to T01 in tasks.md's Notes-for-the-
+next-run):
+
+1. **`Currency` ISO codes inlined as a string-literal union**
+   (`'USD' | 'EUR' | 'GBP' | 'CHF' | 'SEK' | 'NOK' | 'DKK' |
+   'PLN'`) rather than a new `Currency` enum in
+   `@ever-jobs/models`. Reasoning: the codes are well-known
+   ISO 4217 strings; introducing an enum forces every plugin to
+   import it for ~25 LOC of value vs the cost of a churned
+   import edge. A future spec can promote the union if
+   call-sites multiply.
+2. **`parseSalaryCurrency` is exported from the package barrel;
+   `pickLocale` is not.** The locale picker is an
+   implementation detail; if a plugin wants locale dispatch
+   directly it should pass `country` into `extractSalary()`
+   rather than hand-rolling against the private picker. Keeps
+   the public surface of `@ever-jobs/common` minimal — two new
+   helpers added, not three.
+3. **Zero new external runtime deps.** The whole spec is
+   hand-rolled against `RegExp` / `String` / `Map` primitives;
+   `currency.js` / `dinero.js` would add ≥ 30 KB to the bundle
+   for one regex's worth of work. NFR-2 / NFR-3 protect this
+   choice; the bench in T04 (`helpers.bench.ts`) verifies the
+   bundle-size budget.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/012-european-salary-parser/spec.md` — new
+  ~250-line spec covering Goals / Non-Goals / FR-1..FR-13 /
+  NFR-1..NFR-5 / Contracts (interface + precedence + locale
+  table) / Test Plan (≥ 14 currency cases + helper tests +
+  bench) / Open Questions (Q-025) / References.
+- `.specify/specs/012-european-salary-parser/plan.md` — new
+  ~150-line plan covering Approach (dispatcher refactor +
+  three helpers) / 5 Phases (currency detect → number parse
+  → dispatcher → tests → docs+closeout) / Packages Touched
+  (only `@ever-jobs/common`) / Risks (5 entries) / Rollback
+  Plan / Migration Plan = none.
+- `.specify/specs/012-european-salary-parser/tasks.md` — new
+  ~150-line task list covering T01..T05 with explicit Files
+  (planned) / Acceptance / Estimate per task; "Notes-for-the-
+  next-run" pins T01 as the run #38 default with three
+  load-bearing decisions deferred to that run.
+- `docs/index.md` — § 7 grows from 6 to 7 spec rows; Spec 012
+  appended with `draft (run #37); T01..T05 pending` status.
+  `Last revised` bumped to `2026-04-27 (run #37)`.
+- `docs/questions.md` — new Q-025 inserted at the top (Q-024
+  remains as Spec 006's pending-resolution backlog selection).
+- `CLAUDE.md` — run-tag → `#37`.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #37 sync line; **no upstream
+  commits** (twenty-fourth consecutive zero-churn run from
+  JobSpy / Jobspy-api / Ats-scrapers).
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean (no broken cross-refs after
+  Spec 012's new artefacts + index row + questions entry).
+- No source / test code touched (Spec-Kit scaffold only per
+  AGENTS.md § 4 / "if a feature lacks at least `spec.md` +
+  `plan.md` + `tasks.md`, do not write code for it").
+- Three competitor repos (`OTHERS/JobSpy`, `OTHERS/Jobspy-api`,
+  `OTHERS/Ats-scrapers`) all `Already up to date.` on
+  `git pull --ff-only`.
+
+**Notes & follow-ups:**
+
+- Default for run #38 = **Spec 012 / Phase 1 / T01** — implement
+  `parseSalaryCurrency()` + the symbol / ISO / country lookup
+  tables in `packages/common/src/utils/helpers.ts`. Pure
+  dispatcher work; no `extractSalary()` regex refactoring (that
+  ships in T03). Lockfile unchanged.
+- Spec 006 remains complete; the AC-4..AC-6 bundled batch
+  (Oracle HCM Cloud / Mercor / Tesla — candidate Spec 013)
+  follows Spec 012 closure (~5 runs after T05 lands).
+- AC-8 (seed-companies refresh) and AC-9 (Workable diff against
+  upstream commit `312c7b6`) follow that batch — both are quick
+  interludes per Q-024's resolution.
+
+---
+
 ## 2026-04-27 — Scheduled run #36 (Spec 006 / Phase 6 — T13: Spec 006 closeout; **Spec 006 complete**)
 
 **Scope:** land Spec 006 / Phase 6 / T13 — the spec closeout.

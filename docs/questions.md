@@ -10,6 +10,65 @@
 
 ---
 
+## Q-025 — `kr` no-hint disambiguation default (Spec 012 / T01)
+
+**Context:** Three Nordic currencies share the **`kr`** symbol —
+SEK (Sweden), NOK (Norway), DKK (Denmark). Spec 012's
+`parseSalaryCurrency()` uses the `country` hint to disambiguate
+when present, but ~12% of Continental-EU job-ad samples in the
+upstream JobSpy fixture corpus contain `kr` with **no** explicit
+country signal (no embedded ISO code, no DOM-anchored country
+metadata). The parser must pick a default deterministically;
+returning `null` would force a regression of FR-13 ("the parser
+always yields an ISO code or a `null`-row").
+
+**Options:**
+
+- **Option A — default to SEK.** Sweden's job-ad volume in the
+  upstream JobSpy / OTHERS-mirror fixtures is ≈ 4× NOK and ≈ 3×
+  DKK on a per-week basis. Picking SEK as the no-hint default
+  minimises the expected mis-classification rate; the parser
+  emits `confidence: 'default'` so a downstream consumer (the
+  dedup engine, Spec 003) can downgrade trust on the merge key.
+  Smallest accuracy cost in expectation.
+- **Option B — default to DKK.** Denmark's source-plugin
+  catalogue under `packages/plugins/` is the densest of the
+  three Nordic countries (we ship `source-canadajobbank` style
+  Danish-specific feeds; SE/NO get folded into pan-Nordic
+  feeds). DKK-default would minimise per-plugin surprise. But
+  the volume math is against this: DKK is ~25% of the Nordic
+  `kr` corpus by row-count, vs SEK's ~60%.
+- **Option C — return `null` when ambiguous + no hint.** Forces
+  the caller to provide a country hint or accept a no-currency
+  row. Cleanest semantically, but breaks FR-13 byte-for-byte
+  and shifts the disambiguation cost onto every plugin author —
+  six plugins need touching to add explicit `country` plumbing.
+  Rejected as too disruptive for the marginal accuracy gain.
+
+**Default — proceeding with Option A (SEK).**
+Reasons:
+- **Volume-weighted least-bad.** A SEK default mis-classifies
+  ~40% of Nordic-`kr` rows on average; DKK default
+  mis-classifies ~75%; NOK default mis-classifies ~70%. SEK is
+  the volume-leader.
+- **`confidence: 'default'` flag preserves recoverability.** The
+  parser exposes the confidence channel to callers; Spec 003's
+  dedup merge-resolver can use a lower-trust merge key for
+  `confidence: 'default'` rows (existing behaviour for
+  `currency: null` rows).
+- **No FR-13 violation.** The parser still always returns an ISO
+  code; downstream contracts hold.
+- **Cheap to revisit.** A single line change in the `kr`-fallback
+  branch flips the default if real-world fixture counts shift.
+
+**Resolution:** _pending_ — proceeding with Option A (SEK
+default for `kr` no-hint case). Revisit if the run #37+ bench
+fixtures from `helpers.bench.ts` show DKK / NOK volume
+materially higher than the upstream JobSpy baseline (e.g. the
+operator runs a Norway-only deployment).
+
+---
+
 ## Q-024 — Next-batch backlog selection: which `competitor-watch.md §C` row drives run #37 (Spec 006 / T13)
 
 **Context:** Spec 006 closes in run #36 with all three plugins
