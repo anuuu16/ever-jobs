@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 004                                                  |
 | Slug           | persistence-storage-plugins                          |
-| Status         | Phases 1–4 done (T01–T10); Phase 5 in progress (T11 done, T12 pending) |
+| Status         | Phases 1–5 done (T01–T12); spec complete             |
 | Owner          | scheduled-task agent                                 |
 | Created        | 2026-04-26                                           |
-| Last updated   | 2026-04-27 (run #25)                                 |
+| Last updated   | 2026-04-27 (run #26)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001, 003, 005                                        |
 

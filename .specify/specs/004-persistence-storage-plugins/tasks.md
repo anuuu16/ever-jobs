@@ -773,10 +773,71 @@
     push validates the full unit + integration bundle.
   - **Estimate:** 0.5 day. **Actual:** ~0.5 day.
 
-- [ ] T12 — `EVER_JOBS_STORE` env-var honoured at bootstrap.
-  - **Files:** `apps/api/src/app.module.ts`.
+- [x] T12 — `EVER_JOBS_STORE` env-var honoured at bootstrap.
+  - **Files (planned):** `apps/api/src/app.module.ts`.
+  - **Files (actual):** `apps/api/src/jobs/store-bootstrap.factory.ts`
+    (~140 LOC; new — pure resolver from env-var → `{ id, backendClass }`
+    with fail-fast on unknown id, exports
+    `EVER_JOBS_STORE_ENV_VAR` / `DEFAULT_STORE_ID` / `KNOWN_STORE_IDS`
+    / `KnownStoreId` / `ResolvedStoreBootstrap` /
+    `resolveStoreBootstrap`),
+    `apps/api/src/app.module.ts` (~25 LOC delta;
+    `import { StoreModule } from '@ever-jobs/plugin'` +
+    `import { resolveStoreBootstrap } from './jobs/store-bootstrap.factory'`,
+    `const ACTIVE_STORE = resolveStoreBootstrap();` at module-eval
+    time, `StoreModule.forActive(ACTIVE_STORE.id, { backends:
+    [ACTIVE_STORE.backendClass] })` slotted between `HealthModule`
+    and `JobsModule` — keeps the global module's `JOB_STORE_TOKEN`
+    binding visible to `JobsAggregator`'s
+    `@Optional() @Inject(JOB_STORE_TOKEN)` slot from T11),
+    `apps/api/src/jobs/__tests__/store-bootstrap.factory.spec.ts`
+    (~190 LOC; new — **18 cases** across 6 describe-blocks: constants,
+    happy-path-each-known-id, default-fallback (3 cases), unknown-id-error
+    (3 cases), case-sensitivity rejection (7 cases via `it.each`),
+    purity (2 cases), returned-class-identity), `docs/questions.md`
+    (Q-019 — default backend-fleet shape, three options, default =
+    Option C).
   - **Acceptance:** Bootstrap fails fast with `ERR_STORE_NOT_FOUND` on bad value.
-  - **Estimate:** 0.25 day.
+    **Done:** run #26 (2026-04-27). One new question opened this run —
+    **Q-019** (eager-all vs lightweight-default vs lazy-resolve) —
+    resolved with **Option C** (lazy resolve by id).
+    Three load-bearing decisions weren't called out in `tasks.md` and
+    were locked into the source/test surface (per Q-019):
+      1. **Lazy resolve, not eager-all.** Reading `EVER_JOBS_STORE`
+         once at module-eval time and selecting **one** backend class
+         keeps cold-start cost proportional to the active backend
+         (NFR-4 budgets 750 ms; eager-all would pay for
+         `better-sqlite3` native bindings even in `memory` mode).
+         The trade-off is that `StoreRegistry.listIds()` returns
+         `[<active>]` only — a future admin endpoint that wants
+         "what backends does this build know about?" can read
+         `KNOWN_STORE_IDS` directly (it's exported from
+         `store-bootstrap.factory.ts` for exactly that reason).
+      2. **Trim, don't case-fold.** The env-var is `.trim()`ed before
+         lookup (Helm-chart copy-paste UX) but case-sensitivity is
+         preserved — `MEMORY` / `Memory` / `Postgres` are rejected.
+         Silently lower-casing would mask a real config drift where
+         the operator intended a custom backend (case-sensitivity is
+         the registry's contract per T03).
+      3. **Default = `memory`, NOT throw-on-unset.** Spec 004 §10's
+         "in-memory store always available for tests" decision is
+         honoured by the bootstrap path itself — every existing test
+         that doesn't set `EVER_JOBS_STORE` keeps working without
+         needing a `process.env.EVER_JOBS_STORE = 'memory'` shim.
+         Operators who want a hard fail-on-unset can enforce it at
+         their orchestration layer (Kubernetes `valueFrom`,
+         systemd `EnvironmentFile`); making the bootstrap itself
+         strict would have broken every existing test fixture in the
+         repo.
+    Verification: 18 / 18 new cases lock the resolution logic.
+    Tests cannot run in this sandbox (no `node_modules` — pattern
+    from runs #21–#25); CI on push validates the full unit +
+    integration bundle. Spec 004 graduates from "Phases 1–4 done
+    (T01–T10); Phase 5 in progress (T11 done, T12 pending)" to
+    "Phases 1–5 done (T01–T12); spec complete".
+  - **Estimate:** 0.25 day. **Actual:** ~0.5 day (added Q-019 +
+    factory + 18 unit cases; `app.module.ts` edit itself was a
+    one-line addition above `JobsModule`).
 
 ## Notes
 

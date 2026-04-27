@@ -10,6 +10,113 @@
 
 ---
 
+## Q-019 — Default backend-fleet shape for `EVER_JOBS_STORE` bootstrap (Spec 004 / T12)
+
+**Context:** T12's acceptance is exactly two lines — "Bootstrap fails
+fast with `ERR_STORE_NOT_FOUND` on bad value" and "`apps/api/src/app.module.ts`".
+The mechanical part is one `StoreModule.forActive(...)` import; the
+load-bearing question is **which `@StorePlugin`-decorated classes
+populate the `backends:` array by default**. Three classes exist
+(`InMemoryJobStore`, `SqliteDrizzleJobStore`, `PostgresPrismaJobStore`),
+each with different operational pre-conditions:
+
+1. **`InMemoryJobStore`.** Zero deps, zero config — instantiating it
+   costs nothing.
+2. **`SqliteDrizzleJobStore`.** `@Optional()` config; defaults
+   `databaseUrl` to `:memory:` (test-friendly). Pulls `better-sqlite3`
+   native bindings at import time — irrelevant on developer machines
+   but adds ~80–120 ms cold-start on bare-metal Linux.
+3. **`PostgresPrismaJobStore`.** `@Optional()` config; **fails fast**
+   in the constructor when `STORE_POSTGRES_PRISMA_CONFIG` is unbound
+   (no `client`). Including it in `backends` for a deployment that
+   selects `EVER_JOBS_STORE=memory` is safe — Nest only constructs
+   what `forActive` selects, but our `StoreModule.forActive` factory
+   instantiates **every** declared backend (registry-listing
+   contract). So including `PostgresPrismaJobStore` without binding
+   `STORE_POSTGRES_PRISMA_CONFIG` would break boot for `memory` /
+   `sqlite` deployments too.
+
+The deeper question: should the API's bootstrap know about every
+`@StorePlugin` class statically, or should it instantiate **only**
+the backend matching the requested id ("pay-for-what-you-use" mode)?
+
+**Options:**
+
+- **Option A — Eager all-three list.** Hard-code `backends:
+  [InMemoryJobStore, SqliteDrizzleJobStore, PostgresPrismaJobStore]`
+  in `app.module.ts`. Pros: simplest mental model; the registry's
+  `listIds()` always returns all three so a future
+  `GET /api/storage/backends` admin endpoint sees every option. Cons:
+  every API boot pays the `better-sqlite3` native-binding load AND
+  fails fast on missing `STORE_POSTGRES_PRISMA_CONFIG` — i.e. nobody
+  can run `EVER_JOBS_STORE=memory` without first wiring a Prisma
+  client. Operationally hostile for the "I just want to try it"
+  developer flow.
+
+- **Option B — Lightweight default fleet (memory + sqlite-drizzle).**
+  Hard-code `backends: [InMemoryJobStore, SqliteDrizzleJobStore]` in
+  `app.module.ts`; ship `PostgresPrismaJobStore` as opt-in via
+  explicit module import (operator wires `STORE_POSTGRES_PRISMA_CONFIG`
+  + adds `PostgresPrismaJobStore` to the `backends` list themselves
+  in their fork / config). Pros: zero-config local dev works for
+  `memory` AND `sqlite`; postgres opt-in is loud (operator
+  consciously enables it). Cons: setting `EVER_JOBS_STORE=postgres`
+  with the stock build raises `ERR_STORE_NOT_FOUND` even though the
+  plugin EXISTS in the repo — operator has to read docs to learn the
+  opt-in shape.
+
+- **Option C — Lazy resolve by env id ("pay-for-what-you-use").**
+  Read `EVER_JOBS_STORE` synchronously at module-evaluation time;
+  switch on the id to pick the **single** backend class to pass to
+  `StoreModule.forActive`. Unknown id → throw structured error
+  (`ERR_STORE_NOT_FOUND`) before NestJS construction with a message
+  listing the **known** ids (`memory`, `sqlite`, `postgres`). Pros:
+  zero `better-sqlite3` cost when running `memory`; zero
+  `prisma` constructor cost when running `memory` or `sqlite`; the
+  error message names the three known ids exactly so an operator
+  setting `EVER_JOBS_STORE=mongo` learns "did you mean memory /
+  sqlite / postgres?" without combing docs. Postgres still opts in
+  via `STORE_POSTGRES_PRISMA_CONFIG` (the existing fail-fast in the
+  service constructor catches missing config). Cons: the registry's
+  `listIds()` returns `[<active>]` only, so a future admin endpoint
+  that wants "what backends are wired in this build?" needs a
+  separate code path. (The existing `StoreRegistry.listIds()` is
+  per-module — a future admin spec can add a static
+  `KNOWN_STORE_IDS` constant to `apps/api` for this; not blocking.)
+
+**Default — proceeding with Option C (run #26).** Reasons:
+- **Lowest cold-start in every deployment shape.** NFR-4 budgets
+  cold-start at 750 ms and Option C is the only option that keeps
+  the per-id overhead proportional. Eager-all (Option A) pays for
+  every backend on every boot; lightweight (Option B) pays for
+  `better-sqlite3` even in pure-memory mode.
+- **Best operator UX for unknown id.** The bootstrap factory raises
+  `ERR_STORE_NOT_FOUND` with a message naming `memory / sqlite /
+  postgres` literally — the same set the operator is trying to
+  pick from. Both Option A and Option B emit the registry's
+  generic `Registered ids: [...]` — semantically equivalent but less
+  helpful when the operator's typo is `postres` (close to
+  `postgres`).
+- **Postgres opt-in is by *config*, not by *code*.** `EVER_JOBS_STORE=postgres`
+  in Option C still selects `PostgresPrismaJobStore` from the
+  built-in fleet — the operator just needs to additionally bind
+  `STORE_POSTGRES_PRISMA_CONFIG` (an explicit wire-up step they'd
+  do anyway in production). The stock build supports all three ids
+  out of the box with config.
+- **Future admin endpoint is unblocked.** A separate spec can add
+  a `KNOWN_STORE_IDS = ['memory', 'sqlite', 'postgres'] as const`
+  constant to `apps/api/src/jobs/store-bootstrap.factory.ts` so
+  `GET /api/storage/backends` lists every available id (not just
+  the active one).
+
+**Resolution:** _pending_ — proceeding with Option C. Revisit if the
+"lazy resolve = registry only sees active" trade-off bites a future
+admin / observability feature, at which point an
+`AppStoreModule.forActiveWithRegistry(...)` variant could fan out
+metadata-only registration without instantiation.
+
+---
+
 ## Q-018 — Aggregator persistence wiring: opt-in vs opt-out, error policy, observation-store coupling, AggregateResult shape (Spec 004 / T11)
 
 **Context:** T11's acceptance is two lines — "Default behaviour

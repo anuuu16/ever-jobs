@@ -5,6 +5,201 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #26 (Spec 004 Phase 5 — T12: `EVER_JOBS_STORE` env-var honoured at bootstrap; **Spec 004 complete**)
+
+**Scope:** land Spec 004 / Phase 5 / T12 — read `EVER_JOBS_STORE`
+synchronously at module-evaluation time in `apps/api/src/app.module.ts`,
+resolve to one of three known backend classes
+(`InMemoryJobStore` / `SqliteDrizzleJobStore` /
+`PostgresPrismaJobStore`), and wire `StoreModule.forActive(...)`
+between `HealthModule` and `JobsModule` so `JobsAggregator`'s
+`@Optional() @Inject(JOB_STORE_TOKEN)` slot from T11 picks up the
+bound provider rather than `undefined`. Run #25's
+Notes-for-the-next-run set the default to "Spec 004 / Phase 5 / T12
+plus a Q-019 on the default backend-fleet shape" and "memory only by
+default, others opt-in via env / explicit module import"; the
+deviation here is going one step further with **Option C — lazy
+resolve by id** (vs Option B — lightweight default fleet). Rationale
+below.
+
+**One new question opened this run — Q-019** (default backend-fleet
+shape: eager-all vs lightweight-default vs lazy-resolve-by-id).
+Three options enumerated, default = **Option C** (lazy resolve).
+Pivot from run #25's "memory only by default" hint to Option C is
+load-bearing: the lightweight-default option (memory + sqlite by
+default) still pays for `better-sqlite3` native bindings on every
+boot — even when the operator picks `memory`. Option C maps the
+env-var to **one** backend class and only that class is wired into
+`StoreModule.forActive`, so cold-start cost stays proportional to
+the active backend (NFR-4 budgets 750 ms; eager-all and
+lightweight-default both blow that budget on the worst-case `sqlite`
+or `postgres` selection by paying for every backend class's
+constructor / native deps regardless of which one is active). The
+full options matrix and the load-bearing reasoning sit in
+`docs/questions.md` Q-019.
+
+**Three load-bearing decisions** weren't called out in `tasks.md`
+Notes-for-the-next-run and were locked into the source/test surface
+rather than as new questions:
+
+1. **Lazy resolve, not eager-all.** Reading `EVER_JOBS_STORE` once
+   at module-eval time and selecting **one** backend class keeps
+   cold-start cost proportional to the active backend. The trade-off
+   is that `StoreRegistry.listIds()` returns `[<active>]` only — a
+   future admin endpoint that wants "what backends does this build
+   know about?" can read `KNOWN_STORE_IDS` directly (it's exported
+   from `store-bootstrap.factory.ts` for exactly that reason).
+2. **Trim, don't case-fold.** The env-var is `.trim()`ed before
+   lookup (Helm-chart copy-paste UX is a real concern — operators
+   paste values with trailing whitespace) but case-sensitivity is
+   preserved — `MEMORY` / `Memory` / `Postgres` are rejected with
+   `ERR_STORE_NOT_FOUND`. Silently lower-casing would mask a real
+   config drift where the operator intended a custom backend
+   (case-sensitivity is the registry's contract per T03).
+3. **Default = `memory`, NOT throw-on-unset.** Spec 004 §10's
+   "in-memory store always available for tests" decision is honoured
+   by the bootstrap path itself — every existing test that doesn't
+   set `EVER_JOBS_STORE` keeps working without needing a
+   `process.env.EVER_JOBS_STORE = 'memory'` shim. Operators who want
+   a hard fail-on-unset can enforce it at their orchestration layer
+   (Kubernetes `valueFrom`, systemd `EnvironmentFile`); making the
+   bootstrap itself strict would have broken every existing test
+   fixture in the repo.
+
+**Changes — code:**
+
+- `apps/api/src/jobs/store-bootstrap.factory.ts` — new ~140 LOC.
+  Pure resolver from env-var → `{ id, backendClass }`. Exports five
+  surface symbols:
+  `EVER_JOBS_STORE_ENV_VAR = 'EVER_JOBS_STORE'` (op-dashboard grep
+  target), `DEFAULT_STORE_ID = 'memory'` (fallback when env-var is
+  unset / blank), `KNOWN_STORE_IDS = ['memory', 'sqlite',
+  'postgres'] as const` (single source of truth — error messages
+  enumerate this list verbatim), `KnownStoreId` (the literal-union
+  type), `ResolvedStoreBootstrap` (the `{ id, backendClass }`
+  envelope), and the function `resolveStoreBootstrap(env =
+  process.env)` itself. Internal `STORE_BACKEND_BY_ID` map wires
+  each known id to its `@StorePlugin()`-decorated class.
+  `resolveStoreBootstrap` is pure: same env → same output, never
+  mutates `process.env`. Trims surrounding whitespace before lookup
+  but rejects everything that doesn't match a `KNOWN_STORE_IDS`
+  entry exactly (no case folding). Unknown id throws
+  `StoreRegistryError` with code `ERR_STORE_NOT_FOUND` and a message
+  that names every known id literally (operator typo `postres` →
+  immediate suggestion `postgres` by substring match) plus the
+  fallback hint (`unset it to use the default ('memory')`).
+- `apps/api/src/app.module.ts` — extended ~25 LOC.
+  `import { StoreModule } from '@ever-jobs/plugin'` plus
+  `import { resolveStoreBootstrap } from './jobs/store-bootstrap.factory'`.
+  New module-eval-time constant `const ACTIVE_STORE =
+  resolveStoreBootstrap();` — runs synchronously when the module is
+  loaded, so a bad env-var fails NestJS `bootstrap()` BEFORE any
+  HTTP listener is attached. New import slotted between
+  `HealthModule` and `JobsModule`:
+  `StoreModule.forActive(ACTIVE_STORE.id, { backends:
+  [ACTIVE_STORE.backendClass] })`. Ordering matters because
+  `StoreModule` is `global: true` but the `JOB_STORE_TOKEN`
+  provider only resolves once the module is imported — placing it
+  above `JobsModule` ensures `JobsAggregator`'s
+  `@Optional() @Inject(JOB_STORE_TOKEN)` slot from T11 picks up
+  the bound provider rather than `undefined`.
+
+**Changes — tests:**
+
+- `apps/api/src/jobs/__tests__/store-bootstrap.factory.spec.ts` —
+  new ~190 LOC. **18 cases** across 6 describe-blocks:
+  (1) constants — `EVER_JOBS_STORE_ENV_VAR === 'EVER_JOBS_STORE'`,
+  `DEFAULT_STORE_ID === 'memory'`, `KNOWN_STORE_IDS === ['memory',
+  'sqlite', 'postgres']` (3 cases); (2) happy-path — `memory` /
+  `sqlite` / `postgres` each resolve to their decorated class via
+  `it.each`, plus surrounding-whitespace trim case (4 cases);
+  (3) default fallback — undefined / empty / whitespace-only env
+  via `it.each` (3 cases); (4) unknown id → `ERR_STORE_NOT_FOUND`
+  with all-known-ids in message + bad-value-in-message + fallback-
+  hint-in-message (2 cases) plus 7 case-sensitivity rejections
+  (`MEMORY`, `Memory`, `PoStGrEs`, `mysql`, `postres`, `mem`,
+  `memory-store`) via `it.each`; (5) purity — synthetic env does
+  NOT mutate `process.env`, and `process.env` is the default when
+  no argument is given (2 cases, second wraps in try/finally to
+  restore the original env-var); (6) returned class identity —
+  the resolver hands back the exact `@StorePlugin`-decorated class
+  (not a wrapper / proxy) so `Reflect.getMetadata(STORE_PLUGIN_METADATA_KEY,
+  cls)` succeeds in `StoreModule.forActive`.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/004-persistence-storage-plugins/tasks.md` — T12
+  graduates from "pending" to "done" with full planned-vs-actual
+  file list, three-decision rationale (lazy-resolve / trim-not-case-
+  fold / default-memory-not-throw-on-unset), Q-019 cross-reference,
+  and verification numbers. Phase 5 closes; Spec 004 graduates from
+  "Phases 1–4 done (T01–T10); Phase 5 in progress (T11 done, T12
+  pending)" to "Phases 1–5 done (T01–T12); spec complete".
+- `.specify/specs/004-persistence-storage-plugins/spec.md` —
+  `Status` flipped to `Phases 1–5 done (T01–T12); spec complete`;
+  `Last updated` bumped to `2026-04-27 (run #26)`.
+- `docs/questions.md` — new Q-019 at the top with the three
+  options, default = Option C, resolution = pending. Run-tag
+  `(run #26)`.
+- `docs/index.md` — Spec 004 row updated with new status string
+  ("All phases done … spec complete" with T12 → run #26 attribution);
+  `Last revised` bumped to `2026-04-27 (run #26)`.
+- `CLAUDE.md` — run-tag bumped to #26 in the footer.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #26 sync line; **no upstream
+  commits** in any of the three tracked repos (sixteen consecutive
+  zero-churn runs).
+
+**Verification (local, against this commit):**
+
+- T12 ships TypeScript source + tests but cannot run them in the
+  sandbox: the test surface needs `@nestjs/common` resolved through
+  the workspace symlinks plus the resolved `@ever-jobs/*` path
+  aliases — all CI-only per `Agents.md` §"Scheduled-task agents".
+  The full unit-test bundle will validate on CI push.
+- `npm run lint:docs` — clean ("✓ Doc-lint passed — no issues.")
+  after this run's edits.
+- Type-check via `npx tsc --project apps/api/tsconfig.build.json
+  --noEmit` — also CI-only (sandbox has no `node_modules`); the
+  edited `app.module.ts` only adds module-eval-time imports plus
+  one new import in the `imports:` array — no API surface change
+  to any consumer of `AppModule`.
+
+**Notes & follow-ups:**
+
+- **Spec 004 is now complete.** All twelve tasks across five
+  phases ship with full unit/integration coverage; the persistence
+  plumbing is wired end-to-end from `EVER_JOBS_STORE` →
+  `StoreModule.forActive` → `JobsAggregator.maybePersist`.
+  Postgres opt-in still requires the operator to bind
+  `STORE_POSTGRES_PRISMA_CONFIG` in their root module (per Spec
+  004 / T10 decision 2 / fail-fast constructor); a future
+  follow-up could add a `STORE_POSTGRES_URL` convenience env-var
+  that constructs the `PrismaClient` at boot — that's a Spec 012
+  (or thereabouts) candidate, NOT Spec 004 scope.
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #25
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). **Sixteen** consecutive runs of zero-churn — the
+  open `Ats-scrapers`-parity items in `competitor-watch.md §C`
+  (AC-1..AC-9) are now the highest-leverage follow-up with Spec
+  004 closed.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#25; not wired into CI).
+  Open fall-back follow-up.
+- Default for run #27 is **Spec 005 / Phase 5** (the source-
+  health / circuit-breaker spec that's been in "Phases 1–4 done;
+  Phase 5 pending" since run #16). Phase 5's tasks (T09 / T10 —
+  per-source breaker config persisted across reboots, plus the
+  Prometheus `source_circuit_state` Gauge being wired to the
+  bootstrapper) close that spec entirely and unblock the open
+  `Ats-scrapers`-parity items, which are tracked in
+  `competitor-watch.md §C` and require persistent state for
+  half-open recovery counters.
+
+---
+
 ## 2026-04-27 — Scheduled run #25 (Spec 004 Phase 5 — T11: `JobsAggregator` persists post-dedup output; T12 deferred)
 
 **Scope:** land Spec 004 / Phase 5 / T11 — wire the dedup-engine
