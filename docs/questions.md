@@ -182,11 +182,19 @@ Reasons:
 - **Cheap to revisit.** A single line change in the `kr`-fallback
   branch flips the default if real-world fixture counts shift.
 
-**Resolution:** _pending_ — proceeding with Option A (SEK
-default for `kr` no-hint case). Revisit if the run #37+ bench
-fixtures from `helpers.bench.ts` show DKK / NOK volume
-materially higher than the upstream JobSpy baseline (e.g. the
-operator runs a Norway-only deployment).
+**Resolution:** **resolved (run #42)** — Option A (SEK default
+for `kr` no-hint case) confirmed after four runs of test
+fixtures (T01..T04 at runs #38..#41) showed no operational
+pressure to flip. Pinned by the dedicated test
+`uses SEK as the no-hint default for "kr" (Q-025)` in
+`packages/common/__tests__/helpers.spec.ts`. Revisit if the
+operational bench fixtures shipped at T04
+(`helpers.bench.spec.ts` — see Spec 012 / NFR-1..NFR-5)
+show DKK / NOK volume materially higher than the upstream
+JobSpy baseline (e.g. operator runs a Norway-only deployment),
+in which case a single-line flip in the `'kr'` ambiguous-symbol
+branch's `fallback` field carries the change. Spec 012 closed
+this resolution as part of T05's docs-only graduation.
 
 ---
 

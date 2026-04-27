@@ -5,6 +5,99 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #42 (Spec 012 / Phase 5 — T05: closeout pass; **Spec 012 complete**)
+
+**Scope:** land Spec 012 / Phase 5 / T05 — the spec
+closeout pass. Pure docs / metadata: a new "Salary Parser"
+section in `docs/PERFORMANCE_TUNING.md`, status flips on
+Spec 012 + `competitor-watch.md §C / AC-7`, Q-025 resolution
+in `docs/questions.md`, and the next-run default pinned at
+the **AC-4..AC-6 bundled spec (Spec 013)** per Q-024's
+"future bundled batch" line. Run #41's
+Notes-for-the-next-run pinned this default with a seven-step
+edit checklist; T05 honoured all seven.
+
+**No new questions opened this run** — Q-025 graduates from
+"pending" to "resolved" (SEK default for `'kr'` no-hint
+confirmed by four runs of test fixtures, no operational
+pressure to flip). Q-026 + Q-027 (deferred from T04) stay
+open as Spec 013 / 014 candidates; closing them in T05
+would have required source tweaks, violating the "docs-only"
+budget.
+
+**Three load-bearing decisions** were resolved during T05's
+closeout pass:
+
+1. **Q-025 resolution = "default = SEK" stays.** Four runs
+   of test fixtures (T01..T04) showed no operational
+   pressure to flip the no-hint `'kr'` default to DKK or
+   NOK. Resolution text in Q-025 reflects this with a
+   forward-looking "revisit if real-world fixture counts
+   show DKK / NOK higher" line.
+2. **`PERFORMANCE_TUNING.md` section sits at the bottom,
+   NOT under § Caching / Concurrency.** The existing
+   sections are server-runtime knobs; the salary parser
+   is a per-call pure function that doesn't fit those
+   buckets. Adding it as a final H2 (after `## Monitoring`)
+   keeps the existing flow intact.
+3. **Q-026 + Q-027 stay open.** Both surface only in
+   future-call patterns (a plugin author passing
+   `country` without a numeric symbol; a Swiss-anglo
+   input with apostrophe-decimal). Closing them in T05
+   would require source-level tweaks. Tracked as Spec
+   013 / 014 candidates.
+
+**Changes — docs / specs:**
+
+- `docs/PERFORMANCE_TUNING.md` — extended ~85 LOC. New
+  H2 `## Salary Parser` (after `## Monitoring`) with
+  four H3 subsections: detection precedence (§ 7.2),
+  locale dispatch (§ 7.3), example call patterns (four
+  invocations), performance budget (NFR-1..NFR-5 table
+  + bench-ceiling explanation).
+- `.specify/specs/012-european-salary-parser/tasks.md` —
+  T05 graduates to "done" with full planned-vs-actual
+  file lists and per-bullet acceptance verification.
+  Notes-for-the-next-run rewritten to point at
+  **AC-4..AC-6 bundled spec (Spec 013)**.
+- `.specify/specs/012-european-salary-parser/spec.md` —
+  `Status` → `All phases done (T01..T05 runs
+  #38..#42); spec complete`.
+- `docs/index.md` — Spec 012 row + footer bumped to
+  run #42.
+- `docs/questions.md` — Q-025 marked **resolved** with
+  SEK-default rationale.
+- `CLAUDE.md` — run-tag → #42.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #42 sync line; §C row
+  AC-7 rewritten with **DONE (runs #37..#42)** prefix
+  + ✅ glyph + one-line summary of shipped capability.
+  Twenty-six consecutive zero-churn runs.
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean.
+- No source / test code touched.
+
+**Notes & follow-ups:**
+
+- **Spec 012 is now complete.** All five tasks across
+  five phases ship; 63 total cases in `helpers.spec.ts`
+  + micro-bench suite.
+- Default for run #43 is **scaffold Spec 013 —
+  AC-4..AC-6 bundled spec** (Oracle HCM Cloud / Mercor /
+  Tesla). Pure docs — open the Spec-Kit trio under
+  `.specify/specs/013-ats-scrapers-parity-batch-2/`.
+  T01 lands in run #44.
+- Specs **004 / 005 / 006 / 012** are all complete as
+  of this run. Active backlog: §C / AC-4..AC-6 (Spec
+  013, ~5 runs) + AC-8 (~1 run, seed refresh) + AC-9
+  (~1 run, Workable diff). Total remaining: ~7
+  scheduled runs.
+- Pre-existing dedup-hybrid red tests unchanged.
+
+---
+
 ## 2026-04-27 — Scheduled run #41 (Spec 012 / Phase 4 — T04: 14-case currency sweep + `helpers.bench.spec.ts`)
 
 **Scope:** land Spec 012 / Phase 4 / T04 — extend

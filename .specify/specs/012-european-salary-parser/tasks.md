@@ -329,7 +329,7 @@
 
 ## Phase 5 — Documentation + closeout
 
-- [ ] T05 — Doc bump + spec graduation + `competitor-watch.md`
+- [x] T05 — Doc bump + spec graduation + `competitor-watch.md`
   AC-7 flip.
   - **Files (planned):** `docs/PERFORMANCE_TUNING.md` (extend
     with ~30-line "Salary parser shape" section);
@@ -338,27 +338,80 @@
     (`Status` → `done`); `competitor-watch.md` (§C / AC-7 row
     → `DONE (runs #37..#3X)` ✅); `CLAUDE.md` (run-tag bump);
     `docs/questions.md` (Q-025 → resolved).
+  - **Files (actual):** matched plan exactly.
+    `docs/PERFORMANCE_TUNING.md` (extended ~85 LOC; new
+    "Salary Parser" H2 with four H3 subsections covering
+    detection precedence / locale dispatch / example call
+    patterns / performance budget). `docs/index.md` row
+    + footer bumped. `docs/log.md` run #42 entry added.
+    `.specify/specs/012-european-salary-parser/spec.md`
+    Status + Last updated bumped. `competitor-watch.md`
+    §C / AC-7 row rewritten with `DONE (runs #37..#42)`
+    prefix + ✅ glyph + run #42 sync line at the top of
+    the log. `CLAUDE.md` run-tag → #42.
+    `docs/questions.md` Q-025 marked **resolved** with the
+    SEK-default rationale carried through from runs #38..#41.
   - **Acceptance:**
-    - `docs/PERFORMANCE_TUNING.md` has a "Salary parser" section
-      covering: detection precedence (§ 7.2), locale dispatch
-      (§ 7.3), example call patterns, performance budget
-      (NFR-1..NFR-5).
-    - Spec 012 `Status` flips from `draft (run #37); T01..T05
-      pending` to `All phases done (T01..T05 runs #37..#3X);
-      spec complete`. `Last updated` timestamp bumped.
-    - `docs/index.md` § 7 grows from 6 to 7 spec rows; `Last
-      revised` bumped.
+    - `docs/PERFORMANCE_TUNING.md` has a "Salary parser"
+      section covering: detection precedence (§ 7.2), locale
+      dispatch (§ 7.3), example call patterns, performance
+      budget (NFR-1..NFR-5). ✅ Section depth landed
+      slightly larger than the planned ~30 LOC (~85 LOC) —
+      the example-call-patterns code block + the
+      NFR-1..NFR-5 table together earned the extra lines;
+      the section is still tight against the spec.
+    - Spec 012 `Status` flips from `Phases 1–4 done … T05
+      pending` to `All phases done (T01..T05 runs
+      #38..#42); spec complete`. `Last updated` timestamp
+      bumped to `2026-04-27 (run #42)`. ✅
+    - `docs/index.md` § 7 row count remains 7 (Spec 012 was
+      added in run #37); the row's status flips to `All
+      phases done`. ✅
     - `competitor-watch.md` § C / AC-7 row prefixed with
-      `DONE (runs #37..#3X)` and ✅ glyph in Owner column.
+      `DONE (runs #37..#42)` and ✅ glyph in Owner column;
+      one-line summary of shipped capability per row. ✅
     - `npm run lint:docs` reports `✓ Doc-lint passed — no
-      issues.` after this task's edits.
-    - The next-run default in this file's "Notes-for-the-next-
-      run" section is pinned to **AC-4..AC-6 bundled spec**
-      (Oracle HCM Cloud / Mercor / Tesla — Spec 013) per
-      Q-024's "future bundled batch" line. The pinning lives
-      in tasks.md so the next scheduled run can pick up from
-      cold context (mirroring Spec 006's pattern).
-  - **Estimate:** 0.3 day.
+      issues.` after this task's edits. ✅
+    - The next-run default in this file's "Notes-for-the-
+      next-run" section is pinned to **AC-4..AC-6 bundled
+      spec** (Oracle HCM Cloud / Mercor / Tesla — Spec 013)
+      per Q-024's "future bundled batch" line. ✅ Pinning
+      lives below in the post-run notes.
+  - **Done:** run #42 (2026-04-27). Three load-bearing
+    decisions were resolved during T05's closeout pass:
+      1. **Q-025 resolution = "default = SEK" stays.** Four
+         runs of test fixtures (T01..T04) showed no
+         operational pressure to flip the no-hint `'kr'`
+         default to DKK or NOK; the SEK default was never
+         the cause of a wrong-currency assertion. Resolution
+         text in `docs/questions.md` Q-025 reflects this with
+         a forward-looking "revisit if real-world fixture
+         counts show DKK / NOK higher" line so a future
+         contributor knows which signal would prompt a flip.
+      2. **`PERFORMANCE_TUNING.md` section sits at the
+         bottom, NOT under § Caching / Concurrency.** The
+         existing sections are server-runtime knobs
+         (`/health`, X-Process-Time header, Docker resource
+         limits); the salary parser is a per-call pure
+         function that doesn't fit those buckets. Adding it
+         as a final H2 (after `## Monitoring`) keeps the
+         existing flow intact and lets a future "Parsers"
+         family of sections cluster naturally.
+      3. **Q-026 + Q-027 stay open** (deferred from T04 —
+         bare-number country fallback semantics + the
+         `$`-symbol + apostrophe-decimal regex registration
+         choice). Both surface only in future-call patterns
+         (a plugin author passing `country` without a
+         numeric symbol; a Swiss-anglo input with
+         apostrophe-decimal). Closing them in T05 would
+         require source-level tweaks, which violates the
+         T05 "docs-only" budget. Tracked as Spec 013 / Spec
+         014 candidates if real-world fixtures show
+         them firing.
+  - **Estimate:** 0.3 day. **Actual:** ~0.3 day (the
+    `PERFORMANCE_TUNING.md` section was the bulk of the
+    work; the spec / index / CLAUDE / questions / log
+    edits each ran in the ~minute range).
 
 ## Notes
 
@@ -381,50 +434,52 @@
   p95 / p99` summary. Future spec authors writing a parser-style
   bench should copy this shape.
 
-## Notes-for-the-next-run (pinned default for run #42)
+## Notes-for-the-next-run (pinned default for run #43)
 
-- Default = **Spec 012 / Phase 5 / T05** — closeout pass.
-  Concretely, in run #42:
-  1. Extend `docs/PERFORMANCE_TUNING.md` with a ~30-line
-     "Salary parser shape" section covering: detection
-     precedence (spec § 7.2), locale dispatch (§ 7.3), example
-     call patterns, performance budget (NFR-1..NFR-5).
-  2. Flip Spec 012 `Status` from `Phases 1–4 done; T05 pending`
-     to `All phases done; spec complete`.
-  3. Add a Spec 012 row to `docs/index.md` § 7.
-  4. Flip `competitor-watch.md §C / AC-7` row prefix to
-     `DONE (runs #37..#42)` ✅.
-  5. Mark `docs/questions.md` Q-025 as resolved (default = SEK
-     for `kr` no-hint) — pinned by the dedicated test in T01.
-  6. **Open** Q-026 (bare-number regex when `confidence:
-     'country'`) and Q-027 (`$` not registered as USD
-     unique-symbol; apostrophe in regex `numSrc`) as
-     **deferred** items — surfaced by T04's sweep, not in
-     T05's closeout scope. Each gets its own follow-up spec
-     candidate or absorption note.
-  7. Bump `CLAUDE.md` run-tag to #42.
-- Out-of-scope reminders for run #42:
-  - No new currency cases — the 14-case sweep is closed.
-  - No regex tweaks — Q-026 / Q-027 fixes are follow-up specs,
-    not T05 work. T05 is documentation + status flips only.
-- Three load-bearing items already locked in by T04 that T05
-  must not regress:
-  1. **Bench file lives at `helpers.bench.spec.ts`** (not
-     `helpers.bench.ts`). The `*.bench.spec.ts` shape keeps
-     the file jest-discoverable without a `testMatch` tweak
-     while still making the bench nature obvious. T05's doc
-     bump should reference this filename verbatim.
-  2. **CI ceiling for the bench is `2.0 ms`, not `0.5 ms`.**
-     The 4× headroom over NFR-1 absorbs GitHub-runner cold-
-     start noise. The absolute NFR-1 number lives in the JSON
-     record as `p95_under_nfr1` for trend analysis. T05's
-     PERFORMANCE_TUNING.md update should explain BOTH numbers
-     (the assert ceiling AND the design target).
-  3. **14 sweep cases include four spec-text substitutions**
-     (cases 5 / 9 / 12 / 14 — see decisions 3 / 4 / 5 above).
-     T05 must NOT delete or rewrite these substitutions; the
-     deferred Q-026 / Q-027 items will eventually re-enable the
-     literal spec-text variants once the regex gaps close.
+- Default = **AC-4..AC-6 bundled spec — Spec 013** (Oracle HCM
+  Cloud / Mercor / Tesla). Three new source plugins, same
+  registration topology as Spec 006 (`Site` enum + four-place
+  registration + `ALL_SOURCE_MODULES`), same authoring rhythm.
+  Run #43's job is to **scaffold** Spec 013 — the spec.md +
+  plan.md + tasks.md trio under
+  `.specify/specs/013-ats-scrapers-parity-batch-2/` —
+  mirroring Spec 006's run #28 scaffold. T01 (Site enum +
+  registration scaffolding) lands in run #44.
+- Out-of-scope reminders for run #43:
+  - No source code in run #43 — pure docs / spec-kit
+    scaffolding. T01 lands in run #44.
+  - No new dependencies. All three plugins fit within the
+    existing `@ever-jobs/common` HTTP-client surface.
+- Three pre-decided shapes for Spec 013 (set by Q-024 +
+  upstream Python parity):
+  1. **`Site` enum values:** `ORACLE_HCM = 'oracle_hcm'`,
+     `MERCOR = 'mercor'`, `TESLA = 'tesla'`. Underscore in
+     `oracle_hcm` matches the compound-vendor convention
+     (`zip_recruiter`, `join_com`); single-word slugs for
+     `mercor` and `tesla`.
+  2. **Folder layout:** `packages/plugins/source-ats-oracle/`
+     (Oracle HCM Cloud is an ATS), `packages/plugins/source-mercor/`
+     (Mercor is a talent-marketplace, not classified as an
+     ATS — drops the `ats-` prefix), `packages/plugins/source-company-tesla/`
+     (Tesla is a company-direct, mirroring `source-company-amazon`
+     etc.). Three different prefixes intentionally, reflecting
+     the three plugin categories.
+  3. **Estimate:** ~5 scheduled runs (T01..T13) by analogy to
+     Spec 006's actual cost. The integration spec at T09 / T10
+     might be lighter than Spec 006's because the three
+     plugins span three categories (ATS / marketplace /
+     company-direct) rather than three ATS — fewer
+     cross-plugin dedup invariants to test.
+
+## Notes-for-the-next-run (run #41 archived — Spec 012 closeout pass)
+
+- _Archived from run #41 — superseded by the run #43 default
+  block above. Kept for audit-trail._ Default was **Spec 012
+  / Phase 5 / T05**: closeout pass. Seven concrete edits
+  (PERFORMANCE_TUNING.md section, Spec 012 status flip,
+  index.md row update, competitor-watch §C / AC-7 flip,
+  Q-025 resolution, Q-026 / Q-027 deferred items, CLAUDE.md
+  run-tag bump). Closed in run #42.
 
 ## Notes-for-the-next-run (run #41 archived)
 
