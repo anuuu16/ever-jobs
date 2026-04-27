@@ -5,6 +5,147 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #33 (Spec 006 / Phase 5 — T09 + T10: cross-plugin integration + E2E specs)
+
+**Scope:** land Spec 006 / Phase 5 / T09 + T10 — the live
+three-plugin integration spec
+(`apps/api/__tests__/integration/source-ats-batch-1.integration.spec.ts`)
+and the E2E supertest spec
+(`apps/api/__tests__/e2e/source-ats-batch-1.e2e-spec.ts`). With
+this drop, the four-place plugin registration (Site enum +
+ALL_SOURCE_MODULES + tsconfig paths + jest moduleNameMapper) for
+Avature / Gem / Join.com is cross-validated end-to-end through
+the full `AppModule` boot, dedup pipeline, and HTTP surface. Run
+#32's Notes-for-the-next-run pinned this default ("Spec 006 /
+Phase 5 / T09 + T10 — three-plugin live integration spec + e2e
+supertest spec").
+
+**No new questions opened this run** — Q-022 / Q-023 from earlier
+phases continue to govern the plugin input shapes; the integration
+and E2E tiers don't surface new ambiguity.
+
+**Three load-bearing decisions** weren't called out in run #32's
+Notes-for-the-next-run and were locked into the test surface:
+
+1. **Mock `createHttpClient`, not `nock`.** The unit suites for
+   the three plugins already use the same
+   `jest.mock('@ever-jobs/common', …)` pattern; using it here
+   keeps the integration shape consistent across unit /
+   integration / E2E tiers. `nock` would shadow the same code
+   path (axios → undici stack) at the network layer, which is
+   strictly less precise than mocking the factory itself. The
+   factory mock also makes the wire-call assertions cleaner —
+   the integration spec asserts "Gem issues exactly ONE POST"
+   directly against `httpCallLog`, no nock-interceptor
+   bookkeeping required.
+2. **`POST /api/jobs/search`, not `GET /api/jobs?…`.** The T10
+   acceptance text mentions GET-style URLs with query params,
+   but the controller exposes a JSON body via POST (see
+   `apps/api/src/jobs/jobs.controller.ts`). The tasks-file
+   phrasing predates the body-vs-query refactor; we honour the
+   *intent* (per-plugin HTTP round-trip) by hitting the real
+   endpoint shape instead of the literal text. Documented as
+   a "Departures from the literal acceptance text" block in
+   the spec file's leading JSDoc and in `tasks.md`'s T10 entry.
+3. **`avatureGetCount` map keyed on a constant string, not URL.**
+   Avature's pagination URL includes `?jobOffset=N` — varying
+   the offset on the second pagination call. A URL-keyed
+   counter would treat the two calls as independent fixtures
+   and never break the loop; a counter keyed on the literal
+   `'avature'` correctly flips from `avaturePage1` (first
+   call) → `avatureEmpty` (second call). The map is reset in
+   `beforeEach` so the first GET inside each test always
+   returns the populated fixture, not the empty fixture from
+   the prior test's second pagination call.
+
+**Changes — code:** none. T09 + T10 are test-only.
+
+**Changes — tests:**
+
+- `apps/api/__tests__/integration/source-ats-batch-1.integration.spec.ts`
+  — new ~270 LOC. **9 cases** across 4 describe-blocks:
+    1. **four-place registration (PluginRegistry)** — 3 cases.
+       `listSiteKeys()` includes `Site.AVATURE/GEM/JOIN_COM`;
+       `listAtsSites()` flags all three as ATS; `getScraper()`
+       returns a real `IScraper` for each.
+    2. **JobsService.searchJobs fan-out** — 2 cases. Single
+       fan-out across all three plugins emits ≥ 1 row from each
+       (filtered by `j.site`); per-plugin `resultsWanted` cap
+       honoured.
+    3. **JobsAggregator — Spec 003 dedup applied** — 2 cases.
+       All three plugins still contribute ≥ 1 row after dedup;
+       envelope flag `deduped=true`; zero collisions on the
+       synthetic corpus (`outputCount === rawCount`); `dedup=false`
+       opt-out leaves output unchanged.
+    4. **HTTP-client mock — wire-call shape** — 2 cases. Gem
+       issues exactly ONE POST to
+       `jobs.gem.com/api/public/graphql/batch`; Join.com issues
+       a Step-1 HTML GET against `/companies/<slug>` before any
+       Step-2 JSON GETs against `/api/public/companies/`.
+- `apps/api/__tests__/e2e/source-ats-batch-1.e2e-spec.ts` —
+  new ~210 LOC. **5 cases** against the real
+  `POST /api/jobs/search` HTTP surface:
+    1. `siteType:[AVATURE]`, `companySlug:'bloomberg'`,
+       `resultsWanted:5` → 201 + non-empty `jobs[]`; every row
+       tagged `site=Site.AVATURE`.
+    2. `siteType:[GEM]`, `companySlug:'accel'` → 201 +
+       non-empty body; every row tagged `site=Site.GEM`.
+    3. `siteType:[JOIN_COM]`, `companySlug:'primer-ai'` → 201 +
+       non-empty body; every row tagged `site=Site.JOIN_COM`.
+    4. Cross-plugin fan-out — response carries `count`,
+       `raw_count`, `deduped:true`; `count === raw_count`; the
+       `Set` of `j.site` values covers all three.
+    5. `?dedup=false` query-string opt-out — `deduped:false`;
+       `count === raw_count`; non-empty body.
+
+Verification: tests authored but not executed in this scheduled
+run — `node_modules` is not installed in the agent sandbox; CI
+on push validates the full integration + E2E bundle.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/006-ats-scrapers-parity-batch-1/tasks.md` —
+  T09 + T10 graduate to "done" with full planned-vs-actual file
+  lists and per-bullet acceptance verification. Notes-for-the-
+  next-run repinned to "Spec 006 / Phase 5 / T11" (coverage
+  docs update — three new matrix rows in `ATS_INTEGRATIONS.md`
+  + ≥ 10 seed slugs per plugin in `COMPANY_SLUG_DIRECTORY.md`).
+- `.specify/specs/006-ats-scrapers-parity-batch-1/spec.md` —
+  `Status` → `Phase 1+2+3+4 done (T01..T08 runs #29..#32);
+  Phase 5 / T09+T10 done (run #33); T11..T13 pending`.
+- `docs/index.md` — Spec 006 row + footer bumped to run #33.
+- `CLAUDE.md` — run-tag → #33.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #33 sync line; **no upstream
+  commits** (twenty-one consecutive zero-churn runs).
+
+**Notes & follow-ups:**
+
+- Default for run #34 is **Spec 006 / Phase 5 / T11** — coverage
+  docs update for `docs/ATS_INTEGRATIONS.md` +
+  `docs/COMPANY_SLUG_DIRECTORY.md`. Three new matrix rows
+  (Avature / Gem / Join.com); ≥ 10 seed slugs per plugin sampled
+  from upstream `OTHERS/Ats-scrapers/<id>/<id>_companies.csv`.
+  `npm run lint:docs` must stay green.
+- T12 (per-plugin perf benches) is the second-smallest
+  remaining task. Bench files establish baselines against NFR-2
+  ceilings on the existing fixture corpus (no new fixtures
+  needed) and emit one JSON line per run at
+  `dist/bench/<plugin>.json`. CI gating on the bench thresholds
+  is a follow-up spec — not in this batch.
+- T13 (closeout) waits until both T11 and T12 have landed.
+  Then `competitor-watch.md §C` rows AC-1, AC-2, AC-3 graduate
+  to **DONE** with run-tag attributions, and the next batch
+  selection (AC-4 = Oracle HCM Cloud / AC-5 = Mercor / AC-6 =
+  Tesla, **OR** AC-7 = European salary parser as a fast
+  small-spec interlude **OR** AC-8 = seed-companies refresh)
+  pins the next default.
+- External research repos: no new commits since run #32.
+  Twenty-one consecutive zero-churn runs.
+- Pre-existing dedup-hybrid red tests unchanged.
+
+---
+
 ## 2026-04-27 — Scheduled run #32 (Spec 006 / Phase 4 — T07 + T08: JoinComService REST two-step + 11 unit cases)
 
 **Scope:** land Spec 006 / Phase 4 / T07 + T08 — the

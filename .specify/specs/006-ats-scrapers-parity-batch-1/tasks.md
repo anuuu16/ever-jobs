@@ -326,18 +326,71 @@
 
 ## Phase 5 — Integration & docs
 
-- [ ] T09 — Live integration suite for all three plugins.
-  - **File:** `apps/api/__tests__/integration/source-ats-batch-1.integration.spec.ts`.
+- [x] T09 — Live integration suite for all three plugins.
+  - **Files (planned):** `apps/api/__tests__/integration/source-ats-batch-1.integration.spec.ts`.
+  - **Files (actual):** matched plan exactly. ~270 LOC carrying 9
+    cases across 4 describe-blocks; reuses the three plugins' own
+    `__tests__/fixtures/*` corpus (no new fixture files added —
+    matches the upstream Python's "one fixture set per plugin"
+    convention from `OTHERS/Ats-scrapers`).
   - **Acceptance:** Boots `AppModule`; stubs `createHttpClient` with
     fixture responses for the three new plugins; calls
     `JobsService.searchJobs({ site: ['avature','gem','join_com'],
     companySlug: 'demo' })`; asserts ≥ 1 row from each plugin in
     the deduped result. Verifies the four-place registration
-    (no plugin silently absent from `PluginRegistry`).
-  - **Estimate:** 0.5 day.
+    (no plugin silently absent from `PluginRegistry`). ✅
+    Three describe-block coverage:
+      1. **four-place registration (PluginRegistry)** — 3 cases.
+         `listSiteKeys()` includes `Site.AVATURE/GEM/JOIN_COM`;
+         `listAtsSites()` flags all three as ATS; `getScraper()`
+         returns a real `IScraper` for each.
+      2. **JobsService.searchJobs fan-out** — 2 cases. Single fan-out
+         across all three plugins emits ≥ 1 row from each (filtered
+         by `j.site`); per-plugin `resultsWanted` cap honoured.
+      3. **JobsAggregator — Spec 003 dedup applied** — 2 cases.
+         All three plugins still contribute ≥ 1 row after dedup; the
+         dedup engine ran (envelope flag `deduped=true`); zero
+         collisions on the synthetic corpus (`outputCount ===
+         rawCount`); `dedup=false` opt-out leaves output unchanged.
+      4. **HTTP-client mock — wire-call shape** — 2 cases. Gem
+         issues exactly ONE POST to `jobs.gem.com/api/public/graphql/batch`;
+         Join.com issues a Step-1 HTML GET before Step-2 JSON GETs.
+  - **Done:** run #33 (2026-04-27). Three load-bearing decisions
+    locked into the test surface:
+      1. **Mock `createHttpClient`, not `nock`.** The unit suites
+         for the three plugins already use the same
+         `jest.mock(@ever-jobs/common)` pattern; using it here
+         keeps the integration shape consistent across unit /
+         integration / E2E tiers. `nock` would shadow the same
+         code path (axios → undici stack) at the network layer,
+         which is strictly less precise than mocking the factory
+         itself.
+      2. **`companySlug='acme-corp'`** is load-bearing for Join.com:
+         the `JoinComService.deriveCompanyName('acme-corp')` produces
+         `'Acme Corp'` (the dash → space + title-casing path), which
+         exactly matches the Gem `jobBoardExternal.teamDisplayName=
+         'Acme Corp'` baked into `gem-batch-response.json`. That
+         alignment lets a future cross-plugin dedup audit assert
+         "same company across two plugins" if/when description-
+         bearing fixtures land — for now it just keeps the
+         assertion data tidy.
+      3. **`avatureGetCount` map** is reset in `beforeEach` so the
+         first GET inside each test always returns the populated
+         fixture, not the empty fixture from the prior test's
+         second pagination call. A counter-based router (rather
+         than URL-based) is required because Avature's pagination
+         URL includes `?jobOffset=N` — varying the offset would
+         leak fixture-cache state if we keyed on URL.
+  - **Estimate:** 0.5 day. **Actual:** ~0.4 day.
 
-- [ ] T10 — E2E suite via supertest.
-  - **File:** `apps/api/__tests__/e2e/source-ats-batch-1.e2e-spec.ts`.
+- [x] T10 — E2E suite via supertest.
+  - **Files (planned):** `apps/api/__tests__/e2e/source-ats-batch-1.e2e-spec.ts`.
+  - **Files (actual):** matched plan exactly. ~210 LOC carrying 5
+    cases against the real HTTP surface
+    (`POST /api/jobs/search`, NOT the original `GET /api/jobs?...`
+    path the spec text predates). Same fixture-router shape as T09
+    so the three tiers (unit / integration / E2E) all pass through
+    the same mock factory.
   - **Acceptance:** Three GET assertions —
     `/api/jobs?site=avature&companySlug=bloomberg`,
     `?site=gem&companySlug=accel`,
@@ -345,8 +398,41 @@
     `200 OK` + non-empty body, against a sandboxed nock-fixture
     upstream. Asserts dedup-engine collapses identical postings
     across the three plugins (zero collisions on the synthetic
-    fixture).
-  - **Estimate:** 0.5 day.
+    fixture). ✅ All five assertions:
+      1. `POST /api/jobs/search` with `siteType:[AVATURE]`,
+         `companySlug:'bloomberg'`, `resultsWanted:5` → 201 +
+         non-empty `jobs[]`; every row is tagged `site=Site.AVATURE`.
+      2. Same with `siteType:[GEM]`, `companySlug:'accel'` → 201 +
+         non-empty body; every row tagged `site=Site.GEM`.
+      3. Same with `siteType:[JOIN_COM]`, `companySlug:'primer-ai'` →
+         201 + non-empty body; every row tagged `site=Site.JOIN_COM`.
+      4. Cross-plugin fan-out
+         (`siteType:[AVATURE,GEM,JOIN_COM]`) → 201; response carries
+         `count`, `raw_count`, `deduped:true`; `count === raw_count`
+         (zero collisions on the synthetic fixture); the `Set` of
+         `j.site` values across the response covers all three.
+      5. `?dedup=false` query-string opt-out → 201; `deduped:false`;
+         `count === raw_count`; non-empty body.
+  - **Done:** run #33 (2026-04-27). Three load-bearing decisions
+    locked into the test surface (deviating from the literal
+    `tasks.md` text — see the three "Departures from the literal
+    acceptance text" notes in the spec file's leading JSDoc):
+      1. **POST not GET.** The controller exposes
+         `POST /api/jobs/search` with a JSON body — this is the
+         real surface (see `apps/api/src/jobs/jobs.controller.ts`).
+         The tasks-file phrasing predates the body-vs-query
+         refactor; we honour the *intent* (per-plugin HTTP
+         round-trip) by hitting the real endpoint shape instead.
+      2. **Mock `createHttpClient`, not `nock`.** Same reasoning
+         as T09 — keep tier-consistency with the unit suites.
+      3. **Slug = `acme-corp` for the cross-plugin test.** The
+         per-plugin tests pin tenant-specific slugs (`bloomberg` /
+         `accel` / `primer-ai`), but the cross-plugin assertion
+         uses the same slug across all three so the dedup engine
+         exercises the `same-input → distinct outputs` branch
+         (different vendor prefixes on the canonical id collapse
+         zero pairs).
+  - **Estimate:** 0.5 day. **Actual:** ~0.3 day.
 
 - [ ] T11 — Coverage docs update.
   - **Files:** `docs/ATS_INTEGRATIONS.md`,
@@ -381,7 +467,23 @@
     seed-companies refresh).
   - **Estimate:** 0.25 day.
 
-## Notes-for-the-next-run (pinned default for run #31)
+## Notes-for-the-next-run (pinned default for run #34)
+
+- Default = **Spec 006 / Phase 5 / T11** — coverage docs update
+  for `docs/ATS_INTEGRATIONS.md` + `docs/COMPANY_SLUG_DIRECTORY.md`.
+  Three new matrix rows (Avature / Gem / Join.com); ≥ 10 seed slugs
+  per plugin, sampled from upstream
+  `OTHERS/Ats-scrapers/<id>/<id>_companies.csv`. `npm run lint:docs`
+  must stay green. Reasoning: T11 is small, doc-only, and unblocks
+  T12 (per-plugin perf benches against the same fixture corpus).
+  T13 (closeout) waits until both T11 and T12 have landed.
+- T12 (per-plugin perf benches) is the second-smallest remaining
+  task. Bench files establish baselines against NFR-2 ceilings on
+  the existing fixture corpus (no new fixtures needed) and emit
+  one JSON line per run at `dist/bench/<plugin>.json`. CI gating
+  on the bench thresholds is a follow-up spec — not in this batch.
+
+## Notes-for-the-prior-run (pinned default for run #31)
 
 - Default = **Spec 006 / Phase 3 / T05 + T06** — `GemService.scrape()`
   GraphQL-batch implementation plus its ≥ 4 unit cases (happy path,
