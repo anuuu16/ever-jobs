@@ -30,3 +30,9 @@ export {
   StorePlugin,
   STORE_PLUGIN_METADATA_KEY,
 } from './store/store-plugin.decorator';
+export {
+  StoreRegistry,
+  StoreRegistryError,
+  ERR_STORE_INVALID_ID,
+  ERR_STORE_DUPLICATE_ID,
+} from './store/store-registry.service';

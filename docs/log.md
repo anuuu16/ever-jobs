@@ -5,6 +5,193 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #19 (Spec 004 Phase 1 — T03 `StoreRegistry` unblocking T04 `StoreModule.forActive()`)
+
+**Scope:** land Spec 004 / Phase 1 / T03 — the `StoreRegistry` Nest
+provider that records every `@StorePlugin()`-decorated backend by `id`,
+enforces id validation (deferred from T02 / decorator), and exposes the
+lookup surface (`get / has / listIds / listMetadata`) that
+`StoreModule.forActive(storeId)` (T04) will consume at bootstrap. Spec
+004 graduates from "Phase 1 partial (T01–T02 done; T03–T04 pending)" to
+"Phase 1 partial (T01–T03 done; T04 pending)". This was run #18's
+explicit default for #19 ("~120-LOC NestJS provider … indexes them by
+`id` … duplicate-id guard that throws on collision"); implemented as
+planned without deviation. T03 is the choke point that unlocks T04
+(`StoreModule.forActive(storeId)`); from T04, Phases 2–5 fall in
+dependency order. The eventual gate on Spec 005 / T09 (60-second cron
+persisting health snapshots into `IJobStore`) remains in place.
+
+**No new questions opened this run.** T03 is straightforward: every
+shape decision is already pinned by Spec 004 §7.3 (error codes), Spec
+004 §7.2 (`IStoreMetadata`), and the `PluginRegistry` precedent (the
+analogous registry for source plugins). The two free decisions
+(*where* id validation lives, and *which* error codes registration-time
+failures use) were both load-bearing enough to lock in via the test
+suite and exported constants rather than as questions:
+
+1. **id validation lives in `StoreRegistry`, NOT in the decorator.**
+   Mirrors run #18's T02 rationale exactly — decoration runs at
+   class-load time before the logger is wired, so a thrown error there
+   would surface as a cryptic stack rather than a structured registry
+   log line operators can grep for. The 17-case invalid-id catalog and
+   the 8-case valid-id catalog (both via `it.each`) lock the
+   kebab-case regex `/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/` so a future
+   contributor can't drift to e.g. snake_case or PascalCase without
+   lighting up CI.
+2. **Registration-time failure codes are registry-local, NOT in Spec
+   004 §7.3.** The spec's §7.3 lists exactly three runtime/wire codes
+   (`ERR_STORE_NOT_FOUND`, `ERR_STORE_BACKEND_DOWN`,
+   `ERR_STORE_INVALID_CURSOR`). Invalid-id and duplicate-id are
+   bootstrap-time programmer errors, not runtime wire errors —
+   bundling them into §7.3 would dilute the wire contract. Solution:
+   export `ERR_STORE_INVALID_ID` and `ERR_STORE_DUPLICATE_ID` from
+   `@ever-jobs/plugin/store/store-registry.service.ts` (registry-local)
+   and use `ERR_STORE_NOT_FOUND` from `@ever-jobs/models` for the
+   `get(unknown)` runtime path. Test suite asserts all three string
+   literals so ops dashboards / log alerts can grep them safely.
+
+**Changes — code:**
+
+- `packages/plugin/src/store/store-registry.service.ts` — new ~190-LOC
+  file. Exports `StoreRegistry` (Injectable Nest provider),
+  `StoreRegistryError` (Error subclass with `code: string` so
+  `instanceof` works in interceptors / structured-log middleware), and
+  the two registry-local error codes `ERR_STORE_INVALID_ID` and
+  `ERR_STORE_DUPLICATE_ID`. Surface area:
+    - `register(metadata, store)` — validates `id` (non-empty
+      kebab-case), rejects duplicates, calls `Logger.error(message)`
+      before throwing. Atomic — failed registration leaves
+      `size` unchanged.
+    - `get(id)` — returns `IJobStore` or throws with code
+      `ERR_STORE_NOT_FOUND`. Error message lists currently-registered
+      ids for ops triage (e.g. `Unknown store plugin id: 'postgres'.
+      Registered ids: [memory, sqlite]`).
+    - `tryGet(id)` — non-throwing variant; returns `undefined` for
+      unknown id. Used by diagnostic / listing code paths
+      (e.g. `GET /api/storage` when listing only).
+    - `has(id)` — O(1) presence check.
+    - `getMetadata(id)` — returns `IStoreMetadata | undefined`.
+    - `listIds()` — insertion-order `string[]` (matches
+      `PluginRegistry.listSiteKeys()` so admin endpoints can share
+      rendering logic without sorting twice).
+    - `listMetadata()` — insertion-order `IStoreMetadata[]`.
+    - `size` — O(1) total registered backends.
+  Doc-block cites Spec 004 / FR-4 / T03 / T04 / §7.3 and explains the
+  decoration-time-vs-registry-time validation split + the
+  registry-local-vs-§7.3 error code split.
+- `packages/plugin/src/index.ts` — appends 4 new exports under the
+  existing `// Persistence-store plugin (Spec 004)` group:
+  `StoreRegistry`, `StoreRegistryError`, `ERR_STORE_INVALID_ID`,
+  `ERR_STORE_DUPLICATE_ID`. No other line changed; existing exports
+  order preserved.
+
+**Changes — tests:**
+
+- `packages/plugin/src/store/__tests__/store-registry.service.spec.ts`
+  — new ~290-LOC suite (**39 cases** across 7 describe-blocks):
+  1. **happy path** (4 cases): empty registry; id-only register;
+     id+description register; insertion-order across 3 registrations.
+  2. **`get(unknown)` → `ERR_STORE_NOT_FOUND`** (4 cases): throws
+     `StoreRegistryError`; error message lists registered ids;
+     `tryGet()` returns `undefined`; `has()` returns `false`.
+  3. **id validation rejects non-kebab-case** (17 cases via `it.each`):
+     empty string, whitespace-only, uppercase, all-uppercase,
+     underscore, space, leading hyphen, trailing hyphen, double
+     hyphen, leading digit, punctuation (`!`), dot, slash, `null`,
+     `undefined`, `number`, plain `object`. Each case asserts (a)
+     throws with `ERR_STORE_INVALID_ID`, (b) registry size remains 0
+     (atomic — no orphan entries).
+  4. **id validation accepts valid kebab-case** (8 cases via `it.each`):
+     `memory`, `sqlite`, `postgres`, `a` (single letter),
+     `pg2` (digit-after-letter), `store-postgres-prisma`,
+     `store-sqlite-drizzle`, `a1-b2-c3` (max-density alternation).
+  5. **duplicate id → `ERR_STORE_DUPLICATE_ID`** (2 cases): second
+     `register('memory')` throws and existing registration is
+     preserved (NOT overwritten); error message names the existing
+     description for triage.
+  6. **error class identity** (2 cases): `StoreRegistryError extends
+     Error`, `.name === 'StoreRegistryError'`, `.code` propagates;
+     all three error code constants have the expected literal
+     string values (`ERR_STORE_INVALID_ID`, `ERR_STORE_DUPLICATE_ID`,
+     `ERR_STORE_NOT_FOUND`).
+  7. **NestJS DI integration** (2 cases): `StoreRegistry` resolves as
+     a singleton provider via `Test.createTestingModule`; round-trip
+     register → get works through the DI surface (not just direct
+     instantiation).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/004-persistence-storage-plugins/tasks.md` — T03
+  graduates from "pending" to "done" with planned-vs-actual file list,
+  validation-policy summary, error-code-routing rationale, line-count
+  notes, and per-case test summary.
+- `.specify/specs/004-persistence-storage-plugins/spec.md` — `Status`
+  flipped to `Phase 1 partial (T01–T03 done; T04 pending)`;
+  `Last updated` bumped to `2026-04-27 (run #19)`.
+- `docs/index.md` — Spec 004 row updated with new status string;
+  `Last revised` bumped to `2026-04-27 (run #19)`.
+- `CLAUDE.md` — run-tag bumped to #19 in the footer.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #19 sync line; **no upstream commits**
+  in any of the three tracked repos (nine consecutive zero-churn
+  runs).
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns
+  'packages/plugin/src/store/__tests__/store-registry'` —
+  **39 / 39 passed** (T03 registry suite).
+- `npx jest --testPathPatterns
+  'packages/models|packages/plugin/__tests__|packages/plugin/src/store|packages/plugin/src/circuit-breaker'`
+  — **112 / 112 passed across 8 suites** (regression: T01 + T02 + T03
+  + circuit-breaker + canonical-job + disabled-sources +
+  plugin-discovery tests all green).
+- `npx jest --testPathPatterns
+  'apps/api/__tests__/(e2e/sources-(health|admin)|e2e/metrics-circuit-state|integration/circuit-breaker|integration/plugin-policy|health\.e2e)|packages/plugin/src/circuit-breaker|apps/api/src/jobs/__tests__/(plugin-policy|sources-admin)|apps/api/src/auth/__tests__/api-key|apps/api/src/metrics/__tests__/metrics.service|packages/models|packages/plugin/__tests__|packages/plugin/src/store'`
+  — **178 / 178 passed across 18 suites** (full regression bundle:
+  Spec 005 / T01–T08, legacy `/health` + `/ping`, Spec 004 / T01–T03,
+  canonical-job schema, disabled-sources, plugin-discovery, api-key
+  guard, metrics service).
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` — clean.
+
+**Notes & follow-ups:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #18
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). Nine consecutive runs of zero-churn.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#18; not wired into CI). Open
+  fall-back follow-up.
+- Default for run #20 is **Spec 004 / T04 — `StoreModule.forActive(storeId)`
+  factory** (~80-LOC NestJS dynamic module that consults
+  `StoreRegistry.get(storeId)` at bootstrap and binds the chosen
+  backend to `JOB_STORE_TOKEN` + `JOB_OBSERVATION_STORE_TOKEN`).
+  T04 is a thin wrapper around T03 — the registry does the real
+  work; the module just plumbs the chosen `IJobStore` into the DI
+  container under the canonical token. T04 unlocks Phases 2–5 in
+  dependency order, starting with T05/T06 (`store-memory` reference
+  backend). Estimate: 0.25 day. If T04 is blocked for any reason,
+  the fall-back is the open `dedup-hybrid` LSH follow-up (~0.5 day).
+- T03 is the *first* T0x in Spec 004 that exercises runtime
+  behaviour — T01 was contract-only (interfaces erase at runtime) and
+  T02 was decoration-only (`SetMetadata`). The 39 unit cases here are
+  load-bearing because they pin (a) the validation rules backend
+  authors will discover only when a register call throws, and (b) the
+  exact error-code strings ops dashboards / log alerts will grep
+  literally. A future contributor cannot loosen the kebab-case regex,
+  drift the error codes, or silently swallow a duplicate
+  registration without lighting up CI.
+- No `StoreDiscoveryService` was added in this run — `StoreRegistry`
+  is intentionally a pure data structure (mirroring `PluginRegistry`,
+  which is populated by a separate `PluginDiscoveryService`). T04
+  may add `StoreDiscoveryService` if the dynamic-module factory needs
+  it, OR may register backends manually in `StoreModule.forActive`'s
+  `useFactory` callback. Decision deferred to T04.
+
+---
+
 ## 2026-04-27 — Scheduled run #18 (Spec 004 Phase 1 — T02 `@StorePlugin()` decorator unblocking T03 `StoreRegistry`)
 
 **Scope:** land Spec 004 / Phase 1 / T02 — the `@StorePlugin()` class

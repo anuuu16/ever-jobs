@@ -70,11 +70,51 @@
     objects (no shared-prototype leak). 8 / 8 passed.
   - **Estimate:** 0.25 day. **Actual:** ~0.25 day.
 
-- [ ] T03 — Add `StoreRegistry`.
-  - **Files:** `packages/plugin/src/store/store-registry.service.ts`,
+- [x] T03 — Add `StoreRegistry`.
+  - **Files (planned):** `packages/plugin/src/store/store-registry.service.ts`,
     `packages/plugin/src/store/__tests__/store-registry.service.spec.ts`.
-  - **Acceptance:** register/get/listIds; duplicate id throws.
-  - **Estimate:** 0.5 day.
+  - **Files (actual):** `packages/plugin/src/store/store-registry.service.ts`
+    (~190 LOC; injectable Nest provider exposing `register / get / tryGet
+    / has / getMetadata / listIds / listMetadata / size`),
+    `packages/plugin/src/store/__tests__/store-registry.service.spec.ts`
+    (~290 LOC; **39 cases** across 7 describe-blocks),
+    `packages/plugin/src/index.ts` (added 4 exports — `StoreRegistry`,
+    `StoreRegistryError`, `ERR_STORE_INVALID_ID`, `ERR_STORE_DUPLICATE_ID`).
+  - **Acceptance:** register/get/listIds; duplicate id throws. **Done:**
+    run #19 (2026-04-27). Validation policy (deferred from T02 / decorator)
+    now lives here:
+      - id MUST be a non-empty kebab-case string
+        (regex `/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/`) — rejects empty,
+        whitespace, uppercase, snake_case, leading / trailing / double
+        hyphens, leading digit, punctuation, and non-string types
+        (`null`, `undefined`, `number`, `object`).
+      - Duplicate id rejected on second `register()` — existing
+        registration MUST NOT be overwritten (silent overwrite is the
+        original sin this registry pattern was created to prevent;
+        Spec 004 §7.3 reasoning).
+      - All registration failures are atomic: a thrown error MUST
+        leave the registry's `size` unchanged. Tests verify by
+        asserting `size === 0` after every reject path.
+    Three error codes carry the failure modes for ops-grep:
+      - `ERR_STORE_NOT_FOUND` (Spec 004 §7.3) — `get(unknown)`.
+      - `ERR_STORE_INVALID_ID` (registry-local; not in §7.3 because
+        it's a bootstrap-time programmer error rather than a runtime
+        wire error) — `register({ id: <bad> })`.
+      - `ERR_STORE_DUPLICATE_ID` (registry-local; same rationale) —
+        `register()` of an already-registered id.
+    Errors flow through a thin `StoreRegistryError` subclass with a
+    `code: string` field so `instanceof` works in interceptors and
+    structured-log middleware. Both registry-local codes are exported
+    from `@ever-jobs/plugin` so the eventual `StoreModule.forActive()`
+    (T04) and the future `GET /api/storage` endpoint can grep them
+    consistently. Test suite locks: empty-state behaviour, happy-path
+    register / get / listIds (insertion order — matches
+    `PluginRegistry.listSiteKeys()`), error-message-contains-registered-ids
+    for triage, `tryGet()` non-throwing variant, full invalid-id
+    catalog (17 cases via `it.each`), accepts-valid-id catalog (8
+    cases), duplicate-id rejection + state-preservation, error class
+    identity, and NestJS DI singleton resolution.
+  - **Estimate:** 0.5 day. **Actual:** ~0.5 day.
 
 - [ ] T04 — Add `StoreModule.forActive(storeId)` factory.
   - **Files:** `packages/plugin/src/store/store.module.ts`.
