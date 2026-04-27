@@ -5,6 +5,164 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #25 (Spec 004 Phase 5 — T11: `JobsAggregator` persists post-dedup output; T12 deferred)
+
+**Scope:** land Spec 004 / Phase 5 / T11 — wire the dedup-engine
+output through `IJobStore.upsertMany` (and, when bound,
+`IJobObservationStore.putAll`) inside `JobsAggregator.aggregateRaw`,
+behind a `persist?: boolean` per-call opt-out (default `true`). Run
+#24's Notes-for-the-next-run set the default to "T11 + T12 together"
+(mirroring the Phase 3 T07 + T08 pairing); the deviation here is
+landing T11 alone this run. Rationale: T11 is a pure-aggregator
+change that compiles + tests against the existing module graph
+without a single new module import in `apps/api/src/app.module.ts`;
+T12 requires deciding on backend-fleet shape (which `@StorePlugin`
+classes ship with the API by default — `InMemoryJobStore` only? add
+`SqliteDrizzleJobStore`? gate `PostgresPrismaJobStore` on
+`@prisma/client` being generated?) and that decision interacts with
+the lockfile / `prisma generate` ergonomics in CI. Splitting the
+phase boundary here lands T11 cleanly while T12 ships next run
+behind a Q-019 covering the backend-fleet question.
+
+**One new question opened this run — Q-018** (persistence wiring:
+opt-in vs opt-out, error policy, observation-store coupling,
+`AggregateResult` shape). Five sub-questions resolved with
+**Option A**: default `persist=true`; no-store → silent skip; on
+`upsertMany` failure log + structured `persistError`; capture
+observations via `IJobObservationStore.putAll` (best-effort within
+best-effort); extend `AggregateResult` additively with `persisted`
++ `persistCounts` + `persistError`. The full options matrix and the
+load-bearing reasoning sit in `docs/questions.md` Q-018; the
+short version is "best-effort persistence keeps the search hot
+path 100 % available during an unrelated DB blip" — Spec 004 /
+NFR-4 budgets cold-start at 750 ms but says nothing about graceful
+degradation, and Option A fills that gap without breaking the wire
+shape (every existing controller / resolver / test compiles
+unchanged).
+
+**Changes — code:**
+
+- `apps/api/src/jobs/jobs.aggregator.ts` — extended.
+  `AggregateOptions` gained `persist?: boolean` (default `true`)
+  with a JSDoc cross-reference to Q-018.
+  `AggregateResult` gained three optional fields — `persisted`,
+  `persistCounts: { inserted, updated }`, and
+  `persistError: { code, message }` — none of which break existing
+  callers.
+  Constructor gained two new `@Optional() @Inject(...)` slots
+  for `JOB_STORE_TOKEN` and `JOB_OBSERVATION_STORE_TOKEN` (positional;
+  every existing test that constructs the aggregator with one or two
+  ctor args continues to compile).
+  New private `maybePersist(canonical, options)` method captures the
+  best-effort persistence side-effect: opt-out short-circuit,
+  no-store silent skip, empty-canonical zero-call optimisation,
+  `upsertMany` round-trip, observation `putAll` per canonical via
+  `Promise.allSettled` (a single bad observation row doesn't drop
+  the rest, and observation rejections do NOT flip `persisted` to
+  `false` — canonical is the load-bearing write).
+  New exported `ERR_STORE_PERSIST_FAILED` constant — the fallback
+  error code surfaced via `persistError` when the rejection lacks a
+  structured `.code`. Distinct from the well-known Spec 004 §7.3
+  codes (`ERR_STORE_BACKEND_DOWN`, `ERR_STORE_INVALID_CURSOR`) so
+  log queries can grep `ERR_STORE_PERSIST_FAILED` specifically when
+  triaging aggregator-side persistence drops.
+
+**Changes — tests:**
+
+- `apps/api/src/jobs/__tests__/jobs.aggregator.spec.ts` — extended.
+  New top-level `describe('aggregateRaw — persistence (Spec 004 /
+  T11)')` block with **9 cases**: (1) default-success path (store
+  bound, dedup ran, `persisted: true` + `persistCounts` propagated),
+  (2) `persist=false` short-circuit (no `upsertMany` call,
+  `persisted` remains undefined), (3) no-store silent skip,
+  (4) structured-code failure capture (`ERR_STORE_BACKEND_DOWN`
+  flows through `persistError` unchanged; hot-path response is
+  unaffected), (5) bare-Error fallback to `ERR_STORE_PERSIST_FAILED`,
+  (6) observation `putAll` propagation (one call per canonical,
+  `canonicalJobId` + `observations` echoed), (7) observation-store
+  best-effort isolation (`putAll` rejection does NOT flip
+  `persisted` to `false`), (8) empty-canonical zero-call
+  optimisation, (9) dedup=false / no-engine pass-through paths
+  skip persistence by construction. New stub helpers
+  `makeStubStore` / `makeFailingStore` / `makeStubObservationStore`
+  + `withSources` flag on `makeStubEngine`. Pre-existing 11 cases
+  continue to compile + pass — every existing test that used
+  `new JobsAggregator(makeJobsService())` or
+  `new JobsAggregator(makeJobsService(), engine)` is preserved by
+  the positional-optional ctor extension.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/004-persistence-storage-plugins/tasks.md` — T11
+  graduates from "pending" to "done" with full planned-vs-actual
+  file list, five-decision rationale (default `true`, no-store
+  silent skip, captured-not-bubbled failures, observation
+  best-effort isolation, additive result extension), and
+  verification numbers. Phase 5 now in progress (T11 done, T12
+  pending).
+- `.specify/specs/004-persistence-storage-plugins/spec.md` —
+  `Status` flipped to `Phases 1–4 done (T01–T10); Phase 5 in
+  progress (T11 done, T12 pending)`; `Last updated` bumped to
+  `2026-04-27 (run #25)`.
+- `docs/questions.md` — new Q-018 at the top with the five
+  sub-questions, three options, default = Option A, resolution =
+  pending. Run-tag `(run #25)`.
+- `docs/index.md` — Spec 004 row updated with new status string;
+  `Last revised` bumped to `2026-04-27 (run #25)`.
+- `CLAUDE.md` — run-tag bumped to #25 in the footer.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #25 sync line; **no upstream
+  commits** in any of the three tracked repos (fifteen consecutive
+  zero-churn runs).
+
+**Verification (local, against this commit):**
+
+- T11 ships TypeScript source + tests but cannot run them in the
+  sandbox: the test surface needs `@nestjs/common`, `@nestjs/testing`,
+  Jest, and the resolved `@ever-jobs/*` path aliases — all CI-only
+  per `Agents.md` §"Scheduled-task agents". The full unit-test
+  bundle will validate on CI push.
+- `npm run lint:docs` — clean ("✓ Doc-lint passed — no issues.")
+  after this run's edits.
+- Type-check via `npx tsc --project apps/api/tsconfig.build.json
+  --noEmit` — also CI-only (sandbox has no `node_modules`); the
+  edited `jobs.aggregator.ts` only adds optional positional ctor
+  params, optional fields on the result interface, and a new
+  exported constant — none of which break the existing
+  `JobsModule` import graph.
+
+**Notes & follow-ups:**
+
+- T12 (the `EVER_JOBS_STORE` env-var bootstrap honouring) is the
+  default for **run #26**. T12 requires deciding the default
+  backend-fleet shape (Q-019 candidate): does the API ship with
+  every `@StorePlugin` class wired into `StoreModule.forActive(...,
+  { backends: [...] })`, or only the lightweight ones (memory +
+  sqlite-drizzle), or all three gated on env probes? The
+  decision interacts with the existing lockfile/prisma-generate
+  ergonomics that already gate the `store-postgres-prisma`
+  plugin's tests on `RUN_PG_TESTS=1`. Open Q-019 in run #26 with
+  three options and proceed with the "memory only by default,
+  others opt-in via env / explicit module import" default unless
+  the user has weighed in by then.
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #24
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). **Fifteen** consecutive runs of zero-churn — the
+  open `Ats-scrapers`-parity items in `competitor-watch.md §C`
+  (AC-1..AC-9) remain the higher-leverage follow-up if Phase 5
+  closes ahead of schedule.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#24; not wired into CI).
+  Open fall-back follow-up.
+- Default for run #26 is **Spec 004 / Phase 5 — T12**
+  (`EVER_JOBS_STORE` env-var bootstrap honouring) plus a Q-019
+  on the default backend-fleet shape. T12 closes Spec 004
+  entirely once T11 (this run) and T12 ship together.
+
+---
+
 ## 2026-04-27 — Scheduled run #24 (Spec 004 Phase 4 — T10: `store-postgres-prisma` IJobStore implementation; Phase 4 closes)
 
 **Scope:** land Spec 004 / Phase 4 / T10 — author the Prisma-typed

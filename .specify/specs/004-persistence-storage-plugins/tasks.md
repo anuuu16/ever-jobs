@@ -708,10 +708,70 @@
 
 ## Phase 5 — Wire into aggregator
 
-- [ ] T11 — Aggregator persists post-dedup output.
-  - **Files:** `apps/api/src/jobs/jobs.aggregator.ts`.
+- [x] T11 — Aggregator persists post-dedup output.
+  - **Files (planned):** `apps/api/src/jobs/jobs.aggregator.ts`.
+  - **Files (actual):** `apps/api/src/jobs/jobs.aggregator.ts`
+    (~150 LOC delta; added `persist?: boolean` to `AggregateOptions`,
+    extended ctor with two `@Optional() @Inject` slots — `JOB_STORE_TOKEN`
+    + `JOB_OBSERVATION_STORE_TOKEN` — added `maybePersist(...)`
+    private method, extended `AggregateResult` with optional
+    `persisted` / `persistCounts` / `persistError` fields, and
+    exported a new `ERR_STORE_PERSIST_FAILED` fallback error code),
+    `apps/api/src/jobs/__tests__/jobs.aggregator.spec.ts`
+    (~190 LOC delta; new top-level `describe('aggregateRaw —
+    persistence (Spec 004 / T11)')` block with **9 cases** covering
+    every persistence path: default success, `persist=false` short
+    circuit, no-store silent skip, structured-code failure capture,
+    bare-Error fallback to `ERR_STORE_PERSIST_FAILED`, observation
+    `putAll` propagation, observation-store best-effort isolation,
+    empty-canonical zero-call optimisation, dedup=false short-circuit,
+    no-engine pass-through), `docs/questions.md` (Q-018 — persistence
+    wiring design with five sub-questions and three options).
   - **Acceptance:** Default behaviour persists; `persist=false` bypasses.
-  - **Estimate:** 0.5 day.
+    **Done:** run #25 (2026-04-27). Five load-bearing decisions weren't
+    called out in `tasks.md` and were locked into the source/test
+    surface (per Q-018):
+      1. **Default `persist=true`.** Matches the acceptance line
+         exactly.
+      2. **No-store → silent skip (NOT request-time
+         `ERR_STORE_NOT_FOUND`).** Spec 004 §7.3 reserves
+         `ERR_STORE_NOT_FOUND` for **bootstrap**; reusing it at
+         request time would conflate two different operator triage
+         signals. Mirrors the dedup-engine precedent (T13 / Spec
+         003: "When no engine is bound the aggregator is a pass-
+         through"). T12 will validate `EVER_JOBS_STORE` at boot.
+      3. **Persistence failures are captured, NOT bubbled.** A
+         transient DB blip MUST NOT turn a successful search into
+         a 500. The aggregator catches the rejection, captures
+         `{ code, message }` into `AggregateResult.persistError`,
+         and `logger.warn`s. Operators read this from logs / metrics
+         (a future spec will add `store_persist_failures_total` to
+         the Prometheus surface). The hot-path response stays 100 %
+         available during a backend outage.
+      4. **Observation-store coupling is best-effort within
+         best-effort.** `Promise.allSettled` over per-canonical
+         `putAll` calls so one bad row doesn't drop the rest;
+         observation rejections do NOT flip `persisted` to `false`
+         (canonical is the load-bearing write — observations can be
+         backfilled, canonical can't). The conformance test
+         `treats observation-store failures as best-effort
+         (canonical still persisted)` pins this so a future
+         "tighten the contract" refactor can't silently change it.
+      5. **`AggregateResult` extension is purely additive.** Three
+         new optional fields (`persisted` / `persistCounts` /
+         `persistError`) — every existing controller / resolver /
+         test continues to compile unchanged. The
+         `ERR_STORE_PERSIST_FAILED` fallback code is exported from
+         `jobs.aggregator.ts` (NOT `@ever-jobs/models`) because it's
+         scoped to the aggregator's persistence side-effect; the
+         well-known Spec 004 §7.3 codes (`ERR_STORE_BACKEND_DOWN`,
+         `ERR_STORE_INVALID_CURSOR`) flow through unchanged when the
+         backend rejection carries a structured `.code`.
+    Verification: 9 / 9 new cases plus the 11 pre-existing cases
+    cover every branch in `aggregateRaw`. Tests cannot run in this
+    sandbox (no `node_modules` — pattern from runs #21–#24); CI on
+    push validates the full unit + integration bundle.
+  - **Estimate:** 0.5 day. **Actual:** ~0.5 day.
 
 - [ ] T12 — `EVER_JOBS_STORE` env-var honoured at bootstrap.
   - **Files:** `apps/api/src/app.module.ts`.

@@ -10,6 +10,105 @@
 
 ---
 
+## Q-018 — Aggregator persistence wiring: opt-in vs opt-out, error policy, observation-store coupling, AggregateResult shape (Spec 004 / T11)
+
+**Context:** T11's acceptance is two lines — "Default behaviour
+persists; `persist=false` bypasses." The aggregator already runs the
+dedup engine and emits `DedupResult.canonical` (the `CanonicalJob[]`
+to persist) plus per-input `assignments`. Five latent design choices
+weren't called out in `tasks.md`:
+
+1. **Default `persist`?** The acceptance line spells it out — "Default
+   behaviour persists" → default `true`. Confirmed; no question.
+2. **What happens when no `IJobStore` is bound?** Two reasonable
+   shapes: (a) silently treat as `persist=false` (back-compat: every
+   existing test runs without a store binding); (b) hard fail at
+   request time with `ERR_STORE_NOT_FOUND`. (a) keeps tests honest
+   without forcing every test fixture to wire a store; (b) makes
+   misconfigured prod loud. Spec 004 §7.3 reserves the
+   `ERR_STORE_NOT_FOUND` code for **bootstrap** (T12), so request-time
+   should NOT raise it.
+3. **Persistence failures: throw or swallow?** The aggregator is on
+   the hot path of `POST /api/jobs/search`. Three options: (a) bubble
+   any `IJobStore.upsertMany` rejection to the caller — a transient
+   DB blip turns every search into a 500; (b) swallow + `logger.warn`
+   + still return the deduped list — the user gets results, the
+   operator gets a log line; (c) swallow + structured `persistError`
+   field on `AggregateResult` so the controller can surface a
+   header / metric without blocking the response. Spec 004 §7.3's
+   `ERR_STORE_BACKEND_DOWN` doctrine ("bubble with retry hints") was
+   written for explicit store callers (`GET /api/jobs/:id`), not for
+   the aggregator's optional persistence side-effect.
+4. **Observation-store coupling.** Each `CanonicalJob` carries
+   `sources: ReadonlyArray<SourceObservation>`. Two options:
+   (a) call `observationStore.putAll(canonicalJobId, sources)` for
+   every canonical record so observation history is captured;
+   (b) skip observations and let a future T13 add it. Spec 004
+   §7 / FR-2 already requires `IJobObservationStore` to be wired by
+   the same backend (T04's default `bindObservationStore: true`),
+   so capturing observations now is a one-line addition that keeps
+   the contract complete.
+5. **AggregateResult shape.** Two options: (a) leave `AggregateResult`
+   alone — persistence is a side effect — and document the contract
+   in JSDoc; (b) extend with optional `persisted?: boolean`,
+   `persistCounts?: { inserted: number; updated: number }`, and
+   `persistError?: { code: string; message: string }` so the
+   controller can echo the outcome in a response header / metric.
+   (a) keeps the wire shape stable; (b) gives operators a one-roundtrip
+   answer for "did the search persist?".
+
+**Options:**
+
+- **Option A — Default `persist=true`; no-store → silent skip; on
+  upsertMany failure log + structured `persistError` (option 3.c);
+  capture observations via `IJobObservationStore.putAll`; extend
+  `AggregateResult` with `persisted` + `persistCounts` + `persistError`.**
+  Lowest blast radius for the hot path: a failing store NEVER turns
+  a successful search into a 500. The new fields on
+  `AggregateResult` are all optional — every existing controller /
+  resolver / test continues to compile unchanged. Persistence is
+  best-effort but observable: a future metrics interceptor can read
+  `result.persistError?.code` to count `store_persist_failures_total`.
+- **Option B — Default `persist=true`; no-store → silent skip;
+  bubble upsertMany failures (option 3.a); capture observations;
+  extend `AggregateResult` minimally (`persisted` boolean only).**
+  Loudest signal but every transient DB blip is a 500 to the user.
+  Operationally hostile for the search hot path.
+- **Option C — Default `persist=true`; no-store → silent skip;
+  swallow upsertMany failures with `logger.warn` (option 3.b); skip
+  observations for now; do NOT extend `AggregateResult`.** Smallest
+  diff but the controller can't tell whether persistence happened —
+  the caller / dashboard has to issue a follow-up `GET /api/jobs`
+  to verify, which is racy with concurrent writes.
+
+**Default — proceeding with Option A (run #25).** Reasons:
+- Best-effort persistence keeps the search hot path 100 % available
+  during an unrelated DB blip (Spec 004 / NFR-4 budgets cold-start
+  at 750 ms but says nothing about graceful degradation; Option A
+  fills that gap).
+- Capturing observations alongside canonical records keeps the
+  store contract (FR-1 + FR-2) complete in the only writer the API
+  has, so a future analytics query can rely on
+  `IJobObservationStore.listByCanonicalId` without a backfill.
+- The `persistError` field on `AggregateResult` is the cheapest way
+  to surface partial failure to the caller without breaking the
+  response envelope. The controller stays a one-liner; metrics /
+  alerting can be added later by a separate spec without re-wiring
+  the aggregator.
+- Silently skipping when no store is bound matches the dedup-engine
+  precedent (Spec 003 / T13: "When no engine is bound the aggregator
+  is a pass-through"). Operators who set `EVER_JOBS_STORE` get
+  bootstrap-time validation in T12; until then, persistence is a
+  no-op rather than a runtime error.
+
+**Resolution:** _pending_ — proceeding with Option A. Revisit if
+operator feedback shows the swallow-and-log pattern is hiding real
+production issues, at which point a `STORE_PERSIST_FAILURE_THRESHOLD`
+(consecutive failures → bootstrap-style fail-fast) would be a
+cleaner escalation than per-request bubbling.
+
+---
+
 ## Q-017 — Admin force-open / force-reset endpoint: route shape, auth strictness, response payload, invalid-site code (Spec 005 / T07)
 
 **Context:** T07's acceptance is exactly two lines —
