@@ -5,6 +5,335 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #21 (Spec 004 Phase 2 — T05 + T06: `store-memory` reference backend; Phase 2 closes)
+
+**Scope:** land Spec 004 / Phase 2 in a single run — T05 (scaffold
+`packages/plugins/store-memory/`) plus T06 (the `Map`-backed
+`InMemoryJobStore` reference implementation behind `IJobStore` +
+`IJobObservationStore`). With Phase 2 done, Spec 004 graduates from
+"Phase 1 done (T01–T04); Phases 2–5 pending" to "Phases 1–2 done
+(T01–T06); Phases 3–5 pending". This was run #20's explicit default
+for #21 ("Spec 004 / Phase 2 / T05 + T06 — `store-memory` reference
+backend"); implemented as planned without deviation. T05 + T06 ship
+together because T05 in isolation is just empty scaffolding and would
+not exercise the `IJobStore` contract — pairing them yields the
+first concrete backend that (a) lets `apps/api` wire `EVER_JOBS_STORE=memory`
+end-to-end against a working backend without needing Postgres, and
+(b) bootstraps the conformance suite that every later backend (T08
+sqlite-drizzle, T10 postgres-prisma) will reuse. The eventual gate
+on Spec 005 / T09 (60-second cron persisting health snapshots into
+`IJobStore`) remains in place — but with run #21 done, T09 is now
+unblocked end-to-end (the cron has a working store to persist into).
+
+**No new questions opened this run.** T05 / T06 are mechanical to a
+point — the contract is fully pinned by Spec 004 §7.1 and the
+`IJobStore` / `IJobObservationStore` interface JSDoc — but three
+load-bearing design decisions weren't called out in `tasks.md` Notes
+and were locked into the test surface rather than as new questions:
+
+1. **Opaque cursor envelope is `{ v: 1, offset: number }` base64-encoded.**
+   The contract says "opaque-cursor; backends MUST validate the
+   cursor's shape before parsing — never `eval` user input" but
+   leaves the actual envelope free. Three options for the in-memory
+   backend: (a) raw integer offset as a string, (b) base64-encoded
+   JSON, (c) opaque server-generated UUID with state cached in a
+   sidecar `Map`. Picked (b) because every later backend (sqlite,
+   postgres) will need to encode multi-field resume tokens (e.g.
+   `{ mergedAt, canonicalJobId }` for keyset pagination) — locking
+   in a base64-JSON envelope here means the aggregator and the
+   future `GET /api/jobs?cursor=…` endpoint don't need to fork on
+   backend type. The `v: 1` discriminator is forward-compatibility
+   insurance: a future change to the envelope (say, switching from
+   offset-based to keyset-based pagination once the in-memory store
+   is replaced with a real DB) can ship `v: 2` and reject older
+   cursors with `ERR_STORE_INVALID_CURSOR` rather than silently
+   misinterpret them.
+2. **Empty-string `cursor: ''` is REJECTED with
+   `ERR_STORE_INVALID_CURSOR` (NOT silently short-circuited to
+   "page 1").** The naive `query.cursor ? decodeCursor(...) : 0`
+   pattern would have let an empty-string typo fall through to "page
+   1" silently — exactly the failure mode the contract was designed
+   to prevent (operators chasing "why did pagination reset?" with no
+   error in logs). Fixed in this run after the conformance test for
+   "empty string cursor" failed against the truthy check; the test
+   suite pins the strict-presence behaviour with an explicit
+   `it.each` row so a future "simplification" can't drift back.
+3. **`listByQuery` ordering is `mergedAt` DESC, `canonicalJobId` ASC
+   tie-break.** DESC because the dedup engine emits "freshest first"
+   (Spec 003 / FR-3) and operators expect the API to surface the
+   most recent match without an explicit `?sort=` parameter. ASC
+   tie-break because two jobs sharing an identical `mergedAt` (common
+   in batch upserts where the dedup engine stamps every output row
+   with the same `mergedAt`) MUST yield a total order so cursor
+   pagination resumes deterministically — silent ordering drift
+   across pages is what the conformance suite's no-dupes guard would
+   catch, but pinning the order here keeps it predictable for
+   assertion writers as well.
+
+**Changes — code:**
+
+- `packages/plugins/store-memory/package.json` — new (~7-line)
+  package manifest. `name: "@ever-jobs/store-memory"`, `version:
+  "0.1.0"`, `main`/`types` → `src/index.ts`, MIT licence.
+  Mirrors the existing `merge-default` / `dedup-hybrid` shape
+  exactly so the npm-workspaces resolution stays uniform.
+- `packages/plugins/store-memory/tsconfig.json` — new (~9-line)
+  package tsconfig. Extends `../../../tsconfig.base.json`,
+  `outDir → ../../../dist/packages/store-memory`, `declaration: true`,
+  `include: ["src/**/*"]`. Test files under `__tests__/` are
+  intentionally OUT of `include` so production build artefacts don't
+  pull in `Reflector` / `@nestjs/testing` references.
+- `packages/plugins/store-memory/src/store-memory.service.ts` — new
+  ~280-LOC file. Exports `InMemoryJobStore` (decorated with
+  `@StorePlugin({ id: 'memory', description: STORE_MEMORY_DESCRIPTION })`
+  and `@Injectable()`), `STORE_MEMORY_ID = 'memory'`, and
+  `STORE_MEMORY_DESCRIPTION = 'In-memory reference store (Spec 004 —
+  dev / tests, no persistence)'`. Surface area:
+    - **`upsert(job)` / `upsertMany(jobs)`** — single-row and bulk
+      writes against `Map<canonicalJobId, CanonicalJob>`. `upsertMany`
+      pre-checks `Map.has` to split inserted-vs-updated counts; total
+      O(N) with a single Map walk (no second pass).
+    - **`getById(id)` / `findByCanonicalId(id)`** — both delegate to
+      `Map.get(id) ?? null` (pinning the `null`-NOT-`undefined`
+      interface contract). The two methods are aliases per Spec 004
+      §7.1; the second one exists for caller clarity at the
+      dedup-engine boundary.
+    - **`listByQuery(query)`** — single-pass filter (case-folded
+      substring match on `company` / `title` / `location`, inclusive
+      ISO-8601 lower bound on `mergedAt` for `since`), then sorts by
+      `compareForListing` (mergedAt DESC, canonicalJobId ASC), then
+      slices `[offset, offset + limit)`. Returns `{ items }` (NO
+      `nextCursor` key) when the slice exhausts the filtered set,
+      `{ items, nextCursor }` otherwise. `nextCursor` is encoded
+      via `encodeCursor({ v: 1, offset: offset + items.length })`.
+    - **`delete(id)`** — removes from canonicals, cascades to
+      observations on hit. Returns the boolean indicating whether
+      anything was actually removed.
+    - **`putAll(canonicalJobId, observations)`** — replaces the
+      observation array (NOT merges); copies the input via `.slice()`
+      so caller mutations after the call don't bleed into stored state.
+    - **`listByCanonicalId(id)`** — returns a fresh `.slice()` of the
+      stored observation array (defence against caller-side mutation),
+      `[]` for unknown ids.
+    - **`deleteByCanonicalId(id)`** — returns the count of removed
+      observations (idempotent: second call returns 0).
+    - **`size` / `clear`** — diagnostic surface for tests; not part
+      of either `IJobStore` or `IJobObservationStore`. Production
+      callers SHOULD use `listByQuery` for any business logic.
+  Cursor envelope helpers — `encodeCursor(MemoryCursor)` (base64 of
+  `JSON.stringify`), `decodeCursor(string) → MemoryCursor` (rejects
+  not-base64 / not-JSON / non-object / wrong-version /
+  non-integer-offset / negative-offset / string-offset /
+  fractional-offset paths via `MemoryStoreCursorError`), and
+  `resolveLimit(limit?)` (default to `JOB_STORE_QUERY_DEFAULT_LIMIT`
+  when omitted / non-finite / non-positive; clamp to
+  `JOB_STORE_QUERY_MAX_LIMIT`). `MemoryStoreCursorError` carries
+  `code = ERR_STORE_INVALID_CURSOR` so `instanceof` and structural
+  matching (`.toMatchObject({ code })`) both work.
+- `packages/plugins/store-memory/src/store-memory.module.ts` — new
+  ~30-LOC NestJS module. `@Module({ providers: [InMemoryJobStore],
+  exports: [InMemoryJobStore] })` only — does NOT bind
+  `JOB_STORE_TOKEN` itself. Active-backend selection stays in
+  `StoreModule.forActive(storeId, { backends: [InMemoryJobStore] })`
+  so the seam isn't duplicated. Doc-block walks the consumer through
+  the canonical `apps/api` wiring pattern.
+- `packages/plugins/store-memory/src/index.ts` — barrel re-exporting
+  `InMemoryJobStore`, `StoreMemoryModule`, `STORE_MEMORY_ID`,
+  `STORE_MEMORY_DESCRIPTION`.
+
+**Changes — tests:**
+
+- `packages/plugin/src/store/__tests__/conformance.ts` — new
+  ~360-LOC shared conformance suite. Exports
+  `runStoreConformance(label, factory)` plus the
+  `ConformanceBackend = IJobStore & IJobObservationStore` and
+  `ConformanceBackendFactory = () => ConformanceBackend` types.
+  **24 contract cases** in 7 describe-blocks:
+  1. **upsert / getById** (5 cases): round-trip a `CanonicalJob`
+     unchanged; `findByCanonicalId` is symmetric with `getById`;
+     `getById(unknown)` returns `null` AND survives `JSON.stringify`
+     (pins the contract that the `null`-vs-`undefined` distinction
+     is on the wire); `findByCanonicalId(unknown)` returns `null`;
+     `upsert` overwrites by key.
+  2. **upsertMany** (3 cases): all-new batch returns
+     `{ inserted: N, updated: 0 }`; mixed insert/update batch
+     reports both counts correctly AND the post-write `getById`
+     reflects the V2 row; empty array returns `{ 0, 0 }`.
+  3. **delete** (3 cases): hit returns `true`, follow-up `getById`
+     is `null`; miss returns `false`; cascades to attached
+     observations (FR-1 / FR-2 cross-contract guard).
+  4. **listByQuery filters** (6 cases, seeded with a 5-row cohort):
+     empty filter returns all rows; case-insensitive substring on
+     `company` / `title` / `location`; inclusive lower bound on
+     `since`; combined `company + since` filter.
+  5. **listByQuery limits** (2 cases): clamps `limit >
+     JOB_STORE_QUERY_MAX_LIMIT` to MAX (seeds MAX+5 rows so the
+     clamp is observable); defaults to
+     `JOB_STORE_QUERY_DEFAULT_LIMIT` when omitted.
+  6. **listByQuery cursor pagination** (3 cases): paginates 25
+     rows in `pageSize: 7` chunks across 4 pages with no dupes
+     (tracks every yielded `canonicalJobId` in a `Set` and
+     asserts `seen.size === 25` at termination, plus a
+     safety-belt 100-page loop guard); final page has NO
+     `nextCursor` key (`hasOwnProperty` is `false` —
+     stricter than `=== undefined`); malformed cursor throws
+     with `code: ERR_STORE_INVALID_CURSOR`.
+  7. **IJobObservationStore** (4 cases): putAll →
+     listByCanonicalId round-trip with sort-by-`sourceJobId`;
+     putAll replaces (not merges) on second call; deleteByCanonicalId
+     returns count and is idempotent (second call → 0);
+     listByCanonicalId(unknown) returns `[]`.
+- `packages/plugins/store-memory/__tests__/store-memory.spec.ts` —
+  new ~190-LOC file. Calls
+  `runStoreConformance('store-memory', () => new InMemoryJobStore())`
+  AND adds **18 backend-specific cases** in 4 describe-blocks:
+  1. **cursor envelope** (10 cases): 9 invalid-cursor shapes via
+     `it.each` — empty-string, plain-text, base64 of non-JSON,
+     base64 of literal `42`, missing version, wrong version,
+     negative offset, fractional offset, string offset (each row
+     asserts `code: ERR_STORE_INVALID_CURSOR` AND
+     `name: 'MemoryStoreCursorError'`); + a 10th "round-trip" case
+     that decodes a returned `nextCursor` to assert the envelope
+     literally is `{ v: 1, offset: 2 }` and that re-feeding it
+     yields the next 2 rows with no overlap.
+  2. **@StorePlugin metadata** (2 cases): raw `Reflect.getMetadata`
+     and `new Reflector().get` both resolve `{ id: 'memory',
+     description: STORE_MEMORY_DESCRIPTION }` for `InMemoryJobStore`
+     (pins T05 acceptance — the plugin is discoverable by
+     `StoreModule.forActive`).
+  3. **StoreMemoryModule** (2 cases): exports `InMemoryJobStore`
+     as an injectable provider via `Test.createTestingModule`;
+     binds a singleton (two `moduleRef.get(InMemoryJobStore)`
+     calls return the same reference).
+  4. **size / clear** (2 cases): `size` reflects `upsert` count,
+     resets to 0 after `clear`; `clear` drops observations as
+     well as canonicals.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/004-persistence-storage-plugins/tasks.md` — T05
+  graduates from "pending" to "done" with planned-vs-actual file
+  list, NestJS-wiring-rationale (NOT bound to `JOB_STORE_TOKEN`
+  itself), feature-plugin-vs-source-plugin AGENTS.md §5 cite.
+  T06 graduates from "pending" to "done" with planned-vs-actual
+  file list, three-decision rationale (cursor envelope shape,
+  empty-cursor strict-rejection, listByQuery ordering), per-case
+  test summary, and verification numbers (42 / 42 in the plugin
+  suite, 170 / 170 across the focused regression bundle, 236 / 236
+  across the broad regression bundle).
+- `.specify/specs/004-persistence-storage-plugins/spec.md` —
+  `Status` flipped to `Phases 1–2 done (T01–T06); Phases 3–5
+  pending`; `Last updated` bumped to `2026-04-27 (run #21)`.
+- `docs/index.md` — Spec 004 row updated with new status string;
+  `Last revised` bumped to `2026-04-27 (run #21)`.
+- `CLAUDE.md` — run-tag bumped to #21 in the footer.
+- `docs/log.md` — this entry.
+- `tsconfig.base.json` — added path alias
+  `@ever-jobs/store-memory → packages/plugins/store-memory/src/index.ts`
+  (per AGENTS.md §5: feature plugins register in tsconfig + jest only).
+- `jest.config.js` — added matching `moduleNameMapper` entry.
+- `/competitor-watch.md` — run #21 sync line; **no upstream commits**
+  in any of the three tracked repos (eleven consecutive zero-churn
+  runs).
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns 'packages/plugins/store-memory'` —
+  **42 / 42 passed** (T05 + T06 plugin suite: 24 conformance cases
+  + 18 backend-specific cases).
+- `npx jest --testPathPatterns
+  'packages/models|packages/plugin/__tests__|packages/plugin/src/store|packages/plugin/src/circuit-breaker|packages/plugins/store-memory'`
+  — **170 / 170 passed across 10 suites** (focused regression: T01
+  + T02 + T03 + T04 + T05 + T06 + circuit-breaker + canonical-job
+  + disabled-sources + plugin-discovery tests all green).
+- `npx jest --testPathPatterns
+  'apps/api/__tests__/(e2e/sources-(health|admin)|e2e/metrics-circuit-state|integration/circuit-breaker|integration/plugin-policy|health\.e2e)|packages/plugin/src/circuit-breaker|apps/api/src/jobs/__tests__/(plugin-policy|sources-admin)|apps/api/src/auth/__tests__/api-key|apps/api/src/metrics/__tests__/metrics.service|packages/models|packages/plugin/__tests__|packages/plugin/src/store|packages/plugins/store-memory'`
+  — **236 / 236 passed across 20 suites** (broad regression: Spec
+  005 / T01–T08, legacy `/health` + `/ping`, Spec 004 / T01–T06,
+  canonical-job schema, disabled-sources, plugin-discovery,
+  api-key guard, metrics service, sources-admin controller,
+  plugin-policy bootstrapper).
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` — clean.
+- `npm run lint:docs` — clean ("✓ Doc-lint passed — no issues.").
+
+**Notes & follow-ups:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #20
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). **Eleven** consecutive runs of zero-churn — well
+  past the point where adopting the open `Ats-scrapers`-parity
+  items in `competitor-watch.md §C` (AC-1..AC-9) would be the
+  higher-leverage default if Spec 004 / Phase 3 stalls.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#20; not wired into CI).
+  Open fall-back follow-up.
+- Default for run #22 is **Spec 004 / Phase 3 / T07 + T08 —
+  `store-sqlite-drizzle` reference backend**:
+    - T07 scaffolds `packages/plugins/store-sqlite-drizzle/`
+      (package.json, tsconfig.json, `drizzle/schema.ts`,
+      `drizzle/migrations/0000_init.sql`,
+      `src/{index.ts, store-sqlite-drizzle.module.ts,
+      store-sqlite-drizzle.service.ts}`,
+      `__tests__/store-sqlite-drizzle.spec.ts`). Adds the path
+      alias in `tsconfig.base.json` and `jest.config.js`. Drizzle
+      schema covers `canonical_job` (PK = `canonical_job_id`,
+      indexed `merged_at`, case-folded shadow columns for
+      `company` / `title` / `location` per FR-7 / NFR-1) and
+      `source_observation` (FK + ON DELETE CASCADE per FR-2,
+      composite PK `(canonical_job_id, site, source_job_id)`).
+      T07 estimate: 0.5 day.
+    - T08 implements `IJobStore` over Drizzle, using `better-sqlite3`
+      (synchronous driver — fits the in-process model and avoids
+      the connection-pool overhead for the dev-only backend). The
+      same `runStoreConformance(label, factory)` from T06 will
+      re-execute against the SQLite backend; per-test isolation via
+      a fresh in-memory `:memory:` database per `factory()` call.
+      Adds a Drizzle-specific cursor envelope (`{ v: 1, mergedAt,
+      canonicalJobId }` — keyset pagination, NOT offset, because
+      offset paging on SQLite degrades to O(N) at scale per Drizzle
+      docs / NFR-1 budget). Adds a backend-specific test for the
+      ON DELETE CASCADE path (T06's conformance covers the JS-side
+      cascade; SQLite enforces it via FK). T08 estimate: 1 day.
+  Together T07 + T08 give us the second concrete `IJobStore`
+  implementation, which (a) lets contributors run the full test
+  matrix without Postgres / Docker and (b) flushes any contract
+  ambiguities before T09 / T10 wire up Postgres + Prisma. If
+  T07 / T08 is blocked for any reason, fall-back order is:
+    1. T11 / T12 — wire `EVER_JOBS_STORE=memory` into `apps/api`
+       end-to-end now that we have a working backend (~0.75 day
+       combined; defers the dev-vs-prod backend choice but lets
+       us start exercising the active-backend seam from real HTTP
+       flows).
+    2. competitor-watch §C / AC-1 (`source-ats-avature` plugin —
+       0.5 day).
+    3. The open `dedup-hybrid` LSH follow-up (~0.5 day).
+- The shared conformance suite at
+  `packages/plugin/src/store/__tests__/conformance.ts` is the
+  load-bearing artefact for Phases 3–5: every later backend (T08
+  sqlite-drizzle, T10 postgres-prisma, future plugins) MUST
+  `runStoreConformance(label, factory)` from inside its own test
+  file to ship. The contract is now self-enforcing — a regression
+  on any of the 24 contract cases will light up CI for every
+  backend simultaneously, so a backend-author can't accidentally
+  weaken the contract for their own implementation alone.
+- `InMemoryJobStore.size` / `clear()` are intentionally NOT part
+  of `IJobStore`. They exist for diagnostic / test isolation only;
+  production callers SHOULD use `listByQuery({ limit: MAX })` for
+  any "how many rows" question (which costs O(N) anyway because
+  the contract has no `count(filter)` method — and adding one is
+  a Spec 012 candidate, not a v1 surface).
+- The base64 envelope stores `JSON.stringify({ v: 1, offset })`,
+  which for an offset of ≤ 99,999 fits in 11 base64 characters
+  (`eyJ2IjoxLCJvZmZzZXQiOjB9` is 24 chars for offset 0 — bigger
+  than the integer would be on its own, but the `v` discriminator
+  pays for itself on the first envelope-shape change). NFR-3
+  (≤ 2 KB / job memory overhead) is dominated by the
+  `CanonicalJob` JSON itself, not the cursor.
+
+---
+
 ## 2026-04-27 — Scheduled run #20 (Spec 004 Phase 1 — T04 `StoreModule.forActive(storeId)` factory; Phase 1 closes)
 
 **Scope:** land Spec 004 / Phase 1 / T04 — the `StoreModule.forActive(storeId, options)`

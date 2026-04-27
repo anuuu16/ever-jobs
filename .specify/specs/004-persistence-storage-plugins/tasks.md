@@ -174,14 +174,115 @@
 
 ## Phase 2 — `store-memory`
 
-- [ ] T05 — Scaffold `packages/plugins/store-memory/`.
-  - **Acceptance:** Builds standalone.
-  - **Estimate:** 0.25 day.
+- [x] T05 — Scaffold `packages/plugins/store-memory/`.
+  - **Files (planned):** `package.json`, `tsconfig.json`,
+    `src/{index.ts, store-memory.module.ts, store-memory.service.ts}`,
+    `__tests__/store-memory.spec.ts`.
+  - **Files (actual):** `packages/plugins/store-memory/package.json`
+    (mirrors `merge-default` shape — `@ever-jobs/store-memory@0.1.0`,
+    `main`/`types` → `src/index.ts`),
+    `packages/plugins/store-memory/tsconfig.json` (extends
+    `tsconfig.base.json`; `outDir → dist/packages/store-memory`),
+    `packages/plugins/store-memory/src/store-memory.module.ts`
+    (~30 LOC; `@Module({ providers: [InMemoryJobStore], exports: […] })`
+    — does NOT bind `JOB_STORE_TOKEN` itself, leaving that to
+    `StoreModule.forActive()` so the active-backend selection stays
+    in one place),
+    `packages/plugins/store-memory/src/index.ts` (barrel — re-exports
+    `InMemoryJobStore`, `StoreMemoryModule`, `STORE_MEMORY_ID`,
+    `STORE_MEMORY_DESCRIPTION`),
+    `tsconfig.base.json` (added path alias
+    `@ever-jobs/store-memory → packages/plugins/store-memory/src/index.ts`),
+    `jest.config.js` (mirror `moduleNameMapper` entry).
+  - **Acceptance:** Builds standalone. **Done:** run #21 (2026-04-27).
+    `tsc --project apps/api/tsconfig.build.json --noEmit` clean;
+    `npx jest packages/plugins/store-memory` green (42 / 42 — see T06
+    for the test breakdown). `StoreMemoryModule` resolves
+    `InMemoryJobStore` as a singleton via `Test.createTestingModule`
+    (regression guard for the NestJS module surface).
+    Plugin is intentionally NOT registered in
+    `packages/plugins/index.ts` / `ALL_SOURCE_MODULES` — that barrel
+    is for source plugins; `store-memory` is a feature plugin per
+    AGENTS.md §5 ("feature plugins only register in tsconfig + jest").
+  - **Estimate:** 0.25 day. **Actual:** ~0.25 day.
 
-- [ ] T06 — Implement in-memory `Map`-backed store + cursor pagination.
-  - **Files:** `src/store-memory.service.ts`, `__tests__/store-memory.spec.ts`.
-  - **Acceptance:** All conformance tests pass.
-  - **Estimate:** 0.5 day.
+- [x] T06 — Implement in-memory `Map`-backed store + cursor pagination.
+  - **Files (planned):** `src/store-memory.service.ts`,
+    `__tests__/store-memory.spec.ts`.
+  - **Files (actual):** `packages/plugins/store-memory/src/store-memory.service.ts`
+    (~280 LOC; `InMemoryJobStore` decorated with
+    `@StorePlugin({ id: 'memory', description: STORE_MEMORY_DESCRIPTION })`,
+    backed by `Map<canonicalJobId, CanonicalJob>` and
+    `Map<canonicalJobId, SourceObservation[]>`; opaque-cursor pagination
+    via base64-encoded `{ v: 1, offset: number }` envelope; cursor
+    decode raises `MemoryStoreCursorError` carrying
+    `code = ERR_STORE_INVALID_CURSOR` for not-base64 / not-JSON /
+    missing-version / wrong-version / non-integer-offset /
+    negative-offset / string-offset / fractional-offset; deterministic
+    listing order — `mergedAt` DESC, `canonicalJobId` ASC tie-break;
+    case-insensitive substring filters on `company` / `title` /
+    `location`; inclusive lower-bound filter on `mergedAt` via
+    `since.toISOString()` comparison),
+    `packages/plugin/src/store/__tests__/conformance.ts` (~360 LOC;
+    shared `runStoreConformance(label, factory)` exported for re-use
+    by every later backend — T08 sqlite-drizzle, T10 postgres-prisma,
+    and any future plugin; **24 contract cases** across 7
+    describe-blocks: upsert/getById round-trip + null vs undefined,
+    upsertMany insert/update accounting + empty-array edge,
+    delete-cascades-observations, listByQuery filters
+    (company/title/location/since/combined), limit clamping +
+    defaulting, cursor pagination full-traversal + final-page
+    `nextCursor`-omitted + malformed-cursor → `ERR_STORE_INVALID_CURSOR`,
+    observation putAll/replace-not-merge/deleteByCanonicalId/idempotence/
+    listByCanonicalId-unknown),
+    `packages/plugins/store-memory/__tests__/store-memory.spec.ts`
+    (~190 LOC; runs `runStoreConformance` against
+    `() => new InMemoryJobStore()` plus **18 backend-specific cases**
+    in 4 describe-blocks: cursor-envelope failure modes — 9 invalid
+    cursor shapes via `it.each` (empty-string, plain-text, base64
+    of non-JSON, base64 of literal `42`, missing version, wrong
+    version, negative offset, fractional offset, string offset) +
+    nextCursor-round-trips, `@StorePlugin` metadata wiring (raw
+    `Reflect.getMetadata` AND `Reflector.get` both return the same
+    `IStoreMetadata` for `InMemoryJobStore`), `StoreMemoryModule`
+    NestJS singleton resolution + downstream injection, diagnostic
+    `size`/`clear` surface).
+  - **Acceptance:** All conformance tests pass. **Done:** run #21
+    (2026-04-27). 24 / 24 conformance cases + 18 backend-specific
+    cases = **42 / 42** via `npx jest packages/plugins/store-memory`;
+    full focused regression bundle `npx jest --testPathPatterns
+    'packages/models|packages/plugin/__tests__|packages/plugin/src/store|
+    packages/plugin/src/circuit-breaker|packages/plugins/store-memory'`
+    runs **170 / 170 across 10 suites**; the broad regression bundle
+    (legacy `/health` + `/ping`, Spec 005 / T01–T08, Spec 004 /
+    T01–T06, plugin-policy, sources-admin, api-key guard, metrics
+    service) runs **236 / 236 across 20 suites**. Three latent
+    decisions locked into the test surface (rather than as new
+    questions): **(1)** opaque-cursor envelope is `{ v: 1, offset }`
+    base64-encoded — base64 chosen over hex/url-encoded JSON because
+    every later backend (sqlite, postgres) will also need to encode
+    a wire-safe resume token; standardising on base64 here means the
+    aggregator and the future `GET /api/jobs?cursor=…` endpoint don't
+    need to fork on backend type. **(2)** Empty-string `cursor: ''`
+    is REJECTED with `ERR_STORE_INVALID_CURSOR` (NOT silently
+    short-circuited to "page 1"). The naive `query.cursor ? … : 0`
+    pattern would have let an empty-string typo silently desync a
+    paginating caller; the test suite pins this with an explicit
+    `it.each` row so a future "simplification" can't drift back to
+    the truthy check. **(3)** `listByQuery` ordering is **`mergedAt`
+    DESC, `canonicalJobId` ASC tie-break** — DESC because the dedup
+    engine emits "freshest first" (Spec 003 / FR-3) and operators
+    expect the API to surface the most recent match without an
+    explicit `?sort=` parameter, ASC tie-break because two jobs
+    sharing an identical `mergedAt` (common in batch upserts) MUST
+    yield a total order so cursor pagination resumes deterministically
+    — silent ordering drift across pages is what the conformance
+    suite's no-dupes guard would catch, but pinning the order here
+    keeps it predictable for assertion writers as well. The shared
+    conformance suite is the load-bearing artefact for Phases 3 / 4
+    — every later backend MUST `runStoreConformance(label, factory)`
+    to ship, so the contract is self-enforcing.
+  - **Estimate:** 0.5 day. **Actual:** ~0.5 day.
 
 ## Phase 3 — `store-sqlite-drizzle`
 

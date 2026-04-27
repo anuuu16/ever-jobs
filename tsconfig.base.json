@@ -25,6 +25,7 @@
       "@ever-jobs/plugin-sources": ["packages/plugins/index.ts"],
       "@ever-jobs/dedup-hybrid": ["packages/plugins/dedup-hybrid/src/index.ts"],
       "@ever-jobs/merge-default": ["packages/plugins/merge-default/src/index.ts"],
+      "@ever-jobs/store-memory": ["packages/plugins/store-memory/src/index.ts"],
       "@ever-jobs/source-linkedin": ["packages/plugins/source-linkedin/src/index.ts"],
       "@ever-jobs/source-indeed": ["packages/plugins/source-indeed/src/index.ts"],
       "@ever-jobs/source-glassdoor": ["packages/plugins/source-glassdoor/src/index.ts"],
