@@ -5,6 +5,215 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #24 (Spec 004 Phase 4 — T10: `store-postgres-prisma` IJobStore implementation; Phase 4 closes)
+
+**Scope:** land Spec 004 / Phase 4 / T10 — author the Prisma-typed
+`IJobStore` + `IJobObservationStore` implementation
+(`PostgresPrismaJobStore`), the NestJS module, the public barrel, and
+the two-layer test suite (always-on contract + Testcontainers-backed
+gated layer). With T10 done, Spec 004 graduates from "Phases 1–3 done
+(T01–T08); Phase 4 in progress (T09 done, T10 pending); Phase 5
+pending" to "Phases 1–4 done (T01–T10); Phase 5 pending". This was
+run #23's explicit default for #24 ("Spec 004 / Phase 4 / T10 —
+`store-postgres-prisma` `IJobStore` implementation"); implemented as
+planned, with one principled deviation from run #23's Notes-for-the-
+next-run: this run does NOT generate against `@prisma/client`'s typed
+client. Rationale below.
+
+**No new questions opened this run.** T10 is mechanical to a point —
+the contract is fully pinned by Spec 004 §7.1, the `IJobStore` /
+`IJobObservationStore` interface JSDoc, the shared conformance suite
+from T06, and the Drizzle SQLite reference backend (T08). Three
+load-bearing design decisions weren't called out in `tasks.md`
+Notes-for-the-next-run and were locked into the source/test surface
+rather than as new questions:
+
+1. **Structural `PrismaJobsClient` interface over `import type
+   { PrismaClient } from '@prisma/client'`.** The typed `PrismaClient`
+   is a `prisma generate` artefact — it lives under
+   `node_modules/.prisma/client` only after the generator has run, and
+   the scheduled-task sandbox has no `node_modules` and cannot run
+   `npm install` / `prisma generate`. Three options: (a) `import type
+   { PrismaClient } from '@prisma/client'` — fails ts-jest
+   type-resolution when the generator hasn't run, breaking the entire
+   plugin's type-check; (b) `any` cast at every call-site — loses
+   type-safety and propagates `any` into consumer code via the public
+   API; (c) declare a structural `PrismaJobsClient` interface
+   capturing only the methods the store actually uses — the real
+   generated `PrismaClient` structurally satisfies it, future Prisma
+   API surface drift surfaces here instead of at every call-site,
+   test fakes / mocks satisfy it trivially. Picked (c). The interface
+   re-exports from the package barrel as a type-only export so
+   consuming apps that DO have the typed client can pass it through
+   `STORE_POSTGRES_PRISMA_CONFIG` without TypeScript contortions.
+   This is the principled deviation from run #23's
+   Notes-for-the-next-run, which assumed a direct `@prisma/client`
+   type-import.
+
+2. **Eager-fail constructor with `@Optional()` config.** The
+   constructor needs a `PrismaJobsClient` (no sensible default), but
+   NestJS DI sees the parameter type as `Object` from
+   `emitDecoratorMetadata` and refuses to resolve it as a positional
+   dependency. Three options: (a) make the inject non-optional — Nest
+   can't bind it; (b) silent fallback to a no-op or in-memory backend
+   when config is missing — would let a misconfigured production
+   deployment lose the cohort silently, contradicting Spec 004 §7.3
+   / FR-3; (c) `@Optional() @Inject(STORE_POSTGRES_PRISMA_CONFIG)` +
+   explicit `throw new Error(...)` in the constructor when
+   `config?.client` is missing. Picked (c) — Spec 004 §7.3 / FR-3
+   explicitly say bootstrap MUST fail fast on a misconfigured store.
+   Test `throws fail-fast when STORE_POSTGRES_PRISMA_CONFIG is unbound`
+   pins this so a future "convenience default" can't slip in
+   silently.
+
+3. **Two-layer test split (always-on + RUN_PG_TESTS-gated).** Three
+   options: (a) every test in one `describe.skip`-gated block —
+   dev runs without `RUN_PG_TESTS=1` lose all coverage of the
+   package, including metadata wiring + constructor invariants that
+   don't need Postgres; (b) everything always-runs against an
+   in-memory mock — duplicates the backend logic in the test, drifts
+   from the real backend's behaviour over time; (c) split the file
+   — always-on layer covers metadata / constructor / NestJS module
+   resolution against a structural fake, gated layer covers
+   conformance + Postgres-specific behaviour against a Testcontainers
+   `postgres:16-alpine` instance. Picked (c). Dynamic `require()`
+   inside the gated `beforeAll` for `testcontainers` and
+   `@prisma/client` so the file parses cleanly when the packages
+   aren't installed (the gated `describe.skip` means `beforeAll`
+   never runs in that path).
+
+**Changes — code:**
+
+- `packages/plugins/store-postgres-prisma/src/store-postgres-prisma.service.ts`
+  — new ~470 LOC service. `PostgresPrismaJobStore` decorated with
+  `@StorePlugin({ id: 'postgres', description:
+  STORE_POSTGRES_PRISMA_DESCRIPTION })` and `@Injectable()`;
+  constructor takes `@Optional() @Inject(STORE_POSTGRES_PRISMA_CONFIG)`
+  parameter and FAILS FAST when unbound. Implements `IJobStore`
+  (`upsert / upsertMany / getById / findByCanonicalId / listByQuery
+  / delete`) and `IJobObservationStore` (`putAll / listByCanonicalId
+  / deleteByCanonicalId`), plus diagnostic `size()`. Keyset cursor
+  envelope `{ v: 1, mergedAt, canonicalJobId }` (base64-of-JSON; wire-
+  compatible with T08 sqlite-drizzle). Cursor decoder rejects every
+  malformed shape with `ERR_STORE_INVALID_CURSOR`
+  (`PostgresStoreCursorError`). Filter predicates use Prisma's
+  `{ contains, mode: 'insensitive' }` which compiles to `ILIKE
+  '%term%'` and is satisfied by the `pg_trgm` GIN trigram indexes
+  from T09's `0_init/migration.sql`. Bulk `upsertMany` runs in a
+  single `$transaction(async tx => ...)` so partial failure leaves
+  no half-written cohort. `delete` does a `count` first to
+  distinguish miss vs hit (Prisma's `delete` throws on miss; we
+  want `false`). `putAll` is a `deleteMany` + `createMany` pair
+  inside `$transaction` for replace-not-merge semantics.
+- `packages/plugins/store-postgres-prisma/src/store-postgres-prisma.module.ts`
+  — new ~38 LOC NestJS module. `@Module({ providers:
+  [PostgresPrismaJobStore], exports: [PostgresPrismaJobStore] })` —
+  does NOT bind `JOB_STORE_TOKEN` itself (that's
+  `StoreModule.forActive`'s responsibility per AGENTS.md §5).
+  Module JSDoc documents the bootstrap pattern (`new PrismaClient`
+  in `apps/api`'s root module, bound via
+  `STORE_POSTGRES_PRISMA_CONFIG`).
+- `packages/plugins/store-postgres-prisma/src/index.ts` — new ~15
+  LOC barrel. Re-exports `PostgresPrismaJobStore`,
+  `StorePostgresPrismaModule`, `STORE_POSTGRES_PRISMA_ID`,
+  `STORE_POSTGRES_PRISMA_DESCRIPTION`, `STORE_POSTGRES_PRISMA_CONFIG`
+  + type-only `PrismaJobsClient` and `StorePostgresPrismaConfig`.
+
+**Changes — tests:**
+
+- `packages/plugins/store-postgres-prisma/__tests__/store-postgres-prisma.spec.ts`
+  — new ~440 LOC test file. **Always-on layer** (3 describe-blocks,
+  4 cases): `@StorePlugin` metadata via raw `Reflect.getMetadata` AND
+  `Reflector.get`; constructor fail-fast on missing config (zero-arg
+  + partial-config rejection); NestJS module singleton resolution
+  against a structural fake `PrismaJobsClient`. **Gated layer**
+  (`RUN_PG_TESTS=1` → `describeIfPg`; 7 describe-blocks: conformance
+  re-run + 6 backend-specific): runs the shared `runStoreConformance`
+  against a Testcontainers `postgres:16-alpine` instance (per-suite
+  container, per-test `TRUNCATE … CASCADE` for fresh state), plus
+  cursor envelope encode/decode + 8 invalid-cursor cases via
+  `it.each`, FK CASCADE drop verification, keyset-pagination
+  tie-break (10 rows sharing `mergedAt`, paginated 3 at a time),
+  ILIKE substring filter exercising the `pg_trgm` GIN indexes,
+  `jsonb` round-trip preserving nested fields/sources, `size()`
+  diagnostic.
+
+**Changes — wiring:**
+
+- `package.json` — added `testcontainers@^10.13.0` to
+  `devDependencies`. Latest stable per AGENTS.md §1 / Hard Rule §5.
+  Spec 004 / Phase 4 Notes explicitly call for Testcontainers gating
+  on `RUN_PG_TESTS=1`. **Lockfile follow-up REQUIRED** — pattern
+  from runs #21/#22/#23 applies.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/004-persistence-storage-plugins/tasks.md` — T10
+  graduates from "pending" to "done" with full planned-vs-actual
+  file list, three-decision rationale (structural-interface vs
+  type-import, eager-fail constructor, two-layer test split), and
+  verification numbers. Phase 4 now closed.
+- `.specify/specs/004-persistence-storage-plugins/spec.md` —
+  `Status` flipped to `Phases 1–4 done (T01–T10); Phase 5 pending`;
+  `Last updated` bumped to `2026-04-27 (run #24)`.
+- `docs/index.md` — Spec 004 row updated with new status string
+  (`Phases 1–4 done (T01–T10); Phase 5 pending`); `Last revised`
+  bumped to `2026-04-27 (run #24)`.
+- `CLAUDE.md` — run-tag bumped to #24 in the footer.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #24 sync line; **no upstream
+  commits** in any of the three tracked repos (fourteen consecutive
+  zero-churn runs).
+
+**Verification (local, against this commit):**
+
+- T10 ships TypeScript source + tests but cannot run them in the
+  sandbox: (a) the always-on layer needs `@nestjs/testing` from
+  `node_modules` (not installed); (b) the gated layer needs
+  `RUN_PG_TESTS=1`, `testcontainers`, a generated `@prisma/client`,
+  and Docker — all CI-only. The full test surface will validate on
+  CI push once the lockfile is regenerated to include
+  `testcontainers`.
+- `npm run lint:docs` — clean ("✓ Doc-lint passed — no issues.")
+  after this run's edits.
+- Type-check via `npx tsc --project apps/api/tsconfig.build.json
+  --noEmit` — also CI-only (sandbox has no `node_modules`); the
+  apps/api tsconfig deliberately doesn't include the
+  `store-postgres-prisma` plugin source, so the apps/api type-check
+  is unaffected by T10. The plugin's own tsconfig is included in
+  full builds.
+
+**Notes & follow-ups:**
+
+- **Lockfile regen REQUIRED** (mirrors runs #21/#22/#23). The
+  `testcontainers@^10.13.0` addition is in `package.json` but not
+  yet in `package-lock.json`. CI will fail at the `npm ci` step
+  until the user's interactive environment runs `npm install
+  --registry=https://registry.npmjs.org/` and pushes the regen
+  lockfile commit. This is the established flow for this
+  scheduled-task sandbox per `Agents.md` §"Scheduled-task agents".
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #23
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). **Fourteen** consecutive runs of zero-churn — the
+  open `Ats-scrapers`-parity items in `competitor-watch.md §C`
+  (AC-1..AC-9) remain the higher-leverage follow-up if Phase 5
+  stalls on the apps/api integration shape.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#23; not wired into CI).
+  Open fall-back follow-up.
+- Default for run #25 is **Spec 004 / Phase 5 — T11
+  (`JobsAggregator.persist()` step) + T12 (`EVER_JOBS_STORE` env-var
+  bootstrap honouring)**. T11 wires the dedup-engine output through
+  `IJobStore.upsertMany` with a `persist=false` opt-out per Spec 004
+  §7 / FR-1 / FR-3; T12 makes `apps/api/src/app.module.ts` resolve
+  the active store at bootstrap from `EVER_JOBS_STORE`, fail-fast on
+  unknown values per FR-3 / §7.3 (`ERR_STORE_NOT_FOUND`). Together
+  these close Spec 004 entirely.
+
+---
+
 ## 2026-04-27 — Scheduled run #23 (Spec 004 Phase 4 — T09: `store-postgres-prisma` scaffold + Prisma schema; T10 deferred)
 
 **Scope:** land Spec 004 / Phase 4 / T09 — scaffold
