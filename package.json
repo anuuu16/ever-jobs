@@ -20,7 +20,11 @@
     "test:sources": "jest --testPathPatterns packages/plugins/source-",
     "test:fast": "jest --testPathPatterns apps/api/__tests__/health",
     "test:scripts": "jest --testPathPatterns scripts/__tests__",
-    "lint:docs": "ts-node --project tsconfig.base.json -r tsconfig-paths/register scripts/docs-lint.ts"
+    "lint:docs": "ts-node --project tsconfig.base.json -r tsconfig-paths/register scripts/docs-lint.ts",
+    "bench:avature": "ts-node --project tsconfig.base.json -r tsconfig-paths/register packages/plugins/source-ats-avature/__tests__/avature.bench.ts",
+    "bench:gem": "ts-node --project tsconfig.base.json -r tsconfig-paths/register packages/plugins/source-ats-gem/__tests__/gem.bench.ts",
+    "bench:joincom": "ts-node --project tsconfig.base.json -r tsconfig-paths/register packages/plugins/source-ats-joincom/__tests__/joincom.bench.ts",
+    "bench:ats-batch-1": "npm run bench:avature && npm run bench:gem && npm run bench:joincom"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",

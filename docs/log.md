@@ -5,6 +5,167 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #35 (Spec 006 / Phase 5 — T12: per-plugin perf benches for Avature / Gem / Join.com)
+
+**Scope:** land Spec 006 / Phase 5 / T12 — three new performance
+bench scripts (one per plugin) plus four npm-script entry points.
+Run #34's Notes-for-the-next-run pinned this default ("Spec 006 /
+Phase 5 / T12 — per-plugin perf benches at
+`packages/plugins/source-ats-avature/__tests__/avature.bench.ts`,
+`…/source-ats-gem/__tests__/gem.bench.ts`,
+`…/source-ats-joincom/__tests__/joincom.bench.ts`. Acceptance:
+each bench file establishes a baseline against NFR-2 ceilings on
+the fixture corpus and outputs a JSON line at
+`dist/bench/<plugin>.json`").
+
+**No new questions opened this run.**
+
+**Three load-bearing decisions** weren't called out in run #34's
+Notes-for-the-next-run and were locked into the bench surface:
+
+1. **Standalone ts-node scripts, not jest specs.** The bench
+   filename suffix `.bench.ts` deliberately doesn't match
+   `jest.config.js`'s `testMatch` (`*.spec.ts` / `*.e2e-spec.ts`)
+   so the benches are NOT executed by `npm test`. CI gating on
+   bench thresholds is a follow-up spec; running them in CI today
+   would just consume time without enforcing anything. They're
+   invocable via the new `npm run bench:avature` /
+   `npm run bench:gem` / `npm run bench:joincom` /
+   `npm run bench:ats-batch-1` scripts and emit JSON for offline
+   analysis.
+2. **Module-cache patching, not `jest.mock`.** Standalone scripts
+   can't use `jest.mock` (a jest-runtime construct). We
+   `require('@ever-jobs/common')` first, mutate its
+   `createHttpClient` export to a fixture-backed factory, and only
+   THEN `require('../src')` so the service captures the patched
+   reference. Equivalent to `jest.mock` at module-cache level;
+   works cleanly under ts-node's CommonJS compilation.
+3. **Iteration count = 20, warm-ups = 3.** Twenty samples is the
+   smallest count where p95 (the 95th-percentile index =
+   `ceil(0.95 * 20) - 1 = 18`) is a meaningful summary statistic
+   rather than the second-worst sample masquerading as p95. Three
+   warm-ups discount the cheerio/Logger/`createHttpClient`
+   module-init costs (the first scrape() of a fresh `Service`
+   instance is ~3-5× slower than steady state). Fewer warm-ups
+   pollute the `min`; more iterations cost wall-time without
+   changing the headroom verdict for plugins this fast.
+
+**Changes — code (bench scripts):**
+
+- `packages/plugins/source-ats-avature/__tests__/avature.bench.ts`
+  — new ~155 LOC. NFR-2 ceiling = **8000 ms**. Fixtures =
+  `avature-page-1.html` + `avature-page-empty.html` (the unit-suite
+  fixture corpus, no new fixtures added). Each scrape() iteration
+  cycles through the populated page once, then the empty page,
+  exercising the full 5-selector cheerio cascade plus the
+  Apply-decoy filter (12 anchors → 11 emitted rows).
+- `packages/plugins/source-ats-gem/__tests__/gem.bench.ts` — new
+  ~145 LOC. NFR-2 ceiling = **1500 ms**. Fixture =
+  `gem-batch-response.json` (3 postings under the canonical batch
+  envelope shape, deep-cloned per scrape so mutation doesn't bleed
+  across iterations). Single in-process JSON parse → fastest of
+  the three.
+- `packages/plugins/source-ats-joincom/__tests__/joincom.bench.ts`
+  — new ~165 LOC. NFR-2 ceiling = **4000 ms**. Fixtures =
+  `joincom-company-page.html` (Step-1 HTML probe with the primary
+  `"company":{"id":...` regex) + `joincom-jobs-page-{1,2}.json`
+  (Step-2 paginated JSON, `totalPages=2` so the bench exercises
+  the full Step-2 pagination loop). URL-substring router routes
+  `/api/public/companies/.../jobs?page=1` → page 1, `page=2` →
+  page 2, anything else → empty page.
+
+**Changes — code (npm scripts):**
+
+- `package.json` — four new entries under `"scripts"`:
+  `"bench:avature"`, `"bench:gem"`, `"bench:joincom"`, and
+  `"bench:ats-batch-1"` (the latter chains all three sequentially
+  via `&&`). Each invokes `ts-node --project tsconfig.base.json
+  -r tsconfig-paths/register <bench-file>`.
+
+**Common bench shape (across all three):**
+
+- Reads existing fixtures via `fs.readFileSync` (no new fixture
+  files added).
+- Patches `@ever-jobs/common.createHttpClient` to a fixture-backed
+  factory BEFORE requiring the service (CommonJS module-cache
+  trick). Each call to the factory yields a fresh client with its
+  own pagination state, so iterations don't leak.
+- Runs **3 warm-ups** then **20 timed iterations** of
+  `service.scrape(input)`, capturing per-iteration ms via
+  `process.hrtime.bigint()`.
+- Computes `min` / `median` / `mean` / `p95` / `p99` / `max` and
+  `memory_bytes.{before, after, delta}` (with optional
+  `global.gc()` flush when the bench is run with `--expose-gc`).
+- Compares `p95` against the per-plugin NFR-2 ceiling and emits
+  `p95_under_ceiling` (boolean) plus `headroom_pct`. Bench does
+  **not** exit non-zero on a ceiling breach — CI gating is a
+  follow-up spec.
+- Writes a single pretty-printed JSON record at
+  `dist/bench/<plugin>.json` (the `dist/` tree is gitignored, so
+  the artifact is a fresh per-run output).
+
+**Changes — specs:**
+
+- `.specify/specs/006-ats-scrapers-parity-batch-1/tasks.md` — T12
+  graduates from "pending" to "done" with full planned-vs-actual
+  file lists, the three load-bearing decisions called out above,
+  and per-plugin NFR-2 ceiling pins. Notes-for-the-next-run
+  repinned to "Spec 006 / Phase 6 / T13" (Spec 006 closeout —
+  status flips, `competitor-watch.md §C` AC-1/2/3 marks as DONE,
+  next-batch pinning).
+- `.specify/specs/006-ats-scrapers-parity-batch-1/spec.md` —
+  `Status` → `Phase 1+2+3+4 done (T01..T08 runs #29..#32); Phase 5
+  / T09+T10 done (run #33); T11 done (run #34); T12 done (run
+  #35); T13 pending`.
+- `docs/index.md` — Spec 006 row + footer bumped to run #35.
+- `CLAUDE.md` — run-tag → #35.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #35 sync line; **no upstream
+  commits** (twenty-three consecutive zero-churn runs).
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean ("✓ Doc-lint passed — no issues.")
+  after this run's edits.
+- `npx jest --testPathPatterns 'packages/plugins/source-ats-(avature|gem|joincom)'`
+  reports `Test Suites: 3 passed, 3 total · Tests: 28 passed, 28
+  total` — the bench files (with their `.bench.ts` suffix) are
+  not picked up by jest's `testMatch`, so the unit-suite count
+  is unchanged.
+- All three benches were smoke-run locally against this commit:
+    - `npm run bench:avature` → p95=7.112 ms, ceiling 8000 ms,
+      headroom 99.91% (single populated page + empty page; cheerio
+      five-cascade selector chain).
+    - `npm run bench:gem` → p95=0.107 ms, ceiling 1500 ms,
+      headroom 99.99% (single in-process JSON parse over the
+      3-posting batch envelope — fastest of the three).
+    - `npm run bench:joincom` → p95=0.13 ms, ceiling 4000 ms,
+      headroom 100.00% (Step-1 HTML probe + 2-page paginated
+      Step-2 JSON; URL-substring router routes by `?page=N`).
+  All three p95 readings sit comfortably under their NFR-2
+  ceilings; bench JSON records are emitted at
+  `dist/bench/<plugin>.json` (gitignored, fresh per-run output).
+- The benches are excluded from CI's unit/integration/e2e gates
+  by filename convention (`.bench.ts` doesn't match jest's
+  `testMatch`); CI on push will validate the existing test bundle
+  is unaffected.
+
+**Notes & follow-ups:**
+
+- Default for run #36 is **Spec 006 / Phase 6 / T13** — Spec 006
+  closeout. Flip Status → "All phases done (T01–T13); spec
+  complete"; mark `competitor-watch.md §C` AC-1, AC-2, AC-3 as
+  **DONE** with run-tag attributions (#29..#35); pin a new default
+  for run #37 pointing at the next batch from the backlog
+  (candidates: AC-4 / AC-5 / AC-6 = Oracle HCM Cloud / Mercor /
+  Tesla as Spec 007 batch 2; OR AC-7 = European salary parser as
+  fast small-spec interlude; OR AC-8 = seed-companies refresh).
+- External research repos: no new commits since run #34.
+  Twenty-three consecutive zero-churn runs.
+- Pre-existing dedup-hybrid red tests unchanged.
+
+---
+
 ## 2026-04-27 — Scheduled run #34 (Spec 006 / Phase 5 — T11: coverage docs update for Avature / Gem / Join.com)
 
 **Scope:** land Spec 006 / Phase 5 / T11 — coverage docs update

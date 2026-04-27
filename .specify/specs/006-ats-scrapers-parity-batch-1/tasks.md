@@ -463,15 +463,92 @@
     "✓ Doc-lint passed — no issues."
   - **Estimate:** 0.25 day. **Actual:** ~0.25 day.
 
-- [ ] T12 — Per-plugin perf bench.
-  - **Files:** `packages/plugins/source-ats-avature/__tests__/avature.bench.ts`,
+- [x] T12 — Per-plugin perf bench.
+  - **Files (planned):** `packages/plugins/source-ats-avature/__tests__/avature.bench.ts`,
     `…/source-ats-gem/__tests__/gem.bench.ts`,
     `…/source-ats-joincom/__tests__/joincom.bench.ts`.
+  - **Files (actual):** matched plan exactly. Three new `<plugin>.bench.ts`
+    files (~155 LOC each) — one per plugin — under the corresponding
+    `__tests__/` folder. Plus four new npm scripts in `package.json`
+    (`bench:avature`, `bench:gem`, `bench:joincom`, `bench:ats-batch-1`)
+    so each bench is invocable in isolation OR all three sequentially
+    via `npm run bench:ats-batch-1`.
   - **Acceptance:** Each bench file establishes a baseline against
     NFR-2 ceilings on the fixture corpus. Outputs a JSON line at
     `dist/bench/<plugin>.json`. CI gating on bench thresholds is a
-    follow-up spec.
-  - **Estimate:** 0.5 day.
+    follow-up spec. ✅ **Done:** run #35 (2026-04-27).
+    Each bench:
+      - Reads the same fixtures the unit suite uses (no new fixture
+        files added — bench corpus = unit corpus, matches Spec 006's
+        "one fixture set per plugin" convention).
+      - Patches `@ever-jobs/common.createHttpClient` via
+        `require('@ever-jobs/common').createHttpClient = …` BEFORE
+        loading the service, so the fixture-backed factory is in
+        place when the service captures its closure reference. Same
+        mock-shape as the unit suites (`get`/`post`/`setHeaders`),
+        no nock / no real network.
+      - Runs **3 warm-ups** (discount JIT + module-init), then
+        **20 timed iterations** of `service.scrape(input)`, capturing
+        per-iteration ms via `process.hrtime.bigint()`.
+      - Computes `min` / `median` / `mean` / `p95` / `p99` / `max`
+        and `memory_bytes.{before, after, delta}` (with optional
+        `global.gc()` flush when `--expose-gc` is set).
+      - Compares `p95` against the per-plugin NFR-2 ceiling
+        (Avature 8000 ms, Gem 1500 ms, Join.com 4000 ms) and emits
+        `p95_under_ceiling` + `headroom_pct`. The bench does **not**
+        exit non-zero on a ceiling breach — CI gating is the
+        follow-up spec, not this one.
+      - Writes a single JSON record (pretty-printed for readability)
+        at `dist/bench/<plugin>.json` (the `dist/` tree is gitignored,
+        so each run produces a fresh local artifact; future CI gating
+        will collect & aggregate these on the runner).
+    Three load-bearing decisions weren't called out in run #34's
+    Notes-for-the-next-run and were locked into the bench surface:
+      1. **Standalone ts-node scripts, not jest specs.** The bench
+         filename suffix `.bench.ts` deliberately doesn't match
+         `jest.config.js`'s `testMatch` (`*.spec.ts` /
+         `*.e2e-spec.ts`) so the benches are NOT executed by
+         `npm test`. CI gating on bench thresholds is a follow-up
+         spec; running them in CI today would just consume time
+         without enforcing anything. They're invocable via the new
+         npm scripts and emit JSON for offline analysis.
+      2. **Module-cache patching, not `jest.mock`.** Standalone
+         scripts can't use `jest.mock` (which is a jest-runtime
+         construct). We `require('@ever-jobs/common')` first, mutate
+         its `createHttpClient` export to a fixture-backed factory,
+         and only THEN `require('../src')` so the service captures
+         the patched reference. Equivalent to `jest.mock` at
+         module-cache level; works cleanly under ts-node's CommonJS
+         compilation.
+      3. **Iteration count = 20, warm-ups = 3.** Twenty samples is
+         the smallest count where p95 (the 95th-percentile index =
+         `ceil(0.95 * 20) - 1 = 18`) is a meaningful summary statistic
+         rather than the second-worst sample masquerading as p95.
+         Three warm-ups discount the cheerio/Logger/`createHttpClient`
+         module-init costs (the first scrape() of a fresh `Service`
+         instance is ~3-5× slower than steady state). Fewer warm-ups
+         pollute the `min`; more iterations cost wall-time without
+         changing the headroom verdict for plugins this fast.
+    Verification: all three benches were smoke-run locally against
+    this commit (Node v24.14.0 on the dev box) and produced the
+    following p95 readings, all well under their NFR-2 ceilings:
+      - **Avature** — p95 = 7.112 ms (ceiling 8000 ms, headroom
+        99.91%). Cheerio five-selector cascade + Apply-decoy filter
+        over the populated `avature-page-1.html` fixture (12
+        anchors → 11 emitted rows) plus the empty-page terminator.
+      - **Gem** — p95 = 0.107 ms (ceiling 1500 ms, headroom 99.99%).
+        Single in-process JSON parse over the 3-posting batch
+        envelope; fastest of the three.
+      - **Join.com** — p95 = 0.13 ms (ceiling 4000 ms, headroom
+        100.00%). Step-1 regex extraction (`"company":{"id":...`)
+        plus 2-page Step-2 JSON parse, all in-process.
+    The unit suite is unaffected: `npx jest --testPathPatterns
+    'packages/plugins/source-ats-(avature|gem|joincom)'` reports
+    `Test Suites: 3 passed, 3 total · Tests: 28 passed, 28 total`.
+    The `.bench.ts` filename suffix doesn't match jest's `testMatch`,
+    so the benches are excluded from CI's unit/integration/e2e
+    gates by filename convention.
+  - **Estimate:** 0.5 day. **Actual:** ~0.4 day.
 
 ## Phase 6 — Closeout
 
@@ -488,21 +565,37 @@
     seed-companies refresh).
   - **Estimate:** 0.25 day.
 
-## Notes-for-the-next-run (pinned default for run #34)
+## Notes-for-the-next-run (pinned default for run #36)
 
-- Default = **Spec 006 / Phase 5 / T11** — coverage docs update
-  for `docs/ATS_INTEGRATIONS.md` + `docs/COMPANY_SLUG_DIRECTORY.md`.
-  Three new matrix rows (Avature / Gem / Join.com); ≥ 10 seed slugs
-  per plugin, sampled from upstream
-  `OTHERS/Ats-scrapers/<id>/<id>_companies.csv`. `npm run lint:docs`
-  must stay green. Reasoning: T11 is small, doc-only, and unblocks
-  T12 (per-plugin perf benches against the same fixture corpus).
-  T13 (closeout) waits until both T11 and T12 have landed.
-- T12 (per-plugin perf benches) is the second-smallest remaining
-  task. Bench files establish baselines against NFR-2 ceilings on
-  the existing fixture corpus (no new fixtures needed) and emit
-  one JSON line per run at `dist/bench/<plugin>.json`. CI gating
-  on the bench thresholds is a follow-up spec — not in this batch.
+- Default = **Spec 006 / Phase 6 / T13** — Spec 006 closeout. With
+  T01..T12 all green, the only remaining work is the spec graduation:
+  flip Status → "All phases done (T01–T13); spec complete"; mark
+  `competitor-watch.md §C` rows AC-1, AC-2, AC-3 as **DONE** with
+  run-tag attributions (#29..#35); and pin a new default for run
+  #37 pointing at the next batch from `competitor-watch.md §C`
+  (candidates: AC-4 = Oracle HCM Cloud / AC-5 = Mercor / AC-6 =
+  Tesla, **OR** AC-7 = European salary parser as a fast small-spec
+  interlude **OR** AC-8 = seed-companies refresh). Reasoning: T13
+  is small (status flips + a single sweep of the backlog table), so
+  it slots cleanly into one scheduled run.
+- After T13 lands, the natural next batch is **AC-4..AC-6** (three
+  more ATS scrapers: Oracle HCM Cloud / Mercor / Tesla). Same
+  registration topology as Avature / Gem / Join.com, same
+  authoring rhythm; bundling them keeps the cold-start and
+  scaffolding-vs-business-logic ratio sane (Spec 006's load-bearing
+  rationale carries forward). Estimate ~5 scheduled runs (T01..T13)
+  by analogy to Spec 006's actual cost.
+
+## Notes-for-the-prior-run (pinned default for run #34, completed run #35)
+
+- Default = **Spec 006 / Phase 5 / T12** — per-plugin perf benches
+  at `packages/plugins/source-ats-avature/__tests__/avature.bench.ts`,
+  `…/source-ats-gem/__tests__/gem.bench.ts`,
+  `…/source-ats-joincom/__tests__/joincom.bench.ts`. Acceptance:
+  each bench file establishes a baseline against NFR-2 ceilings on
+  the fixture corpus and outputs a JSON line at
+  `dist/bench/<plugin>.json`. CI gating on bench thresholds is a
+  follow-up spec — not in this batch. **Landed run #35.**
 
 ## Notes-for-the-prior-run (pinned default for run #31)
 
