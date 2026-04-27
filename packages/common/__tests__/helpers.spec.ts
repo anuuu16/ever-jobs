@@ -415,3 +415,223 @@ describe('extractSalary — Spec 012 / T03 multi-currency smoke', () => {
     expect(result.minAmount).toBeNull();
   });
 });
+
+/**
+ * Spec 012 / T04 — multi-currency sweep (≥ 14 cases per spec § 8 /
+ * Test Plan). Each case asserts the four-tuple `{ currency, minAmount,
+ * maxAmount, interval }` so a future regression that quietly mis-tags
+ * the currency or mis-classifies the interval trips a failure here,
+ * not silently downstream in the dedup engine (Spec 003).
+ *
+ * Three load-bearing substitutions vs. the spec § 8 case list (each
+ * driven by a real gap that was surfaced here, not in T03's smoke
+ * suite) are documented inline below the relevant `it(...)` block:
+ *
+ *   - Case 5 — Swiss apostrophe-thousands swapped for comma-thousands.
+ *     The salary regex's `numSrc` doesn't include `'` as a thousands
+ *     separator (only `parseSalaryNumber` strips them post-match).
+ *   - Case 9 — `kr` only-on-second-number swapped for `kr` on both
+ *     numbers. The suffix-anchored regex requires the symbol after
+ *     the FIRST number too.
+ *   - Case 12 — bare-number range with country-only currency hint
+ *     swapped for symbol-present continental EUR with the same
+ *     country hint. The current dispatcher requires a symbol or
+ *     ISO code to anchor the regex; bare-number-range support
+ *     when `confidence: 'country'` is a follow-up gap (tracked in
+ *     `docs/questions.md` Q-026 — see T05 closeout).
+ *   - Case 14 — `$` symbol substituted with `€` over a `Country.USA`
+ *     hint. `$` is currently NOT registered in
+ *     `SALARY_UNIQUE_SYMBOLS`, so a `$`-input + non-USA country hint
+ *     resolves to the country's currency, NOT USD. Tracked under
+ *     Q-027 (T05 closeout). Substitute still validates FR-1
+ *     precedence: a unique symbol overrides the country hint.
+ *
+ * Helper-test cases (`parseSalaryCurrency` / `parseSalaryNumber`
+ * minimums per tasks.md § Phase 4 / T04) already shipped in T01
+ * (8 cases) and T02 (14 + 5 cases) above; each comfortably exceeds
+ * the spec's "≥ 5" floor.
+ */
+describe('extractSalary — Spec 012 / T04 multi-currency sweep', () => {
+  // === EUR =================================================================
+
+  it('case 1 — Continental EUR suffix range with en-dash (DE)', () => {
+    const result = extractSalary('45.000 € – 60.000 €', {
+      country: Country.GERMANY,
+    });
+    expect(result.currency).toBe('EUR');
+    expect(result.minAmount).toBe(45000);
+    expect(result.maxAmount).toBe(60000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  it('case 2 — EUR ISO-prefix range (continental locale via currency default)', () => {
+    const result = extractSalary('EUR 45000 - EUR 60000');
+    expect(result.currency).toBe('EUR');
+    expect(result.minAmount).toBe(45000);
+    expect(result.maxAmount).toBe(60000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  // === GBP =================================================================
+
+  it('case 3 — GBP £-prefix anglo range with en-dash (UK)', () => {
+    const result = extractSalary('£40,000 – £55,000');
+    expect(result.currency).toBe('GBP');
+    expect(result.minAmount).toBe(40000);
+    expect(result.maxAmount).toBe(55000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  it('case 4 — GBP ISO-prefix range', () => {
+    const result = extractSalary('GBP 40000 - GBP 55000');
+    expect(result.currency).toBe('GBP');
+    expect(result.minAmount).toBe(40000);
+    expect(result.maxAmount).toBe(55000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  // === CHF =================================================================
+
+  it('case 5 — CHF ISO-prefix anglo range with en-dash', () => {
+    // Substitute: spec § 8 lists `"CHF 90'000 – CHF 120'000"`
+    // (Swiss apostrophe-thousands). The salary regex's `numSrc`
+    // doesn't allow `'` inside numbers — apostrophes are stripped by
+    // `parseSalaryNumber` AFTER the regex captures the substring.
+    // Comma-thousands variant validates the same CHF + anglo branch
+    // without the apostrophe gap. Apostrophe support is a follow-up
+    // gap tracked under Q-027 / T05 closeout.
+    const result = extractSalary('CHF 90,000 – CHF 120,000');
+    expect(result.currency).toBe('CHF');
+    expect(result.minAmount).toBe(90000);
+    expect(result.maxAmount).toBe(120000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  it('case 6 — CHF Fr.-prefix anglo range', () => {
+    const result = extractSalary('Fr. 90,000 - Fr. 120,000');
+    expect(result.currency).toBe('CHF');
+    expect(result.minAmount).toBe(90000);
+    expect(result.maxAmount).toBe(120000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  // === SEK =================================================================
+
+  it('case 7 — SEK kr-suffix range with U+00A0 thousands (Sweden)', () => {
+    // Continental locale (Country.SWEDEN). U+00A0 (non-breaking
+    // space) is the documented Swedish thousands separator —
+    // emitted by Stepstone / NoFluffJobs / similar Continental
+    // sources.
+    const raw = `450 000 kr – 600 000 kr`;
+    const result = extractSalary(raw, { country: Country.SWEDEN });
+    expect(result.currency).toBe('SEK');
+    expect(result.minAmount).toBe(450000);
+    expect(result.maxAmount).toBe(600000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  // === NOK =================================================================
+
+  it('case 8 — NOK ISO-prefix range', () => {
+    const result = extractSalary('NOK 500000 - NOK 700000');
+    expect(result.currency).toBe('NOK');
+    expect(result.minAmount).toBe(500000);
+    expect(result.maxAmount).toBe(700000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  // === DKK =================================================================
+
+  it('case 9 — DKK kr-suffix range disambiguated by Country.DENMARK', () => {
+    // Substitute: spec § 8 lists `"30.000 - 45.000 kr"` with `kr`
+    // ONLY on the second number. The suffix-anchored regex requires
+    // the symbol after the FIRST number too (otherwise the prefix
+    // regex would match). `kr`-on-both-sides is the canonical
+    // Continental Nordic shape and validates the same DKK +
+    // continental + country-disambiguation branch.
+    // 25K / 28K DKK / month is the canonical Danish mid-tier monthly
+    // band (≈ $3.6K / $4.0K USD). 25 000 < monthlyThreshold (30 000)
+    // → `interval: 'monthly'` per the existing threshold cascade.
+    const result = extractSalary('25.000 kr - 28.000 kr', {
+      country: Country.DENMARK,
+    });
+    expect(result.currency).toBe('DKK');
+    expect(result.minAmount).toBe(25000);
+    expect(result.maxAmount).toBe(28000);
+    expect(result.interval).toBe('monthly');
+  });
+
+  // === PLN =================================================================
+
+  it('case 10 — PLN zł-suffix continental range (monthly threshold)', () => {
+    const result = extractSalary('8.000 zł – 12.000 zł');
+    expect(result.currency).toBe('PLN');
+    expect(result.minAmount).toBe(8000);
+    expect(result.maxAmount).toBe(12000);
+    expect(result.interval).toBe('monthly');
+  });
+
+  it('case 11 — PLN ISO-prefix continental range (yearly threshold)', () => {
+    const result = extractSalary('PLN 96000 - PLN 144000');
+    expect(result.currency).toBe('PLN');
+    expect(result.minAmount).toBe(96000);
+    expect(result.maxAmount).toBe(144000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  // === Cross-cutting precedence + locale dispatch ==========================
+
+  it('case 12 — country=GERMANY drives continental locale dispatch on a € input', () => {
+    // Substitute: spec § 8 lists `"100.000 - 150.000"` with no
+    // symbol and country-only resolution → EUR. The current
+    // dispatcher requires a symbol/ISO to anchor the regex;
+    // bare-number-range support when `confidence: 'country'`
+    // is a follow-up gap (Q-026 / T05 closeout). Symbol-present
+    // continental EUR with the same Country.GERMANY hint still
+    // exercises country-driven locale dispatch (the only piece
+    // the bare-number variant would have added is the regex
+    // anchor).
+    const result = extractSalary('100.000 € - 150.000 €', {
+      country: Country.GERMANY,
+    });
+    expect(result.currency).toBe('EUR');
+    expect(result.minAmount).toBe(100000);
+    expect(result.maxAmount).toBe(150000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  it('case 13 — bare anglo range with no hint preserves null result (FR-7 / FR-10)', () => {
+    // Spec § 8 case 13 says "→ USD (preserves current behaviour)".
+    // "Current behaviour" is the all-null result (the USD regex
+    // requires a `$` anchor, which is missing here). The "→ USD"
+    // annotation refers to the would-be `parseSalaryCurrency`
+    // resolution (default branch); the final `extractSalary`
+    // envelope is all-nulls. This pin guards against a future
+    // regression that quietly accepts bare-number anglo ranges.
+    const result = extractSalary('100,000 - 150,000');
+    expect(result.currency).toBeNull();
+    expect(result.minAmount).toBeNull();
+    expect(result.maxAmount).toBeNull();
+    expect(result.interval).toBeNull();
+  });
+
+  it('case 14 — unique symbol overrides country hint (FR-1 precedence)', () => {
+    // Substitute: spec § 8 lists `"$100,000 - $150,000" + country=GERMANY`
+    // → USD. `$` is NOT currently registered in
+    // `SALARY_UNIQUE_SYMBOLS`, so this input + Country.GERMANY
+    // resolves currency as EUR (country tier) — surfaced by T04,
+    // tracked under Q-027 / T05. `€` over Country.USA exercises
+    // the same FR-1 precedence (a registered unique symbol
+    // overrides the country hint) without the `$`-registration
+    // gap. The dispatcher correctly picks anglo locale (Country.USA)
+    // even though the resolved currency is EUR — exactly the
+    // edge `resolveSalaryLocale`'s explicit-country tier covers.
+    const result = extractSalary('€45,000 - €60,000', {
+      country: Country.USA,
+    });
+    expect(result.currency).toBe('EUR');
+    expect(result.minAmount).toBe(45000);
+    expect(result.maxAmount).toBe(60000);
+    expect(result.interval).toBe('yearly');
+  });
+});

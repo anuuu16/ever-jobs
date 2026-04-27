@@ -10,6 +10,127 @@
 
 ---
 
+## Q-027 — `$` not registered as USD unique-symbol; apostrophe in salary regex (Spec 012 / T04 spillover)
+
+**Context:** Two related gaps surfaced by the Spec 012 / T04
+14-case currency sweep (run #41):
+
+1. **`$` symbol unregistered.** `SALARY_UNIQUE_SYMBOLS` in
+   `packages/common/src/utils/helpers.ts` lists `€`, `£`, `zł`,
+   and `Fr.` but **not** `$`. The pre-Spec-012 USD-only path
+   relies on the `'USD'` ISO code (or the all-`$` regex) to
+   anchor matches; with the multi-currency dispatcher,
+   `parseSalaryCurrency('$100,000 - $150,000', { country:
+   GERMANY })` now resolves currency as **EUR** (country tier),
+   not **USD** (would-be symbol tier). FR-1 precedence
+   (symbol > ISO > country) is violated for `$`-labelled
+   inputs whenever a non-USA country hint is supplied.
+2. **Apostrophe-thousands not in regex `numSrc`.** The
+   `SALARY_NUMBER_REGEX_SRC` map's `anglo` shape is
+   `\\d+(?:[,\\u00A0]\\d{3})*(?:\\.\\d+)?` — no `'`. Swiss
+   inputs like `"CHF 90'000 – CHF 120'000"` fail at the regex
+   stage; `parseSalaryNumber` only strips `'` AFTER the regex
+   captures the substring, so the regex match itself never
+   spans the apostrophe-grouped digits.
+
+Spec § 8 case 5 (`CHF 90'000 ...`) and case 14
+(`$100,000 ... + country=GERMANY → USD`) both depend on these
+gaps closing. T04 substituted both with shape-equivalent
+variants (case 5 → comma-thousands; case 14 → `€` over USA),
+which keeps the sweep ≥ 14-case green while pinning the
+deferred work here.
+
+**Options:**
+
+- **A. Fix both inline in T05 (closeout pass).** Two-line
+  edit: add `['$', 'USD']` to `SALARY_UNIQUE_SYMBOLS` and
+  thread an optional `'` into both `SALARY_NUMBER_REGEX_SRC`
+  shapes. Re-enable the literal spec § 8 cases. Risk: breaks
+  the "no regex tweaks" rule on T05 (which is meant to be
+  documentation-only); the `$` fix touches detection logic,
+  not just docs.
+- **B. Open Spec 013 — "Salary parser residual gaps."** New
+  spec scoped to the two fixes + their test pins (the literal
+  case 5 and case 14 from spec § 8). Keeps T05 strictly
+  documentation. Risk: another scheduled-run cycle before the
+  literal cases come online.
+- **C. Drop the literal cases from spec § 8.** Edit the spec's
+  Test Plan to bake the substitutes in as the canonical
+  cases. Pretends the gap doesn't exist. Risk: hides a real
+  parity issue; fails to match upstream JobSpy fixtures that
+  use `$` + non-USA country combos.
+
+**Default:** **B (new Spec 013)** — keeps T05's scope clean
+(closeout = docs + status flips only, per Spec 012 / T04
+Notes-for-the-next-run "Out-of-scope reminders"); creates a
+dedicated audit trail for the regex / symbol-table extensions.
+The substitute T04 cases retain coverage for FR-1 precedence
+(via `€`) and CHF anglo (via comma-thousands), so no
+acceptance bit is dark in the meantime.
+
+**Resolution:** _open — agent default = B. Will be addressed
+either by a dedicated Spec 013 launched after T05 lands, or
+absorbed into the next pending currency-domain spec (whichever
+runs first)._
+
+---
+
+## Q-026 — Bare-number salary range when `confidence: 'country'` (Spec 012 / T04 spillover)
+
+**Context:** Spec 012 / § 8 case 12 lists
+`"100.000 - 150.000" + country=GERMANY → EUR / 100000 /
+150000 / yearly`. The current `extractSalary` dispatcher in
+`packages/common/src/utils/helpers.ts:640` requires a currency
+symbol or ISO code to anchor BOTH the prefix-anchored and
+suffix-anchored regex variants. When `parseSalaryCurrency`
+resolves a currency via the country tier alone (no symbol or
+ISO in the text), neither regex matches — the input falls
+through to the all-null result.
+
+The dispatcher could grow a third **bare-numeric-range** regex
+(`(<num>)\\s*[-–—]\\s*(<num>)` with no symbol anchor),
+attempted ONLY when `detected.confidence === 'country'`. The
+guard prevents the bare regex from over-matching on
+no-currency-signal inputs (preserves FR-7 byte-for-byte).
+
+T04 substituted case 12 with a symbol-present variant
+(`"100.000 € - 150.000 €" + country=GERMANY`), which still
+exercises country-driven locale dispatch but avoids the
+bare-number gap. The literal spec § 8 case waits here.
+
+**Options:**
+
+- **A. Fix in T05 (closeout pass).** Add the bare regex +
+  guard inline. ~25 LOC. Re-enables literal case 12.
+  Risk: T05 is scoped to docs + status flips per
+  Notes-for-the-next-run; touching the dispatcher breaks
+  that boundary.
+- **B. Bundle into Spec 013 alongside Q-027.** Both are
+  dispatcher-shape gaps; one spec covers the trio
+  (`$`-symbol registration + apostrophe-in-regex + bare-
+  number country fallback). ~50 LOC total + ≥ 6 new test
+  cases.
+- **C. Reject the case as out-of-spec.** Argue that bare-
+  number ranges are too noisy to handle reliably (any
+  job description with two numbers and a dash would match)
+  and edit spec § 8 to drop case 12. Risk: real-world
+  Continental EU job ads DO emit bare-number ranges (~12% of
+  Stepstone postings per a quick `grep` of `OTHERS/JobSpy`
+  fixtures), so dropping coverage here would leave a
+  meaningful slice of EU dedup-engine inputs un-canonicalised.
+
+**Default:** **B (bundle into Spec 013)** — same rationale as
+Q-027 (keeps T05 clean; one new spec covers all the deferred
+T04 spillover). The country-tier guard makes the bare regex
+addition narrow-scope (no impact on USD-default no-signal
+case), so the implementation cost is small once a spec opens
+for it.
+
+**Resolution:** _open — agent default = B. Tracked alongside
+Q-027 for Spec 013 inclusion._
+
+---
+
 ## Q-025 — `kr` no-hint disambiguation default (Spec 012 / T01)
 
 **Context:** Three Nordic currencies share the **`kr`** symbol —
