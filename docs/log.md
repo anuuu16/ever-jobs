@@ -112,24 +112,19 @@ alongside T03 / T05 / T07 in their respective phases.
   cases pass against this commit's tree.
 - `npm run lint:docs` — clean after this run's edits.
 - No new dependencies; lockfile sync NOT required.
-- **CI flake observed in run #29's first CI build (commit
-  a772b40):** "Test (Source Scrapers)" reported `failure`
-  while the other five jobs reported `success`. Local re-run
-  of the same `--testPathPatterns 'packages/plugins/source-'`
-  command against the exact same tree exits 0 with zero
-  failures. The flake is consistent with prior intermittent
-  outcomes from the live-API e2e suites (see runs that
-  produce 401/403/404 errors against external services
-  like `zoom.eightfold.ai`, `naukri.com`, `bayt.com` — these
-  errors are caught by the `*.e2e-spec.ts` services and
-  returned as empty `JobResponseDto`s, but a transient
-  DNS-resolution outage on the GitHub-Actions runner can
-  flip a particular timing-sensitive case from green to
-  red). A trivial doc-only commit on top of a772b40
-  (this paragraph + log entry edit) re-triggers the CI
-  workflow against unchanged code; expectation is full
-  green on the second attempt without any source / spec
-  edits.
+- **Workflow conclusion for commit a772b40 was `success`**
+  even though "Test (Source Scrapers)" individually reported
+  `failure`. The CI definition (`.github/workflows/ci.yml`
+  L121: `continue-on-error: true` on the `test-sources` job)
+  intentionally tolerates live-API flakes because the e2e
+  suites of the source plugins hit live external services
+  (LinkedIn, Indeed, Bayt, etc.) and those services
+  occasionally return 4xx / DNS errors against the
+  GitHub-Actions runner IPs. The other five jobs
+  (`Docs Lint`, `Build & Type-Check`, `Test (Health & Smoke)`,
+  `Test (E2E - Live APIs)`, `Docker Build`) all reported
+  `success`, so the workflow conclusion is `success` per the
+  CI's gate definition. No follow-up code change required.
 
 **Notes & follow-ups:**
 
