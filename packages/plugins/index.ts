@@ -38,6 +38,8 @@ import { JoinComModule } from './source-ats-joincom';
 import { LeverModule } from './source-ats-lever';
 import { LoxoModule } from './source-ats-loxo';
 import { ManatalModule } from './source-ats-manatal';
+import { MercorModule } from './source-ats-mercor';
+import { OracleModule } from './source-ats-oracle';
 import { PaylocityModule } from './source-ats-paylocity';
 import { PersonioModule } from './source-ats-personio';
 import { PhenomModule } from './source-ats-phenom';
@@ -157,6 +159,7 @@ import { StepStoneModule } from './source-stepstone';
 import { SwissdevjobsModule } from './source-swissdevjobs';
 import { TalrooModule } from './source-talroo';
 import { TechcareersModule } from './source-techcareers';
+import { TeslaModule } from './source-tesla';
 import { TheMuseModule } from './source-themuse';
 import { UndpJobsModule } from './source-undpjobs';
 import { UpworkModule } from './source-upwork';
@@ -202,6 +205,8 @@ export const ALL_SOURCE_MODULES = [
   LeverModule,
   LoxoModule,
   ManatalModule,
+  MercorModule,
+  OracleModule,
   PaylocityModule,
   PersonioModule,
   PhenomModule,
@@ -321,6 +326,7 @@ export const ALL_SOURCE_MODULES = [
   SwissdevjobsModule,
   TalrooModule,
   TechcareersModule,
+  TeslaModule,
   TheMuseModule,
   UndpJobsModule,
   UpworkModule,

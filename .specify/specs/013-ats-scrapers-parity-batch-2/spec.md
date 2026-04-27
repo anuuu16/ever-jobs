@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | T01 landed run #44; T02..T15 pending                 |
+| Status         | Phase 1 done (T01..T02 runs #44..#45); T03..T15 pending |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-27 (run #44)                                 |
+| Last updated   | 2026-04-28 (run #45)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -333,6 +333,28 @@ records.)
 
 ## 10. Decisions
 
+- **2026-04-28 (run #45 / T02)** — Four new plugin packages
+  scaffolded under `packages/plugins/`: `source-ats-oracle`,
+  `source-ats-mercor`, `source-tesla`, `source-tesla-playwright`.
+  Each package follows the canonical layout (`package.json` /
+  `tsconfig.json` / `src/{index.ts,<plugin>.module.ts,<plugin>.service.ts}`
+  / `__tests__/<plugin>.service.spec.ts`) and ships with a stub
+  `scrape(input)` that returns `new JobResponseDto([])` —
+  behavioural code for each plugin lands at T03 / T05 / T07 / T09
+  respectively. Three modules (`OracleModule`, `MercorModule`,
+  `TeslaModule`) are appended to `ALL_SOURCE_MODULES` in
+  `packages/plugins/index.ts`; `TeslaPlaywrightModule` is
+  intentionally NOT imported there (per Q-028 / FR-13 — operators
+  opt in by manually importing the module alongside their preferred
+  set). The `source-tesla-playwright` `package.json` declares
+  `playwright` as both `peerDependencies` and
+  `peerDependenciesMeta.optional` so an `npm install` without the
+  upstream Tesla-Playwright path still resolves clean — the runtime
+  guard for the missing dep lives in T09's lazy
+  `import('playwright')` plus its `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE`
+  sentinel. Twelve new spec cases (3 per service × 4 services)
+  pin the four-place registration scaffolding before any source
+  behaviour exists. Same shape as Spec 006 / T02 (run #29).
 - **2026-04-27 (run #44 / T01)** — Site enum extended with the four
   new literal values (`ORACLE = 'oracle'`, `MERCOR = 'mercor'`,
   `TESLA = 'tesla'`, `TESLA_PLAYWRIGHT = 'tesla_playwright'`) under a

@@ -22,13 +22,24 @@
       optional-field conventions.
   - **Estimate:** 0.25 day.
 
-- [ ] T02 — Four new plugin packages scaffolded; three appended to
+- [x] T02 — Four new plugin packages scaffolded; three appended to
   `ALL_SOURCE_MODULES`.
+  **Landed run #45.**
   - **Files (planned):** `packages/plugins/source-ats-oracle/{package.json,tsconfig.json,src/{index.ts,oracle.module.ts,oracle.service.ts},__tests__/oracle.service.spec.ts}`,
     same shape for `source-ats-mercor`, `source-tesla`, AND
     `source-tesla-playwright` (the optional companion gets a stub
     package too — its scaffolding is identical, only `ALL_SOURCE_MODULES`
     excludes it). Plus one edit to `packages/plugins/index.ts`.
+  - **Files (actual):** matched plan exactly. Four packages × six
+    files each (package.json + tsconfig.json + src/index.ts +
+    src/<plugin>.module.ts + src/<plugin>.service.ts +
+    __tests__/<plugin>.service.spec.ts) = 24 new files. Plus
+    one edit to the `ALL_SOURCE_MODULES` barrel (3 imports
+    added, 3 array entries added — `MercorModule` /
+    `OracleModule` interleaved alphabetically into the ATS
+    block, `TeslaModule` interleaved into the source-* block;
+    `TeslaPlaywrightModule` deliberately not imported per
+    FR-13).
   - **Acceptance:**
     - Four packages exist and compile with stub
       `scrape(input) { return new JobResponseDto([]); }`.
@@ -38,7 +49,8 @@
       (a) NestJS DI resolution via the corresponding module,
       (b) stub `scrape()` returning empty `JobResponseDto`,
       (c) the new `Site` enum value's literal string.
-  - **Estimate:** 0.5 day.
+  - **Estimate:** 0.5 day. **Actual:** ~0.3 day (matches Spec 006 /
+    T02 actual at run #29).
 
 ## Phase 2 — Oracle HCM Cloud
 
@@ -259,18 +271,22 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #45** = Spec 013 / Phase 1 / T02 — scaffold the
-  four new plugin packages (`source-ats-oracle`, `source-ats-mercor`,
-  `source-tesla`, `source-tesla-playwright`) under
-  `packages/plugins/`. Each package gets `package.json`,
-  `tsconfig.json`, `src/{index.ts,<plugin>.module.ts,<plugin>.service.ts}`,
-  and `__tests__/<plugin>.service.spec.ts` (≥ 3 cases per package
-  per T02 acceptance). Stub `scrape(input)` returns
-  `new JobResponseDto([])`. Edit `packages/plugins/index.ts` to
-  append `OracleModule`, `MercorModule`, `TeslaModule` to
-  `ALL_SOURCE_MODULES` — but **NOT** `TeslaPlaywrightModule`
-  (FR-13 / opt-in companion). Estimated ~0.5 day; still one full
-  scheduled-run cycle.
+- **Default for run #46** = Spec 013 / Phase 2 / T03 —
+  `OracleService.scrape(input)` REST + finder-string path. Land
+  `oracle.service.ts` (real implementation), `oracle.types.ts`,
+  `oracle.constants.ts`. URL composition rules: `companyUrl`
+  override is canonical; `companySlug` (`<subdomain>-<region>` form)
+  composes to `https://<subdomain>.fa.<region>.oraclecloud.com`.
+  Finder string per FR-2:
+  `siteNumber=<value>;facetsList=LOCATIONS;WORK_LOCATIONS;WORKPLACE_TYPES;TITLES;CATEGORIES;ORGANIZATIONS;POSTING_DATES;FLEX_FIELDS;limit=100;offset=N;sortBy=POSTING_DATES_DESC`.
+  `siteNumber` defaults to `'CX_45001'` (Q-030) when undefined.
+  HTTP via `@ever-jobs/common.createHttpClient`; errors caught →
+  empty `JobResponseDto` with sentinel `ERR_ORACLE_BAD_TENANT` /
+  `ERR_ORACLE_FINDER_REJECTED` recorded. Estimated 0.5 day.
+- **Default for run #45 (DONE — landed run #45)** = Spec 013 /
+  Phase 1 / T02 — scaffold the four new plugin packages and
+  append three (Oracle / Mercor / Tesla) to `ALL_SOURCE_MODULES`.
+  `TeslaPlaywrightModule` deliberately excluded per FR-13.
 - **Default for run #44 (DONE — landed run #44)** = Spec 013 /
   Phase 1 / T01 (Site enum + tsconfig paths + jest moduleNameMapper
   + `ScraperInputDto` extensions). Pure scaffolding pass; same

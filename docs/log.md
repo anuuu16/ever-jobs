@@ -5,6 +5,146 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #45 (Spec 013 / Phase 1 / T02 — Plugin scaffolds landed)
+
+**Scope:** land Spec 013 / Phase 1 / T02 — scaffold the four new
+plugin packages (`source-ats-oracle`, `source-ats-mercor`,
+`source-tesla`, `source-tesla-playwright`) under
+`packages/plugins/`, and append the three default modules
+(`OracleModule`, `MercorModule`, `TeslaModule`) to
+`ALL_SOURCE_MODULES` in `packages/plugins/index.ts`. The OPTIONAL
+companion `TeslaPlaywrightModule` is deliberately excluded from
+the barrel per Spec 013 / Q-028 / FR-13. Same shape as Spec 006
+/ T02 at run #29 (the precedent for batched-spec plugin
+scaffolding). Estimated 0.5 day per tasks.md; landed in a single
+scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #44's sync). Twenty-nine consecutive zero-churn
+runs in `OTHERS/`.
+
+**No new questions opened this run.** Q-028..Q-031 (opened in
+run #43's spec scaffold) stay open with their pinned defaults;
+their resolutions land alongside the implementation tasks (T03 /
+T05 / T07 / T09) over the next several runs. Q-032 (Tesla /
+Tesla-Playwright cross-plugin dedup strategy) still pending the
+T09 implementation. Q-026 / Q-027 retain their **Spec 014
+candidate** label unchanged from run #43.
+
+**Five load-bearing structural choices** were honoured during
+T02's edit pass:
+
+1. **Each plugin's `__tests__/<plugin>.service.spec.ts` ships
+   exactly three cases** (DI resolution, stub `scrape()` returns
+   empty, `Site.<KEY>` literal-string assertion). Mirrors the
+   Spec 006 / T02 / Avature/Gem/Join.com triplet at run #29; the
+   acceptance line on T02 calls for "(a)/(b)/(c)" pinned cases
+   per service, so 3 × 4 = 12 new spec cases this run. Behavioural
+   tests (≥ 5..6 cases per service) land alongside T03 / T05 /
+   T07 / T09 — keeps the registration scaffolding and the
+   business logic in separate commits so a future regression
+   bisect can split "registration broke" from "behaviour broke."
+2. **`source-tesla-playwright/package.json` declares `playwright`
+   under BOTH `peerDependencies` and `peerDependenciesMeta` with
+   `optional: true`.** The peer declaration plus the optional
+   meta marker matches `npm`'s recommended pattern for an
+   optional peer; an `npm install` against the root workspace
+   does NOT pull `playwright` in transitively (which would balloon
+   `node_modules` for every operator who only runs the default
+   `source-tesla` HTTP path). The runtime guard for the missing
+   dep lives in T09's lazy `import('playwright')` plus its
+   `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE` sentinel — declared on the
+   spec already, no source change needed in this run.
+3. **Alphabetical-within-group barrel ordering preserved.**
+   `MercorModule` and `OracleModule` interleave alphabetically
+   into the existing `source-ats-*` import block (`Manatal …
+   Mercor … Oracle … Paylocity`); `TeslaModule` interleaves into
+   the source-* (non-ATS) block (`Techcareers … Tesla …
+   TheMuse`). The `ALL_SOURCE_MODULES` array mirrors the import
+   order. `TeslaPlaywrightModule` does NOT appear in either the
+   imports or the array — consistent with FR-13's opt-in line.
+4. **`TeslaService` decorated with `category: 'company'`,
+   `isAts: false`** — Tesla is single-tenant (one company's
+   careers site), not a multi-tenant ATS. Same boundary as
+   `source-company-{amazon,apple,microsoft,etc.}/` which all
+   carry `category: 'company'` in their `@SourcePlugin`
+   metadata. `OracleService` and `MercorService` carry
+   `category: 'ats'`, `isAts: true` — Oracle HCM Cloud is a
+   true multi-tenant ATS (used by hundreds of companies); Mercor
+   is borderline but its catalogue-wide explore-page endpoint
+   serves multiple companies, fitting the ATS classification
+   better than the company-specific one. The folder convention
+   (`source-ats-mercor` vs `source-company-tesla`) matches the
+   `category` value.
+5. **JSDoc cross-references the landing task per service.**
+   `OracleService.scrape()`'s JSDoc points at T03; Mercor at
+   T05; Tesla at T07; Tesla-Playwright at T09. A future
+   contributor following the JSDoc breadcrumbs lands directly in
+   `tasks.md` § Phase 2 / 3 / 4 / 5 respectively without having
+   to re-derive the task graph from `competitor-watch.md`.
+
+**Changes — source / test:**
+
+- `packages/plugins/source-ats-oracle/{package.json,tsconfig.json,
+  src/{index.ts,oracle.module.ts,oracle.service.ts},
+  __tests__/oracle.service.spec.ts}` — six new files. Stub
+  `scrape(input)` returns `new JobResponseDto([])`. JSDoc on
+  `oracle.service.ts` documents the URL-resolution rules (FR-1 /
+  FR-2 / FR-3) and the `siteNumber` default (`'CX_45001'` per
+  Q-030 / FR-4) ahead of T03 so the implementation lands without
+  re-deriving the contract.
+- `packages/plugins/source-ats-mercor/{…}` — six new files. JSDoc
+  documents the catalogue-wide design (Q-029 / FR-5..FR-8) and
+  the literal `Authorization: Bearer` header convention from the
+  upstream Python.
+- `packages/plugins/source-tesla/{…}` — six new files. JSDoc
+  documents the single-tenant design (board GET +
+  detail-fetch fan-out budgeted by `descriptionDepth` per
+  Q-031 / FR-9..FR-12) and the explicit "HTTP-only — no
+  Playwright import here" boundary.
+- `packages/plugins/source-tesla-playwright/{…}` — six new files.
+  `package.json` declares `playwright` as optional peer.
+  JSDoc documents the lazy-`import()` strategy (FR-13), the
+  anti-automation Chromium flags, and the cross-plugin dedup
+  consideration (Q-032 — same `externalId`, different `Site`).
+- `packages/plugins/index.ts` — three new imports added
+  alphabetically into existing import blocks (`MercorModule`,
+  `OracleModule` into the `source-ats-*` block; `TeslaModule`
+  into the source-* block). Three matching `ALL_SOURCE_MODULES`
+  entries appended in the same order. `TeslaPlaywrightModule`
+  intentionally absent.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  T02 row flipped from `[ ]` to `[x]` with "Landed run #45"
+  annotation + actual-files line; Notes-for-the-next-run pinned
+  default updated to **Spec 013 / Phase 2 / T03**
+  (`OracleService.scrape()` REST + finder-string).
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  Status flipped from "T01 landed run #44; T02..T15 pending" to
+  "Phase 1 done (T01..T02 runs #44..#45); T03..T15 pending";
+  Last-updated bumped to run #45; new entry appended to § 10
+  Decisions covering the T02 scaffold and the five load-bearing
+  choices.
+- `docs/index.md` — Spec 013 row status updated to match
+  spec.md; footer bumped to run #45.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #45.
+- `/competitor-watch.md` — run #45 sync line appended at top
+  of Sync Log; AC-4 / AC-5 / AC-6 row prefixes updated from
+  "Spec 013 / T01 landed run #44; T02..T15 pending" to
+  "Spec 013 / Phase 1 done (T01..T02 runs #44..#45); T03..T15
+  pending".
+
+**Verification:** Twelve new spec cases (3 cases × 4 services)
+lock the four-place registration path. Tests cannot run in this
+sandbox (no `node_modules` — pattern from runs #21–#44); CI on
+push validates the full unit + integration bundle.
+
+---
+
 ## 2026-04-27 — Scheduled run #44 (Spec 013 / Phase 1 / T01 — Bootstrap landed)
 
 **Scope:** land Spec 013 / Phase 1 / T01 — pure scaffolding pass
