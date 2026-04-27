@@ -446,6 +446,12 @@ export function runStoreConformance(
       });
 
       it('putAll REPLACES (not merges) the existing set', async () => {
+        // Canonical row MUST exist before observations attach — production
+        // backends enforce FR-2's 1-N relationship via a FK constraint
+        // (see store-sqlite-drizzle's `source_observation.canonical_job_id`
+        // FK). The in-memory backend tolerates orphans for simplicity, but
+        // the contract is "observations belong to a canonical job".
+        await store.upsert(makeJob());
         await store.putAll('job-1', [makeObs('s1'), makeObs('s2')]);
         await store.putAll('job-1', [makeObs('s3')]);
         const read = await store.listByCanonicalId('job-1');
@@ -453,6 +459,7 @@ export function runStoreConformance(
       });
 
       it('deleteByCanonicalId returns count and is idempotent', async () => {
+        await store.upsert(makeJob());
         await store.putAll('job-1', [makeObs('s1'), makeObs('s2')]);
         const first = await store.deleteByCanonicalId('job-1');
         expect(first).toBe(2);

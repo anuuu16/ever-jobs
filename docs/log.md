@@ -5,6 +5,349 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #22 (Spec 004 Phase 3 — T07 + T08: `store-sqlite-drizzle` reference backend; Phase 3 closes)
+
+**Scope:** land Spec 004 / Phase 3 in a single run — T07 (scaffold
+`packages/plugins/store-sqlite-drizzle/` + Drizzle schema for
+`canonical_job` and `source_observation`) plus T08 (the
+`better-sqlite3`-backed `IJobStore` implementation with keyset cursor
+pagination). With Phase 3 done, Spec 004 graduates from "Phases 1–2
+done (T01–T06); Phases 3–5 pending" to "Phases 1–3 done (T01–T08);
+Phases 4–5 pending". This was run #21's explicit default for #22
+("Spec 004 / Phase 3 / T07 + T08 — `store-sqlite-drizzle` reference
+backend"); implemented as planned without deviation. T07 + T08 ship
+together because T07 in isolation is just schema + scaffolding and
+would not exercise the Drizzle / better-sqlite3 surface — pairing
+them yields the second concrete `IJobStore` backend that re-runs the
+same `runStoreConformance(label, factory)` from T06 and adds the
+SQL-specific guards (FK cascade, keyset pagination tie-break) that
+the in-memory backend can't reach.
+
+**No new questions opened this run.** T07 + T08 are mechanical to a
+point — the contract is fully pinned by Spec 004 §7.1, the
+`IJobStore` / `IJobObservationStore` interface JSDoc, and the shared
+conformance suite from T06 — but three load-bearing design decisions
+weren't called out in `tasks.md` Notes and were locked into the test
+surface rather than as new questions:
+
+1. **Keyset cursor over offset.** Spec 004 §7.1 says "opaque cursor"
+   but is silent on the encoding. Three options: (a) raw integer
+   offset (matches T06's in-memory backend), (b) keyset on
+   `(merged_at, canonical_job_id)`, (c) server-generated UUID with
+   state cached in a sidecar table. Picked (b) because Spec 004 /
+   NFR-1 budgets <25 ms p95 read on sqlite. Offset paging walks the
+   skipped prefix on every page (O(N) at depth N); keyset paging
+   seeks via the composite `idx_canonical_job_merged_at_id` index in
+   O(log N), regardless of how deep the page is. Backend-specific
+   test `keyset pagination tie-break` seeds 10 rows with identical
+   `mergedAt`, paginates in chunks of 3, and asserts every row
+   appears exactly once across the resulting 4 pages — guards
+   against future "simplifications" that drop the canonical-id ASC
+   tie-break in `buildKeysetCursorPredicate`. The cursor envelope
+   `{ v: 1, mergedAt, canonicalJobId }` is base64-of-JSON to match
+   T06's wire shape (so the future
+   `GET /api/jobs?cursor=…` endpoint doesn't fork on backend type)
+   and the `v: 1` discriminator is forward-compatibility insurance
+   — a future v2 envelope (e.g. carrying a SAFE-pointer encoding for
+   sharded backends) ships `v: 2` and rejects v1 cursors with
+   `ERR_STORE_INVALID_CURSOR` rather than silently misinterpreting
+   them.
+2. **`STORE_SQLITE_DRIZZLE_CONFIG` injection token (`@Optional()`).**
+   The constructor needs a config object (database path), but
+   NestJS DI sees the parameter type as `Object` from
+   `emitDecoratorMetadata` and can't resolve it as a positional
+   dependency. Three options: (a) zero-arg constructor + a
+   `configure(config)` setter — breaks the immutable-after-
+   construction invariant and adds a "did you forget to call
+   configure?" failure mode, (b) per-instance factory provider —
+   pushes wiring complexity to every consumer and breaks the
+   `StoreModule.forActive({ backends: [SqliteDrizzleJobStore] })`
+   uniform-class-list pattern, (c) `@Optional() @Inject(TOKEN)`
+   constructor parameter that defaults to `:memory:` when no
+   provider is bound. Picked (c) — tests pass `new
+   SqliteDrizzleJobStore({ databaseUrl: ':memory:' })` directly,
+   production binds a config provider via `apps/api`'s root module.
+   The `@Optional()` is what made the `StoreModule.forActive` path
+   work without any config provider at all (config is OFF by
+   default, in-memory DB; production overrides via
+   `EVER_JOBS_SQLITE_PATH` env var → config provider). Test
+   `StoreSqliteDrizzleModule resolves SqliteDrizzleJobStore as a
+   NestJS singleton` pins the contract that the bare-module path
+   compiles + resolves without a config provider.
+3. **Conformance-suite `upsert` preamble for two
+   `IJobObservationStore` cases.** The original `runStoreConformance`
+   from T06 called `store.putAll('job-1', …)` without first
+   `store.upsert(makeJob())` in two cases (`putAll REPLACES (not
+   merges) the existing set` and `deleteByCanonicalId returns count
+   and is idempotent`). The in-memory backend tolerated this (no FK
+   enforcement); the SQL-backed backend's
+   `source_observation.canonical_job_id REFERENCES canonical_job(...)`
+   constraint (FR-1 / FR-2 / 1-N relationship) rejected it with
+   `SqliteError: FOREIGN KEY constraint failed`. Two options: (a)
+   relax the FK or use deferred constraints (SQLite's deferred-
+   constraint support is incomplete and a deferred FK would defer
+   the enforcement of the very contract we want to enforce), (b)
+   add the `upsert(makeJob())` preamble to the two cases. Picked
+   (b) — this clarifies the implicit FR-2 contract that
+   `IJobObservationStore` operations require the canonical row to
+   exist first (which production deployments will always satisfy
+   because the dedup engine emits the canonical row first per
+   Spec 003 / FR-1; the contract gap was a test-side artefact, not
+   a behaviour gap). The in-memory backend continues to pass
+   unchanged because the upsert is harmless there. Decision noted
+   in `tasks.md` so the reasoning is recoverable from spec history
+   alone.
+
+**Changes — code:**
+
+- `packages/plugins/store-sqlite-drizzle/package.json` — new
+  (~7-line) package manifest. `name: "@ever-jobs/store-sqlite-drizzle"`,
+  `version: "0.1.0"`, `main`/`types` → `src/index.ts`, MIT licence.
+  Mirrors the existing `store-memory` shape so the npm-workspaces
+  resolution stays uniform.
+- `packages/plugins/store-sqlite-drizzle/tsconfig.json` — new (~9-line)
+  package tsconfig. Extends `../../../tsconfig.base.json`,
+  `outDir → ../../../dist/packages/store-sqlite-drizzle`,
+  `declaration: true`, `include: ["src/**/*"]`. Test files under
+  `__tests__/` are intentionally OUT of `include`.
+- `packages/plugins/store-sqlite-drizzle/drizzle/schema.ts` — new
+  ~155-LOC file. Drizzle schema declarations for `canonical_job`
+  and `source_observation` tables plus `INITIAL_SCHEMA_SQL` raw-SQL
+  bootstrap statement consumed by the service constructor on a
+  fresh `:memory:` database. Schema covers:
+    - `canonical_job` PK = `canonical_job_id`; flat columns for
+      title/company/location/description/url/merged_at; JSON-column
+      fallbacks for `fields_json`/`sources_json` (round-trip the
+      provenance map and observation array without an extra JOIN);
+      case-folded shadow columns `company_lc`/`title_lc`/
+      `location_lc` populated by the application layer + indexed
+      so case-insensitive substring filters stay a B-tree probe
+      (FR-7 / NFR-1).
+    - `source_observation` composite PK
+      `(canonical_job_id, site, source_job_id)` (FR-2; double-write
+      guard); FK on `canonical_job_id` with `ON DELETE CASCADE`
+      (FR-1 / FR-2; SQL-layer cascade replaces the JS-side cascade
+      from the in-memory backend).
+    - Composite index `idx_canonical_job_merged_at_id` on
+      `(merged_at, canonical_job_id)` — backs both deterministic
+      listing order and the keyset-cursor seek (NFR-1).
+- `packages/plugins/store-sqlite-drizzle/drizzle/migrations/0000_init.sql`
+  — new ~55-LOC hand-authored migration matching the schema. Includes
+  `PRAGMA foreign_keys = ON` for production-disk deployments. Kept
+  hand-authored (not `drizzle-kit generate`-d) so the SQLite-specific
+  PRAGMA reminder lives in the file; a future `drizzle-kit generate`
+  MUST produce byte-identical SQL.
+- `packages/plugins/store-sqlite-drizzle/src/store-sqlite-drizzle.service.ts`
+  — new ~440-LOC file. Exports `SqliteDrizzleJobStore` (decorated
+  with `@StorePlugin({ id: 'sqlite', description:
+  STORE_SQLITE_DRIZZLE_DESCRIPTION })` and `@Injectable()`),
+  `STORE_SQLITE_DRIZZLE_ID = 'sqlite'`,
+  `STORE_SQLITE_DRIZZLE_DESCRIPTION`, and the
+  `STORE_SQLITE_DRIZZLE_CONFIG` injection token. Surface area:
+    - **`upsert(job)` / `upsertMany(jobs)`** — `INSERT … ON CONFLICT
+      DO UPDATE` per row; `upsertMany` pre-checks existence with one
+      `SELECT canonical_job_id WHERE canonical_job_id IN (…)` so
+      inserted-vs-updated counts come back in two round-trips total.
+      Whole batch wrapped in a `better-sqlite3` synchronous
+      transaction so partial failure leaves no half-written cohort.
+    - **`getById(id)` / `findByCanonicalId(id)`** — single
+      `SELECT … LIMIT 1`; `null` (NOT `undefined`) on miss to pin
+      the contract.
+    - **`listByQuery(query)`** — single `SELECT` with optional
+      case-insensitive substring `LIKE` predicates against
+      `_lc` columns plus `mergedAt >= since` if provided.
+      Ordering is `merged_at DESC, canonical_job_id ASC`.
+      Pagination is keyset; `nextCursor` is omitted on the final
+      page (key absent, not `nextCursor: undefined`).
+    - **`delete(id)`** — `DELETE FROM canonical_job WHERE …`; FK
+      cascade drops attached observations.
+    - **`putAll(canonicalJobId, observations)`** — wrapped in a
+      synchronous transaction: `DELETE` the prior set, then `INSERT`
+      the new rows.
+    - **`listByCanonicalId(id)` / `deleteByCanonicalId(id)`** —
+      `SELECT` / `DELETE` against `source_observation`.
+    - **Test/diagnostic surface:** `size` (`SELECT COUNT(*)`),
+      `clear()`, `close()`.
+  Cursor envelope helpers — `encodeCursor(SqliteCursor)` (base64 of
+  `JSON.stringify`), `decodeCursor(string) → SqliteCursor` (rejects
+  not-base64 / not-JSON / non-object / wrong-version /
+  non-string-mergedAt / empty-canonicalJobId paths via
+  `SqliteStoreCursorError`), and `resolveLimit(limit?)` (mirrors
+  T06's clamp/default behaviour). `SqliteStoreCursorError` carries
+  `code = ERR_STORE_INVALID_CURSOR` so structural matching works.
+  `buildKeysetCursorPredicate(cursor)` returns the inverted SQL
+  predicate that resumes after the cursor's tuple (`merged_at <
+  cursor.mergedAt OR (merged_at = cursor.mergedAt AND
+  canonical_job_id > cursor.canonicalJobId)`) — pinned because the
+  asymmetry (DESC `<`, ASC `>`) is exactly where a future
+  refactor could silently desync pagination.
+- `packages/plugins/store-sqlite-drizzle/src/store-sqlite-drizzle.module.ts`
+  — new ~33-LOC NestJS module. `@Module({ providers:
+  [SqliteDrizzleJobStore], exports: [SqliteDrizzleJobStore] })`
+  only — does NOT bind `JOB_STORE_TOKEN` itself, leaving active-
+  backend selection to `StoreModule.forActive()` per AGENTS.md §5.
+  Doc-block walks the consumer through the canonical `apps/api`
+  wiring pattern.
+- `packages/plugins/store-sqlite-drizzle/src/index.ts` — barrel
+  re-exporting `SqliteDrizzleJobStore`, `StoreSqliteDrizzleModule`,
+  `STORE_SQLITE_DRIZZLE_ID`, `STORE_SQLITE_DRIZZLE_DESCRIPTION`,
+  `STORE_SQLITE_DRIZZLE_CONFIG`, plus type-only export of
+  `StoreSqliteDrizzleConfig`.
+
+**Changes — tests:**
+
+- `packages/plugin/src/store/__tests__/conformance.ts` — added
+  `await store.upsert(makeJob())` preamble to two
+  `IJobObservationStore` cases (`putAll REPLACES (not merges) the
+  existing set` and `deleteByCanonicalId returns count and is
+  idempotent`) so the FK constraint on production-grade backends
+  like sqlite-drizzle is satisfied. The in-memory backend continues
+  to pass unchanged (the upsert is harmless there). Comment block
+  documents the rationale so future readers don't mistake it for
+  test-side over-reach.
+- `packages/plugins/store-sqlite-drizzle/__tests__/store-sqlite-drizzle.spec.ts`
+  — new ~315-LOC file. Calls
+  `runStoreConformance('store-sqlite-drizzle', () => new
+  SqliteDrizzleJobStore({ databaseUrl: ':memory:' }))`
+  AND adds **18 backend-specific cases** in 7 describe-blocks:
+  1. **`@StorePlugin` metadata** (2 cases): raw `Reflect.getMetadata`
+     and NestJS `Reflector.get` both resolve `{ id: 'sqlite',
+     description: STORE_SQLITE_DRIZZLE_DESCRIPTION }` for
+     `SqliteDrizzleJobStore` (pins T07 acceptance — discoverable
+     by `StoreModule.forActive`).
+  2. **`StoreSqliteDrizzleModule`** (1 case): exports
+     `SqliteDrizzleJobStore` as an injectable provider via
+     `Test.createTestingModule`; binds a singleton (two
+     `moduleRef.get(SqliteDrizzleJobStore)` calls return the same
+     reference). Uses the `@Optional()` config-token path —
+     guards the bare-module DI surface that production wiring
+     overrides via a config provider.
+  3. **cursor envelope** (9 cases): 8 invalid-cursor shapes via
+     `it.each` — empty-string, plain-text, base64 of non-JSON,
+     base64 of literal `42`, missing version, wrong version,
+     mergedAt-not-string, canonicalJobId-empty (each row asserts
+     `code: ERR_STORE_INVALID_CURSOR` AND
+     `name: 'SqliteStoreCursorError'`); + a "round-trip" case
+     that encodes the returned `nextCursor` to assert the
+     envelope literally is `{ v: 1, mergedAt, canonicalJobId }`
+     and that re-feeding it yields the expected next page.
+  4. **SQL FK cascade** (1 case): seeds a canonical job +
+     observations, calls `delete`, asserts the underlying
+     observations are physically gone (not just hidden) by
+     re-querying via `listByCanonicalId` (returns `[]`) and
+     `deleteByCanonicalId` (returns `0`). Guards against future
+     schema-only edits forgetting the `PRAGMA foreign_keys = ON`.
+  5. **keyset pagination tie-break** (1 case): seeds 10 rows with
+     identical `mergedAt`, paginates in chunks of 3, asserts every
+     row appears exactly once across 4 pages. Guards against future
+     "simplifications" that drop the canonical-id ASC tie-break in
+     `buildKeysetCursorPredicate`.
+  6. **size / clear** (2 cases): `size` reflects insert / delete
+     counts; `clear()` drops every canonical row AND attached
+     observations.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/004-persistence-storage-plugins/tasks.md` — T07
+  graduates from "pending" to "done" with planned-vs-actual file
+  list, schema-rationale (case-folded shadow columns, composite
+  PK, FK cascade), hand-authored-migration justification. T08
+  graduates from "pending" to "done" with planned-vs-actual file
+  list, three-decision rationale (keyset cursor, `@Optional()`
+  config token, conformance-suite preamble), per-method behaviour
+  summary, and verification numbers (42 / 42 in the plugin suite,
+  212 / 212 across the focused regression bundle, 278 / 278 across
+  the broad regression bundle).
+- `.specify/specs/004-persistence-storage-plugins/spec.md` —
+  `Status` flipped to `Phases 1–3 done (T01–T08); Phases 4–5
+  pending`; `Last updated` bumped to `2026-04-27 (run #22)`.
+- `docs/index.md` — Spec 004 row updated with new status string;
+  `Last revised` bumped to `2026-04-27 (run #22)`.
+- `CLAUDE.md` — run-tag bumped to #22 in the footer.
+- `docs/log.md` — this entry.
+- `tsconfig.base.json` — added path alias
+  `@ever-jobs/store-sqlite-drizzle → packages/plugins/store-sqlite-drizzle/src/index.ts`
+  (per AGENTS.md §5: feature plugins register in tsconfig + jest only).
+- `jest.config.js` — added matching `moduleNameMapper` entry.
+- `package.json` — added `drizzle-orm@^0.45.2`,
+  `better-sqlite3@^12.9.0` to `dependencies`, and
+  `@types/better-sqlite3@^7.6.13` to `devDependencies`. Latest
+  stable versions per the AGENTS.md §1 / Hard Rule §5 ("always
+  prefer the latest stable versions of dependencies"). The
+  `prebuild-install@7.1.3` deprecation warning surfaced by npm
+  is from `better-sqlite3`'s native-binary download path; it's
+  upstream and not actionable on our side.
+- `/competitor-watch.md` — run #22 sync line; **no upstream commits**
+  in any of the three tracked repos (twelve consecutive zero-churn
+  runs).
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns 'packages/plugins/store-sqlite-drizzle'`
+  — **42 / 42 passed** (T07 + T08 plugin suite: 24 conformance
+  cases + 18 backend-specific cases).
+- `npx jest --testPathPatterns
+  'packages/models|packages/plugin/__tests__|packages/plugin/src/store|packages/plugin/src/circuit-breaker|packages/plugins/store-memory|packages/plugins/store-sqlite-drizzle'`
+  — **212 / 212 passed across 11 suites** (focused regression: T01
+  + T02 + T03 + T04 + T05 + T06 + T07 + T08 + circuit-breaker +
+  canonical-job + disabled-sources + plugin-discovery tests all
+  green).
+- `npx jest --testPathPatterns
+  'apps/api/__tests__/(e2e/sources-(health|admin)|e2e/metrics-circuit-state|integration/circuit-breaker|integration/plugin-policy|health\.e2e)|packages/plugin/src/circuit-breaker|apps/api/src/jobs/__tests__/(plugin-policy|sources-admin)|apps/api/src/auth/__tests__/api-key|apps/api/src/metrics/__tests__/metrics.service|packages/models|packages/plugin/__tests__|packages/plugin/src/store|packages/plugins/store-memory|packages/plugins/store-sqlite-drizzle'`
+  — **278 / 278 passed across 21 suites** (broad regression: Spec
+  005 / T01–T08, legacy `/health` + `/ping`, Spec 004 / T01–T08,
+  canonical-job schema, disabled-sources, plugin-discovery,
+  api-key guard, metrics service, sources-admin controller,
+  plugin-policy bootstrapper).
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` — clean.
+- `npx tsc --project packages/plugins/store-sqlite-drizzle/tsconfig.json --noEmit`
+  — clean.
+- `npm run lint:docs` — clean ("✓ Doc-lint passed — no issues.").
+
+**Notes & follow-ups:**
+
+- External research repos in `OTHERS/` re-fetched via their
+  `upstream-https` remotes; **no new commits** since run #21
+  (Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`). **Twelve** consecutive runs of zero-churn — well
+  past the point where adopting the open `Ats-scrapers`-parity
+  items in `competitor-watch.md §C` (AC-1..AC-9) would be the
+  higher-leverage default if Spec 004 / Phase 4 stalls.
+- Pre-existing test cases under
+  `packages/plugins/dedup-hybrid/__tests__/minhash-strategy.spec.ts`
+  remain red (unchanged from runs #11–#21; not wired into CI).
+  Open fall-back follow-up.
+- Default for run #23 is **Spec 004 / Phase 4 / T09 + T10 —
+  `store-postgres-prisma` reference backend**:
+    - T09 scaffolds `packages/plugins/store-postgres-prisma/`
+      (package.json, tsconfig.json, `prisma/schema.prisma`,
+      `prisma/migrations/<ts>_init/migration.sql`,
+      `src/{index.ts, store-postgres-prisma.module.ts,
+      store-postgres-prisma.service.ts}`,
+      `__tests__/store-postgres-prisma.spec.ts`). Adds the path
+      alias in `tsconfig.base.json` and `jest.config.js`. Prisma
+      schema mirrors the Drizzle schema's tables but uses
+      Postgres-native types (`text` for canonical id, `timestamptz`
+      for `merged_at`, `jsonb` for the JSON columns instead of
+      `text`). Cursor encoding stays the same `{ v: 1, mergedAt,
+      canonicalJobId }` envelope so the wire shape is uniform
+      across all three backends. T09 estimate: 0.5 day.
+    - T10 implements `IJobStore` over Prisma against a
+      Testcontainers-managed Postgres instance. Re-runs the same
+      `runStoreConformance(label, factory)` from T06 (plus the
+      `upsert` preamble fix from T08). Adds backend-specific tests
+      for the Postgres-specific `tsvector` GIN index path — Spec
+      004 / FR-7 says "case-insensitive substring", which on
+      Postgres is best served by `pg_trgm` GIN (a `LIKE` against a
+      `text` column without trigram indexes degrades to seq scan
+      at scale). CI gate: `RUN_PG_TESTS=1` per the spec's Phase 4
+      note. T10 estimate: 1 day.
+  Together T09 + T10 give us the third concrete `IJobStore`
+  backend and unblock T11 + T12 (aggregator persistence + bootstrap
+  env-var honouring).
+
+---
+
 ## 2026-04-27 — Scheduled run #21 (Spec 004 Phase 2 — T05 + T06: `store-memory` reference backend; Phase 2 closes)
 
 **Scope:** land Spec 004 / Phase 2 in a single run — T05 (scaffold
