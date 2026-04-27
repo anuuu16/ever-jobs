@@ -5,6 +5,113 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #31 (Spec 006 / Phase 3 — T05 + T06: GemService GraphQL-batch + 9 unit cases)
+
+**Scope:** land Spec 006 / Phase 3 / T05 + T06 — the
+`GemService.scrape()` GraphQL-batch implementation (single POST to
+`https://jobs.gem.com/api/public/graphql/batch` carrying both
+`JobBoardTheme` and `JobBoardList` operations) plus its 9-case
+unit suite. Run #30's Notes-for-the-next-run pinned this default
+("Spec 006 / Phase 3 / T05 + T06 — `GemService` GraphQL-batch
+implementation + ≥ 4 unit cases"). The deviation here is shipping
+9 cases (4 mandated + 3 carry-over scaffolding cases from T02 +
+2 extras locking the response-shape edge cases).
+
+**No new questions opened this run** — Q-022 (the slug-resolution
+question for Avature opened in run #28) governs all three plugins'
+input shape. Gem doesn't have a custom-domain wrinkle (it always
+hits `https://jobs.gem.com`), so no new question is needed.
+
+**Two load-bearing decisions** weren't called out in run #30's
+Notes-for-the-next-run and were locked into the source/test
+surface:
+
+1. **Coerce a non-array response into a single-element array.**
+   A misconfigured upstream redirect can return an unwrapped
+   envelope (the `batch: 'true'` header is silently dropped along
+   the redirect chain). The parser handles this with
+   `Array.isArray(raw) ? raw : raw ? [raw] : []` so the
+   one-envelope case still has a chance of matching
+   `JobBoardList`. The more common failure mode (the redirect
+   dropping the List operation entirely) falls through to the
+   "no envelope carries `oatsExternalJobPostings`" branch and
+   emits an empty `JobResponseDto`.
+2. **`null` for missing-id postings.** A posting with neither
+   `extId` nor `id` is dropped (returned `null` from `toJobPost`
+   and filtered out) rather than synthesised with a placeholder.
+   Synthetic ids would break dedup keying downstream — Spec
+   003's hash strategy uses the canonical `id` field as one of
+   the three primary signals; a synthetic id for every missing-
+   id posting would collapse them all into one canonical row.
+
+**Changes — code:**
+
+- `packages/plugins/source-ats-gem/src/gem.constants.ts` — new
+  ~100 LOC. `GEM_BASE_URL`, `GEM_API_ENDPOINT`,
+  `GEM_JOB_BOARD_THEME_QUERY`, `GEM_JOB_BOARD_LIST_QUERY`
+  (verbatim from upstream Python's `JOB_BOARD_LIST_QUERY` so
+  future schema drift surfaces here, not as silent field loss),
+  `GEM_DEFAULT_RESULTS_WANTED = 100`, `GEM_HEADERS` (carries
+  the load-bearing `batch: 'true'` flag).
+- `packages/plugins/source-ats-gem/src/gem.types.ts` — new
+  ~75 LOC. Structural interfaces for the GraphQL response
+  shape (`GemLocation`, `GemDepartment`, `GemJobMeta`,
+  `GemJobPosting`, `GemJobBoardListData`, `GemBatchEnvelope`).
+  Subset of upstream Python's dataclasses, narrowed to the
+  fields we actually map onto `JobPostDto`.
+- `packages/plugins/source-ats-gem/src/gem.service.ts` —
+  extended ~190 LOC (replaces the ~10 LOC stub from T02).
+  `scrape(input)` issues the batched POST, walks the
+  response array via `pickJobBoardListEnvelope` (tolerates
+  Theme/List ordering), maps each posting to `JobPostDto`
+  via `toJobPost`. Remote detection cascades through
+  `locations[0].isRemote` → location-name substring match
+  → `job.locationType` substring match. NEVER throws.
+
+**Changes — tests:**
+
+- `packages/plugins/source-ats-gem/__tests__/gem.service.spec.ts`
+  — extended ~190 LOC. **9 cases**: registration scaffolding
+  (3), happy path with full mapping + resultsWanted cap (2),
+  empty `jobPostings` (1), HTTP 500 caught (1 — verifies
+  no re-throw across 2 sequential rejections), response-order
+  tolerance (2 — reversed fixture + the no-envelope-matches
+  sentinel).
+- `packages/plugins/source-ats-gem/__tests__/fixtures/gem-batch-response.json`
+  — new ~95 LOC. 3 postings (Engineering / Engineering-
+  Remote / Design-Hybrid). Each fixture-mutating case
+  deep-clones via `JSON.parse(JSON.stringify(...))`.
+
+Verification: `npx jest --testPathPatterns 'packages/plugins/source-ats-gem'`
+locally → `9 passed · exit 0`.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/006-ats-scrapers-parity-batch-1/tasks.md` —
+  T05 + T06 graduate to "done" with full planned-vs-actual
+  file lists and per-bullet acceptance verification.
+- `.specify/specs/006-ats-scrapers-parity-batch-1/spec.md` —
+  `Status` → `Phase 1+2+3 done (T01..T06 runs #29..#31);
+  T07..T13 pending`.
+- `docs/index.md` — Spec 006 row + footer bumped to run #31.
+- `CLAUDE.md` — run-tag → #31.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #31 sync line; **no upstream
+  commits** (nineteen consecutive zero-churn runs).
+
+**Notes & follow-ups:**
+
+- Default for run #32 is **Spec 006 / Phase 4 / T07 + T08**
+  — `JoinComService.scrape()` REST two-step path. Step 1 is
+  an HTML scrape for the company id; step 2 is a paginated
+  REST call. Polite pacing of `>= 0.5 s` between pages.
+  Acceptance is ≥ 5 unit cases.
+- External research repos: no new commits since run #30.
+  Nineteen consecutive zero-churn runs.
+- Pre-existing dedup-hybrid red tests unchanged.
+
+---
+
 ## 2026-04-27 — Scheduled run #30 (Spec 006 / Phase 2 — T03 + T04: AvatureService HTML-scrape + 8 unit cases)
 
 **Scope:** land Spec 006 / Phase 2 / T03 + T04 — the

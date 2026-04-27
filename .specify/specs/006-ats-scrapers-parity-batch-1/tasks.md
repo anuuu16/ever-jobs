@@ -149,35 +149,100 @@
 
 ## Phase 3 — Gem
 
-- [ ] T05 — `GemService.scrape(input)` GraphQL-batch path.
-  - **Files:** `packages/plugins/source-ats-gem/src/gem.service.ts`,
+- [x] T05 — `GemService.scrape(input)` GraphQL-batch path.
+  - **Files (planned):** `packages/plugins/source-ats-gem/src/gem.service.ts`,
     `…/gem.types.ts`, `…/gem.constants.ts`.
+  - **Files (actual):** matched plan exactly.
+    `gem.service.ts` (~190 LOC),
+    `gem.constants.ts` (~100 LOC; queries + endpoint + headers +
+    `GEM_DEFAULT_RESULTS_WANTED = 100`),
+    `gem.types.ts` (~75 LOC; structural interfaces for the
+    `oatsExternalJobPostings` response shape).
   - **Acceptance:**
     - Single POST to `https://jobs.gem.com/api/public/graphql/batch`
       with both `JobBoardTheme` and `JobBoardList` operations
-      carrying `boardId = input.companySlug`.
+      carrying `boardId = input.companySlug`. ✅ Unit case
+      "happy path … pins the wire request" asserts exactly two
+      operations are present, in the canonical order, with the
+      slug bound to `boardId`.
     - Headers: `Accept: */*`, `Content-Type: application/json`,
       `Origin/Referer: https://jobs.gem.com`, `batch: true`,
-      `User-Agent` per `@ever-jobs/common`.
-    - Picks the response array element whose `data.oatsExternalJobPostings`
-      is defined (tolerates response-order swap).
+      `User-Agent` per `@ever-jobs/common`. ✅ `GEM_HEADERS`
+      constant carries every required header, including the
+      load-bearing `batch: 'true'` flag — the server silently
+      degrades to non-batched without it.
+    - Picks the response array element whose
+      `data.oatsExternalJobPostings` is defined (tolerates
+      response-order swap). ✅ `pickJobBoardListEnvelope`
+      walks the response array and returns the first envelope
+      whose `data.oatsExternalJobPostings !== undefined` —
+      tolerates Theme-first OR List-first ordering. Unit case
+      "response-order tolerance" pins the inverted-order shape
+      with a `.reverse()`-d clone of the fixture.
     - Maps each `jobPostings[i]` to a `JobPostDto` with
-      `id = ext_id`, `title`, `location =
+      `id = "gem-${extId ?? id}"`, `title`, `location =
       locations[0]?.name`, `department = job?.department?.name`,
-      `employmentType = job?.employmentType`,
-      `locationType = job?.locationType`,
-      `url = \`https://jobs.gem.com/\${input.companySlug}/jobs/\${ext_id}\``.
-    - Caps at `input.resultsWanted`.
-    - Catches HTTP errors → empty `JobResponseDto`.
-  - **Estimate:** 1 day.
+      `url = \`https://jobs.gem.com/\${slug}/jobs/\${id}\``,
+      `companyName = jobBoardExternal.teamDisplayName ?? slug`.
+      ✅ `toJobPost` builds the DTO; remote detection cascades
+      through `locations[0].isRemote`, then case-insensitive
+      `"remote"` substring match on the location name, then
+      `job.locationType.toLowerCase().includes('remote')`.
+    - Caps at `input.resultsWanted`. ✅ `for-of` loop breaks
+      once `jobs.length >= resultsWanted`. Unit case
+      "honours resultsWanted=2 against a 3-posting fixture"
+      pins this.
+    - Catches HTTP errors → empty `JobResponseDto`. ✅
+      `try`/`catch` around the `client.post` call; rejection
+      logs at `warn` and returns `new JobResponseDto([])`.
+      Two unit cases (HTTP 500 caught + a fresh socket-hangup
+      rejection) verify the never-throw posture.
+  - **Done:** run #31 (2026-04-27). Two minor design choices
+    weren't called out in `tasks.md` and were locked into the
+    source/test surface:
+      1. **Coerce a non-array response into a single-element
+         array.** A misconfigured upstream redirect can return
+         an unwrapped envelope (the `batch: 'true'` header is
+         silently dropped along the redirect chain). The parser
+         handles this with `Array.isArray(raw) ? raw : raw ?
+         [raw] : []` so the one-envelope case still has a chance
+         of matching `JobBoardList` (the more common failure mode
+         is the redirect dropping the List operation entirely,
+         which falls through to the "no envelope carries
+         `oatsExternalJobPostings`" branch and emits an empty
+         `JobResponseDto`).
+      2. **`null` for missing-id postings.** A posting with
+         neither `extId` nor `id` is dropped (returned `null`
+         from `toJobPost` and filtered out) rather than synthesised
+         with a placeholder. Synthetic ids would break dedup
+         keying downstream — Spec 003's hash strategy uses the
+         canonical `id` field as one of the three primary
+         signals, and a `gem-undefined-${i}` synthetic would
+         collapse every missing-id posting into one canonical
+         row.
+  - **Estimate:** 1 day. **Actual:** ~0.4 day.
 
-- [ ] T06 — Gem unit tests.
-  - **Files:** `packages/plugins/source-ats-gem/__tests__/gem.service.spec.ts`,
+- [x] T06 — Gem unit tests.
+  - **Files (planned):** `packages/plugins/source-ats-gem/__tests__/gem.service.spec.ts`,
     `…/__tests__/fixtures/gem-batch-response.json`.
+  - **Files (actual):** matched plan exactly.
+    `gem.service.spec.ts` (~190 LOC),
+    `__tests__/fixtures/gem-batch-response.json` (~95 LOC; 3
+    postings + theme envelope + companyInfo).
   - **Acceptance:** ≥ 4 cases — happy path, empty `jobPostings`,
     HTTP 500 caught, response-order tolerance (Theme first vs
-    List first). All green.
-  - **Estimate:** 0.5 day.
+    List first). All green. ✅ **9 cases** total (4 mandated + 3
+    carry-over scaffolding cases from T02 + 1 extra
+    "resultsWanted=2 mid-fixture cap" + 1 extra "no envelope
+    carries oatsExternalJobPostings" sentinel test). Locally
+    `npx jest --testPathPatterns 'packages/plugins/source-ats-gem'`
+    reports `Test Suites: 1 passed, 1 total · Tests: 9 passed,
+    9 total · exit 0`.
+  - **Done:** run #31 (2026-04-27). Fixture deep-cloned per
+    case via `JSON.parse(JSON.stringify(...))` so one mutation
+    (e.g. emptying `jobPostings[]` for the "empty" case) doesn't
+    leak into a sibling test.
+  - **Estimate:** 0.5 day. **Actual:** ~0.3 day.
 
 ## Phase 4 — Join.com
 
