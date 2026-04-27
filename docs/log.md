@@ -5,6 +5,116 @@
 
 ---
 
+## 2026-04-27 — Scheduled run #40 (Spec 012 / Phase 3 — T03: `extractSalary()` rewired to per-currency dispatcher)
+
+**Scope:** land Spec 012 / Phase 3 / T03 — rewire
+`extractSalary()` in
+`packages/common/src/utils/helpers.ts` to use
+`parseSalaryCurrency` (T01) + `parseSalaryNumber` (T02) +
+two new per-currency regex builders (`buildSalaryRegexPrefix`
+and `buildSalaryRegexSuffix`). Run #39's
+Notes-for-the-next-run pinned this default ("Spec 012 /
+Phase 3 / T03 — rewire `extractSalary()` to call the two new
+helpers").
+
+**No new questions opened this run** — T03 implements the
+dispatcher contract documented in spec § 7.2 / § 7.3 + run
+#39's three deferred decisions.
+
+**Three load-bearing decisions** weren't called out in run
+#39's Notes-for-the-next-run and were locked into the
+source/test surface during T03:
+
+1. **Locale cascade adds a currency-natural-locale tier.**
+   `resolveSalaryLocale(options, currency)` walks four tiers:
+   explicit `options.locale` → `pickLocale(options.country)`
+   → currency's natural locale via
+   `CURRENCY_TO_NATURAL_LOCALE` → `'anglo'` default. The
+   third tier matters because `'45.000 €'` with no country
+   hint should still parse continental — without it,
+   `'45.000'` reads as `45.0` under anglo.
+2. **Two regex shapes, not one.**
+   `buildSalaryRegexPrefix` matches `<sym><num> -
+   [<sym>?]<num>`; `buildSalaryRegexSuffix` matches
+   `<num><sym> - <num><sym?>`. Tried in sequence (prefix
+   first, suffix only if prefix misses).
+3. **`[kK]?\b` discipline (debugged in-run).** The original
+   `[kK]?` shape was eating the `k` of `kr` for Nordic
+   suffix-form inputs (`'500.000 kr'` was matched as
+   `min=500.000`, `K-suffix=k`, `currency-suffix=` — the
+   currency token was eaten by the K-capture, then the
+   `*1000` K-multiplier kicked in, yielding `500,000,000`
+   and tripping the upperLimit ceiling). Adding `\b` after
+   `[kK]?` forces the K-suffix to be at a word boundary
+   (`100K -` matches: `K` then space; `kr` doesn't:
+   `k` then `r`, both word chars). The smoke-test suite
+   caught this — exactly why we wrote it.
+
+**Changes — code:**
+
+- `packages/common/src/utils/helpers.ts` — extended ~190
+  LOC. New exported types: `ExtractSalaryOptions` /
+  `ExtractSalaryResult` (replacing the inline anonymous
+  shapes from the pre-Spec-012 implementation). Three new
+  module-private constants: `SALARY_SYMBOL_ALTERNATIONS`,
+  `SALARY_NUMBER_REGEX_SRC`, `CURRENCY_TO_NATURAL_LOCALE`.
+  Two new private functions: `resolveSalaryLocale(options,
+  currency)` and the pair
+  `buildSalaryRegexPrefix(symAlt, numSrc)` /
+  `buildSalaryRegexSuffix(symAlt, numSrc)`. The exported
+  `extractSalary(salaryStr, options?)` now dispatches via
+  these helpers; pre-Spec-012 logic for K-multiplier,
+  hourly/monthly/yearly thresholds, range validation, and
+  `enforceAnnualSalary` annualisation preserved byte-for-byte
+  (FR-10).
+
+**Changes — tests:**
+
+- `packages/common/__tests__/helpers.spec.ts` — extended
+  ~55 LOC. New `describe('extractSalary — Spec 012 / T03
+  multi-currency smoke')` block with **5 cases**:
+  EUR-suffix (Continental, Country.GERMANY hint),
+  GBP-prefix (anglo locale via currency default),
+  CHF-ISO-prefix (anglo with Swiss apostrophe-thousands
+  tolerance from T02), DKK-via-`kr`-disambiguation
+  (Country.DENMARK hint), and the "no signal → null
+  result" regression pin. The full ≥ 14-case currency sweep
+  ships in T04.
+
+Verification: `npx jest
+packages/common/__tests__/helpers` reports `Test Suites: 1
+passed · Tests: 49 passed (44 from T01+T02 + 5 new T03
+smoke) · exit 0`. The 11 pre-Spec-012 USD-only cases stay
+green byte-for-byte (FR-10 confirmed).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/012-european-salary-parser/tasks.md` —
+  T03 graduates from "pending" to "done" with full
+  planned-vs-actual file lists, three-decision rationale,
+  and `[kK]?\b` debugging notes. Notes-for-the-next-run
+  rewritten to point at T04.
+- `.specify/specs/012-european-salary-parser/spec.md` —
+  `Status` → `Phases 1–3 done (T01 run #38, T02 run #39,
+  T03 run #40); T04..T05 pending`.
+- `docs/index.md` — Spec 012 row + footer bumped to run #40.
+- `CLAUDE.md` — run-tag → #40.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — run #40 sync line; **no upstream
+  commits** (twenty-five consecutive zero-churn runs).
+
+**Notes & follow-ups:**
+
+- Default for run #41 is **Spec 012 / Phase 4 / T04** —
+  ≥ 14-case currency sweep + new `helpers.bench.ts`
+  mirroring Spec 006 / T12 bench shape. T05 (doc bump +
+  spec graduation) follows in run #42.
+- External research repos: no new commits since run #39.
+  Twenty-five consecutive zero-churn runs.
+- Pre-existing dedup-hybrid red tests unchanged.
+
+---
+
 ## 2026-04-27 — Scheduled run #39 (Spec 012 / Phase 2 — T02: `parseSalaryNumber()` + private `pickLocale()`)
 
 **Scope:** land Spec 012 / Phase 2 / T02 — extend

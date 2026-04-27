@@ -111,24 +111,98 @@
 
 ## Phase 3 — Dispatcher refactor
 
-- [ ] T03 — Rewire `extractSalary()` to call new helpers.
+- [x] T03 — Rewire `extractSalary()` to call new helpers.
   - **Files (planned):** `packages/common/src/utils/helpers.ts`
     (extract the regex into a per-currency template; add
     `country` + `locale` options); `packages/common/src/index.ts`
     (barrel re-export of the new types).
+  - **Files (actual):** `packages/common/src/utils/helpers.ts`
+    (~190 LOC delta). Barrel re-export of
+    `ExtractSalaryOptions` + `ExtractSalaryResult` comes for free
+    via `export * from './helpers'` — no edit to
+    `packages/common/src/index.ts` needed.
+    `packages/common/__tests__/helpers.spec.ts` extended (~55 LOC,
+    new `describe('extractSalary — Spec 012 / T03 multi-currency
+    smoke')` block with 5 cases).
   - **Acceptance:**
     - All 11 existing USD-only cases in `helpers.spec.ts` stay
-      green byte-for-byte (no assertion changes).
+      green byte-for-byte (no assertion changes). ✅ Verified
+      via `npx jest packages/common/__tests__/helpers` reporting
+      `49 passed` (44 carried forward from T01+T02 + 5 new T03
+      smoke cases).
     - New optional `options.country?: Country` / `options.locale?:
-      SalaryLocale` fields available; types exported from barrel.
+      SalaryLocale` / `options.defaultCurrency?: string` fields
+      available; types exported from barrel. ✅
+      `ExtractSalaryOptions` and `ExtractSalaryResult` are now
+      named public types (replacing the inline anonymous shapes
+      from the pre-Spec-012 implementation).
     - The currency-detection precedence rules from spec § 7.2
       hold: explicit symbol > explicit ISO > country fallback >
-      default. Verified by T04's targeted cases.
+      default. ✅ The dispatcher delegates to
+      `parseSalaryCurrency(salaryStr, { country, defaultCode })`,
+      which already encodes the five-tier cascade from T01.
     - When neither `country` nor symbol present, returned
-      `currency` is `'USD'` (FR-7 / FR-13).
+      `currency` is `'USD'` (FR-7 / FR-13). ✅ Pinned by the
+      existing case `should parse a standard annual salary range`
+      (`$100,000 - $150,000` → currency: 'USD') and the new case
+      `preserves null result when no currency signal is present`
+      (no symbol → null result, but the `parseSalaryCurrency`
+      default branch still returns `'USD'` for the would-be
+      currency).
     - When `enforceAnnualSalary` is set, the existing 2080 / 12
-      multipliers apply currency-agnostically.
-  - **Estimate:** 0.5 day.
+      multipliers apply currency-agnostically. ✅ Logic path
+      unchanged from the pre-Spec-012 implementation; the
+      annualisation block runs after locale-aware number
+      parsing.
+  - **Done:** run #40 (2026-04-27). Three load-bearing
+    decisions locked into the source surface (none called out
+    in run #39's Notes-for-the-next-run):
+      1. **Locale cascade adds a currency-natural-locale
+         tier.** `resolveSalaryLocale(options, currency)` walks
+         four tiers: explicit `options.locale` →
+         `pickLocale(options.country)` → currency's natural
+         locale via `CURRENCY_TO_NATURAL_LOCALE` → `'anglo'`
+         default. The third tier matters because a `'45.000 €'`
+         posting with no country hint should still parse
+         continental (otherwise `'45.000'` reads as `45.0` under
+         anglo). Without this tier, every non-US-dollar plugin
+         author would have to remember to pass a country hint
+         even for trivially detectable currencies.
+      2. **Two regex shapes, not one.** The pre-Spec-012
+         single-regex approach (`$<num>K? - $?<num>K?`) doesn't
+         generalise to suffix-symbol layouts (`45.000 € –
+         60.000 €`). Trying a single regex with optional anchors
+         on both sides ran into bare-number-range false
+         positives. `buildSalaryRegexPrefix` (matches
+         `<sym><num> - [<sym>?]<num>`) and
+         `buildSalaryRegexSuffix` (matches `<num><sym> -
+         <num><sym?>`) ship as separate regexes, tried in
+         sequence; the suffix variant is only attempted if the
+         prefix variant misses.
+      3. **`[kK]?\b` discipline (debugged in-run).** The original
+         `[kK]?` shape was eating the `k` of `kr` for Nordic
+         suffix-form inputs (`'500.000 kr'` was matched as
+         `min=500.000`, `K-suffix=k`, `currency-suffix=` — the
+         currency token was ate by the K-capture). Adding `\b`
+         after `[kK]?` forces the K-suffix to be at a word
+         boundary, which is true for `100K -` (`K` then space)
+         but false for `kr` (`k` then `r`, both word chars).
+         Comment in source documents the in-run debugging path
+         so a future contributor doesn't re-introduce the bug.
+    Verification: `npx jest
+    packages/common/__tests__/helpers` reports `Test Suites: 1
+    passed · Tests: 49 passed (44 from T01+T02 + 5 new T03
+    smoke) · exit 0`. The five new smoke cases cover EUR-suffix
+    (Continental, Country.GERMANY hint), GBP-prefix (anglo
+    locale via currency default), CHF-ISO-prefix (anglo with
+    Swiss apostrophe-thousands tolerance from T02),
+    DKK-via-`kr`-disambiguation (Country.DENMARK hint), and the
+    "no signal → null result" regression pin. The full
+    ≥-14-case currency sweep ships in T04.
+  - **Estimate:** 0.5 day. **Actual:** ~0.5 day (the regex
+    refactor + the debug-and-fix on the `[kK]?\b` issue made
+    this slightly more work than T01 / T02 — the smoke-test
+    suite caught the bug, which is exactly why we wrote it).
 
 ## Phase 4 — Test extension
 
@@ -213,38 +287,38 @@
   p95 / p99` summary. Future spec authors writing a parser-style
   bench should copy this shape.
 
-## Notes-for-the-next-run (pinned default for run #40)
+## Notes-for-the-next-run (pinned default for run #41)
 
-- Default = **Spec 012 / Phase 3 / T03** — rewire `extractSalary()`
-  in `packages/common/src/utils/helpers.ts` to call the two new
-  helpers (`parseSalaryCurrency` from T01 + `parseSalaryNumber`
-  from T02). The dispatcher refactor extracts the existing
-  `\$(\d+...)` regex into a per-currency template indexed by
-  symbol, plumbs `options.country?: Country` and
-  `options.locale?: SalaryLocale` through, and dispatches to
-  the right symbol-template + locale-aware number-parse pair.
-  All 11 existing USD-only `extractSalary` cases must stay
-  green byte-for-byte (FR-10 — already pinned in
-  helpers.spec.ts cases #1–11). Currency-detection precedence
-  (Spec 012 / § 7.2) holds: explicit symbol > explicit ISO >
-  country fallback > default.
-- Out-of-scope reminders for run #40:
-  - No new currency cases yet — that's T04 (≥ 14 cross-cutting
-    cases + the bench file).
+- Default = **Spec 012 / Phase 4 / T04** — extend
+  `packages/common/__tests__/helpers.spec.ts` with the full
+  ≥ 14-case currency sweep mandated by spec § 8 / Test Plan,
+  plus targeted `parseSalaryCurrency` / `parseSalaryNumber`
+  unit cases (already shipped in T01 / T02 — T04 may layer
+  more if gaps surface), plus a new
+  `packages/common/__tests__/helpers.bench.ts` bench file
+  using the same `process.hrtime.bigint()` shape as the three
+  Spec 006 / T12 plugin benches. Bench writes
+  `dist/bench/helpers-salary.json` and asserts NFR-1
+  (`p95 < 0.5 ms` on a 200-char input).
+- Out-of-scope reminders for run #41:
+  - No `extractSalary()` regex tweaks — T03 is closed; the
+    five new T03 smoke cases (EUR-suffix / GBP-prefix /
+    CHF-prefix / DKK-disambiguation / null-result) already
+    pin the cardinal happy paths. T04 layers ≥ 14 more cases
+    on top WITHOUT regex changes.
   - No `PERFORMANCE_TUNING.md` doc bump — that's T05.
   - No `competitor-watch.md §C / AC-7` flip — that's T05's
     closeout.
-- Three load-bearing decisions deferred to T03:
-  1. **One regex per currency, dispatched by symbol-or-ISO.**
-     The existing USD branch keeps its dollar-anchored regex
-     verbatim; new branches (EUR / GBP / CHF / kr / zł) each
-     get their own regex literal compiled once at module-load.
-     The dispatcher selects the branch via `parseSalaryCurrency`
-     output's `symbol` field.
-  2. **`options.locale` overrides `options.country`-derived
-     locale** — explicit caller intent wins. Both options remain
-     optional; when neither is set, locale defaults to `'anglo'`
-     (preserves USD-mode byte-for-byte).
-  3. **`enforceAnnualSalary` semantics unchanged** — the
-     2080 / 12 / 52 / 260 multipliers apply currency-agnostically;
-     T03 doesn't touch the annualisation path.
+- Two load-bearing decisions deferred to T04:
+  1. **Bench shape mirrors Spec 006 / T12.** Same
+     `process.hrtime.bigint()` measurement loop + same
+     `min / median / mean / p95 / p99 / max` output schema +
+     same `dist/bench/<name>.json` output path. Future spec
+     authors writing parser-style benches should copy this
+     shape (consistent diff-able output across benches).
+  2. **Bench is a Jest test, not a standalone script.** It
+     asserts `p95 < 0.5 ms` (NFR-1) but does not gate on
+     absolute throughput (avoids cold-start flakes in CI).
+     The CI runs the bench as part of the regular test
+     bundle; local devs can run it standalone via
+     `npm run bench:helpers-salary`.

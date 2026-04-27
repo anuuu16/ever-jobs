@@ -360,3 +360,58 @@ describe('pickLocale (Spec 012 / T02, internal)', () => {
     expect(pickLocale(Country.WORLDWIDE)).toBe('anglo');
   });
 });
+
+/**
+ * Spec 012 / T03 — `extractSalary` multi-currency smoke tests.
+ *
+ * Three smoke cases verify the dispatcher end-to-end: EUR continental
+ * (suffix), GBP anglo (prefix), CHF anglo with `Fr.` symbol. The full
+ * golden-set extension (≥ 14 cases per spec § 8) ships in T04 alongside
+ * the bench file; these three pin the cardinal multi-currency happy
+ * paths so a regression here trips the test suite on any T04 run.
+ */
+describe('extractSalary — Spec 012 / T03 multi-currency smoke', () => {
+  it('parses a continental EUR range with € suffix and Country.GERMANY hint', () => {
+    const result = extractSalary('45.000 € – 60.000 €', {
+      country: Country.GERMANY,
+    });
+    expect(result.currency).toBe('EUR');
+    expect(result.minAmount).toBe(45000);
+    expect(result.maxAmount).toBe(60000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  it('parses a GBP range with £ prefix (anglo locale by currency default)', () => {
+    const result = extractSalary('£45,000 - £60,000');
+    expect(result.currency).toBe('GBP');
+    expect(result.minAmount).toBe(45000);
+    expect(result.maxAmount).toBe(60000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  it('parses a CHF range with explicit ISO code prefix', () => {
+    const result = extractSalary('CHF 90,000 - 120,000');
+    expect(result.currency).toBe('CHF');
+    expect(result.minAmount).toBe(90000);
+    expect(result.maxAmount).toBe(120000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  it('disambiguates kr suffix via the country hint (Denmark → DKK)', () => {
+    const result = extractSalary('500.000 kr - 700.000 kr', {
+      country: Country.DENMARK,
+    });
+    expect(result.currency).toBe('DKK');
+    expect(result.minAmount).toBe(500000);
+    expect(result.maxAmount).toBe(700000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  it('preserves null result when no currency signal is present', () => {
+    // No symbol, no ISO, no country → defaults to USD; the input has
+    // no `$` either, so the USD regex doesn't match → all-null result.
+    const result = extractSalary('Looking for a software engineer');
+    expect(result.currency).toBeNull();
+    expect(result.minAmount).toBeNull();
+  });
+});

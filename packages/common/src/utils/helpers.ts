@@ -443,21 +443,210 @@ export function extractEmails(text: string | null): string[] | null {
 }
 
 /**
- * Extract salary information from a description string.
- * Returns [interval, minAmount, maxAmount, currency] or nulls.
- * Replaces Python's extract_salary().
+ * Spec 012 / T03 — `extractSalary` options.
+ *
+ * Existing fields (`lowerLimit / upperLimit / hourlyThreshold /
+ * monthlyThreshold / enforceAnnualSalary`) preserve the pre-Spec-012
+ * behaviour byte-for-byte. New fields (`country / locale /
+ * defaultCurrency`) drive the multi-currency dispatcher; all are
+ * optional and default to the existing USD / anglo path when unset.
+ */
+export interface ExtractSalaryOptions {
+  lowerLimit?: number;
+  upperLimit?: number;
+  hourlyThreshold?: number;
+  monthlyThreshold?: number;
+  enforceAnnualSalary?: boolean;
+  /** Spec 012 / T03 — country hint for currency / locale resolution. */
+  country?: Country;
+  /**
+   * Spec 012 / T03 — explicit locale override; takes precedence over
+   * `country`-derived locale when both are set.
+   */
+  locale?: SalaryLocale;
+  /**
+   * Spec 012 / T03 — fallback ISO 4217 code when neither symbol nor
+   * ISO nor country resolves a currency. Defaults to `'USD'` per
+   * Spec 012 / FR-7.
+   */
+  defaultCurrency?: string;
+}
+
+/**
+ * Spec 012 / T03 — `extractSalary` result envelope. Shape unchanged
+ * from the original (FR-10), now exported as a public type so plugin
+ * authors can write `Promise<ExtractSalaryResult>`-typed adapters.
+ */
+export interface ExtractSalaryResult {
+  interval: string | null;
+  minAmount: number | null;
+  maxAmount: number | null;
+  currency: string | null;
+}
+
+/**
+ * Per-currency regex token alternation (used to build the salary
+ * matcher). Each entry is a regex-escaped alternation of the
+ * recognised symbols / ISO codes for that currency. Order matters
+ * within an alternation: longer / more specific shapes (e.g.
+ * `'EUR'` over `'€'`) come first so the engine prefers them when
+ * both are present.
+ *
+ * The leading `\\b` on multi-letter ISO codes prevents `'EUR'` from
+ * matching inside `'EURO'` etc. The single-character symbols don't
+ * need a word boundary.
+ */
+const SALARY_SYMBOL_ALTERNATIONS: ReadonlyMap<string, string> = new Map([
+  ['USD', '\\$|\\bUSD\\b'],
+  ['EUR', '€|\\bEUR\\b'],
+  ['GBP', '£|\\bGBP\\b'],
+  ['CHF', '\\bCHF\\b|\\bFr\\.?'],
+  ['SEK', '\\bSEK\\b|\\bkr\\b'],
+  ['NOK', '\\bNOK\\b|\\bkr\\b'],
+  ['DKK', '\\bDKK\\b|\\bkr\\b'],
+  ['PLN', 'zł|\\bPLN\\b'],
+]);
+
+/**
+ * Per-locale regex source for a salary number. The continental and
+ * anglo shapes flip thousands / decimal separators; both tolerate
+ * U+00A0 thousands. The Swiss apostrophe is stripped up-front by
+ * {@link parseSalaryNumber} (FR-12) so it doesn't need its own slot
+ * in the regex.
+ */
+const SALARY_NUMBER_REGEX_SRC: Readonly<Record<SalaryLocale, string>> = {
+  continental: '\\d+(?:[.\\u00A0]\\d{3})*(?:,\\d+)?',
+  anglo: '\\d+(?:[,\\u00A0]\\d{3})*(?:\\.\\d+)?',
+};
+
+/**
+ * Spec 012 / T03 — currency → "natural" locale mapping. Used as the
+ * third tier in {@link resolveSalaryLocale}'s cascade (after explicit
+ * `options.locale` and `options.country`). Mirrors the
+ * country → locale mapping in {@link SALARY_LOCALE_MAP}: USD / GBP /
+ * CHF use `'anglo'`; everything else uses `'continental'`. Without
+ * this tier, an EUR-labelled input with no country hint would be
+ * parsed as anglo (period-decimal) and `'45.000 €'` would yield
+ * 45.0 instead of 45000.
+ */
+const CURRENCY_TO_NATURAL_LOCALE: ReadonlyMap<string, SalaryLocale> = new Map([
+  ['USD', 'anglo'],
+  ['GBP', 'anglo'],
+  ['CHF', 'anglo'],
+  ['EUR', 'continental'],
+  ['SEK', 'continental'],
+  ['NOK', 'continental'],
+  ['DKK', 'continental'],
+  ['PLN', 'continental'],
+]);
+
+/**
+ * Resolve the {@link SalaryLocale} for a single `extractSalary`
+ * call. Cascade:
+ *
+ *   1. Explicit `options.locale` — operator told us directly.
+ *   2. `options.country` → `pickLocale(country)` — country hint
+ *      drives the locale.
+ *   3. Detected `currency` → natural locale via
+ *      {@link CURRENCY_TO_NATURAL_LOCALE} — preserves intent when
+ *      neither operator hint is supplied (e.g. a `'45.000 €'` ad
+ *      should be parsed continental even without a country).
+ *   4. `'anglo'` default (preserves USD byte-for-byte behaviour;
+ *      Spec 012 / FR-10).
+ */
+function resolveSalaryLocale(
+  options: ExtractSalaryOptions | undefined,
+  currency: string,
+): SalaryLocale {
+  if (options?.locale) return options.locale;
+  if (options?.country !== undefined) return pickLocale(options.country);
+  return CURRENCY_TO_NATURAL_LOCALE.get(currency) ?? 'anglo';
+}
+
+/**
+ * Build the prefix-anchored salary regex: the FIRST number must be
+ * preceded by a currency symbol or ISO code. Captures four groups —
+ * `[1] = min number raw`, `[2] = min K suffix`, `[3] = max number
+ * raw`, `[4] = max K suffix`. Form:
+ *
+ *   <sym>\s*<num>K?\s*[<sym>?]\s*<dash>\s*[<sym>?]<num>K?[\s<sym>?]
+ *
+ * Matches USD `$100,000 - $150,000`, GBP `£45,000 - £60,000`, CHF
+ * `CHF 90,000 - 120,000`, etc. Permissive on the second number: the
+ * symbol on the left of the second number is optional (covers
+ * `$100 - 150`-style shorthand).
+ */
+function buildSalaryRegexPrefix(
+  symbolAlt: string,
+  numSrc: string,
+): RegExp {
+  // The `[kK]?\b` shape pins the K-suffix to a word boundary so
+  // `100K -` parses cleanly while `100 kr` doesn't lose the leading
+  // `k` to the suffix capture group. Without the boundary, the
+  // `k` of `kr` would be greedily consumed by `([kK]?)` and the
+  // currency symbol matcher would then see only `r` (Spec 012 / T03
+  // — debugged in run #40 against `'500.000 kr - 700.000 kr'`).
+  return new RegExp(
+    `(?:${symbolAlt})\\s*(${numSrc})\\s*([kK]?\\b)\\s*(?:${symbolAlt})?` +
+      `\\s*[-–—]\\s*` +
+      `(?:${symbolAlt})?\\s*(${numSrc})\\s*([kK]?\\b)\\s*(?:${symbolAlt})?`,
+  );
+}
+
+/**
+ * Build the suffix-anchored salary regex: the FIRST number must be
+ * FOLLOWED by a currency symbol or ISO code. Captures the same four
+ * groups as the prefix variant. Form:
+ *
+ *   <num>K?\s*<sym>\s*<dash>\s*<num>K?[\s<sym>?]
+ *
+ * Matches Continental EUR `45.000 € – 60.000 €`, Nordic kr
+ * `500.000 kr - 700.000 kr`, Polish PLN `50 000 zł – 80 000 zł`.
+ * The trailing symbol on the second number is optional so terse
+ * postings like `'45.000 € – 60.000'` still parse.
+ */
+function buildSalaryRegexSuffix(
+  symbolAlt: string,
+  numSrc: string,
+): RegExp {
+  // Same `[kK]?\b` discipline as the prefix variant — see the
+  // commentary on {@link buildSalaryRegexPrefix} for the
+  // `kr`-disambiguation rationale.
+  return new RegExp(
+    `(${numSrc})\\s*([kK]?\\b)\\s*(?:${symbolAlt})` +
+      `\\s*[-–—]\\s*` +
+      `(${numSrc})\\s*([kK]?\\b)\\s*(?:${symbolAlt})?`,
+  );
+}
+
+/**
+ * Extract salary information from a free-form description string.
+ *
+ * Spec 012 / T03 — multi-currency, locale-aware dispatcher. Resolves
+ * currency via {@link parseSalaryCurrency}, picks a locale via
+ * {@link resolveSalaryLocale}, builds a per-currency regex, and
+ * delegates numeric parsing to {@link parseSalaryNumber}.
+ *
+ * Behaviour preserved from the pre-Spec-012 implementation
+ * (FR-10): every USD-only fixture in the existing test suite stays
+ * green byte-for-byte. The new code paths only fire when the input
+ * carries a non-USD signal (symbol / ISO code / country hint).
+ *
+ * Returns the same `{ interval, minAmount, maxAmount, currency }`
+ * envelope; `currency` is now an ISO 4217 string rather than a
+ * hard-coded `'USD'`. Returns the all-`null` envelope on any
+ * failure (no throws — preserves prior contract).
  */
 export function extractSalary(
   salaryStr: string | null,
-  options?: {
-    lowerLimit?: number;
-    upperLimit?: number;
-    hourlyThreshold?: number;
-    monthlyThreshold?: number;
-    enforceAnnualSalary?: boolean;
-  },
-): { interval: string | null; minAmount: number | null; maxAmount: number | null; currency: string | null } {
-  const result = { interval: null as string | null, minAmount: null as number | null, maxAmount: null as number | null, currency: null as string | null };
+  options?: ExtractSalaryOptions,
+): ExtractSalaryResult {
+  const result: ExtractSalaryResult = {
+    interval: null,
+    minAmount: null,
+    maxAmount: null,
+    currency: null,
+  };
 
   if (!salaryStr) return result;
 
@@ -467,13 +656,30 @@ export function extractSalary(
   const monthlyThreshold = options?.monthlyThreshold ?? 30000;
   const enforceAnnualSalary = options?.enforceAnnualSalary ?? false;
 
-  const pattern = /\$(\d+(?:,\d+)?(?:\.\d+)?)([kK]?)\s*[-—–]\s*(?:\$)?(\d+(?:,\d+)?(?:\.\d+)?)([kK]?)/;
-  const match = salaryStr.match(pattern);
+  const detected = parseSalaryCurrency(salaryStr, {
+    country: options?.country,
+    defaultCode: options?.defaultCurrency,
+  });
+  const locale = resolveSalaryLocale(options, detected.code);
+  const symbolAlt = SALARY_SYMBOL_ALTERNATIONS.get(detected.code);
+  if (!symbolAlt) return result;
 
+  const numSrc = SALARY_NUMBER_REGEX_SRC[locale];
+  // Try the prefix-anchored shape first (covers USD / GBP / CHF /
+  // ISO-prefixed inputs); fall through to the suffix-anchored shape
+  // (covers Continental EUR / Nordic kr / Polish zł). The two shapes
+  // are tried sequentially because a single combined regex would
+  // require either (a) overly permissive optional anchors that match
+  // bare number ranges, or (b) a complex alternation that doubles
+  // the regex compile cost on the hot path.
+  const prefixPattern = buildSalaryRegexPrefix(symbolAlt, numSrc);
+  const suffixPattern = buildSalaryRegexSuffix(symbolAlt, numSrc);
+  const match = salaryStr.match(prefixPattern) ?? salaryStr.match(suffixPattern);
   if (!match) return result;
 
-  let minSalary = parseFloat(match[1].replace(/,/g, ''));
-  let maxSalary = parseFloat(match[3].replace(/,/g, ''));
+  let minSalary = parseSalaryNumber(match[1], locale);
+  let maxSalary = parseSalaryNumber(match[3], locale);
+  if (minSalary === null || maxSalary === null) return result;
 
   if (match[2].toLowerCase() === 'k' || match[4].toLowerCase() === 'k') {
     minSalary *= 1000;
@@ -511,7 +717,7 @@ export function extractSalary(
       interval,
       minAmount: enforceAnnualSalary ? annualMinSalary : minSalary,
       maxAmount: enforceAnnualSalary ? annualMaxSalary : maxSalary,
-      currency: 'USD',
+      currency: detected.code,
     };
   }
 
