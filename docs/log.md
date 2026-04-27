@@ -164,6 +164,22 @@ rather than as new questions:
   edited `app.module.ts` only adds module-eval-time imports plus
   one new import in the `imports:` array — no API surface change
   to any consumer of `AppModule`.
+- **Lockfile sync follow-up:** discovered during this run that
+  `testcontainers@^10.13.0` was added to `package.json` in c6ad0f0
+  (run #24 / Spec 004 / T10) but the matching `package-lock.json`
+  sync was deferred — `npm ci` had been failing on `develop`
+  for **three consecutive commits** (c6ad0f0, 2e135e4, 1d43d31),
+  blocking `Docs Lint` + `Build & Type-Check` jobs. Resolved via
+  `npm install --package-lock-only --registry=https://registry.npmjs.org/`
+  (per the project memory rule about avoiding the local Verdaccio
+  mirror) in a separate follow-up commit on this run; lockfile
+  net change is +1577 / -12 lines, all in the `testcontainers`
+  dep tree (genericcontainers, docker-modem, dockerode, ssh2).
+  Established pattern from runs #21–#23 was for the user to do
+  this interactively; this run takes ownership of it because
+  `npm install --package-lock-only` is feasible in the sandbox
+  (it only mutates the lockfile; no `node_modules`, no native
+  binding compilation, completes in ~19 s).
 
 **Notes & follow-ups:**
 
