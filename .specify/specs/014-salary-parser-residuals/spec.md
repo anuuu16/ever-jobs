@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 014                                                                         |
 | Slug           | salary-parser-residuals                                                     |
-| Status         | T01..T03 landed runs #60..#62; T04 partial run #63 (Q-035 + Q-036 blocked literal cases); T05 pending |
+| Status         | T01..T03 + T05 done (runs #60..#64); T04 partial run #63 (Q-035 + Q-036 blocked literal cases — deferred to Spec 015 candidate) |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #59)                                                        |
-| Last updated   | 2026-04-28 (run #63)                                                        |
+| Last updated   | 2026-04-28 (run #64)                                                        |
 | Supersedes     | (none — extends Spec 012's salary-parser surface in `@ever-jobs/common`)    |
 | Related specs  | 003 (Job Deduplication Engine), 012 (European Salary Parser)                |
 
@@ -545,9 +545,83 @@ Populated as T01..T05 land.)
   source-side fixes for Q-035 + Q-036 are explicitly
   out-of-scope here and bundled into the Spec 015 candidate.
 
-_T05 lands in run #64; T04's two deferred sub-cases land
-alongside the Spec 015 candidate (run #65+ if Spec 012's
-lean one-task-per-run cadence holds)._
+- **2026-04-28 (run #64 / T05)** — Documentation + closeout
+  pass landed. Three doc-shape edits:
+
+  (1) **`docs/PERFORMANCE_TUNING.md` — new "Spec 014 residual
+  extensions (T01..T03)" subsection** between "Locale dispatch"
+  and "Example call patterns". Names each of the three
+  T01..T03 behaviours with one example apiece, per the T05
+  acceptance:
+  - (a) `$`-symbol promotion to `'symbol'` confidence
+    (`parseSalaryCurrency('$100,000', { country: GERMANY })`
+    → USD via symbol tier). The asymmetry surfaced by Q-035
+    (locale resolution still cascades through the country
+    tier) is documented inline with a pointer to the K-suffix
+    workaround for cross-country FR-1 precedence end-to-end
+    pinning.
+  - (b) Swiss apostrophe-thousands now match the regex directly
+    (`extractSalary("CHF 90'000 – CHF 120'000")` → CHF /
+    90000 / 120000 / yearly). The continental regex source's
+    intentional asymmetry (NOT extended to avoid mis-classifying
+    `"45'000,50"`) is documented alongside.
+  - (c) Bare-number ranges parse when a `country` hint is
+    supplied (`extractSalary('100.000 - 150.000', { country:
+    GERMANY })` → EUR / 100000 / 150000 / yearly). The
+    `confidence === 'country'` guard's load-bearing role is
+    documented (vs the rejected `!== 'default'` shape). The
+    false-positive risk surfaced by Q-036 (plain-prose ranges
+    rescued by hourly annualisation) is documented inline with
+    plugin-author guidance to pre-sanitise inputs until the
+    Spec 015 candidate lands the bare-path raw-value
+    pre-check.
+
+  (2) **`docs/questions.md` Q-026 + Q-027 resolution flips.**
+  Both questions flipped from "open — agent default = B" to
+  "**resolved** in Spec 014 (runs #59..#64)" with the actual
+  landed-run numbers and the cross-pointer to Q-035 + Q-036
+  for the follow-up gaps.
+
+  (3) **`docs/index.md` Spec 014 row + footer + status fields**
+  bumped to closeout status. Spec 014 row now reads
+  "T01..T03 + T05 done (runs #60..#64); T04 partial run #63
+  (Q-035 + Q-036 blocked literal cases — deferred to Spec 015
+  candidate)".
+
+  Implementation observation resolved during T05's pass:
+
+  **The PERFORMANCE_TUNING.md paragraph deviates from the
+  parent T05 acceptance in one structural way.** The
+  acceptance text named "the over-matching prevention via
+  the `confidence === 'country'` guard + `lowerLimit` clamp"
+  as a single safety-net description for (c). Run #63's Q-036
+  discovery established that the `lowerLimit` clamp does NOT
+  reject all plain-prose ranges (the hourly conversion path
+  rescues raw `5` past the clamp). The T05 paragraph therefore
+  describes only the `confidence === 'country'` guard as
+  load-bearing AND adds an explicit "Known false-positive
+  risk" subsection pointing to Q-036 + the plugin-author
+  pre-sanitisation guidance. This is a deliberate divergence
+  from the parent acceptance: the prose now matches the actual
+  dispatcher behaviour rather than the (incorrect) safety-net
+  characterisation in the original spec text. A future
+  contributor reading the doc cold gets the truth, not a
+  cleanup story.
+
+  Out-of-scope reminders honoured: NO source-code edits in run
+  #64 (all changes are docs); T04 stays flagged `[~]` partial
+  in tasks.md (full close blocks on Spec 015 candidate); Q-035
+  / Q-036 stay `_pending review._` until the Spec 015
+  candidate lands; no `competitor-watch.md` §C entry — Spec
+  014 is internal-correctness work, not upstream-driven
+  coverage.
+
+_Spec 014 residual closeout: T05 done; T04 is `[~]` partial
+pending the Spec 015 candidate's source-side bundle (Q-035 +
+Q-036) and the three deferred test cases (literal Spec 012
+§ 8 case 14 + the two FR-7 false-positive immunity cases).
+The Spec 015 candidate is the next scaffolding pass per
+`tasks.md` Notes-for-the-next-run._
 
 ## 11. References
 

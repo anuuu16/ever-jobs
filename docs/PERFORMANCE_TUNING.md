@@ -95,6 +95,87 @@ PLN → continental) → `'anglo'` default. Without an explicit
 hint, `'45.000 €'` parses correctly because EUR's natural
 locale is continental.
 
+### Spec 014 residual extensions (T01..T03)
+
+Spec 014 (runs #60..#62) lifts three behavioural gaps Spec 012
+deferred to follow-on questions ([Q-026](questions.md#q-026--bare-number-salary-range-when-confidence-country-spec-012--t04-spillover) /
+[Q-027](questions.md#q-027---not-registered-as-usd-unique-symbol-apostrophe-in-salary-regex-spec-012--t04-spillover)).
+All three are dispatcher-shape edits in
+`@ever-jobs/common`; no plugin source changes are required —
+plugins pick up the new behaviour transparently via the
+existing barrel.
+
+- **(a) `$`-symbol promotion to `'symbol'` confidence (T01).**
+  `SALARY_UNIQUE_SYMBOLS` now lists `['$', 'USD']` alongside
+  `€` / `£` / `zł` / `Fr.`. A `$` anywhere in the input now
+  outranks any non-USA `country` hint at the
+  `parseSalaryCurrency` slice. Example:
+
+  ```ts
+  parseSalaryCurrency('$100,000', { country: Country.GERMANY });
+  // → { code: 'USD', symbol: '$', confidence: 'symbol' }
+  // (was: { code: 'EUR', symbol: null, confidence: 'country' })
+  ```
+
+  Known asymmetry with `extractSalary()`: locale resolution
+  (`resolveSalaryLocale`) still cascades through the country
+  tier even when the symbol tier resolved currency. With
+  `country=GERMANY` the locale stays continental, and a
+  literal anglo shape like `"$100,000 - $150,000"` parses as
+  `100.000 ≈ 100`. Tracked as
+  [Q-035](questions.md#q-035--resolvesalarylocale-doesnt-honour-symbol-tier-precedence-end-to-end-spec-014--t04-discovery);
+  the K-suffix variant (`"$100K - $150K"`) bypasses this and
+  is the recommended shape for cross-country FR-1 precedence
+  end-to-end pinning. Lands in the Spec 015 candidate.
+
+- **(b) Swiss apostrophe-thousands now match the regex directly
+  (T02).** `SALARY_NUMBER_REGEX_SRC.anglo` adds `'` to the
+  thousands-separator character class
+  (`[, ]` → `[, ']`), so literal Swiss inputs span
+  the regex match in the FIRST place — the existing
+  apostrophe-strip in `parseSalaryNumber` (FR-12) stays as a
+  defence-in-depth path. The continental regex source is
+  intentionally NOT extended (a continental dual-decimal
+  shape like `"45'000,50"` would otherwise mis-classify the
+  `'` as a thousands separator and lose the trailing
+  decimal). Example:
+
+  ```ts
+  extractSalary("CHF 90'000 – CHF 120'000");
+  // → { interval: 'yearly', minAmount: 90000, maxAmount: 120000, currency: 'CHF' }
+  ```
+
+- **(c) Bare-number ranges parse when a `country` hint is
+  supplied (T03).** `extractSalary()` adds a third
+  bare-numeric-range regex variant gated on the literal
+  string check `detected.confidence === 'country'` (NOT
+  `!== 'default'` — that would wrongly include
+  `'symbol'` / `'iso'` paths). The bare regex is built
+  conditionally — `null` when the guard misses — so the
+  no-country-hint hot path doesn't pay any regex-compile
+  cost. Example:
+
+  ```ts
+  extractSalary('100.000 - 150.000', { country: Country.GERMANY });
+  // → { interval: 'yearly', minAmount: 100000, maxAmount: 150000, currency: 'EUR' }
+
+  extractSalary('100.000 - 150.000');  // no country hint
+  // → { interval: null, minAmount: null, maxAmount: null, currency: null }
+  ```
+
+  Known false-positive risk: a plain-prose number range like
+  `"5 - 7 years experience"` under `country=GERMANY` is
+  captured by the bare regex; raw `5 < hourlyThreshold` so
+  the dispatcher annualises (`5 * 2080 = 10400`) past
+  `lowerLimit = 1000`, and the row is wrongly emitted as
+  `{ interval: 'hourly', minAmount: 5, maxAmount: 7,
+  currency: 'EUR' }`. Tracked as
+  [Q-036](questions.md#q-036--bare-regex-over-matches-plain-prose-under-country-hint-spec-014--t04-discovery).
+  Plugin authors who pass `country` should pre-sanitise
+  input strings (strip phrases like `"X years experience"` /
+  `"X month internship"`) until the Spec 015 candidate
+  lands the bare-path raw-value pre-check.
+
 ### Example call patterns
 
 ```ts

@@ -421,15 +421,24 @@ The substitute T04 cases retain coverage for FR-1 precedence
 (via `€`) and CHF anglo (via comma-thousands), so no
 acceptance bit is dark in the meantime.
 
-**Resolution:** _open — agent default = B. Renumbered from
-"Spec 013" to **Spec 014 candidate** in run #43 — Spec 013 was
-allocated to AC-4..AC-6 (Oracle / Mercor / Tesla) per Q-024
-Option A's "future bundled batch" line and run #42's
-Notes-for-the-next-run pin. **Pinned to Spec 014 in run #59**
-(scaffolding pass landed run #59 alongside Q-026; see
-[`.specify/specs/014-salary-parser-residuals/spec.md`](../.specify/specs/014-salary-parser-residuals/spec.md)
-§ 1 G-1 for the G-1 (`$` registration) and G-2 (apostrophe-
-in-regex) framing). Q-027 closes when Spec 014 / T05 lands._
+**Resolution:** **resolved** in Spec 014 (runs #59..#64) —
+both gaps closed. The `$` registration landed run #60 / T01
+(`SALARY_UNIQUE_SYMBOLS` grew to five entries; `['$', 'USD']`
+is the fifth, appended at the END to preserve EUR / GBP / PLN
+/ CHF detection paths byte-for-byte). The apostrophe-in-regex
+extension landed run #61 / T02
+(`SALARY_NUMBER_REGEX_SRC.anglo` thousands character class
+extended from `[, ]` to `[, ']`; continental
+source intentionally NOT extended — a continental dual-
+decimal shape like `"45'000,50"` would otherwise mis-classify
+the `'` as a thousands separator). The T05 closeout pass
+landed run #64. **Two follow-up gaps surfaced** during run
+#63 / T04: Q-035 (locale-resolution end-to-end precedence)
+and Q-036 (bare-regex prose immunity); both bundle into the
+Spec 015 candidate. Spec 014 / T04's literal Spec 012 § 8
+case 14 stays deferred to that spec; the K-suffix variant
+(`"$100K - $150K" + country=GERMANY`) lands at run #63 to
+pin FR-1 precedence end-to-end via a workable shape._
 
 ---
 
@@ -484,15 +493,24 @@ addition narrow-scope (no impact on USD-default no-signal
 case), so the implementation cost is small once a spec opens
 for it.
 
-**Resolution:** _open — agent default = B. Renumbered from
-"Spec 013" to **Spec 014 candidate** in run #43 (Spec 013 was
-allocated to AC-4..AC-6 per Q-024). **Pinned to Spec 014 in
-run #59** (scaffolding pass landed run #59 alongside Q-027; see
-[`.specify/specs/014-salary-parser-residuals/spec.md`](../.specify/specs/014-salary-parser-residuals/spec.md)
-§ 1 G-3 for the G-3 (bare-numeric-range third try-branch)
-framing — the `confidence === 'country'` guard prevents
-over-matching on no-signal inputs, FR-7 preserved). Q-026
-closes when Spec 014 / T05 lands._
+**Resolution:** **resolved** in Spec 014 (runs #59..#64) — the
+bare-numeric-range third regex variant landed run #62 / T03 in
+`extractSalary()`, gated on the literal string check
+`detected.confidence === 'country'` (NOT `!== 'default'` —
+that would wrongly include the `'symbol'` and `'iso'` paths).
+The bare regex is built conditionally (`null` when the guard
+misses), so the no-country-hint hot path doesn't pay any
+regex-compile cost. Three test cases pin the literal Spec 012
+§ 8 case 12 (bare path) + the symbol-present substitute
+(suffix path; additive coverage) + the FR-7 negative
+(no-country-hint → all-`null`). The T05 closeout pass landed
+run #64. **One follow-up gap surfaced** during run #63 / T04:
+Q-036 (the bare regex over-matches plain-prose ranges like
+`"5 - 7 years experience"` because raw `5 < hourlyThreshold`
+triggers annualisation past `lowerLimit`). The two FR-7
+false-positive immunity cases the parent T04 acceptance
+called for stay deferred to the Spec 015 candidate alongside
+Q-036's source-side fix._
 
 ---
 

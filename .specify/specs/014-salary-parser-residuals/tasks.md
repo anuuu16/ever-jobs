@@ -202,9 +202,10 @@
 
 ## Phase 5 — Documentation + closeout
 
-- [ ] T05 — Doc bump in `PERFORMANCE_TUNING.md`; spec status
+- [x] T05 — Doc bump in `PERFORMANCE_TUNING.md`; spec status
   flip; questions resolution flip; `docs/index.md` row update;
   `docs/log.md` entry.
+  **Landed run #64.**
   - **Files (planned):**
     - `docs/PERFORMANCE_TUNING.md` (~15-line bump under the
       existing "Salary parser shape / currency detection
@@ -249,21 +250,36 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #64** = Spec 014 / Phase 5 / T05 —
-  Documentation + closeout. Lands the
-  `docs/PERFORMANCE_TUNING.md` paragraph naming the three
-  T01..T03 behaviours (`$`-symbol promotion / Swiss
-  apostrophe-thousands / bare-number country fallback);
-  flips `.specify/specs/014-salary-parser-residuals/spec.md`
-  Status to "T01..T03 + T04 partial done; T04 literal-comma
-  case + FR-7 immunity deferred to Spec 015 (Q-035 + Q-036)";
-  flips `docs/questions.md` Q-026 / Q-027 resolution text
-  from "open — agent default = B" to "**resolved** in Spec
-  014 (runs #59..#63)"; updates `docs/index.md` Spec 014
-  row; adds `docs/log.md` closeout entry; bumps `CLAUDE.md`
-  run-tag. Pure docs pass; NO source code. T04 stays
-  flagged `[~]` partial in tasks.md (full close blocks on
-  the Spec 015 candidate). Estimated 0.15 day.
+- **Default for run #65** = open the **Spec 015 candidate**
+  scaffolding pass. Three new artefacts under
+  `.specify/specs/015-salary-parser-locale-and-prose-immunity/`
+  (spec.md + plan.md + tasks.md). Pure docs / Spec-Kit pass;
+  NO source code. The scaffolding addresses the two open
+  questions opened during Spec 014 / T04 (Q-035: locale
+  resolution end-to-end precedence; Q-036: bare-regex
+  prose immunity) plus the three Spec 014 deferred test
+  cases (literal Spec 012 § 8 case 14 + the two FR-7
+  false-positive immunity cases). Phase split likely
+  mirrors Spec 014's lean pattern: T01 = source-side
+  edits to `resolveSalaryLocale` (Q-035 default A) +
+  `extractSalary()` bare-path raw-value pre-check
+  (Q-036 default B); T02 = three deferred test cases land;
+  T03 = doc + closeout. Estimated 3 phases / 3 runs.
+- **Default for run #64 (DONE — landed run #64)** = Spec 014
+  / Phase 5 / T05 — documentation + closeout pass.
+  Added the `docs/PERFORMANCE_TUNING.md` paragraph naming
+  the three T01..T03 behaviours (`$`-symbol promotion /
+  Swiss apostrophe-thousands / bare-number country
+  fallback) with one example apiece + the documented
+  asymmetries from Q-035 + Q-036. Flipped
+  `docs/questions.md` Q-026 + Q-027 resolution text from
+  "open — agent default = B" to
+  "**resolved** in Spec 014 (runs #59..#64)" with the
+  actual landed-run numbers; updated `.specify/specs/`
+  and `docs/index.md` Spec 014 row to closeout status;
+  bumped `CLAUDE.md` run-tag to #64. T04 stays flagged
+  `[~]` partial (full close blocks on Spec 015 candidate
+  per the Q-035 + Q-036 source-side fixes).
 - **Default for run #63 (DONE — landed run #63 partial)** =
   Spec 014 / Phase 4 / T04 — landed the K-suffix variant
   of case 14 (`"$100K - $150K" + country=GERMANY` → USD /

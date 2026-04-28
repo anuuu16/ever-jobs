@@ -5,6 +5,161 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #64 (Spec 014 / Phase 5 / T05 — documentation + closeout pass landed)
+
+**Scope:** land Spec 014 / Phase 5 / T05 — the documentation +
+closeout pass that names the three landed T01..T03 behaviours
+in `docs/PERFORMANCE_TUNING.md`, flips `docs/questions.md`
+Q-026 / Q-027 resolution text from "open — agent default = B"
+to "**resolved** in Spec 014 (runs #59..#64)", and bumps the
+Spec 014 status everywhere (`spec.md` Status field, `tasks.md`
+T05 row, `docs/index.md` row, `CLAUDE.md` run-tag,
+`docs/log.md` this entry). Pure docs pass; NO source code
+this run.
+
+**Run-#64 lands:**
+
+- **`docs/PERFORMANCE_TUNING.md` — new "Spec 014 residual
+  extensions (T01..T03)" subsection** between "Locale dispatch"
+  and "Example call patterns". ~80 LOC. Names each of the three
+  behaviours with one example apiece per the parent T05
+  acceptance:
+  - (a) `$`-symbol promotion to `'symbol'` confidence (T01),
+    with the asymmetry surfaced by Q-035 documented inline
+    + the K-suffix workaround named.
+  - (b) Swiss apostrophe-thousands now match the regex directly
+    (T02), with the continental regex source's intentional
+    asymmetry (NOT extended to avoid mis-classifying
+    `"45'000,50"`) explained.
+  - (c) Bare-number ranges parse when a `country` hint is
+    supplied (T03), with the `confidence === 'country'` guard's
+    load-bearing role described AND the false-positive risk
+    surfaced by Q-036 documented inline with plugin-author
+    pre-sanitisation guidance.
+- **`docs/questions.md` Q-026 + Q-027 resolution flips.** Both
+  questions flipped from `_open — agent default = B_` to
+  `**resolved** in Spec 014 (runs #59..#64)` with the actual
+  landed-run numbers AND the cross-pointer to Q-035 + Q-036
+  for the follow-up gaps. Q-026's resolution text names T03's
+  three test cases (literal § 8 case 12 + symbol-present
+  substitute + FR-7 negative); Q-027's resolution text names
+  T01's `SALARY_UNIQUE_SYMBOLS` extension + T02's anglo-regex
+  extension with the byte-identical-iteration-order +
+  intentional-continental-asymmetry decisions called out.
+- **Spec 014 spec.md** Status field flipped from "T01..T03
+  landed runs #60..#62; T04 partial run #63 (Q-035 + Q-036
+  blocked literal cases); T05 pending" to "T01..T03 + T05
+  done (runs #60..#64); T04 partial run #63 (Q-035 + Q-036
+  blocked literal cases — deferred to Spec 015 candidate)";
+  Last-updated bumped to run #64; § 10 Decisions log
+  appended with the run-#64 / T05 entry naming the three
+  doc-shape edits + the deliberate divergence from the
+  parent acceptance on the (c) safety-net description.
+- **Spec 014 tasks.md** T05 row flipped from `[ ]` to `[x]`
+  with "Landed run #64" annotation; Notes-for-the-next-run
+  pinned default updated to **the Spec 015 candidate
+  scaffolding pass** (open `.specify/specs/015-salary-parser-
+  locale-and-prose-immunity/`).
+- **`docs/index.md`** Spec 014 row updated; footer bumped to
+  run #64.
+- **`CLAUDE.md`** run-tag bumped to #64.
+
+Estimated 0.15 day per tasks.md; landed in a single
+scheduled-run cycle (run #64).
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from runs #59..#63's syncs). Forty-seventh consecutive
+zero-churn run in `OTHERS/`. (Spec 014 is internal-correctness
+work, not upstream-driven coverage; the streak is logged for
+continuity.)
+
+**No new questions opened this run.** The two questions opened
+during run #63 (Q-035 + Q-036) stay `_pending review._`; their
+formal resolution flip blocks on the Spec 015 candidate landing.
+
+**One implementation observation** resolved during T05's pass:
+
+**The PERFORMANCE_TUNING.md paragraph deviates from the parent
+T05 acceptance in one structural way.** The parent acceptance
+text named "the over-matching prevention via the
+`confidence === 'country'` guard + `lowerLimit` clamp" as a
+single safety-net description for behaviour (c). Run #63's
+Q-036 discovery established that the `lowerLimit` clamp does
+NOT reject all plain-prose ranges (the hourly conversion path
+rescues raw `5` past the clamp). The T05 paragraph therefore
+describes only the `confidence === 'country'` guard as
+load-bearing AND adds an explicit "Known false-positive risk"
+subsection pointing to Q-036 + the plugin-author
+pre-sanitisation guidance. This is a deliberate divergence
+from the parent acceptance: the prose now matches the actual
+dispatcher behaviour rather than the (incorrect) safety-net
+characterisation in the original spec text. A future
+contributor reading the doc cold gets the truth, not a
+cleanup story.
+
+**Changes — source / test:**
+
+- **No source-code edits in run #64** — T05 is strictly
+  documentation per its acceptance text.
+
+**Changes — docs / specs:**
+
+- `docs/PERFORMANCE_TUNING.md` — new ~80-line "Spec 014
+  residual extensions (T01..T03)" subsection (see scope above).
+- `docs/questions.md` — Q-026 + Q-027 resolution flips
+  (each ~12-line replacement at the bottom of the question
+  block).
+- `.specify/specs/014-salary-parser-residuals/spec.md` —
+  Status field updated; Last-updated bumped to run #64; § 10
+  Decisions log appended (~70 LOC).
+- `.specify/specs/014-salary-parser-residuals/tasks.md` —
+  T05 row flipped to `[x]`; Notes-for-the-next-run updated
+  with the Spec 015 candidate forecast.
+- `docs/index.md` — Spec 014 row + footer updated.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #64.
+- **No `competitor-watch.md` §C entry** — Spec 014 is not
+  linked to a §C / AC-N row (Q-026 / Q-027 / Q-035 / Q-036
+  are internal-correctness gaps surfaced during the salary-
+  parser sweeps, not upstream-driven coverage gaps).
+  Sync-log line for run #64 (zero-churn, 47th consecutive)
+  to be added to `competitor-watch.md` per the standard
+  pattern (in the parent directory, not in this repo).
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean.
+- `npx jest --testPathPatterns 'packages/common/__tests__/helpers.spec'`
+  — 71 cases pass, 0 failures (no test changes this run;
+  re-ran for sanity).
+
+**Notes & follow-ups:**
+
+- **Default for run #65** = open the **Spec 015 candidate**
+  scaffolding pass. Three new artefacts under
+  `.specify/specs/015-salary-parser-locale-and-prose-immunity/`
+  (spec.md + plan.md + tasks.md). Pure docs / Spec-Kit pass;
+  NO source code. The scaffolding addresses Q-035 (locale
+  resolution end-to-end precedence) and Q-036 (bare-regex
+  prose immunity) plus the three Spec 014 deferred test
+  cases (literal Spec 012 § 8 case 14 + the two FR-7
+  false-positive immunity cases). Phase split likely
+  mirrors Spec 014's lean pattern: T01 = source-side
+  edits to `resolveSalaryLocale` (Q-035 default A) +
+  `extractSalary()` bare-path raw-value pre-check
+  (Q-036 default B); T02 = three deferred test cases land;
+  T03 = doc + closeout. Estimated 3 phases / 3 runs.
+- **Out-of-scope reminders for run #65:** Stay strictly in
+  Spec 015 scaffolding scope (docs only). Do NOT touch any
+  source code. Do NOT close out T04 to `[x]` — T04 stays
+  `[~]` partial until Spec 015 / T02 lands the three
+  deferred test cases. Do NOT resolve Q-035 / Q-036 — they
+  stay `_pending review._` until the Spec 015 candidate's
+  source-side fixes land.
+
+---
+
 ## 2026-04-28 — Scheduled run #63 (Spec 014 / Phase 4 / T04 partial — K-suffix end-to-end pin landed; Q-035 + Q-036 opened for deferred literal cases)
 
 **Scope:** land Spec 014 / Phase 4 / T04 *partially* — the
