@@ -8,8 +8,8 @@
 
 ## 1. Approach
 
-Spec 017 closes `AC-8` from
-[`competitor-watch.md`](../../../../competitor-watch.md) §C —
+Spec 017 closes `AC-8` from `competitor-watch.md` §C (the
+file lives at the workspace root outside the ever-jobs repo) —
 the long-pending "refresh the four high-volume Western-tier
 ATS slug-directory sections from upstream CSV corpora" item.
 

@@ -58,11 +58,14 @@ slugs per vendor) by appending fresh entries from the
 upstream CSV, **preserving every existing entry byte-for-byte**
 (per the AGENTS.md "no deletion" rule).
 
-This spec is `AC-8` from the
-[`competitor-watch.md`](../../../../competitor-watch.md) backlog
+This spec is `AC-8` from the `competitor-watch.md` backlog
 table (run #69 default-pinned for run #70 in
 `.specify/specs/016-bench-file-ts1127-fix/tasks.md` § "Notes
-for the next run").
+for the next run"). The `competitor-watch.md` file lives at
+the workspace root **outside the repo** (in
+`C:\Coding\Ever Gauzy AI\` on the scheduled-task host); it
+is intentionally not part of the ever-jobs repo and is not
+linked here so CI link-resolution stays clean.
 
 ## 2. Goals
 
@@ -80,9 +83,8 @@ for the next run").
    "Logic-improvement candidates" row that names the four
    vendors so its description tracks the new directory state
    (FR-7).
-5. Close `AC-8` in
-   [`competitor-watch.md`](../../../../competitor-watch.md) §C
-   (FR-8).
+5. Close `AC-8` in `competitor-watch.md` §C (FR-8). The
+   file lives outside the repo at the workspace root.
 
 ## 3. Non-Goals
 
@@ -527,8 +529,9 @@ same 25 slugs (FR-6 reproducibility verified locally).
 - [`docs/SOURCE_ADOPTION_BACKLOG.md`](../../../docs/SOURCE_ADOPTION_BACKLOG.md)
   — the "Logic-improvement candidates" `(seed lists)` row is
   updated by T05.
-- [`competitor-watch.md`](../../../../competitor-watch.md) §C
-  — `AC-8` row flips to `agent ✅` at T05 closeout.
+- `competitor-watch.md` §C (workspace-root file, outside the
+  ever-jobs repo) — `AC-8` row flips to `agent ✅` at T05
+  closeout.
 - `OTHERS/Ats-scrapers/greenhouse/greenhouse_companies.csv`
   (2 805 rows after header) — Greenhouse sampling source.
 - `OTHERS/Ats-scrapers/lever/lever_companies.csv`

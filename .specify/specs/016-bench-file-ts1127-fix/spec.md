@@ -185,9 +185,9 @@ Per-currency p95s sit between 0.0123 ms (CHF) and 0.0212 ms
 (SEK); USD = 0.0165 ms, EUR = 0.0137 ms, GBP = 0.0192 ms,
 NOK = (≈ 0.02 ms), DKK = (≈ 0.02 ms), PLN = (≈ 0.02 ms).
 The full per-currency breakdown lives in
-[`dist/bench/helpers-salary.json`](../../../dist/bench/helpers-salary.json)
-(committed only as a build artefact; regenerated each bench
-run).
+`dist/bench/helpers-salary.json` (build-artefact only —
+gitignored; regenerated each bench run by `ts-jest` so
+the path resolves on whatever host runs the bench).
 
 **Decision:** record the **0.0174 ms overall p95** as the
 post-Spec-015 / T01 + Spec-016 / T01 baseline. Spec 017+

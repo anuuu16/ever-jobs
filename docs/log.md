@@ -393,9 +393,8 @@ Windows host:
 Per-currency p95s sit between 0.0123 ms (CHF) and 0.0212 ms
 (SEK); USD = 0.0165 ms, EUR = 0.0137 ms, GBP = 0.0192 ms,
 NOK / DKK / PLN ≈ 0.02 ms each. The full per-currency
-breakdown lives in
-[`dist/bench/helpers-salary.json`](../dist/bench/helpers-salary.json)
-(committed only as a build artefact; regenerated each bench
+breakdown lives in `dist/bench/helpers-salary.json`
+(build-artefact only — gitignored; regenerated each bench
 run). **Spec 017+ runs** that touch `extractSalary()` or its
 callees should gate on `p95 ≤ 0.0174 ms + 0.1 ms = 0.1174 ms`
 (using the NFR-1-style "≤ +0.1 ms of baseline" budget the

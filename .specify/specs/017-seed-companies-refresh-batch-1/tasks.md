@@ -161,9 +161,9 @@
 
 ## Phase 5 — Closeout (T05, run #75 — pending)
 
-- [ ] T05 — Flip `AC-8` to `agent ✅` in
-  [`competitor-watch.md`](../../../../competitor-watch.md) §C
-  with the four phase run-numbers. Refresh
+- [ ] T05 — Flip `AC-8` to `agent ✅` in `competitor-watch.md`
+  §C (workspace-root file, outside the ever-jobs repo) with
+  the four phase run-numbers. Refresh
   [`docs/SOURCE_ADOPTION_BACKLOG.md`](../../../docs/SOURCE_ADOPTION_BACKLOG.md)
   `(seed lists)` row to read "≥ 25 sampled per vendor
   (Greenhouse 53 / Lever 30 / Workable 27 / SmartRecruiters
