@@ -5,6 +5,75 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #86 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0199 ms; lint:docs clean; external-snapshot tag set held identical for the 65th consecutive run)
+
+**Scope:** Run #86 executes the **maintenance-loop continuation default** authorised by
+Q-042 default C (opened at run #84). The abbreviated health-check evidence form
+authorised at run #85's forward-pointer continues here.
+
+**Health-check evidence (abbreviated):**
+
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 6.033 s**.
+  Case count unchanged (77 cases pinned by Spec 019 / T02 at run #80).
+- `npx jest packages/common/__tests__/helpers.bench --colors=false` → **2/2 passed in 5.940 s**.
+  `dist/bench/helpers-salary.json` records overall **p95 = 0.0199 ms** (delta from run #85 =
+  +0.0047 ms — slight upward drift; delta from Spec 016 baseline 0.0174 ms = +0.0025 ms;
+  delta from Spec 019 / T02 reading 0.0248 ms = -0.0049 ms — still favourable). Drift sits
+  far inside the +0.1 ms NFR-1 budget. Per-currency p95 figures all stay under the 0.5 ms
+  NFR-1 target and the 2.0 ms CI ceiling.
+- `npm run lint:docs` exits 0.
+
+**External-snapshot tag set:**
+
+`git pull --ff-only` on all three watched repos returns `Already up to date.` SHAs unchanged
+since run #21:
+
+| Repo            | Tip SHA       |
+| --------------- | ------------- |
+| Ats-scrapers    | `3bacd6e`     |
+| JobSpy          | `fda080a`     |
+| Jobspy-api      | `26bb6f4`     |
+
+**65th consecutive zero-churn run** in the external-snapshot tag set (since run #21).
+
+**Files touched (run #86):**
+
+- `docs/log.md` — this run #86 entry prepended above the run #85 entry.
+- `CLAUDE.md` — run-tag bumped from `2026-04-28 (scheduled run #85)` to
+  `2026-04-28 (scheduled run #86)`.
+- `competitor-watch.md` (workspace-root, outside the ever-jobs repo) — Sync Log run #86
+  entry prepended.
+
+**No changes (FR-9):**
+
+- No `.ts` / `.tsx` / `.js` source or test file in the run #86 diff.
+- No spec.md / tasks.md flip; no `docs/index.md` § 7 update; no `docs/questions.md` change
+  (Q-042 stays at default C; resolution flip is human-driven).
+- No `package.json` / `package-lock.json` change.
+
+**Forward-pointers / default for run #87:**
+
+- **Default for run #87 = continue the Q-042 default-C maintenance loop.** Same recipe:
+  pull the three external repos; if any ship new commits, score against the parallel
+  out-of-repo upstream-watch ledger `§ C` and either open a new `AC-NN` row or fold into
+  an existing one. If the snapshot is still unchanged, re-run helpers + bench and prepend
+  an abbreviated run #87 entry. Q-042 promotion triggers (fresh upstream commit, failing
+  CI gate, customer-reported synthetic row, user-owner directive) remain the only escape
+  hatches from the default-C loop.
+- Q-041 + Q-042 Resolutions stay `_open` until the human owner reviews; run #86 does
+  not flip them.
+
+**Acceptance:**
+
+- `npm run lint:docs` exit 0.
+- 77/77 jest cases for `helpers.spec.ts` (unchanged from run #85).
+- 2/2 jest cases for `helpers.bench.ts`; bench p95 = 0.0199 ms (well under NFR-1).
+- All three external repos at the same SHAs as run #85.
+- No `.ts` file in run #86 diff (FR-9 honoured).
+- No spec.md / tasks.md flip at run #86.
+
+---
+
 ## 2026-04-28 — Scheduled run #85 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0152 ms; lint:docs clean; external-snapshot tag set held identical for the 64th consecutive run)
 
 **Scope:** Run #85 executes the **maintenance-loop continuation default** forward-pointed
