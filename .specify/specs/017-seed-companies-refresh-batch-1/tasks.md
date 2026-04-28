@@ -135,14 +135,14 @@
       shape).
   - **Estimate:** 0.15 day.
 
-## Phase 4 — SmartRecruiters refresh (T04, run #74 — pending)
+## Phase 4 — SmartRecruiters refresh (T04, run #74 — landed this run)
 
-- [ ] T04 — Append 25 deterministic-indexed SmartRecruiters
+- [x] T04 — Append 25 deterministic-indexed SmartRecruiters
   slug rows to the SmartRecruiters table (FR-4 / FR-9).
   Sample from
   `OTHERS/Ats-scrapers/smartrecruiters/smartrecruiters_companies.csv`.
   Record selection as Decision D-08. Verify row count = 4 +
-  25 = **29**.
+  25 = **29**. **Landed run #74.**
   - **Files (planned):** mirror Phase 1 with SmartRecruiters
     as the vendor.
   - **Acceptance:**
@@ -197,21 +197,46 @@
 
 ## Notes for the next run (after T00 lands)
 
-- **Default for run #74** = Spec 017 / Phase 4 / T04 — append
-  25 deterministic-indexed SmartRecruiters slug rows. Sample
-  from
-  `OTHERS/Ats-scrapers/smartrecruiters/smartrecruiters_companies.csv`
-  (812 post-header rows). Apply § 7.1's sampling rule + the
-  duplicate-and-numeric filter (D-02). Land ~25 row appends
-  with § 10 D-08 recording the selection verbatim.
-  **SmartRecruiters-specific watch-out:** slug case is
-  preserved from the upstream URL (existing rows `Visa`,
-  `BoschGroup`, `Equinox`, `Skechers` are all mixed/PascalCase).
-  The deterministic-indexed sample may pick rows with both
-  all-lowercase URLs (e.g. `10minuteschool`) AND mixed-case
-  URLs (e.g. `1Huddle`). Both are valid; preserve case from
-  the URL exactly. Verify SmartRecruiters table row count =
-  4 + 25 = 29.
+- **Default for run #75** = Spec 017 / Phase 5 / T05 — closeout.
+  Flip `AC-8` to `agent ✅` in `competitor-watch.md` §C
+  (workspace-root file, outside the ever-jobs repo) with the
+  four phase run-numbers `#71/#72/#73/#74`. Refresh
+  `docs/SOURCE_ADOPTION_BACKLOG.md` `(seed lists)` row to read
+  "≥ 25 sampled per vendor (Greenhouse 53 / Lever 30 /
+  Workable 27 / SmartRecruiters 29 — refreshed Spec 017 runs
+  #71..#74)" (FR-7 / FR-8). Flip Spec 017 spec.md Status to
+  "All phases done (T01..T05 runs #71..#75); spec complete".
+  Update `docs/index.md` Spec 017 row Status to match.
+  **Closeout-specific watch-out:** double-check that the
+  `competitor-watch.md` `AC-8` flip preserves the existing
+  table column alignment; the markdown table uses
+  pipe-and-dash formatting that's strict about column widths.
+  The SOURCE_ADOPTION_BACKLOG `(seed lists)` row is the third
+  row in the "Logic-improvement candidates" table — line up
+  the `(seed lists)` cell width with the existing column.
+
+- **Default for run #74 (DONE — landed run #74)** = Spec 017 /
+  Phase 4 / T04 — appended 25 deterministic-indexed
+  SmartRecruiters slug rows. § 7.1 methodology produced
+  L = 810 / step = 32; selection recorded verbatim as D-08
+  in spec.md § 10. Two rows dropped from the 812 raw corpus:
+  2 case-insensitive duplicates (`Visa`, `Equinox`) of the
+  existing 4 SmartRecruiters rows; 0 pure-numeric names; 0
+  empty-name cases. All 25 selected slugs landed lowercase
+  (the upstream URL column is lowercased uniformly at the
+  sampled indices, even though the `name` column carries
+  PascalCase values like `10Minuteschool`). The Watch-out
+  note for run #74 anticipated mixed-case URL slugs in the
+  slice (existing rows are PascalCase, and `1Huddle` exists
+  in the CSV); none were represented at the deterministic
+  indices `[0, 32, 64, …, 768]`. Multi-word company names
+  (`Renaud Bray`) carried hyphenated slugs (`renaud-bray`)
+  per the upstream URL. Two trailing-digit tenant slugs
+  (`elizabethglaserpediatricaidsfoundation3`,
+  `ingramcontentgroup1`) passed the D-02 pure-numeric filter
+  because their `name` fields carry an alphabetic prefix.
+  SmartRecruiters table row count 29 = 4 preserved + 25
+  appended.
 
 - **Default for run #73 (DONE — landed run #73)** = Spec 017 /
   Phase 3 / T03 — appended 25 deterministic-indexed Workable

@@ -5,6 +5,128 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #74 (Spec 017 / Phase 4 / T04 — 25 deterministic-indexed SmartRecruiters slugs appended; all-lowercase slice / no PascalCase URL slugs)
+
+**Scope:** land Spec 017 / Phase 4 / T04 — append 25
+deterministic-indexed SmartRecruiters slug rows to
+`docs/COMPANY_SLUG_DIRECTORY.md` per § 7.1 sampling
+methodology. Verbatim selection recorded as Decision D-08
+in spec.md § 10 (FR-11).
+
+**Selection mechanics:** L = **810** (post-duplicate-and-
+numeric filter against 812 raw rows; 2 case-insensitive
+duplicates dropped — `Visa`, `Equinox` — both exact
+case-insensitive matches with the existing 4 SmartRecruiters
+rows; the existing `Bosch` and `Skechers` directory rows do
+not appear by exact case-insensitive `name` match in the
+upstream CSV — `Bosch` is represented as `Bosch Homecomfort`
+and `Boschgroup`, neither lowercases to `bosch`; `Skechers`
+is absent from the CSV entirely, so the existing row was
+hand-curated); step = `⌊810/25⌋ = 32`; indices `[0, 32, 64,
+…, 768]`.
+
+**25 selected slugs** from
+`OTHERS/Ats-scrapers/smartrecruiters/smartrecruiters_companies.csv`:
+`10minuteschool`, `ajua`, `artelia`, `blueally`, `check24`,
+`continental`, `deloittenordic`,
+`elizabethglaserpediatricaidsfoundation3`,
+`firstdrivelogisticsinc`, `ginastechjobs`, `hexagroup`,
+`ingramcontentgroup1`, `kanadeviainova`,
+`liftedanupworkcompany`, `mcwaneinc`, `mytime`,
+`nxtkeycorporation`, `primark`, `renaud-bray`, `samsungena`,
+`siloamcareers`, `sterlingenterprisellc`, `telefonicatech`,
+`trustonic`, `virtuaadvancedsolution`.
+
+**SmartRecruiters case-preservation note (§ 7.2):** every
+URL in the upstream CSV's `url` column at the
+deterministic-indexed sample positions is **lowercase**
+(`https://jobs.smartrecruiters.com/<lowercase-name>`). The
+"preserve case from URL" rule therefore yields 25 lowercase
+slugs in this slice — no mixed-case PascalCase slugs
+(e.g. the existing `Visa` / `BoschGroup` / `Equinox` /
+`Skechers` shape, or upstream-CSV examples like `1Huddle`
+whose URL is `…/1huddle`) appeared at the 25 sampled
+indices. The Watch-out note for run #74 anticipated
+mixed-case slugs in the slice, but the upstream URL column
+is lowercased uniformly across the 25 sampled rows. The
+four existing rows (Visa / BoschGroup / Equinox / Skechers)
+are hand-curated PascalCase values and remain
+byte-identical (FR-5).
+
+**Multi-word names (`Renaud Bray`):** the upstream URL
+converts internal whitespace to a single `-` (e.g.
+`…/renaud-bray`). The `Slug` column reflects the literal URL
+last-path-segment per § 7.2; the `Company` column carries
+the trimmed `name` field verbatim (matching the FR-9 / § 7.3
+contract — same convention as Lever's `Asapp 2` /
+`Glass Health Inc` precedent in D-06).
+
+**Trailing-digit names (`Elizabethglaserpediatricaidsfoundation3`,
+`Ingramcontentgroup1`):** these are real SmartRecruiters
+tenant slugs where the upstream company has multiple branded
+tenants on the same ATS (the `3` / `1` suffix disambiguates
+the tenant). These pass the D-02 pure-numeric filter (the
+`name` is not purely numeric — it carries an alphabetic
+prefix) and are included in the sample.
+
+**SmartRecruiters table row count after T04:** 29 (4 preserved
++ 25 appended; verified via `awk '/^## SmartRecruiters$/,/^##
+SuccessFactors$/' docs/COMPANY_SLUG_DIRECTORY.md | grep -c
+'^|'` reporting 31 = 29 data rows + 2 header rows).
+
+**No new questions opened this run.** Q-038 / Q-039 / Q-040
+stay open; resolutions flip at T05.
+
+**No competitor-watch upstream churn** — fifty-third
+consecutive zero-churn run in `OTHERS/`.
+
+**Changes — docs / specs:**
+
+- `docs/COMPANY_SLUG_DIRECTORY.md` — 25 new rows appended to
+  the SmartRecruiters section. Existing 4 rows byte-identical
+  (FR-5). New rows use em-dash `—` for `Industry` (D-03).
+- `.specify/specs/017-seed-companies-refresh-batch-1/spec.md`
+  — Status → "T01..T04 done (runs #71/#72/#73/#74); Phase 5
+  (T05) pending"; § 10 Decisions appended with D-08 (verbatim
+  25-slug table + case-preservation / multi-word /
+  trailing-digit notes).
+- `.specify/specs/017-seed-companies-refresh-batch-1/tasks.md`
+  — T04 flipped `[x]`; Notes-for-the-next-run pin updated
+  to **Spec 017 / Phase 5 / T05** (closeout: AC-8 flip +
+  SOURCE_ADOPTION_BACKLOG `(seed lists)` row refresh).
+- `docs/index.md` — Spec 017 row updated; footer bumped.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #74.
+- `/competitor-watch.md` — run #74 sync line at top.
+
+**Verification:** `lint:docs` pending; SmartRecruiters table
+row count = 29 confirmed; § 7.1 reproducibility holds; test
+suite delta = 0 (NFR-2). Per the run #71/#72 CI failure
+post-mortem (linter's `0cae51a` fix), this run avoids broken
+markdown links to gitignored / out-of-repo paths — the D-08
+entry uses backtick-only references for any extra-repo file.
+
+**Notes & follow-ups:**
+
+- **Default for run #75** = Spec 017 / Phase 5 / T05 —
+  closeout. Flip `AC-8` to `agent ✅` in `competitor-watch.md`
+  §C with the four phase run-numbers `#71/#72/#73/#74`.
+  Refresh `docs/SOURCE_ADOPTION_BACKLOG.md` `(seed lists)`
+  row to read "≥ 25 sampled per vendor (Greenhouse 53 /
+  Lever 30 / Workable 27 / SmartRecruiters 29 — refreshed
+  Spec 017 runs #71..#74)". Flip Spec 017 spec.md Status to
+  "All phases done (T01..T05 runs #71..#75); spec complete".
+- **Out-of-scope reminders for run #75:** Stay strictly
+  inside `competitor-watch.md` §C, `docs/SOURCE_ADOPTION_BACKLOG.md`,
+  and the Spec 017 spec-kit triple. Do NOT touch any `.ts`
+  file. Avoid markdown links to gitignored or out-of-repo
+  paths.
+- Specs **004 / 005 / 006 / 012 / 013 / 014 / 015 / 016**
+  stay complete. Spec **017** advances from "T01..T03 done"
+  to "T01..T04 done; T05 pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #73 (Spec 017 / Phase 3 / T03 — 25 deterministic-indexed Workable slugs appended; 1 leading-dash slug surfaced)
 
 **Scope:** land Spec 017 / Phase 3 / T03 — append 25

@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 017                                                                         |
 | Slug           | seed-companies-refresh-batch-1                                              |
-| Status         | T01..T03 done (runs #71/#72/#73); Phase 4..5 (T04..T05) pending             |
+| Status         | T01..T04 done (runs #71/#72/#73/#74); Phase 5 (T05) pending                  |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #70)                                                        |
-| Last updated   | 2026-04-28 (run #73)                                                        |
+| Last updated   | 2026-04-28 (run #74)                                                        |
 | Supersedes     | (none — first refresh of the four big-volume vendor slug tables in `docs/COMPANY_SLUG_DIRECTORY.md`) |
 | Related specs  | 006 (ATS Batch 1 — Avature / Gem / Join.com slug seeding precedent), 013 (ATS Batch 2 — Oracle / Mercor / Tesla slug seeding precedent), 016 (immediately-prior single-byte warm-up; Spec 016 closeout's "Notes for the next run" pinned **AC-8** as the run #70 default) |
 
@@ -577,6 +577,98 @@ appended), verified via
 
 Re-running the § 7.1 methodology against the same CSV produces the
 same 25 slugs (FR-6 reproducibility verified locally).
+
+### Decision D-08 (run #74, T04) — SmartRecruiters 25-slug selection verbatim
+
+**Context:** FR-11 requires the 25-slug selection per vendor to be
+recorded verbatim. The § 7.1 methodology run against
+`OTHERS/Ats-scrapers/smartrecruiters/smartrecruiters_companies.csv`
+(812 post-header rows) yielded **L = 810** post-filter (2 rows
+dropped: 2 case-insensitive duplicates with the existing 4
+SmartRecruiters rows — `Visa` (CSV row matches existing `Visa`)
+and `Equinox` (CSV row matches existing `Equinox`); 0
+pure-numeric `name` values; 0 empty/whitespace edge rows). The
+existing `Bosch` and `Skechers` directory rows do NOT appear by
+exact case-insensitive `name` match in the upstream CSV
+(`Bosch` is represented as `Bosch Homecomfort` and `Boschgroup`
+in the CSV — neither lowercases to `bosch`; `Skechers` is not
+present in the SmartRecruiters CSV at all — the existing
+directory row was hand-curated). Per the § 7.1 strict
+case-insensitive `name`-equality dedup rule (D-02 / D-06
+precedent), only exact-match-after-lowercase rows are dropped;
+substring matches like `Boschgroup ⊃ Bosch` are intentionally
+not deduped. Step = `⌊810/25⌋ = 32`. The 25 deterministic
+indices `[0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320,
+352, 384, 416, 448, 480, 512, 544, 576, 608, 640, 672, 704,
+736, 768]` produced the following selection (CSV `name`
+trimmed → derived `slug` per § 7.2):
+
+| idx  | upstream `name`                          | slug                                       |
+| ---- | ---------------------------------------- | ------------------------------------------ |
+|    0 | 10Minuteschool                           | `10minuteschool`                           |
+|   32 | Ajua                                     | `ajua`                                     |
+|   64 | Artelia                                  | `artelia`                                  |
+|   96 | Blueally                                 | `blueally`                                 |
+|  128 | Check24                                  | `check24`                                  |
+|  160 | Continental                              | `continental`                              |
+|  192 | Deloittenordic                           | `deloittenordic`                           |
+|  224 | Elizabethglaserpediatricaidsfoundation3  | `elizabethglaserpediatricaidsfoundation3`  |
+|  256 | Firstdrivelogisticsinc                   | `firstdrivelogisticsinc`                   |
+|  288 | Ginastechjobs                            | `ginastechjobs`                            |
+|  320 | Hexagroup                                | `hexagroup`                                |
+|  352 | Ingramcontentgroup1                      | `ingramcontentgroup1`                      |
+|  384 | Kanadeviainova                           | `kanadeviainova`                           |
+|  416 | Liftedanupworkcompany                    | `liftedanupworkcompany`                    |
+|  448 | Mcwaneinc                                | `mcwaneinc`                                |
+|  480 | Mytime                                   | `mytime`                                   |
+|  512 | Nxtkeycorporation                        | `nxtkeycorporation`                        |
+|  544 | Primark                                  | `primark`                                  |
+|  576 | Renaud Bray                              | `renaud-bray`                              |
+|  608 | Samsungena                               | `samsungena`                               |
+|  640 | Siloamcareers                            | `siloamcareers`                            |
+|  672 | Sterlingenterprisellc                    | `sterlingenterprisellc`                    |
+|  704 | Telefonicatech                           | `telefonicatech`                           |
+|  736 | Trustonic                                | `trustonic`                                |
+|  768 | Virtuaadvancedsolution                   | `virtuaadvancedsolution`                   |
+
+**SmartRecruiters case-preservation note (§ 7.2):** every URL in
+the upstream CSV's `url` column at the deterministic-indexed
+sample positions is lowercase (`https://jobs.smartrecruiters.com/<lowercase-name>`).
+The "preserve case from URL" rule therefore yields 25 lowercase
+slugs in this slice — no mixed-case PascalCase slugs
+(e.g. the existing `Visa` / `BoschGroup` / `Equinox` /
+`Skechers` shape, or upstream-CSV examples like `1Huddle` whose
+URL is `https://jobs.smartrecruiters.com/1huddle`) appeared at
+the 25 sampled indices. The Watch-out note for run #74
+anticipated mixed-case slugs in the slice, but the upstream
+URL column is lowercased uniformly across the 25 sampled rows.
+The four existing rows (Visa / BoschGroup / Equinox / Skechers)
+are hand-curated PascalCase values and remain byte-identical
+(FR-5).
+
+**Multi-word names (`Renaud Bray`):** the upstream URL converts
+internal whitespace to a single `-` (e.g.
+`https://jobs.smartrecruiters.com/renaud-bray`). The `Slug`
+column reflects the literal URL last-path-segment per § 7.2;
+the `Company` column carries the trimmed `name` field verbatim
+(matching the FR-9 / § 7.3 contract — same convention as
+Lever's `Asapp 2` / `Glass Health Inc` precedent in D-06).
+
+**Trailing-digit names (`Elizabethglaserpediatricaidsfoundation3`,
+`Ingramcontentgroup1`):** these are real SmartRecruiters tenant
+slugs where the upstream company has multiple branded tenants
+on the same ATS (the `3` / `1` suffix disambiguates the tenant).
+These pass the D-02 pure-numeric filter (the `name` is not
+purely numeric — it carries an alphabetic prefix) and are
+included in the sample.
+
+SmartRecruiters table row count after T04: **29** (4 preserved
++ 25 appended), verified via
+`awk '/^## SmartRecruiters$/,/^## SuccessFactors$/' docs/COMPANY_SLUG_DIRECTORY.md
+| grep -c '^|'` reporting 31 (29 data rows + 2 header rows).
+
+Re-running the § 7.1 methodology against the same CSV produces
+the same 25 slugs (FR-6 reproducibility verified locally).
 
 ## 11. References
 

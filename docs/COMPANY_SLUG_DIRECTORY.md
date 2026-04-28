@@ -205,6 +205,31 @@ SmartRecruiters slugs are company identifiers at `jobs.smartrecruiters.com/{slug
 | Bosch | `BoschGroup` | Industrial / Tech |
 | Equinox | `Equinox` | Fitness |
 | Skechers | `Skechers` | Footwear |
+| 10Minuteschool | `10minuteschool` | — |
+| Ajua | `ajua` | — |
+| Artelia | `artelia` | — |
+| Blueally | `blueally` | — |
+| Check24 | `check24` | — |
+| Continental | `continental` | — |
+| Deloittenordic | `deloittenordic` | — |
+| Elizabethglaserpediatricaidsfoundation3 | `elizabethglaserpediatricaidsfoundation3` | — |
+| Firstdrivelogisticsinc | `firstdrivelogisticsinc` | — |
+| Ginastechjobs | `ginastechjobs` | — |
+| Hexagroup | `hexagroup` | — |
+| Ingramcontentgroup1 | `ingramcontentgroup1` | — |
+| Kanadeviainova | `kanadeviainova` | — |
+| Liftedanupworkcompany | `liftedanupworkcompany` | — |
+| Mcwaneinc | `mcwaneinc` | — |
+| Mytime | `mytime` | — |
+| Nxtkeycorporation | `nxtkeycorporation` | — |
+| Primark | `primark` | — |
+| Renaud Bray | `renaud-bray` | — |
+| Samsungena | `samsungena` | — |
+| Siloamcareers | `siloamcareers` | — |
+| Sterlingenterprisellc | `sterlingenterprisellc` | — |
+| Telefonicatech | `telefonicatech` | — |
+| Trustonic | `trustonic` | — |
+| Virtuaadvancedsolution | `virtuaadvancedsolution` | — |
 
 ---
 
