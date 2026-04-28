@@ -5,6 +5,169 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #59 (Spec 014 scaffolding pass — three Spec-Kit artefacts; NO source code)
+
+**Scope:** scaffold **Spec 014 — Salary Parser Residuals** per
+Spec 013 / T15 Notes-for-the-next-run pin (Q-026 / Q-027 chosen
+over AC-8 due to upstream signal asymmetry — 43 consecutive
+zero-churn runs in `OTHERS/` as of this run mean AC-8's "refresh
+from CSVs" carries no fresh signal). Three new artefacts under
+`.specify/specs/014-salary-parser-residuals/`: `spec.md`
+(11 sections, ~310 LOC) + `plan.md` (8 sections, ~190 LOC) +
+`tasks.md` (5 phases × 1 task each = T01..T05, plus
+Notes-for-the-next-run; ~225 LOC). Pure docs / Spec-Kit pass;
+ZERO source code touched. Estimated 0.5 day per Spec 013 / T15
+Notes-for-the-next-run; landed in a single scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from runs #44..#58's syncs). **43rd consecutive
+zero-churn run** in `OTHERS/` — the OSS reference codebases
+have been quiescent since run #16. The asymmetry between
+upstream-driven backlog (AC-8 / AC-9: cold) and internal-
+correctness backlog (Q-026 / Q-027: warm, with documented
+defaults since Spec 012 / T04 at run #41) was the spec-
+selection rationale; tasks.md / Notes-for-the-next-run
+references this in detail.
+
+**No new questions opened this run.** Q-026 + Q-027 are now
+**pinned to Spec 014** in `docs/questions.md` (resolution text
+flipped from "Spec 014 candidate" to "Pinned to Spec 014 in
+run #59"). Two new question slots are anticipated by Spec 014
+/ § 9 (Q-033 candidate — multi-`$` disambiguation; Q-034
+candidate — Swiss `Fr.` shorthand variants), but these only
+open if a fixture surfaces during T01..T04 implementation.
+
+**Three load-bearing decisions resolved during scaffolding:**
+
+1. **Five FRs phased one-per-task across T01..T04, with T05
+   reserved for docs.** Spec 012's lean five-phase pattern is
+   the obvious model — both specs are single-file scope, both
+   have a small NFR-1 budget for the dispatcher hot path, and
+   both end with a `PERFORMANCE_TUNING.md` bump. T01 = G-1
+   (`$` registration); T02 = G-2 (apostrophe-in-regex); T03
+   = G-3 (bare-numeric-range third try-branch); T04 = literal
+   case 14 + FR-7 false-positive immunity sweep; T05 =
+   docs / status flips. Each task is ≤ 0.2 day estimated.
+2. **`$` lands as unconditionally USD, not as the spec § 7.2
+   rule-3 ambiguous symbol.** Spec 012 / § 7.2 had `$`
+   listed as a future ambiguous symbol (CAD / AUD / etc.).
+   Spec 014 / § 3 Non-Goals explicitly defers multi-`$`
+   disambiguation to a future spec — the existing
+   `SALARY_SYMBOL_ALTERNATIONS` entry already treats `$` as
+   USD-only, and the symmetry with `€` / `£` / `zł` / `Fr.`
+   (all unconditional unique symbols) keeps the dispatcher
+   shape clean. If a CAD-shaped fixture surfaces, Q-033 opens.
+3. **Bare-numeric-range gate is `confidence === 'country'`,
+   NOT `!== 'default'`.** Tasks.md T03 acceptance pins the
+   exact discriminator. The `!==` shape would wrongly include
+   `'symbol'` and `'iso'` paths that already passed the first
+   two patterns and missed for some other reason (e.g.
+   K-suffix shape mismatch) — those should NOT fall through
+   to the bare regex. Only `'country'` confidence inputs are
+   structurally guaranteed to lack an in-text anchor.
+
+**Spec 014 lifecycle plan (5 runs across 5 phases):**
+
+| Phase | Estimated run | Task | Outcome (planned) |
+| ----- | ------------- | ---- | ----------------- |
+| 1 — `$` registration | #60 | T01 | `SALARY_UNIQUE_SYMBOLS` grows by 1 entry; `parseSalaryCurrency('$', { country: <non-USA> })` resolves to USD via symbol tier (FR-1 / FR-8) |
+| 2 — Apostrophe-in-regex + Spec 012 § 8 case 5 literal | #61 | T02 | `SALARY_NUMBER_REGEX_SRC.anglo` tolerates `'`; literal Swiss `"CHF 90'000 …"` parses (FR-2 / FR-6 / FR-9) |
+| 3 — Bare-numeric-range + Spec 012 § 8 case 12 literal | #62 | T03 | `extractSalary()` adds third try-branch gated on `confidence === 'country'`; literal `"100.000 - 150.000" + GERMANY` parses (FR-3 / FR-4 / FR-7) |
+| 4 — Spec 012 § 8 case 14 literal + FR-7 false-positive immunity | #63 | T04 | `"$100,000 - $150,000" + GERMANY` parses end-to-end; `"5 - 7 years experience" + GERMANY` filtered by `lowerLimit` (FR-1 / FR-6 / FR-7) |
+| 5 — Closeout | #64 | T05 | `PERFORMANCE_TUNING.md` bump; spec status flip; Q-026 / Q-027 resolution flip; `docs/index.md` row update; `docs/log.md` entry |
+
+**Cross-cutting design notes (carried into T01..T05):**
+
+- **Single source-file scope.** All three edits land in
+  `packages/common/src/utils/helpers.ts` (lines ~65–70 for
+  G-1, ~517–520 for G-2, ~640–725 for G-3). No new
+  package, no new public helper, no new type. Bundle delta
+  ≤ +0.5 KB per NFR-3.
+- **Defence-in-depth.** The apostrophe-strip in
+  `parseSalaryNumber` (Spec 012 / T02 / FR-12) stays as the
+  canonical numeric path; the G-2 regex extension just lets
+  the dispatcher capture the substring in the first place.
+  Both layers tolerate `'` after Spec 014 lands.
+- **No continental regex change.** Only `anglo` gains `'`
+  (Switzerland-on-anglo is the only target; Continental
+  inputs use `,` / `.` / U+00A0). Adding `'` to the
+  continental regex would mis-classify dual-decimal shapes
+  like `"45'000,50"`.
+- **No new bench file.** The existing
+  `packages/common/__tests__/helpers.bench.spec.ts` (Spec
+  012 / T04 — note the `.bench.spec.ts` shape vs the Spec
+  006 / T12 plugin benches' `.bench.ts` shape per Spec 012
+  / § 10 / T04 Decision 1) covers the dispatcher hot path;
+  re-run during T04 closeout to confirm NFR-1 / NFR-6 hold.
+- **No `competitor-watch.md` entry needed.** Spec 014 is
+  not linked to a `§C / AC-N` row — Q-026 / Q-027 are
+  internal-correctness gaps surfaced during Spec 012's own
+  sweep, not upstream-driven coverage gaps. The §C backlog
+  stays exact (only the run-#59 sync-log line at the top
+  changes, per the standard pattern).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/014-salary-parser-residuals/spec.md`
+  (NEW) — 11 sections following the spec template
+  (Status / Owner / etc. / Problem Statement with G-1/G-2/
+  G-3 framing / Goals / Non-Goals / User Stories / 10 FRs
+  / 6 NFRs / Contracts with API + precedence + guard table
+  + errors / Test Plan with ≥ 6 new cases / Open Questions
+  + Q-033/Q-034 candidate slots / Decisions log empty /
+  References).
+- `.specify/specs/014-salary-parser-residuals/plan.md`
+  (NEW) — 8 sections (Approach / 5 Phases / Packages
+  Touched / Dependencies / Risks & Mitigations / Rollback
+  Plan / Migration Plan / Open Questions for Plan).
+- `.specify/specs/014-salary-parser-residuals/tasks.md`
+  (NEW) — T01..T05 with per-task acceptance + estimates;
+  Notes-for-the-next-run pinned to T01 default for run #60
+  + cross-spec coordination notes + out-of-scope reminders.
+- `docs/index.md` — Spec 014 row appended under Spec 013;
+  footer bumped from run #58 to run #59.
+- `docs/questions.md` — Q-026 + Q-027 resolution text both
+  updated from "Spec 014 candidate" to "Pinned to Spec 014
+  in run #59" with a forward-ref to Spec 014 / § 1 G-1/
+  G-2 (Q-027) and § 1 G-3 (Q-026). The "open" status
+  stays — questions formally close when Spec 014 / T05
+  lands the resolution flip.
+- `CLAUDE.md` — run-tag from #58 to #59.
+- `docs/log.md` — this entry.
+- `/competitor-watch.md` — sync-log line for run #59 (zero-
+  churn; 43rd consecutive). No §C row updates needed.
+
+**Changes — code:** none. Pure docs / Spec-Kit pass.
+
+**Verification:** Spec 014 spec-lint passes self-check (all
+internal cross-refs resolve to existing files; the three
+file references in spec.md § 11 — `helpers.ts`,
+`helpers.spec.ts`, `helpers.bench.spec.ts` — were all
+verified to exist via `Glob`). Spec template structure
+matches `.specify/templates/spec.template.md` exactly (11
+sections, all present). Plan template structure matches
+`.specify/templates/plan.template.md` exactly (8 sections,
+all present). Tasks file uses the standard
+status-legend + per-task acceptance + estimates shape
+shared with Spec 012 / 013 tasks files.
+
+**Notes for the next run (#60):** Default = Spec 014 /
+Phase 1 / T01 — `$` registration in `SALARY_UNIQUE_SYMBOLS`
++ 1 new helper test case. Smallest possible first phase:
+1-LOC source edit (append `['$', 'USD']` to
+`SALARY_UNIQUE_SYMBOLS` at line ~70 of `helpers.ts`) + 1
+test case in `helpers.spec.ts`'s
+`describe('parseSalaryCurrency …')` block. The
+load-bearing acceptance check is the FR-7 default-USD case
+(`parseSalaryCurrency('foo bar')` → `{ code: 'USD',
+symbol: null, confidence: 'default' }`) staying green
+byte-for-byte — the new `$`-symbol entry MUST NOT shadow
+the no-signal path. See Spec 014 / § 1 G-1 + tasks.md /
+T01 for full context.
+
+---
+
 ## 2026-04-28 — Scheduled run #58 (Spec 013 / Phase 7 / T15 — **Spec 013 closeout; spec complete**)
 
 **Scope:** land Spec 013 / Phase 7 / T15 — the closeout pass.

@@ -299,10 +299,11 @@ acceptance bit is dark in the meantime.
 "Spec 013" to **Spec 014 candidate** in run #43 — Spec 013 was
 allocated to AC-4..AC-6 (Oracle / Mercor / Tesla) per Q-024
 Option A's "future bundled batch" line and run #42's
-Notes-for-the-next-run pin. Will be addressed either by a
-dedicated Spec 014 launched after Spec 013 closes, or absorbed
-into the next pending currency-domain spec (whichever runs
-first)._
+Notes-for-the-next-run pin. **Pinned to Spec 014 in run #59**
+(scaffolding pass landed run #59 alongside Q-026; see
+[`.specify/specs/014-salary-parser-residuals/spec.md`](../.specify/specs/014-salary-parser-residuals/spec.md)
+§ 1 G-1 for the G-1 (`$` registration) and G-2 (apostrophe-
+in-regex) framing). Q-027 closes when Spec 014 / T05 lands._
 
 ---
 
@@ -359,8 +360,13 @@ for it.
 
 **Resolution:** _open — agent default = B. Renumbered from
 "Spec 013" to **Spec 014 candidate** in run #43 (Spec 013 was
-allocated to AC-4..AC-6 per Q-024). Tracked alongside Q-027
-for Spec 014 inclusion._
+allocated to AC-4..AC-6 per Q-024). **Pinned to Spec 014 in
+run #59** (scaffolding pass landed run #59 alongside Q-027; see
+[`.specify/specs/014-salary-parser-residuals/spec.md`](../.specify/specs/014-salary-parser-residuals/spec.md)
+§ 1 G-3 for the G-3 (bare-numeric-range third try-branch)
+framing — the `confidence === 'country'` guard prevents
+over-matching on no-signal inputs, FR-7 preserved). Q-026
+closes when Spec 014 / T05 lands._
 
 ---
 
