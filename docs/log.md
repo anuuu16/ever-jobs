@@ -5,6 +5,162 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #78 (Spec 019 / Phase 0 — `salary-parser-residuals-batch-2` scaffold pass; opens Q-041 for the bare-path threshold bump; closes Spec 015 / FR-8 documented limitation as the load-bearing residual)
+
+**Scope:** Spec 018 closed at run #77 — the prior agent-driven
+backlog of upstream-watch items is exhausted for the current
+external-snapshot tag set (recorded out-of-repo). Run #78 picks
+the next backlog candidate per the Spec 018 / tasks.md "Default
+for run #78" guidance. Recommended pick was `(a)
+salary-parser-residuals-batch-2` on the warm-internal-correctness
+rationale (matches the Spec 014 → 015 → 016 lean cadence).
+
+**Pickup re-evaluation:** the Spec 018 / tasks.md guidance cited
+`Q-026 / Q-027 / Q-035 / Q-036` as the candidate residual set,
+but those four questions are all **already resolved** — Q-026 /
+Q-027 in Spec 014 (runs #59..#64); Q-035 / Q-036 in Spec 015
+(runs #65..#68). The genuine open residual is **Spec 015 /
+FR-8**, the documented limitation that `"100 - 150" +
+country=GERMANY` still emits `{ interval: 'hourly', minAmount:
+100, maxAmount: 150, currency: 'EUR' }` because the bare-path
+raw-value pre-check uses `lowerLimit / 12 ≈ 83` as the
+rejection floor (so `100 ≥ 83` admits, then annualisation
+`100 * 2080 = 208000 ≥ lowerLimit = 1000` passes the bounds
+check). This bare-path admission produces synthetic salary
+rows on **prose** like `"team of 100 - 150 employees"` /
+`"100 - 150 km commute radius"` whenever a plugin supplies a
+country hint — the country-tier guard alone is insufficient as
+a prose-immunity safety net.
+
+**Spec 019 scope (scaffolded at this pass):**
+
+- **Title:** `019-salary-parser-residuals-batch-2` —
+  Bare-Path Raw-Value Pre-Check Threshold Bump (closes Spec
+  015 / FR-8 documented limitation).
+- **Source-side change (T01 / FR-1):** single-token edit at
+  [`packages/common/src/utils/helpers.ts:803`](../packages/common/src/utils/helpers.ts):
+  `minSalary < lowerLimit / 12` → `minSalary < lowerLimit`
+  (4 tokens deleted, 0 inserted; net -4 tokens).
+- **Test pins (T02 / FR-2):** three new `it(...)` blocks in
+  [`packages/common/__tests__/helpers.spec.ts`](../packages/common/__tests__/helpers.spec.ts)
+  — case 74 (`"100 - 150" + country=GERMANY` → reject), case
+  75 (`"team of 100 - 150 employees" + country=GERMANY` →
+  reject; additive prose-immunity coverage), case 76
+  (`"1000 - 1500" + country=GERMANY` → admit at threshold
+  boundary). Test count delta: 73 → 76.
+- **Closeout (T03 / FR-4):**
+  [`docs/PERFORMANCE_TUNING.md`](./PERFORMANCE_TUNING.md)
+  reclassifies the `"100 - 150"` shape from "FR-8 known
+  limitation" to "Spec 019 / FR-1 rejected (use
+  prefix/suffix path with currency symbol or ISO instead)".
+- **Lifecycle:** 3 implementation runs (T01 + T02 + T03 at
+  runs #79..#81) + Phase 0 scaffold (this run, #78). Matches
+  Spec 014 / Spec 015 cadence.
+
+**Q-041 opened:** `docs/questions.md` gains a new top-of-list
+entry "Bare-path raw-value pre-check threshold bump for
+Spec 019". Four options enumerated: (A) bump threshold from
+`lowerLimit / 12 ≈ 83` to `lowerLimit ≈ 1000` (default —
+single-token edit, dimensional rule, language-independent);
+(B) stop-word filter (rejected — fragile / i18n-brittle, same
+reasoning as Spec 015 / Q-036 / Option C); (C) tighten bare
+regex to require ≥ 4 digits or thousands-separator (rejected
+— larger structural change); (D) status quo + document harder
+(rejected — false-positive synthetic rows leak into Spec 003
+dedup-engine input). Default = A. Resolution stays `_open` —
+human owner reviews; agent proceeds with default.
+
+**Files touched (run #78):**
+
+- `.specify/specs/019-salary-parser-residuals-batch-2/spec.md` —
+  new file (~280 lines): full spec body (problem statement,
+  goals, non-goals, user stories, FR-1..FR-10, NFR-1..NFR-7,
+  contracts § 7.1 source-edit text + § 7.2 test-case literals
+  + § 7.3 coverage matrix, test plan, open questions reference
+  to Q-041, decisions log empty at scaffold pass).
+- `.specify/specs/019-salary-parser-residuals-batch-2/plan.md` —
+  new file (~210 lines): phasing overview, packages-touched
+  table, risks (substitute-case regression / operator-facing
+  behaviour change / bench p95 regression / Continental
+  locale interpretation / prose-immunity capture shape),
+  per-run stop conditions, acceptance gates per phase,
+  rollback / out-of-scope reminders, lean-cadence
+  justification, forward-compat candidates for a
+  hypothetical Spec 020.
+- `.specify/specs/019-salary-parser-residuals-batch-2/tasks.md` —
+  new file (~150 lines): T00 (Phase 0 scaffold, this pass —
+  marked `[x]`), T01 (Phase 1 source edit — `[ ]`), T02
+  (Phase 2 test pins — `[ ]`), T03 (Phase 3 closeout — `[ ]`),
+  Notes-for-the-next-run section with full T01 acceptance
+  recipe (10 numbered steps), Out-of-scope reminders
+  enumeration.
+- `docs/questions.md` — Q-041 prepended at top of list (~80
+  lines): four-option enumeration with full trade-off
+  analysis; default A pinned.
+- `docs/index.md` — new row for Spec 019 in § 7 Specs table;
+  footer bumped to `2026-04-28 (run #78)`.
+- `docs/log.md` — this run #78 entry prepended at the top of
+  the `---` divider.
+- `competitor-watch.md` — Sync Log entry for run #78 prepended
+  (no `§ C` row addition; Spec 019 is internal-correctness
+  driven, not upstream-driven).
+- `CLAUDE.md` — run-tag bumped from `2026-04-28 (scheduled run #77)`
+  to `2026-04-28 (scheduled run #78)`.
+
+**Acceptance verified at scaffold pass:**
+
+- `npm run lint:docs` clean (NFR-7; doc-lint exits 0 — verified
+  pre-commit).
+- No `.ts` file in the diff (FR-9 / NFR-3 — Phase 0 is
+  docs-only).
+- Four scaffold artefacts exist in
+  `.specify/specs/019-salary-parser-residuals-batch-2/` (the
+  three Spec-Kit files + the implicit existence of the
+  directory itself).
+- Q-041 default = A pinned in `docs/questions.md`.
+- Spec 019 / spec.md Status reads
+  `draft (Phase 0 scaffolded run #78); Phase 1..3 pending`.
+- Spec 019 / tasks.md T00 row reads `[x]`; T01..T03 rows
+  read `[ ]`.
+
+**Next run (#79) recommendation — Spec 019 / Phase 1 / T01:**
+single-token edit at `helpers.ts:803`
+(`lowerLimit / 12` → `lowerLimit`); regression sweep gate
+(73/73 helpers.spec green); bench p95 ≤ 0.1174 ms; FR-5
+idempotence verified (`grep -c 'lowerLimit / 12' helpers.ts`
+returns 0). T01 acceptance recipe is enumerated in detail in
+Spec 019 / tasks.md "Notes for the next run" section (10
+numbered steps). T01 is the load-bearing source-side change;
+T02 + T03 cannot proceed without T01 landed.
+
+**Notes:**
+
+- 57th consecutive zero-churn run on the external-snapshot
+  tag set (recorded out-of-repo). The prior agent-owned
+  upstream-watch row queue closed at run #77; Spec 019 is the
+  first internal-correctness spec to land after the
+  upstream-watch backlog exhausted at run #77.
+- Sandbox cannot run `npx jest` (no `node_modules`); CI on
+  push validates the bench p95 and the regression sweep at
+  T01 / T02. The scaffold pass itself authors no `.ts` and
+  has no jest dependency.
+- Spec 019 is a sub-spec of Spec 015 dimensionally — it
+  retunes a single inequality token that Spec 015 introduced.
+  The behavioural surface area is provably narrower than
+  Spec 015's (which added a new constant + new locale tier +
+  new pre-check block); the 3-phase / 3-run plan is
+  justified.
+- Forward-compat candidates for a hypothetical Spec 020 are
+  documented in Spec 019 / plan.md / § 8 (graduated
+  per-country thresholds; operator-opt-in via new
+  `bareNumericThreshold` option). Both stay out-of-scope for
+  Spec 019; Spec 020 candidate opens only if production
+  telemetry shows ≥ 1% of EU plugin calls dropping
+  legitimate Continental hourly low-end ranges via the bare
+  path.
+
+---
+
 ## 2026-04-28 — Scheduled run #77 (Spec 018 / Phase 1 / T01 — verdict closeout for `workable-upstream-parity`; AC-9 flipped to `agent ✅ (run #77)`; spec complete)
 
 **Scope:** Spec 018 was scaffolded at run #76 with the

@@ -10,6 +10,93 @@
 
 ---
 
+## Q-041 — Bare-path raw-value pre-check threshold bump for Spec 019 (`salary-parser-residuals-batch-2`)
+
+**Context:** Spec 015 / FR-2 (run #66) added a raw-value
+pre-check on the bare-regex match path of `extractSalary`:
+if neither match end is K-suffixed AND `minSalary <
+lowerLimit / 12 ≈ 83`, return the all-`null` envelope. The
+threshold was deliberately set low (≈ 83) to admit
+legitimate Continental low-end shapes like
+`"100 - 150"` (rare entry-level postings) — Spec 015 / FR-8
+explicitly documents `"100 - 150" + country=GERMANY` as a
+**known limitation** that still emits
+`{ interval: 'hourly', minAmount: 100, maxAmount: 150,
+currency: 'EUR' }` after annualisation
+(`100 * 2080 = 208000 ≥ lowerLimit = 1000`).
+
+The Spec 015 / FR-8 documented limitation is the load-bearing
+residual driving Spec 019 (`salary-parser-residuals-batch-2`).
+The bare path admits any minimum ≥ ≈ 83 with the country tier
+guard, which produces synthetic `{ interval: 'hourly' }` rows
+on prose like:
+
+- `"benefits include 100 - 150 EUR monthly grocery allowance"`
+- `"team of 100 - 150 employees"`
+- `"100 - 150 km commute radius"`
+- `"100 - 150 days per year remote"`
+
+…whenever the upstream plugin (Stepstone-DE / JobUp-CH /
+Pracuj-PL) supplies a `country` hint in `ScraperInputDto.country`.
+The country-tier guard alone is insufficient — it differentiates
+"have a country hint" from "no country hint", not "salary text"
+from "prose text".
+
+**Options:**
+
+- **Option A — Bump the bare-path raw-value threshold from
+  `lowerLimit / 12 ≈ 83` to `lowerLimit ≈ 1000`.** Single-token
+  source edit (`/ 12` → `/ 1` or removed). Behavioural delta:
+  - `"100 - 150"` (`min = 100`) → reject (`100 < 1000`). ✓ closes FR-8.
+  - `"1000 - 1500"` (`min = 1000`) → admit (`1000 ≥ 1000`). Continental monthly range — annualised `1000 * 12 = 12000 ≥ lowerLimit`.
+  - `"100.000 - 150.000"` (`min = 100000` after continental locale parse) → admit. Continental yearly range, byte-identical to current behaviour.
+  - `"5K - 7K"` (K-suffixed) → admit (K-suffix bypasses pre-check). Byte-identical to current behaviour.
+  - `"5 - 7 years experience"` (`min = 5`) → reject (already rejected by `< 83` check; new check also rejects). Byte-identical to Spec 015 behaviour.
+  - **Tradeoff:** rejects legitimate Continental hourly low-end ranges where the operator did not supply a currency symbol or ISO code (e.g. `"100 - 150"` interpreted as €100/hr to €150/hr). These are exceedingly rare in production EU job-ad text — most EU ads carry the EUR symbol or PLN/SEK ISO, and would route through the prefix or suffix paths (which are unaffected). Operators needing this shape can either (i) include the symbol (`"€100 - €150"`), (ii) include the ISO (`"100 EUR - 150 EUR"`), or (iii) provide the K-suffix (`"0.1K - 0.15K"` — admittedly awkward; not commonly written).
+
+- **Option B — Stop-word filter near the matched range.** Scan
+  for keywords `year(s) | month(s) | day(s) | km | mi |
+  employees | people | colleagues | days | hours | weeks |
+  experience | internship | tenure | radius | commute` within
+  ±20 chars of the match. Rejected by Spec 015 (Q-036 / Option C)
+  as fragile and i18n-brittle (DE / FR / PL / NL variants
+  required); reasoning still applies.
+
+- **Option C — Tighten the bare regex to require ≥ 4 digits
+  in min OR a thousands-separator presence OR a K-suffix.**
+  Larger structural change; replaces the `(numSrc)` capture
+  with an alternation. Functionally similar to Option A on
+  the rejection side (`"100 - 150"` rejected because 100 < 1000
+  digits; `"1000 - 1500"` admitted because 4 digits). But the
+  regex change alters the captured shape and requires a parallel
+  edit to `parseSalaryNumber`-feeding paths to handle the new
+  alternation correctly. Not warranted given Option A's
+  one-token simplicity.
+
+- **Option D — Status quo + document harder.** Reject Spec 019
+  entirely. Bump `docs/PERFORMANCE_TUNING.md` with louder
+  caveats and pin `"100 - 150"`-style false positives as
+  intended behaviour. Lowest engineering cost, highest
+  downstream cost (false-positive synthetic salary rows leak
+  into Spec 003's deduplication-engine input).
+
+**Default (proceeding):** **Option A — bump threshold from
+`lowerLimit / 12 ≈ 83` to `lowerLimit ≈ 1000`.** Single-token
+source edit, dimensional rejection rule (no string-content
+inspection), preserves all 73 existing test cases (Option A
+expands the Spec 015 / FR-8 reject set by exactly one case
+at the bare path; the prefix/suffix paths and K-suffix path
+stay byte-identical). The Continental-hourly-low-end
+tradeoff is small enough to accept (operators who need it
+can use the symbol/ISO escape hatch).
+
+**Resolution:** _open — agent default = A. Pinned in Spec 019
+/ FR-1; revisit if production telemetry shows ≥ 1% of EU
+plugin calls dropping legitimate Continental hourly low-end
+ranges via the bare path._
+
+---
+
 ## Q-038 — Sampling methodology for the Spec 017 seed-companies refresh (Batch 1)
 
 **Context:** Spec 017 (`seed-companies-refresh-batch-1`)
