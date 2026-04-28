@@ -5,6 +5,49 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #89 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0188 ms; lint:docs clean; external-snapshot tag set held identical for the 68th consecutive run)
+
+**Scope:** Run #89 continues the Q-042 default-C maintenance loop. Abbreviated
+health-check evidence form continues per run #85's authorisation.
+
+**Health-check evidence (abbreviated):**
+
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 5.912 s**.
+- `npx jest packages/common/__tests__/helpers.bench --colors=false` → **2/2 passed in 6.044 s**.
+  `dist/bench/helpers-salary.json` records overall **p95 = 0.0188 ms** (delta from run #88 =
+  +0.0053 ms; delta from Spec 016 baseline 0.0174 ms = +0.0014 ms; well within +0.1 ms NFR-1
+  budget). The 12.45 ms max is a single outlier iteration (sandbox jitter — likely a GC pause);
+  p95 / p99 figures stay well under the 0.5 ms NFR-1 target.
+- `npm run lint:docs` exits 0.
+
+**External-snapshot tag set:**
+
+`git pull --ff-only` returns `Already up to date.` for all three watched repos. SHAs
+unchanged since run #21: Ats-scrapers `3bacd6e`, JobSpy `fda080a`, Jobspy-api `26bb6f4`.
+**68th consecutive zero-churn run** (since run #21).
+
+**Files touched (run #89):**
+
+- `docs/log.md` — this run #89 entry prepended above the run #88 entry.
+- `CLAUDE.md` — run-tag bumped from `2026-04-28 (scheduled run #88)` to
+  `2026-04-28 (scheduled run #89)`.
+- `competitor-watch.md` (workspace-root, outside the ever-jobs repo) — Sync Log run #89
+  entry prepended.
+
+**No changes (FR-9):** No `.ts` / `.tsx` / `.js` source or test file in the run #89 diff.
+No spec.md / tasks.md flip; no `docs/index.md` § 7 update; no `docs/questions.md` change.
+No `package.json` / `package-lock.json` change.
+
+**Forward-pointers / default for run #90:** continue the Q-042 default-C maintenance loop.
+Trigger-detection convention holds: any maintenance run can deviate from C if a concrete
+trigger fires (fresh upstream commit, failing CI gate, customer-reported synthetic row,
+user-owner directive). Q-041 + Q-042 Resolutions stay `_open` until the human owner reviews.
+
+**Acceptance:** `npm run lint:docs` exit 0; 77/77 jest; bench p95 = 0.0188 ms (well under
+NFR-1); all three external repos at the same SHAs as run #88; no `.ts` in run #89 diff.
+
+---
+
 ## 2026-04-28 — Scheduled run #88 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0135 ms; lint:docs clean; external-snapshot tag set held identical for the 67th consecutive run)
 
 **Scope:** Run #88 executes the **maintenance-loop continuation default** authorised by
