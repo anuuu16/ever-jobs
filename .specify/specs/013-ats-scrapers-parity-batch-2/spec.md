@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | T05 landed run #48; T06..T15 pending                 |
+| Status         | T06 landed run #49; T07..T15 pending                 |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-28 (run #48)                                 |
+| Last updated   | 2026-04-28 (run #49)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -332,6 +332,47 @@ records.)
   'detail-all'` with `'detail-25'` the default).
 
 ## 10. Decisions
+
+- **2026-04-28 (run #49 / T06)** — Mercor behavioural unit-test
+  sweep landed alongside the 50-listing × 12-company fixture.
+  Three load-bearing test-shape decisions resolved during
+  authoring:
+
+  (1) **Fixture sized at 50 listings spanning 12 distinct
+  `companyName` values, not the FR-spec minimum (50 / 10).** The
+  extra two companies (Plaid, Ramp) reserve headroom for two
+  follow-on use cases without re-shaping the fixture: a Plaid
+  vs Stripe substring-collision test (both contain "p" but
+  not each other) and a Ramp slug whose post-filter return
+  count (3) lets us check the "cap exceeds slug-slice" branch
+  in T08 / T11. Cheaper to over-stock now than to extend the
+  fixture mid-Phase 4. Stripe is intentionally the largest
+  company-slice (8 rows) so the resultsWanted-cap-mid-slice
+  case has clear "first 3 of 8" semantics rather than ambiguous
+  "3 of 3" edge behaviour.
+
+  (2) **Compensation-null branch surfaced via two listings
+  (Notion 1021, Figma 1030), not one.** Single-listing null-comp
+  coverage was sufficient for the assertion, but two listings
+  let us also validate that the null branch is keyed off
+  `rateMin == null && rateMax == null` (NOT off the
+  payRateFrequency string alone) — with two listings using
+  different `listingDomain` values we can prove the comp-null
+  decision isn't accidentally coupled to any other field. Same
+  defensive shape as Oracle T04 (run #47) which seeded both
+  ExternalUrl-null and EmployerName-null in separate fixture
+  rows.
+
+  (3) **Case-insensitive slug post-filter pinned via a separate
+  test case, not folded into the happy-path filter test.** Per
+  `mercor.service.ts:107-111` the slug is `.toLowerCase()`d
+  before the substring match, so `'STRIPE'` and `'stripe'` and
+  `'Stripe'` all collapse to the same eight-row slice. We
+  document this as a dedicated test case (rather than a
+  parameter-sweep within the happy-path filter test) so a
+  future refactor that accidentally drops the lowercase call
+  fails one specific test with an obvious name, not a
+  parameter-name buried in a test.each() iteration.
 
 - **2026-04-28 (run #48 / T05)** — `MercorService.scrape(input)`
   shipped against the live `/work/listings-explore-page`

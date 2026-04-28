@@ -5,6 +5,158 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #49 (Spec 013 / Phase 3 / T06 — Mercor behavioural test sweep landed)
+
+**Scope:** land Spec 013 / Phase 3 / T06 —
+extend `packages/plugins/source-ats-mercor/__tests__/mercor.service.spec.ts`
+from 5 cases (T05 registration / wire-format / envelope-guard /
+HTTP-failure smoke) → 11 cases (5 carry-over + 6 behavioural per
+the acceptance line: happy-path with full catalogue / slug
+post-filter narrowing / case-insensitive slug / empty `listings[]`
+/ `resultsWanted` cap mid-catalogue / compensation-null branch).
+New on-disk fixture `__tests__/fixtures/mercor-explore.json`
+ships a sanitised 50-listing × 12-company corpus exercising the
+`JobPostDto` mapping branches (hourly / monthly / yearly
+intervals; remote / on-site; null-rate / populated-rate). Same
+shape as Spec 013 / T04 (Oracle behavioural sweep, run #47) and
+Spec 006 / T04 (Avature behavioural sweep, run #31). Estimated
+0.4 day per tasks.md; landed in a single scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #48's sync). Thirty-third consecutive
+zero-churn run in `OTHERS/`.
+
+**No new questions opened this run.** Q-028 / Q-031 stay open
+with their pinned defaults pending T07 / T09 implementation.
+Q-029 (Mercor catalogue-wide input semantics) is now exercised
+by the live behavioural test sweep — its resolution graduates
+from "open / agent default" to "implementation-ratified" in the
+T15 closeout pass. Q-030 was resolved in run #46. Q-026 / Q-027
+retain their **Spec 014 candidate** label.
+
+**Three load-bearing decisions** were resolved during T06's
+test-authoring pass (full prose in Spec 013 § 10):
+
+1. **Fixture sized at 50 listings × 12 companies, not the FR-spec
+   minimum (50 / 10).** The extra two companies (Plaid, Ramp)
+   reserve headroom for two follow-on use cases without
+   re-shaping the fixture: a Plaid-vs-Stripe substring-collision
+   test and a Ramp slug whose post-filter slice (3 rows) lets
+   us check the "cap exceeds slug-slice" branch in T08 / T11.
+   Stripe is intentionally the largest company-slice (8 rows)
+   so the resultsWanted-cap-mid-slice case has clear
+   "first 3 of 8" semantics rather than ambiguous "3 of 3"
+   edge behaviour.
+2. **Compensation-null branch surfaced via two listings (Notion
+   1021, Figma 1030), not one.** With two listings using
+   different `listingDomain` values we can prove the comp-null
+   decision isn't accidentally coupled to any other field —
+   it's keyed strictly off `rateMin == null && rateMax == null`.
+   Same defensive shape as Oracle T04 (run #47) which seeded
+   both ExternalUrl-null and EmployerName-null in separate
+   fixture rows.
+3. **Case-insensitive slug post-filter pinned via a dedicated
+   test case, not folded into the happy-path filter test.** Per
+   `mercor.service.ts:107-111` the slug is `.toLowerCase()`d
+   before the substring match. Documenting case-insensitivity
+   as a separate test case (rather than a parameter sweep
+   within the happy-path filter test) means a future refactor
+   that accidentally drops the lowercase call fails one specific
+   test with an obvious name, not a parameter-name buried in a
+   `test.each()` iteration.
+
+**Changes — test:**
+
+- `packages/plugins/source-ats-mercor/__tests__/fixtures/mercor-explore.json`
+  — NEW. ~570 LOC. 50-listing × 12-company sanitised corpus.
+  Stripe (×8), OpenAI (×5), Anthropic (×4), Notion (×4),
+  Airbnb (×5), Figma (×4), Vercel (×3), Linear (×4), Discord
+  (×4), Coinbase (×3), Plaid (×3), Ramp (×3). Compensation
+  intervals: yearly (default, ~46 listings), monthly (1 —
+  Airbnb London brand-marketing lead), hourly (1 — Coinbase
+  compliance contractor), null (2 — Notion customer-success
+  + Figma DevRel). Locations span SF, NY, Seattle, LA, Dublin,
+  London, Berlin, Singapore, "Remote, US", "Remote, EU",
+  "Remote, EMEA", "Remote, Worldwide".
+- `packages/plugins/source-ats-mercor/__tests__/mercor.service.spec.ts`
+  — bumped from 5 → 11 cases. Mocks `createHttpClient` at the
+  factory boundary (matches the Oracle/Avature pattern). New
+  cases: full-catalogue happy path with first-row mapping
+  assertion (id / title / companyName / atsId / atsType / site
+  / location / isRemote / datePosted / jobUrl / compensation
+  interval+bounds+currency) plus remote-detection / hourly /
+  monthly cross-row sanity checks; slug post-filter returns
+  exactly 8 Stripe rows with no leakage; case-insensitive slug
+  (`'STRIPE'`) returns the same 8 rows; empty `listings[]` returns
+  empty `JobResponseDto` (NOT triggering the envelope-error
+  path — array is present, just empty); `resultsWanted=3` against
+  Stripe slice returns the FIRST 3 Stripe rows
+  (`mercor-1001 / mercor-1002 / mercor-1003`), proving cap
+  applies AFTER post-filter; compensation-null branch surfaces
+  `compensation === null` for two distinct fixture rows.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  T06 row flipped from `[ ]` to `[x]` with "Landed run #49"
+  annotation; "Files (actual)" and "Actual" estimate notes
+  added; Notes-for-the-next-run pinned default updated to
+  **Spec 013 / Phase 4 / T07** (TeslaService HTTP-only board +
+  detail path).
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  Status flipped to "T06 landed run #49; T07..T15 pending";
+  Last-updated bumped to run #49; new entry appended to § 10
+  Decisions covering the three load-bearing test-shape choices
+  above.
+- `docs/index.md` — Spec 013 row status updated; footer bumped
+  to run #49.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #49.
+- `/competitor-watch.md` — run #49 sync line appended at top
+  of Sync Log; AC-5 row prefix updated to "Spec 013 / Phase 3
+  / T06 landed run #49; T07..T15 pending; Phase 3 complete";
+  AC-4 / AC-6 unchanged.
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean.
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` —
+  clean (CI's typecheck path).
+- `npx jest --testPathPatterns 'packages/plugins/source-ats-mercor'`
+  — 11 cases pass, 0 failures.
+
+**Notes & follow-ups:**
+
+- **Default for run #50** = Spec 013 / Phase 4 / T07 — implement
+  `TeslaService.scrape(input)` HTTP-only board + detail path.
+  Real `tesla.service.ts` + `tesla.types.ts` + `tesla.constants.ts`
+  shipping the board GET to
+  `https://www.tesla.com/cua-api/apps/careers/state` + per-job
+  detail GETs to `https://www.tesla.com/cua-api/careers/job/{id}`
+  (budget governed by `descriptionDepth`: `'board'` → 0,
+  `'detail-25'` default → 25, `'detail-all'` → ∞). Akamai
+  sentinel `ERR_TESLA_AKAMAI_CHALLENGE` recorded when the board
+  GET returns 403 / 503 / HTML body. HTTP via
+  `@ever-jobs/common.createHttpClient`; no `playwright` import
+  in this package — the bypass companion is Phase 5 (T09).
+  Estimated 0.7 day.
+- **Out-of-scope reminders for run #50:** Stay strictly inside
+  `packages/plugins/source-tesla/src/`. Do NOT touch the Mercor
+  service / fixtures — those settled in this run. Do NOT add
+  `playwright` to `source-tesla`'s `package.json` — the bypass
+  companion is its own opt-in package.
+- **Active backlog after Spec 013 closes:** Spec 014
+  candidates = Q-026/Q-027 salary residuals OR AC-8
+  (seed-companies refresh) OR AC-9 (Workable diff). Pick at
+  Spec 013 / T15 closeout.
+- Specs **004 / 005 / 006 / 012** stay complete; **001 / 003**
+  retain their statuses unchanged. Spec **013** advances from
+  "Phase 3 / T05 landed" to "Phase 3 complete (T05+T06);
+  T07..T15 pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #48 (Spec 013 / Phase 3 / T05 — Mercor service landed)
 
 **Scope:** land Spec 013 / Phase 3 / T05 —

@@ -119,9 +119,21 @@
       necessary symmetry with Oracle's two-sentinel pattern).
   - **Estimate:** 0.4 day.
 
-- [ ] T06 — Mercor unit tests (≥ 5 cases).
+- [x] T06 — Mercor unit tests (≥ 5 cases).
+  **Landed run #49.**
   - **Files (planned):** `packages/plugins/source-ats-mercor/__tests__/mercor.service.spec.ts`
     (extend), `…/__tests__/fixtures/mercor-explore.json`.
+  - **Files (actual):** matched plan exactly. The spec file grew
+    from 5 cases (T05 registration / wire-format / envelope-guard /
+    HTTP-failure smoke) → 11 cases (5 carry-over + 6 behavioural).
+    Fixture is a sanitised 50-listing corpus spanning 12 distinct
+    `companyName` values (Stripe ×8, OpenAI ×5, Anthropic ×4, Notion
+    ×4, Airbnb ×5, Figma ×4, Vercel ×3, Linear ×4, Discord ×4,
+    Coinbase ×3, Plaid ×3, Ramp ×3) covering hourly / monthly /
+    yearly compensation intervals and remote / on-site location
+    variants. Two listings (Notion 1021, Figma 1030) deliberately
+    have null `rateMin / rateMax / payRateFrequency` to exercise
+    the compensation-null branch.
   - **Acceptance:**
     - Cases: happy path with full catalogue, slug post-filter narrows
       result, empty `listings[]`, HTTP 500, resultsWanted cap
@@ -129,7 +141,8 @@
     - Fixture has ≥ 50 listings spanning ≥ 10 distinct
       `companyName` values so post-filter can be exercised
       meaningfully.
-  - **Estimate:** 0.4 day.
+  - **Estimate:** 0.4 day. **Actual:** ~0.3 day (matches Spec 006 /
+    T04 actual at run #31 and Spec 013 / T04 actual at run #47).
 
 ## Phase 4 — Tesla (default, pure-HTTP)
 
@@ -289,15 +302,26 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #49** = Spec 013 / Phase 3 / T06 — Mercor
-  behavioural unit-test sweep. Extend
-  `__tests__/mercor.service.spec.ts` to ≥ 5 cases (happy path with
-  full catalogue, slug post-filter narrowing, empty `listings[]`,
-  HTTP 500, `resultsWanted` cap mid-catalogue). Add
-  `__tests__/fixtures/mercor-explore.json` with ≥ 50 listings
-  spanning ≥ 10 distinct `companyName` values so post-filter can
-  be exercised meaningfully. Same shape as Oracle T04 (run #47).
-  Estimated 0.5 day.
+- **Default for run #50** = Spec 013 / Phase 4 / T07 —
+  `TeslaService.scrape(input)` HTTP-only board + detail path.
+  Real `tesla.service.ts` + `tesla.types.ts` + `tesla.constants.ts`
+  shipping the board GET to
+  `https://www.tesla.com/cua-api/apps/careers/state` + per-job
+  detail GETs to `https://www.tesla.com/cua-api/careers/job/{id}`
+  (budget governed by `descriptionDepth`: `'board'` → 0, `'detail-25'`
+  default → 25, `'detail-all'` → ∞). Akamai sentinel
+  `ERR_TESLA_AKAMAI_CHALLENGE` recorded when the board GET returns
+  403 / 503 / HTML body. HTTP via `@ever-jobs/common.createHttpClient`;
+  no `playwright` import in this package — the bypass companion is
+  Phase 5 (T09). Estimated 0.7 day.
+- **Default for run #49 (DONE — landed run #49)** = Spec 013 /
+  Phase 3 / T06 — Mercor behavioural unit-test sweep. Spec file
+  grew from 5 → 11 cases; `__tests__/fixtures/mercor-explore.json`
+  shipped (50-listing × 12-company corpus exercising slug
+  post-filter narrowing, resultsWanted-cap-after-filter, hourly /
+  monthly / yearly compensation intervals, remote / on-site
+  locations, and the compensation-null branch via two deliberate
+  null-rate entries).
 - **Default for run #48 (DONE — landed run #48)** = Spec 013 /
   Phase 3 / T05 — `MercorService.scrape(input)` single GET path
   against `https://aws.api.mercor.com/work/listings-explore-page`.
