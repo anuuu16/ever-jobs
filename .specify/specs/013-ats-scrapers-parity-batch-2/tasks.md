@@ -244,16 +244,64 @@
       failed or unexpected error). Browser always closed in `finally`.
   - **Estimate:** 0.8 day.
 
-- [ ] T10 — Tesla-Playwright unit tests (≥ 4 cases).
+- [x] T10 — Tesla-Playwright unit tests (≥ 4 cases).
+  **Landed run #53.**
   - **Files (planned):** `packages/plugins/source-tesla-playwright/__tests__/tesla-playwright.service.spec.ts`
     (extend), with `jest.mock('playwright', …)` for the happy-path
     case + a separate spec for the missing-dep case.
+  - **Files (actual):** matched plan with one load-bearing
+    deviation. The spec file grew from 5 cases (T09 carry-over —
+    DI / Site enum / budget map / launch-args / missing-dep
+    real-failure path) → 10 cases (5 carry-over + 5 behavioural —
+    +1 over the ≥ 4 acceptance line so the
+    `descriptionDepth='board'` budget=0 path AND the resultsWanted
+    cap pre-detail-fetch path both get explicit pins, mirroring
+    source-tesla T08's analogous cases 12 + 13). Local fixtures
+    ship under `__tests__/fixtures/`:
+    `tesla-playwright-board.json` (10 listings × 6 location keys ×
+    5 department keys × 3 region keys; listings 300009 / 300010
+    exercise the missing-`d` / missing-`l` defensive paths,
+    intentionally smaller than source-tesla's 50-row corpus since
+    the in-page-fetch contract is identical and the smaller fixture
+    keeps the OPT-IN companion's footprint lean) and four detail
+    envelopes (`tesla-playwright-job-300001.json` full 4-field /
+    `-300002.json` partial 2-field / `-300003.json` single-1 field /
+    `-missing.json` missing-all-four → null description). The IDs
+    use 300xxx (not source-tesla's 200xxx) so cross-fixture grep
+    stays unambiguous when both packages are inspected together.
+    **Deviation from planned approach:** instead of
+    `jest.mock('playwright', …, { virtual: true })`, the tests
+    inject the stubbed module via
+    `jest.spyOn(service as any, 'loadPlaywright').mockResolvedValue(...)`.
+    Reason: the production service uses a `Function('s','return
+    import(s)')(specifier)` indirection (per T09) to defeat
+    ts-jest's compile-time module resolution — that same
+    indirection ALSO defeats Jest's hoisted `jest.mock` system,
+    which intercepts at the require/import call site (Function-
+    wrapped imports run in a fresh global scope outside Jest's
+    instrumented loader). Spying on the lazy-loader method itself
+    (one boundary closer to where the module is consumed) gives
+    full control without fighting the indirection. `sleep()` is
+    similarly spy-stubbed to skip the 5 s settle window.
   - **Acceptance:**
-    - Cases: happy path with stubbed `playwright` module,
+    - Cases: happy path with stubbed `playwright` module
+      (5-job mapping pin + first-3-have-descriptions assertion +
+      browser.close finally-block contract),
       `playwright` not installed sentinel
-      (`require('playwright')` throws), Akamai bypass succeeds,
-      page navigation timeout returns empty.
-  - **Estimate:** 0.5 day.
+      (`require('playwright')` throws — exercised genuinely
+      against the workspace's actual dependency graph in T09's
+      carry-over case 5), Akamai bypass succeeds (anti-automation
+      flag + networkidle + 60 s timeout wire-format pins),
+      page navigation timeout returns empty (page.goto rejects
+      with TimeoutError-shape error → empty JobResponseDto + no
+      detail fetches + browser still closed). PLUS bonus:
+      `descriptionDepth='board'` skips detail loop entirely;
+      resultsWanted cap pre-detail-fetch (1 board + N details =
+      N+1 page.evaluate calls).
+  - **Estimate:** 0.5 day. **Actual:** ~0.3 day (matches Spec 006
+    / T04 actual at run #31, Spec 013 / T04 actual at run #47,
+    Spec 013 / T06 actual at run #49, Spec 013 / T08 actual at
+    run #51).
 
 ## Phase 6 — Integration & docs
 
@@ -345,18 +393,35 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #53** = Spec 013 / Phase 5 / T10 — Tesla-
-  Playwright behavioural unit-test sweep. Extend
-  `__tests__/tesla-playwright.service.spec.ts` to ≥ 4 cases
-  (happy path with stubbed `playwright` module via
-  `jest.mock('playwright', () => ({...}))` factory; `playwright`
-  not installed sentinel `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE`
-  carry-over from T09 — already exercised; Akamai bypass
-  succeeds — board+detail fetches return populated JSON via
-  the stubbed `page.evaluate()`; page navigation timeout
-  returns empty via stubbed `page.goto()` rejecting with
-  `TimeoutError`). Mirror the Oracle T04 / Mercor T06 / Tesla
-  T08 fixture-mock pattern. Estimated 0.5 day.
+- **Default for run #54** = Spec 013 / Phase 6 / T11 — three-
+  plugin integration spec under
+  `apps/api/__tests__/integration/source-ats-batch-2.integration.spec.ts`.
+  Wires Oracle + Mercor + Tesla through the live `JobsService`
+  fan-out via stubbed-`createHttpClient` fixtures; asserts each
+  plugin contributes ≥ 1 row and that `JobsAggregator` dedup
+  reports zero collisions on the synthetic fixture (Spec 003 /
+  FR-1). Tesla-Playwright is excluded from this suite (default
+  `ALL_SOURCE_MODULES` does not include it). Mirror the Spec 006
+  / T11 (run #38) integration-test pattern. Estimated 0.4 day.
+- **Default for run #53 (DONE — landed run #53)** = Spec 013 /
+  Phase 5 / T10 — Tesla-Playwright behavioural unit-test sweep.
+  Spec file grew from 5 → 10 cases (5 carry-over + 5
+  behavioural — +1 over the ≥ 4 acceptance line for explicit
+  `board`-budget + resultsWanted-cap pins). Local fixtures shipped
+  under `__tests__/fixtures/`: `tesla-playwright-board.json`
+  (10 listings × 6 locations × 5 departments × 3 regions; ID range
+  300xxx; listings 300009 / 300010 exercise missing-`d` / `l`
+  branches), four detail envelopes
+  (`tesla-playwright-job-300001.json` full 4-field /
+  `-300002.json` partial 2-field / `-300003.json` single-1 field /
+  `-missing.json` missing-all-four). Stubbing approach deviated
+  from the planned `jest.mock('playwright', …, { virtual: true })`
+  factory: the `Function('s','return import(s)')(specifier)`
+  indirection added in T09 also defeats Jest's hoisted-mock
+  system, so tests `jest.spyOn(service as any, 'loadPlaywright')`
+  the lazy loader instead — gives full control over the playwright
+  surface without fighting the indirection. `sleep()` similarly
+  spy-stubbed to skip the 5 s settle window.
 - **Default for run #52 (DONE — landed run #52)** = Spec 013 /
   Phase 5 / T09 — `TeslaPlaywrightService.scrape(input)`
   lazy-Playwright path in the OPTIONAL companion package.

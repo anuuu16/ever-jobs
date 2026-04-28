@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | T09 landed run #52; T10..T15 pending                 |
+| Status         | T10 landed run #53; T11..T15 pending                 |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-28 (run #52)                                 |
+| Last updated   | 2026-04-28 (run #53)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -332,6 +332,62 @@ records.)
   'detail-all'` with `'detail-25'` the default).
 
 ## 10. Decisions
+
+- **2026-04-28 (run #53 / T10)** — Tesla-Playwright behavioural
+  unit-test sweep landed alongside the 10-listing board fixture +
+  four detail-envelope fixtures (full / partial / single /
+  missing-all). Three load-bearing test-shape decisions resolved
+  during authoring:
+
+  (1) **Stubbing approach: spy on the lazy-loader, not
+  `jest.mock('playwright', …, { virtual: true })`.** T09 added
+  the `Function('s','return import(s)')(specifier)` indirection to
+  defeat ts-jest's compile-time module resolution. That same
+  indirection ALSO defeats Jest's hoisted-mock system —
+  `jest.mock(...)` rewrites import sites at the
+  module-loader level, but Function-wrapped imports execute in a
+  fresh global scope outside Jest's instrumented loader, so the
+  factory is never invoked. Solution: spy on the private
+  `loadPlaywright()` method one boundary closer to where the
+  module is consumed (`jest.spyOn(service as any,
+  'loadPlaywright').mockResolvedValue(stubModule)`). Gives full
+  control over the playwright surface area without fighting the
+  indirection. `sleep()` similarly spy-stubbed so the 5 s settle
+  window doesn't slow the test suite down (10 cases × 5 s would
+  add 50 s of dead-air to the local + CI run).
+
+  (2) **Fixture sized at 10 listings (vs source-tesla T08's 50).**
+  The OPTIONAL companion's in-page-fetch contract is identical
+  to the default plugin's pure-HTTP path — the per-listing
+  mapping, lookup-key resolution, remote-detection heuristic,
+  and missing-`d`/`l` defensive paths are all identical-by-
+  construction (the `toJobPost()` shape is duplicated across the
+  two packages per AGENTS.md §5). A smaller corpus is sufficient
+  to exercise every branch the optional companion adds (chromium
+  launch args, page.goto wire-format, in-page evaluate URL
+  shape, browser.close finally-block). Keeping the fixture
+  smaller also keeps the OPT-IN companion's footprint lean —
+  operators who never enable Playwright pay for the smallest
+  possible test corpus on every CI run. ID range (300xxx) is
+  intentionally distinct from source-tesla's 200xxx so
+  cross-fixture grep stays unambiguous; 300009 / 300010
+  reserve explicit slots for the missing-`d` / missing-`l`
+  defensive paths.
+
+  (3) **+1 over the ≥ 4 acceptance line via `descriptionDepth=
+  'board'` AND resultsWanted-cap pins.** The acceptance line
+  covers happy-path / missing-dep / Akamai-bypass-succeeds /
+  navigation-timeout. We added two bonus cases mirroring
+  source-tesla T08's analogous cases 12 (resultsWanted cap
+  pre-detail-fetch — exactly N+1 evaluate calls) + 13
+  (`descriptionDepth='board'` budget=0 path — exactly 1
+  evaluate call). Both pin structural invariants that share
+  surface area with the happy-path test but exercise distinct
+  control-flow branches in `scrape()` (the
+  `Math.min(listings.length, ...detailBudget)` calculation +
+  the budget=0 short-circuit). Cheaper to land now alongside
+  the rest of the sweep than to revisit when Spec 016 detail-
+  page enrichment touches the same code paths.
 
 - **2026-04-28 (run #52 / T09)** — `TeslaPlaywrightService.scrape(input)`
   shipped in the OPTIONAL companion package against the live
