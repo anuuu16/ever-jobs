@@ -5,6 +5,115 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #82 (maintenance sweep; no spec landed; helpers regression 77/77 green; bench p95 = 0.0138 ms; lint:docs clean; external-snapshot tag set held identical for the 61st consecutive run)
+
+**Scope:** Run #82 executes the maintenance-sweep default forward-pointed by run #81's
+[`docs/log.md`](./log.md) closeout entry: rerun the helpers regression + bench, refresh
+`competitor-watch.md` § A from a fresh `git log` of the three watched repos, and pin a new concrete
+spec only if a new external commit lands or a residual surfaces. Run #82 is a **no-spec** run — the
+agent-driven competitor-watch backlog has been exhausted since AC-9 closed at run #77, Spec 019
+(`salary-parser-residuals-batch-2`) closed its full lifecycle at run #81, and no fresh external
+snapshot has materialised in the three watched repos through run #82.
+
+**Health-check evidence (FR-1 / NFR-1 / NFR-7 of the maintenance default):**
+
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 5.884 s**.
+  The case count is unchanged from run #80 (77 cases pinned by Spec 019 / T02). No regression
+  surfaced in the bare-path threshold logic landed at Spec 019 / T01 (run #79).
+- `npx jest packages/common/__tests__/helpers.bench --colors=false` → **2/2 passed in 5.993 s**.
+  `dist/bench/helpers-salary.json` records overall **p95 = 0.0138 ms** (delta from run #80 = -0.0110 ms;
+  delta from Spec 016 baseline 0.0174 ms = -0.0036 ms). The drift is well within the +0.1 ms NFR-1
+  budget (negative drift is favourable; the 0.0138 ms reading is the lowest p95 observed since
+  Spec 012 / T04 sampled the bench at 0.5 ms NFR-1 target). The fixture is unchanged; the bench
+  acceptance gate restored by Spec 016 / T01 (run #69) holds. Per-currency p95: USD 0.0109,
+  EUR 0.0133, GBP not reported in this run's tail (sandbox tail truncated; full JSON intact).
+- `npm run lint:docs` exits 0 — all doc-link / fence / heading invariants pass. No new doc
+  surfaces edited at run #82 outside the four ledger files.
+
+**External-snapshot tag set (FR-2 of the maintenance default):**
+
+`git pull --ff-only` on all three watched repos in `OTHERS/` returns `Already up to date.` SHAs
+verified post-pull and unchanged since run #21:
+
+| Repo            | Tip SHA       | Last commit subject                                                  |
+| --------------- | ------------- | -------------------------------------------------------------------- |
+| Ats-scrapers    | `3bacd6e`     | `fast-forward` (out-of-repo upstream-watch ledger has full context). |
+| JobSpy          | `fda080a`     | `fix(linkedin): add fallback for date parsing on new job listings`.  |
+| Jobspy-api      | `26bb6f4`     | `Update README.md`.                                                  |
+
+**61st consecutive zero-churn run** in `OTHERS/` (since run #21). No `AC-NN` row added to § C of
+the parallel out-of-repo upstream-watch ledger; this docs/log.md run #82 entry plus the
+parallel Sync Log entry are the sole agent-driven records at run #82.
+
+**No-spec rationale (FR-3 of the maintenance default):** the spec backlog at the start of run
+#82 is empty:
+
+- AC-1..AC-9 all closed by runs #71..#77 (last close: AC-9 / Spec 018 at run #77).
+- Spec 019 (`salary-parser-residuals-batch-2`) closed at run #81 (T01..T03 at runs #79..#81).
+- Q-026 / Q-027 carry-over candidates for a future `salary-parser-residuals-batch-3` are noted
+  in run #80's forward-pointer but neither has surfaced as load-bearing in the three runs since
+  Spec 019 closed; promoting either to a Spec 020 scaffold without a fresh observable
+  motivation would violate Constitution Article 2 (no coding without a load-bearing spec).
+- Spec 015 / D-02's TS5.x U+00D7 rejection investigation is documented as a long-tail forward-
+  pointer in [`docs/PERFORMANCE_TUNING.md`](./PERFORMANCE_TUNING.md); it remains too speculative
+  for a Spec 020 scope at this snapshot.
+- No fresh external commit landed at runs #79..#82, so no upstream-driven AC opens.
+
+**Files touched (run #82):**
+
+- `competitor-watch.md` (workspace-root, **out of repo** — see Spec 002 / FR-4 routing rule;
+  also referenced from this docs/log.md entry as "the parallel out-of-repo upstream-watch
+  ledger") — Sync Log entry prepended at the top of the existing list documenting run #82's
+  zero-churn pull + maintenance-sweep evidence.
+- `docs/log.md` — this run #82 entry prepended above the run #81 entry.
+- `CLAUDE.md` — run-tag bumped from `2026-04-28 (scheduled run #81)` to
+  `2026-04-28 (scheduled run #82)`.
+
+**No changes (FR-9 of the maintenance default — explicit non-edits):**
+
+- No `.ts` / `.tsx` / `.js` source or test file in the run #82 diff.
+- No `.specify/specs/*/spec.md` or `tasks.md` flips at run #82 — Spec 019 closed at run #81 and
+  no new spec scaffolded.
+- No `docs/index.md` § 7 row update — last edit at run #81 (Spec 019 row Status flipped to
+  `complete`); the index reflects the post-run-#81 state and remains accurate at run #82.
+- No `docs/questions.md` change — the open questions list (Q-001..Q-041) is unchanged. Q-041
+  Resolution stays `_open — agent default = A` per run #81's closeout note (resolution flip is
+  human-driven, not agent-driven).
+- No `package.json` / `package-lock.json` change — no dep bumps motivated by this maintenance
+  pass; the run-#69-pinned dep matrix holds.
+
+**Forward-pointers / default for run #83:**
+
+- **Default for run #83 = continue the maintenance loop.** Pull the three external repos; if any
+  ship new commits, score them against `§ C` of the upstream-watch ledger and either open a new
+  `AC-NN` row or fold into an existing one. If the snapshot is still unchanged, re-run helpers
+  regression + bench and prepend a new docs/log.md run #83 entry with bench p95 + 77/77 jest
+  evidence. If a third consecutive maintenance run lands at run #84 with no spec, consider
+  promoting Q-026 / Q-027 to a `salary-parser-residuals-batch-3` Spec 020 scaffold — but only
+  after one of those carry-over candidates surfaces with a concrete observable trigger
+  (failing fixture, customer-reported synthetic row, telemetry signal).
+- The 3-run-without-a-spec watermark for run #84 is the **escalation gate** — at that point,
+  the maintenance default's risk is "agent goes silent". The mitigation is to either (a) open
+  a Spec 020 scaffold from one of the deferred candidates above, or (b) record an explicit
+  "maintenance-only" rationale in `docs/questions.md` as Q-042 with options A (open Spec 020
+  from Q-026) / B (open Spec 020 from Q-027) / C (continue maintenance loop indefinitely
+  pending external churn) and a defensible default.
+- Q-041 Resolution stays `_open — agent default = A` until the human owner reviews; run #82
+  does not flip it.
+
+**Acceptance:**
+
+- `npm run lint:docs` exit 0 (verified pre-commit).
+- 77/77 jest cases for `packages/common/__tests__/helpers.spec.ts` (unchanged from run #80).
+- 2/2 jest cases for `packages/common/__tests__/helpers.bench.ts`; bench p95 = 0.0138 ms (well
+  under the 0.5 ms NFR-1 target and the 2.0 ms CI ceiling).
+- All three external repos at the same SHAs as run #81: Ats-scrapers `3bacd6e`, JobSpy
+  `fda080a`, Jobspy-api `26bb6f4`.
+- No `.ts` file in the run #82 diff (FR-9 / Non-Goal honoured).
+- No spec.md / tasks.md flip at run #82 (no Spec 020 scaffolded; Spec 019 stays `complete`).
+
+---
+
 ## 2026-04-28 — Scheduled run #81 (Spec 019 / Phase 3 — T03 closeout; `docs/PERFORMANCE_TUNING.md` Spec 015 / FR-8 paragraph rewritten to reflect closure; spec status flips to `All phases done (T03 run #81); spec complete`; 3-run implementation budget held exactly)
 
 **Scope:** Run #81 executes the Spec 019 / Phase 3 / T03 closeout task — a docs-only doc-edit pass on
