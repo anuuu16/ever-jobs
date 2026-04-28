@@ -5,6 +5,135 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #76 (Spec 018 / Phase 0 — scaffold pass for `workable-upstream-parity` against upstream commit `312c7b6`; AC-9 stays as-is until T01 / run #77)
+
+**Scope:** AC-8 closed at run #75 with Spec 017 complete. The
+next pending agent-owned `competitor-watch.md` § C row is
+**AC-9** ("Diff Workable scraper logic (commit `312c7b6`) and
+absorb relevant behaviour into our plugin"). Run #76 opens
+**Spec 018 — `workable-upstream-parity`** as the absorption
+vehicle and completes the Phase 0 scaffold: three new files in
+`.specify/specs/018-workable-upstream-parity/` (spec.md /
+plan.md / tasks.md) + four ledger surfaces threaded
+(`docs/index.md` § 7 row, `docs/log.md` this entry,
+`competitor-watch.md` Sync Log run #76 entry, `CLAUDE.md`
+run-tag bump). The AC-9 row in `competitor-watch.md` § C
+**stays as-is** at this scaffold pass — the flip to `agent ✅`
+is owned by Spec 018 / Phase 1 / T01 at run #77.
+
+**Diff anchor under audit (recorded verbatim in
+`018/spec.md` § 7.1):** upstream commit `312c7b6` ("Improve
+workable scraper", 2025-12-24) on
+`OTHERS/Ats-scrapers/workable/main.py` — +6 / −2 lines, 1 hunk.
+Three new conditional `print()` calls inside the
+`# Log decision to scrape` block of `scrape_workable_jobs`:
+
+1. `if force:` → `Forcing scrape for '<slug>' (force=True).`
+2. `elif not company_data.get("last_scraped"):` → distinguishes
+   "field absent" from prior catch-all else.
+3. final `else:` → surfaces previously-silent "field present
+   but ISO-parse-failed" path.
+
+The diff is a **diagnostic-logging refinement only** — no new
+return values, no new function parameters, no new HTTP
+behaviour, no new retry semantics, no new file-cache layout.
+
+**Architectural-mismatch verdict (drafted in `018/spec.md` § 7.2,
+formalised as Decision D-01 at T01):** the upstream `print()`
+branches refine the `should_scrape_company` checkpoint
+subsystem, which has **no analog in `WorkableService`**. Our
+`IScraper` contract from `@ever-jobs/models` is stateless by
+design; the upstream's checkpoint concerns map to:
+
+| Upstream concern                                | Ever Jobs layer                                                  |
+| ----------------------------------------------- | ---------------------------------------------------------------- |
+| `should_scrape_company` 12-h cooldown           | BullMQ queue scheduling (cron / aggregator level).               |
+| `last_scraped` JSON cache (`companies/<slug>.json`) | `persistence-postgres` plugin (Spec 004 boundary).            |
+| `force=True` re-scrape flag                     | API caller invokes `.scrape()` again; no plugin-side cache.       |
+| Diagnostic `print()` of skip / scrape reason    | NestJS `Logger` from `@nestjs/common` — already wired.            |
+| Bulk-loop iteration over CSV slug → name mapping | `JobsAggregator` fan-out + `Promise.allSettled`.                  |
+| Per-iteration `random.uniform()` jitter         | `p-limit` bounded concurrency (orchestration layer).              |
+
+Verdict: **documented no-op absorption** at the
+`source-ats-workable` plugin level. Absorbing the upstream
+`print()` branches would first require introducing the entire
+checkpoint subsystem at the plugin layer — work that explicitly
+lives in the persistence layer per the Spec 004 / Spec 005
+architectural boundaries.
+
+**Coverage matrix recorded (8 upstream behaviours in `018/spec.md`
+§ 7.3):**
+
+- `mirrored` (2): widget API URL `https://apply.workable.com/api/v1/widget/accounts/<slug>`
+  (`workable.constants.ts:2` ↔ `workable/main.py:113`); 404 →
+  graceful empty `JobResponseDto([])`.
+- `mirrored-elsewhere` (2): retry policy (`createHttpClient`
+  with `retryDelay` / `retryBackoff` / `retryMaxDelay` knobs);
+  bulk-loop scheduling (`JobsAggregator` + `p-limit`).
+- `out-of-scope-for-plugin` (3): slug-from-URL extraction;
+  `last_scraped` JSON cache; `--force` CLI flag.
+- `gap-acknowledged` (1): `aiohttp.TCPConnector(ssl=False)` —
+  intentionally not absorbed; Ever Jobs prefers TLS verification
+  by default. Security upgrade in Ever Jobs's favour, **not**
+  promoted to a follow-on spec candidate.
+
+**Spec 018 lean cadence (per `018/plan.md` § 3 phasing
+rationale):** 2 phases / 1 task / 2 runs. The two-run shape
+mirrors the **Spec 017 lifecycle** (run #70 scaffolded; runs
+#71..#75 landed T01..T05). A single-run cadence (Spec 016
+pattern) was rejected because:
+
+- The hourly schedule risks breaking the convention that
+  AC-NN flips happen at named T01 closeout runs.
+- Two runs give a clean interleaving point if a hot upstream
+  commit appears between runs.
+- Spec 016's single-run cadence was justified by a literal
+  one-byte source change; Spec 018's docs-only deltas across
+  multiple ledger surfaces fit better as two moderate-edit runs.
+
+**Files touched (run #76):**
+
+- `.specify/specs/018-workable-upstream-parity/spec.md` (new — ~270 lines).
+- `.specify/specs/018-workable-upstream-parity/plan.md` (new — ~150 lines).
+- `.specify/specs/018-workable-upstream-parity/tasks.md` (new).
+- `docs/index.md` — Spec 018 row appended to § 7 table; footer
+  bumped to `2026-04-28 (run #76)`.
+- `docs/log.md` — this entry prepended at top.
+- `competitor-watch.md` — Sync Log run #76 entry prepended.
+- `CLAUDE.md` — run-tag bumped → `2026-04-28 (scheduled run #76)`.
+
+**Acceptance:**
+
+- `npm run lint:docs` exit 0.
+- `OTHERS/` zero-churn streak holds: Ats-scrapers @ `3bacd6e`,
+  JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` — all 0 new
+  commits since run #75. **55th consecutive zero-churn run.**
+- All four ledger surfaces reference Spec 018 by name + run #76.
+- The Spec 018 row in `docs/index.md` § 7 reads `draft
+  (scaffolded run #76); Phase 0 only — Phase 1 (T01) pending`.
+- No `.ts` file modified across this run (FR-6 / NFR-3 of Spec 018).
+- AC-9 row in `competitor-watch.md` § C **unchanged** at this
+  scaffold pass (T01 owns the flip at run #77).
+- No new `Q-NNN` opened in `docs/questions.md`. The 312c7b6
+  diff is unambiguous; the verdict is well-supported by Spec
+  004 / Spec 005 boundaries. If T01 implementation surfaces
+  ambiguity, Q-041 opens then.
+
+**Default for run #77:** **Spec 018 / Phase 1 / T01** — verdict
+closeout. Deliverables: flip `competitor-watch.md` § C row
+AC-9 from `agent` to `agent ✅` with run number `(run #77)`;
+append Decision D-01 (verdict text from § 7.2 formalised) plus
+any D-02..D-NN discovery notes from re-reading
+`workable.service.ts` against the Coverage Matrix; flip Spec
+018 spec.md Status to `All phases done (T01 run #77); spec
+complete`; flip tasks.md T01 row to `[x]`; prepend run #77
+entries to `docs/log.md` + `competitor-watch.md` Sync Log;
+bump `CLAUDE.md` run-tag → #77. Sanity-sweep
+`npx jest --testPathPatterns 'packages/plugins/source-ats-workable'`
+to confirm test count unchanged. Estimated 0.05 day.
+
+---
+
 ## 2026-04-28 — Scheduled run #75 (Spec 017 / Phase 5 / T05 — closeout; AC-8 flipped to `agent ✅`; SOURCE_ADOPTION_BACKLOG `(seed lists)` shipped; spec complete)
 
 **Scope:** land Spec 017 / Phase 5 / T05 — closeout pass
