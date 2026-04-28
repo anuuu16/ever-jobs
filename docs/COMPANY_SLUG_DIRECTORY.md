@@ -228,6 +228,31 @@ Workable slugs are the company subdomain at `apply.workable.com/{slug}`.
 | ------- | ---- | -------- |
 | Sephora | `sephora` | Retail / Beauty |
 | Forbes | `forbes` | Media |
+| Our Home | `-our-home` | — |
+| Alliedteam | `alliedteam` | — |
+| Auprosports | `auprosports` | — |
+| Blitzoo Games | `blitzoo-games` | — |
+| Cdr Companies | `cdr-companies` | — |
+| Constructor 1 | `constructor-1` | — |
+| Deep Science Ventures | `deep-science-ventures` | — |
+| Elevated Hiring | `elevated-hiring` | — |
+| Fergus | `fergus` | — |
+| Gamigo | `gamigo` | — |
+| Healthsnap | `healthsnap` | — |
+| Infini Capital Management Limited | `infini-capital-management-limited` | — |
+| Karohealthcare | `karohealthcare` | — |
+| Lingoace | `lingoace` | — |
+| Mention Me Ltd | `mention-me-ltd` | — |
+| Nawy Real Estate | `nawy-real-estate` | — |
+| Optibpo | `optibpo` | — |
+| Pinnacle Middle East | `pinnacle-middle-east` | — |
+| Radley Yeldar | `radley-yeldar` | — |
+| Samsung Sds America | `samsung-sds-america` | — |
+| Snowed In Studios 3 | `snowed-in-studios-3` | — |
+| Switchboard Hiring 1 | `switchboard-hiring-1` | — |
+| Thetsuigroup | `thetsuigroup` | — |
+| University Of Mount Saint Vincent | `university-of-mount-saint-vincent` | — |
+| Wearenoble | `wearenoble` | — |
 
 ---
 

@@ -5,6 +5,92 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #73 (Spec 017 / Phase 3 / T03 — 25 deterministic-indexed Workable slugs appended; 1 leading-dash slug surfaced)
+
+**Scope:** land Spec 017 / Phase 3 / T03 — append 25
+deterministic-indexed Workable slug rows to
+`docs/COMPANY_SLUG_DIRECTORY.md` per § 7.1 sampling
+methodology. Verbatim selection recorded as Decision D-07
+in spec.md § 10 (FR-11).
+
+**Selection mechanics:** L = **4 026** (post-duplicate-and-
+numeric filter against 4 028 raw rows); step =
+`⌊4026/25⌋ = 161`; indices `[0, 161, 322, …, 3864]`.
+
+**25 selected slugs** from
+`OTHERS/Ats-scrapers/workable/workable_companies.csv`:
+`-our-home`, `alliedteam`, `auprosports`, `blitzoo-games`,
+`cdr-companies`, `constructor-1`, `deep-science-ventures`,
+`elevated-hiring`, `fergus`, `gamigo`, `healthsnap`,
+`infini-capital-management-limited`, `karohealthcare`,
+`lingoace`, `mention-me-ltd`, `nawy-real-estate`,
+`optibpo`, `pinnacle-middle-east`, `radley-yeldar`,
+`samsung-sds-america`, `snowed-in-studios-3`,
+`switchboard-hiring-1`, `thetsuigroup`,
+`university-of-mount-saint-vincent`, `wearenoble`.
+
+**Workable quirk surfaced as anticipated:** Index 0 picked
+the documented edge case ` Our Home,https://apply.workable.com/-our-home`
+— the leading space in `name` is trimmed for `Company`
+(`Our Home`); the literal leading `-` in the URL slug is
+preserved verbatim in the `Slug` column (`-our-home`) per
+§ 7.2 (real Workable subdomain shape, not a markup
+artefact). The deterministic-indexed sample landed exactly
+the row the run #70 / D-04 watch-out anticipated.
+
+**Workable table row count after T03:** 27 (2 preserved + 25
+appended; verified via `awk '/^## Workable$/,/^##
+BambooHR$/' docs/COMPANY_SLUG_DIRECTORY.md | grep -c '^|'`
+reporting 29 = 27 data rows + 2 header rows).
+
+**No new questions opened this run.** Q-038 / Q-039 / Q-040
+stay open; resolutions flip at T05.
+
+**No competitor-watch upstream churn** — fifty-second
+consecutive zero-churn run in `OTHERS/`.
+
+**Changes — docs / specs:**
+
+- `docs/COMPANY_SLUG_DIRECTORY.md` — 25 new rows appended to
+  the Workable section. Existing 2 rows byte-identical
+  (FR-5). New rows use em-dash `—` for `Industry` (D-03).
+- `.specify/specs/017-seed-companies-refresh-batch-1/spec.md`
+  — Status → "T01..T03 done (runs #71/#72/#73); Phase 4..5
+  pending"; § 10 Decisions appended with D-07 (verbatim
+  25-slug table + leading-dash flagging).
+- `.specify/specs/017-seed-companies-refresh-batch-1/tasks.md`
+  — T03 flipped `[x]`; Notes-for-the-next-run pin updated
+  to **Spec 017 / Phase 4 / T04** (SmartRecruiters).
+- `docs/index.md` — Spec 017 row updated; footer bumped.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #73.
+- `/competitor-watch.md` — run #73 sync line at top.
+
+**Verification:** `lint:docs` pending; Workable table row
+count = 27 confirmed; § 7.1 reproducibility holds; test
+suite delta = 0 (NFR-2). Per the run #71/#72 CI failure
+post-mortem (linter's `0cae51a` fix), this run avoids
+broken markdown links to gitignored / out-of-repo paths —
+the D-07 entry uses backtick-only references for any
+extra-repo file.
+
+**Notes & follow-ups:**
+
+- **Default for run #74** = Spec 017 / Phase 4 / T04 —
+  SmartRecruiters. Sample from
+  `OTHERS/Ats-scrapers/smartrecruiters/smartrecruiters_companies.csv`
+  (812 rows). Case-preservation rule (§ 7.2) — slug column
+  preserves upstream URL case.
+- **Out-of-scope reminders for run #74:** Stay strictly
+  inside the SmartRecruiters section + Spec 017 spec-kit
+  triple. Do NOT touch any `.ts` file. Avoid markdown
+  links to gitignored or out-of-repo paths.
+- Specs **004 / 005 / 006 / 012 / 013 / 014 / 015 / 016**
+  stay complete. Spec **017** advances from "T01..T02
+  done" to "T01..T03 done; T04..T05 pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #72 (Spec 017 / Phase 2 / T02 — 25 deterministic-indexed Lever slugs appended)
 
 **Scope:** land Spec 017 / Phase 2 / T02 — append 25

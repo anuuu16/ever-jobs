@@ -111,11 +111,12 @@
 
 ## Phase 3 — Workable refresh (T03, run #73 — pending)
 
-- [ ] T03 — Append 25 deterministic-indexed Workable slug
+- [x] T03 — Append 25 deterministic-indexed Workable slug
   rows to the Workable table (FR-3 / FR-9). Sample from
   `OTHERS/Ats-scrapers/workable/workable_companies.csv`.
   Record selection as Decision D-07. Verify row count = 2 +
   25 = **27**.
+  **Landed run #73.**
   - **Files (planned):** mirror Phase 1 with Workable as the
     vendor.
   - **Acceptance:**
@@ -196,19 +197,31 @@
 
 ## Notes for the next run (after T00 lands)
 
-- **Default for run #73** = Spec 017 / Phase 3 / T03 — append
-  25 deterministic-indexed Workable slug rows. Sample from
-  `OTHERS/Ats-scrapers/workable/workable_companies.csv` (4 028
-  post-header rows). Apply § 7.1's deterministic-indexed
-  sampling rule + the duplicate-and-numeric filter (D-02).
-  Land ~25 row appends with § 10 D-07 recording the selection
-  verbatim. **Workable-specific watch-out:** ~2 % of the CSV's
-  `name` field starts with a single space (e.g. ` Our Home`)
-  with corresponding URL `https://apply.workable.com/-our-home`
-  (literal leading `-`). Trim the `name` for the directory's
-  `Company` column; preserve the leading `-` in the `Slug`
-  column (it's a real Workable subdomain shape per § 7.2).
-  Verify Workable table row count = 2 + 25 = 27.
+- **Default for run #74** = Spec 017 / Phase 4 / T04 — append
+  25 deterministic-indexed SmartRecruiters slug rows. Sample
+  from
+  `OTHERS/Ats-scrapers/smartrecruiters/smartrecruiters_companies.csv`
+  (812 post-header rows). Apply § 7.1's sampling rule + the
+  duplicate-and-numeric filter (D-02). Land ~25 row appends
+  with § 10 D-08 recording the selection verbatim.
+  **SmartRecruiters-specific watch-out:** slug case is
+  preserved from the upstream URL (existing rows `Visa`,
+  `BoschGroup`, `Equinox`, `Skechers` are all mixed/PascalCase).
+  The deterministic-indexed sample may pick rows with both
+  all-lowercase URLs (e.g. `10minuteschool`) AND mixed-case
+  URLs (e.g. `1Huddle`). Both are valid; preserve case from
+  the URL exactly. Verify SmartRecruiters table row count =
+  4 + 25 = 29.
+
+- **Default for run #73 (DONE — landed run #73)** = Spec 017 /
+  Phase 3 / T03 — appended 25 deterministic-indexed Workable
+  slug rows. § 7.1 methodology produced L = 4 026 / step =
+  161; selection recorded verbatim as D-07 in spec.md § 10.
+  **One leading-dash slug surfaced** (`Our Home` →
+  `-our-home`) at index 0 — exactly the Workable subdomain
+  shape § 7.2 / D-07 anticipated; preserved literally in the
+  Slug column. Workable table row count 27 = 2 preserved + 25
+  appended.
 
 - **Default for run #72 (DONE — landed run #72)** = Spec 017 /
   Phase 2 / T02 — appended 25 deterministic-indexed Lever

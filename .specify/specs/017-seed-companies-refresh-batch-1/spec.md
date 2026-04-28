@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 017                                                                         |
 | Slug           | seed-companies-refresh-batch-1                                              |
-| Status         | T01..T02 done (runs #71/#72); Phase 3..5 (T03..T05) pending                 |
+| Status         | T01..T03 done (runs #71/#72/#73); Phase 4..5 (T04..T05) pending             |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #70)                                                        |
-| Last updated   | 2026-04-28 (run #72)                                                        |
+| Last updated   | 2026-04-28 (run #73)                                                        |
 | Supersedes     | (none — first refresh of the four big-volume vendor slug tables in `docs/COMPANY_SLUG_DIRECTORY.md`) |
 | Related specs  | 006 (ATS Batch 1 — Avature / Gem / Join.com slug seeding precedent), 013 (ATS Batch 2 — Oracle / Mercor / Tesla slug seeding precedent), 016 (immediately-prior single-byte warm-up; Spec 016 closeout's "Notes for the next run" pinned **AC-8** as the run #70 default) |
 
@@ -518,6 +518,62 @@ Lever table row count after T02: **30** (5 preserved + 25
 appended), verified via
 `awk '/^## Lever$/,/^## Ashby$/' docs/COMPANY_SLUG_DIRECTORY.md
 | grep -c '^|'` reporting 32 (30 data rows + 2 header rows).
+
+Re-running the § 7.1 methodology against the same CSV produces the
+same 25 slugs (FR-6 reproducibility verified locally).
+
+### Decision D-07 (run #73, T03) — Workable 25-slug selection verbatim
+
+**Context:** FR-11 requires the 25-slug selection per vendor to be
+recorded verbatim. The § 7.1 methodology run against
+`OTHERS/Ats-scrapers/workable/workable_companies.csv` (4 028
+post-header rows) yielded **L = 4 026** post-filter (2 rows dropped:
+0 duplicates with the existing 2 Workable rows; 0 pure-numeric
+names; ~2 empty/whitespace edge rows). Step =
+`⌊4026/25⌋ = 161`. The 25 deterministic indices `[0, 161, 322, …,
+3864]` produced the following selection (CSV `name` trimmed →
+derived `slug` per § 7.2):
+
+| idx  | upstream `name` (trimmed)         | slug                                 |
+| ---- | --------------------------------- | ------------------------------------ |
+|    0 | Our Home                          | `-our-home`  *(leading-dash)*        |
+|  161 | Alliedteam                        | `alliedteam`                         |
+|  322 | Auprosports                       | `auprosports`                        |
+|  483 | Blitzoo Games                     | `blitzoo-games`                      |
+|  644 | Cdr Companies                     | `cdr-companies`                      |
+|  805 | Constructor 1                     | `constructor-1`                      |
+|  966 | Deep Science Ventures             | `deep-science-ventures`              |
+| 1127 | Elevated Hiring                   | `elevated-hiring`                    |
+| 1288 | Fergus                            | `fergus`                             |
+| 1449 | Gamigo                            | `gamigo`                             |
+| 1610 | Healthsnap                        | `healthsnap`                         |
+| 1771 | Infini Capital Management Limited | `infini-capital-management-limited`  |
+| 1932 | Karohealthcare                    | `karohealthcare`                     |
+| 2093 | Lingoace                          | `lingoace`                           |
+| 2254 | Mention Me Ltd                    | `mention-me-ltd`                     |
+| 2415 | Nawy Real Estate                  | `nawy-real-estate`                   |
+| 2576 | Optibpo                           | `optibpo`                            |
+| 2737 | Pinnacle Middle East              | `pinnacle-middle-east`               |
+| 2898 | Radley Yeldar                     | `radley-yeldar`                      |
+| 3059 | Samsung Sds America               | `samsung-sds-america`                |
+| 3220 | Snowed In Studios 3               | `snowed-in-studios-3`                |
+| 3381 | Switchboard Hiring 1              | `switchboard-hiring-1`               |
+| 3542 | Thetsuigroup                      | `thetsuigroup`                       |
+| 3703 | University Of Mount Saint Vincent | `university-of-mount-saint-vincent`  |
+| 3864 | Wearenoble                        | `wearenoble`                         |
+
+**Workable quirk surfaced (1 leading-dash slug):** Index 0 captured
+the documented edge case `Our Home` (CSV row 1: ` Our Home,https://apply.workable.com/-our-home`).
+The leading space in `name` is trimmed for the `Company` column
+(`Our Home`); the literal leading `-` in the URL slug is preserved
+verbatim in the `Slug` column (`-our-home`) — it's a real Workable
+subdomain shape per § 7.2. The deterministic-indexed sample
+landed exactly the row the run #70 / D-04 pin anticipated.
+
+Workable table row count after T03: **27** (2 preserved + 25
+appended), verified via
+`awk '/^## Workable$/,/^## BambooHR$/' docs/COMPANY_SLUG_DIRECTORY.md
+| grep -c '^|'` reporting 29 (27 data rows + 2 header rows).
 
 Re-running the § 7.1 methodology against the same CSV produces the
 same 25 slugs (FR-6 reproducibility verified locally).
