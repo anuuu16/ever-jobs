@@ -17,7 +17,9 @@
 (commit `312c7b6`) and absorb relevant behaviour into our plugin")
 has been the queued upstream-driven backlog item since run #75 closed
 out Spec 017. The upstream Workable scraper sits at
-[`OTHERS/Ats-scrapers/workable/main.py`](../../../../OTHERS/Ats-scrapers/workable/main.py)
+`OTHERS/Ats-scrapers/workable/main.py` (the file lives at the
+workspace root outside the ever-jobs repo, so referenced as a
+plain backticked path)
 on commit `3bacd6e` (HEAD); the most recent meaningful upstream
 edit on that file was commit `312c7b6` ("Improve workable scraper",
 2025-12-24, +6 / −2 lines). AC-9 names that commit explicitly as the
@@ -437,9 +439,10 @@ on by default), not a regression.
 
 ## 11. References
 
-- [`OTHERS/Ats-scrapers/workable/main.py`](../../../../OTHERS/Ats-scrapers/workable/main.py) —
-  upstream source under audit; commit `3bacd6e` HEAD,
-  anchor diff at `312c7b6`.
+- `OTHERS/Ats-scrapers/workable/main.py` — upstream source
+  under audit; commit `3bacd6e` HEAD, anchor diff at `312c7b6`
+  (the file lives at the workspace root outside the ever-jobs
+  repo, so referenced as a plain backticked path).
 - [`packages/plugins/source-ats-workable/`](../../../packages/plugins/source-ats-workable/) —
   Ever Jobs plugin; absorbs upstream behaviour where applicable.
   - [`src/workable.service.ts`](../../../packages/plugins/source-ats-workable/src/workable.service.ts) —
