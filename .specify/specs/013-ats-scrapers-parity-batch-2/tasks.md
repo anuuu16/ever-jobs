@@ -336,8 +336,25 @@
   - **Estimate:** 0.4 day. **Actual:** ~0.3 day (matches Spec
     006 / T09 actual at run #34).
 
-- [ ] T12 — Three-plugin e2e spec.
+- [x] T12 — Three-plugin e2e spec.
+  **Landed run #55.**
   - **Files (planned):** `apps/api/__tests__/e2e/source-ats-batch-2.e2e-spec.ts`.
+  - **Files (actual):** matched plan exactly. New 5-case suite
+    mirrors the Spec 006 / T10 (batch-1) e2e shape: three single-
+    source POSTs (oracle / mercor / tesla) + cross-plugin fan-out
+    + `dedup=false` opt-out. Departs from the literal acceptance
+    text in four ways (all pre-existing departures, see header
+    comment in the spec file): (1) POST `/api/jobs/search` not
+    GET — actual controller surface, returns `201 Created` per
+    NestJS POST default; (2) `jest.mock('@ever-jobs/common', …)`
+    not nock, since the unit + integration tiers already use it;
+    (3) per-plugin slug routing (`eeho-us2` for oracle, `stripe`
+    for mercor, ignored for tesla); (4) `descriptionDepth='board'`
+    on cross-plugin tests so Tesla doesn't fan out 25 detail
+    GETs against synthetic fixtures. Reuses each plugin's
+    existing `__tests__/fixtures/` corpus directly (no
+    duplication into `apps/api/__tests__/fixtures/`) — same
+    single-source rationale as T11.
   - **Acceptance:**
     - `GET /api/jobs?site=oracle&companyUrl=https%3A%2F%2Feeho.fa.us2.oraclecloud.com`,
       `&site=mercor&companySlug=stripe`, `&site=tesla` return
@@ -345,7 +362,8 @@
       fixture server.
     - Asserts dedup-engine consumes the rows without collisions
       across the three plugins.
-  - **Estimate:** 0.4 day.
+  - **Estimate:** 0.4 day. **Actual:** ~0.3 day (matches Spec 006
+    / T10 actual at run #35).
 
 - [ ] T13 — Coverage docs.
   - **Files (planned):** `docs/ATS_INTEGRATIONS.md` (three new
@@ -412,17 +430,26 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #55** = Spec 013 / Phase 6 / T12 — three-
-  plugin e2e spec under
-  `apps/api/__tests__/e2e/source-ats-batch-2.e2e-spec.ts`. Boots
-  the Nest HTTP layer (`createTestApp()` + `request(app.getHttpServer())`)
-  and issues real HTTP requests against
-  `GET /api/jobs?site=oracle&companyUrl=https%3A%2F%2Feeho.fa.us2.oraclecloud.com`,
-  `GET /api/jobs?site=mercor&companySlug=stripe`, and
-  `GET /api/jobs?site=tesla` — asserts `200 OK` + non-empty
-  `JobPostDto[]` against the same fixture-router that T11 uses
-  (single-sourced `createHttpClient` mock). Mirror the Spec 006
-  / T12 (run #35) e2e pattern. Estimated 0.4 day.
+- **Default for run #56** = Spec 013 / Phase 6 / T13 — coverage
+  docs. Two file edits: `docs/ATS_INTEGRATIONS.md` (three new
+  matrix rows for Oracle / Mercor / Tesla; Tesla-Playwright noted
+  as opt-in companion in a sub-row) and `docs/COMPANY_SLUG_DIRECTORY.md`
+  (≥ 10 seed slugs for Oracle from `OTHERS/Ats-scrapers/oracle/oracle_companies.csv`,
+  ≥ 10 curated Mercor `companyName` substring slugs, single
+  Tesla entry since it is single-tenant). Acceptance: matrix rows
+  include Method / Data Format / Notable Users / URL pattern.
+  Estimated 0.4 day.
+- **Default for run #55 (DONE — landed run #55)** = Spec 013 /
+  Phase 6 / T12 — three-plugin e2e spec under
+  `apps/api/__tests__/e2e/source-ats-batch-2.e2e-spec.ts`. 5-case
+  suite mirrors Spec 006 / T10 (batch-1) e2e shape: oracle /
+  mercor / tesla single-source POSTs + cross-plugin fan-out +
+  `dedup=false` opt-out. Reuses each plugin's existing fixtures
+  (single-sourced URL→fixture router same as T11). Same four
+  pre-existing departures as batch-1's e2e (POST not GET, 201
+  not 200, `jest.mock('@ever-jobs/common')` not nock,
+  `descriptionDepth='board'` to keep Tesla cheap on the
+  cross-plugin tests).
 - **Default for run #54 (DONE — landed run #54)** = Spec 013 /
   Phase 6 / T11 — three-plugin integration spec under
   `apps/api/__tests__/integration/source-ats-batch-2.integration.spec.ts`.

@@ -5,6 +5,135 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #55 (Spec 013 / Phase 6 / T12 — Three-plugin e2e spec landed)
+
+**Scope:** land Spec 013 / Phase 6 / T12 — three-plugin e2e
+spec under
+`apps/api/__tests__/e2e/source-ats-batch-2.e2e-spec.ts`.
+5-case suite mirrors the Spec 006 / T10 (batch-1) e2e shape:
+three single-source POSTs (oracle / mercor / tesla) +
+cross-plugin fan-out + `?dedup=false` opt-out. Estimated
+0.4 day per tasks.md; landed in a single scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #54's sync). Thirty-ninth consecutive
+zero-churn run in `OTHERS/`.
+
+**No new questions opened this run.** All open questions
+(Q-026 / Q-027 — Spec 014 candidate; Q-028..Q-032 —
+implementation-ratified through T07..T10) retain their
+existing dispositions.
+
+**No new load-bearing test-shape decisions this run.** The
+integration spec (T11, run #54) settled the three load-bearing
+questions — fixture single-sourcing, slug routing
+(`eeho-us2` cross-plugin / `stripe` for Mercor's happy path),
+and `descriptionDepth='board'` on cross-plugin tests. The e2e
+spec is the same shape one tier up (supertest through
+`POST /api/jobs/search` instead of direct `JobsService` calls),
+so the same three decisions apply verbatim. Four pre-existing
+departures from the literal acceptance text are inherited from
+Spec 006 / T10 (batch-1 e2e):
+
+1. **POST `/api/jobs/search` with JSON body, not GET with
+   query params** — actual controller surface.
+2. **`201 Created` not `200 OK`** — NestJS POST handlers
+   return 201 by default without an explicit `@HttpCode(200)`.
+3. **`jest.mock('@ever-jobs/common', …)` not nock** —
+   matches the unit + integration tiers; nock would shadow
+   the same axios → undici stack at the network layer
+   (strictly less precise).
+4. **Per-plugin slug routing and `descriptionDepth='board'`
+   on cross-plugin tests** — same plugin-shape divergence
+   reasoning as the integration spec.
+
+**Changes — source / test:**
+
+- `apps/api/__tests__/e2e/source-ats-batch-2.e2e-spec.ts`
+  — NEW. ~310 LOC. Boots the real `AppModule` via
+  `createTestApp()` with `@ever-jobs/common.createHttpClient`
+  mocked at the module boundary (same pattern as Spec 006 /
+  T10 and Spec 013 / T11). URL-keyed fixture router
+  dispatches to the appropriate plugin's existing fixture
+  (oracle-page-1.json / mercor-explore.json / tesla-board.json
+  + tesla-job-{id}.json for IDs 200001..200003; "missing all
+  four" envelope for the remaining detail GETs). 5 cases:
+  * Oracle single-source POST (`siteType=[Site.ORACLE]`,
+    `companySlug='eeho-us2'`) → 201 + `count > 0` + every
+    `job.site === Site.ORACLE`.
+  * Mercor single-source POST (`siteType=[Site.MERCOR]`,
+    `companySlug='stripe'`) → 201 + `count > 0` + every
+    `companyName.toLowerCase()` contains `'stripe'`.
+  * Tesla single-source POST (`siteType=[Site.TESLA]`,
+    `descriptionDepth='board'`) → 201 + `count > 0` + every
+    `job.site === Site.TESLA`.
+  * Cross-plugin fan-out (`siteType=[Oracle, Mercor, Tesla]`,
+    `companySlug='eeho-us2'`) → Oracle + Tesla emit rows,
+    Mercor emits zero (slug doesn't match any companyName);
+    `deduped=true`, `count === raw_count` (zero collisions
+    on synthetic fixtures' `oracle-${id}` / `tesla-${id}`
+    namespaces).
+  * `?dedup=false` opt-out → `deduped: false`,
+    `count === raw_count`, `count > 0`.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  T12 row flipped from `[ ]` to `[x]` with "Landed run #55"
+  annotation; "Files (actual)" subsection added with the
+  5-case structure summary; Notes-for-the-next-run pinned
+  default updated to **Spec 013 / Phase 6 / T13** (coverage
+  docs).
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  Status flipped to "T12 landed run #55; T13..T15 pending";
+  Last-updated bumped to run #55; new entry appended to
+  § 10 Decisions covering the four pre-existing departures
+  from the literal acceptance text.
+- `docs/index.md` — Spec 013 row status updated; footer
+  bumped to run #55.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #55.
+- `/competitor-watch.md` — run #55 sync line appended at
+  top of Sync Log; AC-4 / AC-5 / AC-6 row prefixes updated
+  to "Spec 013 / Phase 6 / T12 landed run #55; T13..T15
+  pending".
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean.
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` —
+  clean (CI's typecheck path).
+- `npx jest --testPathPatterns 'source-ats-batch-2.e2e-spec'`
+  — 5 cases pass, 0 failures (suite ~22s due to full
+  AppModule boot, comparable to batch-1's analogous suite).
+
+**Notes & follow-ups:**
+
+- **Default for run #56** = Spec 013 / Phase 6 / T13 — coverage
+  docs. Two file edits: `docs/ATS_INTEGRATIONS.md` (three new
+  matrix rows for Oracle / Mercor / Tesla; Tesla-Playwright
+  noted as opt-in companion in a sub-row) and
+  `docs/COMPANY_SLUG_DIRECTORY.md` (≥ 10 seed slugs for
+  Oracle from `OTHERS/Ats-scrapers/oracle/oracle_companies.csv`,
+  ≥ 10 curated Mercor `companyName` substring slugs, single
+  Tesla entry since it is single-tenant). ~0.4 day.
+- **Out-of-scope reminders for run #56:** Stay strictly
+  inside `docs/`. Do NOT touch the e2e spec — that
+  settled here. Do NOT add Tesla-Playwright as a primary
+  matrix row in `ATS_INTEGRATIONS.md` (FR-13 — opt-in
+  companion only; sub-row only).
+- **Active backlog after Spec 013 closes:** Spec 014
+  candidates = Q-026/Q-027 salary residuals OR AC-8
+  (seed-companies refresh) OR AC-9 (Workable diff). Pick at
+  Spec 013 / T15 closeout.
+- Specs **004 / 005 / 006 / 012** stay complete; **001 /
+  003** retain their statuses unchanged. Spec **013**
+  advances from "T11 landed; T12..T15 pending" to "T12
+  landed; T13..T15 pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #54 (Spec 013 / Phase 6 / T11 — Three-plugin integration spec landed)
 
 **Scope:** land Spec 013 / Phase 6 / T11 — three-plugin

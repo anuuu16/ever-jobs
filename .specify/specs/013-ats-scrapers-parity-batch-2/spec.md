@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | T11 landed run #54; T12..T15 pending                 |
+| Status         | T12 landed run #55; T13..T15 pending                 |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-28 (run #54)                                 |
+| Last updated   | 2026-04-28 (run #55)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -332,6 +332,37 @@ records.)
   'detail-all'` with `'detail-25'` the default).
 
 ## 10. Decisions
+
+- **2026-04-28 (run #55 / T12)** — Three-plugin e2e spec landed at
+  `apps/api/__tests__/e2e/source-ats-batch-2.e2e-spec.ts`. The
+  authoring decisions are intentionally minimal: the integration
+  spec (T11, run #54) already settled the load-bearing test-shape
+  questions — fixture single-sourcing, slug routing
+  (`eeho-us2` cross-plugin / `stripe` for Mercor's happy path),
+  and `descriptionDepth='board'` on cross-plugin tests. The e2e
+  spec is mechanically the same shape one tier up — supertest
+  through `POST /api/jobs/search` instead of direct
+  `JobsService.searchJobs(...)` calls — so the same three
+  decisions apply verbatim.
+  Four pre-existing departures from the literal acceptance text
+  are inherited from Spec 006 / T10 (batch-1 e2e):
+  (1) **POST `/api/jobs/search` with JSON body, not GET with
+  query params.** The actual controller surface; the tasks-file
+  phrasing predates the body-vs-query refactor.
+  (2) **`201 Created` not `200 OK`.** NestJS returns 201 by
+  default for POST handlers without an explicit `@HttpCode(200)`
+  decorator.
+  (3) **`jest.mock('@ever-jobs/common', …)` not nock.** Keeps
+  the test surface consistent with the unit + integration tiers;
+  nock would shadow the same code path (axios → undici stack)
+  at the network layer, strictly less precise than mocking the
+  factory.
+  (4) **Per-plugin slug routing and `descriptionDepth='board'`
+  on cross-plugin tests** for the same reasons as the integration
+  spec. The 5-case suite (3 single-source + cross-plugin
+  fan-out + `?dedup=false` opt-out) parallels the batch-1
+  e2e exactly so future contributors comparing the two read
+  the same shape.
 
 - **2026-04-28 (run #54 / T11)** — Three-plugin integration spec
   landed at
