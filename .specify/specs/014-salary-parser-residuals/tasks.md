@@ -84,10 +84,11 @@
 
 ## Phase 3 — Bare-numeric-range third branch + literal Spec 012 § 8 case 12
 
-- [ ] T03 — `extractSalary()` adds a third bare-numeric-range
+- [x] T03 — `extractSalary()` adds a third bare-numeric-range
   regex variant gated on `detected.confidence === 'country'`;
   literal `"100.000 - 150.000" + country=GERMANY` parses
   (FR-3 / FR-4 / FR-7).
+  **Landed run #62.**
   - **Files (planned):**
     - `packages/common/src/utils/helpers.ts` (new private
       `buildSalaryRegexBare(numSrc)` function + 3-line
@@ -222,20 +223,29 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #62** = Spec 014 / Phase 3 / T03 —
-  Bare-numeric-range third branch. Add a private
-  `buildSalaryRegexBare(numSrc: string): RegExp` with the
-  same four-capture shape as the prefix/suffix builders
-  (`[1] = min`, `[2] = min K-suffix`, `[3] = max`,
-  `[4] = max K-suffix`). Wire a third try-branch into
-  `extractSalary()` body, gated on the literal string
-  check `detected.confidence === 'country'` (NOT
-  `!== 'default'`). Add the literal Spec 012 § 8 case 12
-  (`extractSalary("100.000 - 150.000", { country: GERMANY })`
-  → EUR / 100000 / 150000 / yearly) PLUS the FR-7 negative
-  pin (`extractSalary("100.000 - 150.000")` with no country
-  → all-`null`). The bare regex must be compiled per-call
-  per FR-10 (no module-level cache). Estimated 0.2 day.
+- **Default for run #63** = Spec 014 / Phase 4 / T04 —
+  Re-enable the literal Spec 012 § 8 case 14
+  (`"$100,000 - $150,000" + country=GERMANY` →
+  `{ currency: 'USD', minAmount: 100000, maxAmount: 150000,
+  interval: 'yearly' }`). Pure tests-only pass; T01 already
+  shipped the source-side fix (G-1 / FR-1). Plus the
+  FR-7 false-positive immunity case
+  (`"5 - 7 years experience" + country=GERMANY` →
+  all-`null` via the `lowerLimit` clamp at line ~709).
+  Plus a bench re-run check (`npx jest packages/common/__tests__/helpers.bench`)
+  asserting p95 within ≤ +0.1 ms of the Spec 012 / T04
+  baseline. Pure tests + bench + no source edits. Estimated
+  0.15 day.
+- **Default for run #62 (DONE — landed run #62)** = Spec 014
+  / Phase 3 / T03 — Bare-numeric-range third branch. Added
+  private `buildSalaryRegexBare(numSrc)` with the four-capture
+  shape mirroring prefix/suffix builders. Wired into
+  `extractSalary()` body via a third try-branch gated on
+  literal `detected.confidence === 'country'` (NOT
+  `!== 'default'`). Three new test cases pin the literal
+  Spec 012 § 8 case 12 + the symbol-present substitute
+  (suffix path; additive coverage) + the FR-7 negative
+  (no-country-hint → all-`null`).
 - **Default for run #61 (DONE — landed run #61)** = Spec 014
   / Phase 2 / T02 — Apostrophe-in-regex extension. Edited
   `SALARY_NUMBER_REGEX_SRC.anglo` to add `'` to the

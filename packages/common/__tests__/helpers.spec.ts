@@ -719,3 +719,66 @@ describe('extractSalary — Spec 014 / T02 (apostrophe-thousands)', () => {
     expect(result.interval).toBe('yearly');
   });
 });
+
+/**
+ * Spec 014 / T03 — bare-numeric-range third regex variant gated on
+ * `detected.confidence === 'country'` (Q-026 / FR-3 / FR-4 / FR-7).
+ *
+ * Restores the literal Spec 012 / § 8 case 12
+ * (`"100.000 - 150.000" + country=GERMANY`) that T04 had to
+ * substitute with a symbol-present variant
+ * (`"100.000 € - 150.000 €" + country=GERMANY`) because both
+ * `extractSalary()` regex variants (prefix + suffix) require a
+ * currency anchor. The country-tier guard is the load-bearing
+ * safety: an ungated bare regex would over-match plain-prose number
+ * ranges (`"5 - 7 years experience"`) for any caller without a
+ * country hint.
+ *
+ * The FR-7 negative case below pins the guard's correctness — a
+ * regression that flipped the guard to `!== 'default'` (or removed
+ * it entirely) would surface here.
+ */
+describe('extractSalary — Spec 014 / T03 (bare-numeric-range with country guard)', () => {
+  it('Spec 014 / T03 — literal Spec 012 § 8 case 12 (bare-number Continental + country=GERMANY)', () => {
+    // The literal case from Spec 012 / § 8 — restored after T04's
+    // substitute. Drives the country tier in `parseSalaryCurrency`
+    // (no symbol, no ISO, only the country hint), then the
+    // dispatcher tries prefix → suffix → bare and the bare variant
+    // is the one that catches it.
+    const result = extractSalary('100.000 - 150.000', {
+      country: Country.GERMANY,
+    });
+    expect(result.currency).toBe('EUR');
+    expect(result.minAmount).toBe(100000);
+    expect(result.maxAmount).toBe(150000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  it('Spec 014 / T03 — symbol-present substitute stays green alongside (FR-5; additive)', () => {
+    // The substitute from Spec 012 / T04 — explicitly pinned so a
+    // future regression that broke the suffix-anchored path (which
+    // catches this shape, NOT the new bare path) surfaces here.
+    const result = extractSalary('100.000 € - 150.000 €', {
+      country: Country.GERMANY,
+    });
+    expect(result.currency).toBe('EUR');
+    expect(result.minAmount).toBe(100000);
+    expect(result.maxAmount).toBe(150000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  it('Spec 014 / T03 — FR-7 negative: bare range with NO country hint returns all-null', () => {
+    // Load-bearing guard test — confirms the bare regex MUST NOT
+    // fire when `confidence === 'default'`. Without the guard, a
+    // bare-prose range like this would silently parse as USD (the
+    // FR-7 default) and emit a JobPostDto with garbage min/max.
+    // Same shape as case 12 above but with the country hint
+    // stripped: `confidence` falls through to `'default'` so the
+    // bare regex is never built.
+    const result = extractSalary('100.000 - 150.000');
+    expect(result.currency).toBeNull();
+    expect(result.minAmount).toBeNull();
+    expect(result.maxAmount).toBeNull();
+    expect(result.interval).toBeNull();
+  });
+});

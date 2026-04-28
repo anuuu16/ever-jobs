@@ -5,6 +5,164 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #62 (Spec 014 / Phase 3 / T03 — bare-numeric-range third try-branch landed)
+
+**Scope:** land Spec 014 / Phase 3 / T03 — add a third
+bare-numeric-range regex variant to `extractSalary()` gated on
+the literal string check `detected.confidence === 'country'`,
+and re-enable the literal Spec 012 / § 8 case 12
+(`"100.000 - 150.000" + country=GERMANY` → EUR / 100000 /
+150000 / yearly) that T04 had to substitute with a
+symbol-present variant. Two file edits + one closeout pass:
+
+- **Source-code edits (helpers.ts, NOTE: bundled into the T02
+  commit `4e90c50` because the prior run-#61 prep had already
+  staged both T02's regex extension AND T03's
+  `buildSalaryRegexBare()` + dispatcher cascade together):**
+  - New private function `buildSalaryRegexBare(numSrc: string):
+    RegExp` mirroring the prefix/suffix builders' four-capture
+    shape (`[1] = min`, `[2] = min K-suffix`, `[3] = max`,
+    `[4] = max K-suffix`). Body:
+    `(${numSrc})\s*([kK]?\b)\s*[-–—]\s*(${numSrc})\s*([kK]?\b)`.
+  - 17-line edit to `extractSalary()` body: conditional
+    `barePattern = detected.confidence === 'country' ?
+    buildSalaryRegexBare(numSrc) : null`; 3-arm match cascade
+    `prefixPattern.match() ?? suffixPattern.match() ??
+    (barePattern ? salaryStr.match(barePattern) : null)`.
+- **Test-code edits (helpers.spec.ts, run #62 commit):**
+  - New describe block `'extractSalary — Spec 014 / T03
+    (bare-numeric-range with country guard)'` appended after
+    the Spec 014 / T02 block. Three cases: literal Spec 012
+    § 8 case 12 (bare path) + symbol-present substitute from
+    T04 (suffix path; pinned for regression-detection) +
+    FR-7 negative pin (no country hint → all-`null`).
+  - Test count grew from 67 → 70 (T03 added 3 cases, +1 over
+    the spec's ≥ 2 floor for the "third case = explicit
+    branch coverage for the suffix path" reason described in
+    spec.md § 10).
+
+Estimated 0.2 day per tasks.md; landed across runs #61
+(source) + #62 (tests + closeout).
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from runs #59..#61's syncs). Forty-fifth
+consecutive zero-churn run in `OTHERS/`. (Spec 014 is
+internal-correctness work, not upstream-driven coverage; the
+streak is logged for continuity.)
+
+**No new questions opened this run.** Spec 014 is the
+resolution path for Q-026 + Q-027 (Spec 012 / T04
+spillover); their `docs/questions.md` resolution text flips
+at T05 closeout per the scaffolding plan, not now. After
+T03's landing, **Q-026 (bare-number range with country hint)
+is structurally resolved** — the source code lands, the
+literal § 8 case parses, and the FR-7 negative pin protects
+the guard. The questions.md flip is the formal closeout,
+deferred to T05 per the plan.
+
+**Three implementation observations** were resolved during
+T03's edit pass (full prose in Spec 014 § 10):
+
+1. **Conditional builder, not conditional match.** The
+   acceptance text said "IF `match` is null AND
+   `detected.confidence === 'country'`, try
+   `buildSalaryRegexBare(numSrc)`". A naïve reading would
+   build the bare regex unconditionally and only match it
+   when the guard fires — but `RegExp` construction is the
+   expensive part, not the match attempt. Conditional
+   construction (`barePattern = confidence === 'country' ?
+   buildSalaryRegexBare(numSrc) : null`) means the no-country-
+   hint hot path doesn't pay any regex-compile cost. The
+   match cascade is a 3-arm null-coalesce.
+2. **Three test cases shipped, not two.** The acceptance
+   text required 2 cases (literal § 8 case 12 + FR-7
+   negative). We added a third — the symbol-present
+   substitute from Spec 012 / T04 — explicitly pinned. This
+   is load-bearing: the substitute is caught by the
+   SUFFIX-anchored regex, not the new bare regex; pinning
+   it alongside guarantees a future regression in the
+   suffix path surfaces here, not silently downstream.
+   Three cases = bare path + suffix path + default path
+   (each exercises a distinct dispatcher branch).
+3. **`!== 'default'` rejected as the guard form.** The
+   acceptance text spelled out "the guard MUST be the
+   literal string check `=== 'country'` — NOT `!==
+   'default'`". The `!== 'default'` shape would also pass
+   through the `'symbol'` and `'iso'` paths that already
+   missed BOTH anchored regex variants — a symbol-present
+   input that misses prefix AND suffix is structurally
+   malformed; a bare regex is the WRONG fallback for that
+   case (would emit a fake JobPostDto matching some
+   bare-prose number range elsewhere in the same string).
+   The literal `=== 'country'` check forecloses that path.
+
+**Changes — source / test:**
+
+- `packages/common/src/utils/helpers.ts` — `buildSalaryRegexBare()`
+  function (~30 LOC including doc-comment) + dispatcher
+  edit (~17 LOC). **Already landed in commit `4e90c50` (the
+  prior T02 commit bundled both T02 and T03's source).**
+- `packages/common/__tests__/helpers.spec.ts` — new T03
+  describe block with 3 cases (~63 LOC). Test count
+  67 → 70 (verified locally via
+  `npx jest packages/common/__tests__/helpers.spec`).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/014-salary-parser-residuals/tasks.md` —
+  T03 row flipped from `[ ]` to `[x]` with "Landed run
+  #62" annotation; Notes-for-the-next-run pinned default
+  updated to **Spec 014 / Phase 4 / T04** (Spec 012 § 8
+  case 14 literal + FR-7 false-positive immunity).
+- `.specify/specs/014-salary-parser-residuals/spec.md` —
+  Status flipped from "T01..T02 landed runs #60..#61;
+  T03..T05 pending" to "T01..T03 landed runs #60..#62;
+  T04..T05 pending"; Last-updated bumped to run #62; § 10
+  Decisions log appended with the three implementation
+  observations.
+- `docs/index.md` — Spec 014 row status updated; footer
+  bumped to run #62.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #62.
+- **No `competitor-watch.md` §C entry** — Spec 014 is not
+  linked to a §C / AC-N row (Q-026 / Q-027 are
+  internal-correctness gaps surfaced during Spec 012's
+  sweep, not upstream-driven coverage gaps). Sync-log line
+  for run #62 (zero-churn, 45th consecutive) added at top
+  of Sync Log per the standard pattern.
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns 'packages/common/__tests__/helpers.spec'`
+  — 70 cases pass, 0 failures (was 67; T03 added 3).
+- `npm run lint:docs` — clean.
+
+**Notes & follow-ups:**
+
+- **Default for run #63** = Spec 014 / Phase 4 / T04 —
+  Re-enable the literal Spec 012 § 8 case 14
+  (`"$100,000 - $150,000" + country=GERMANY` →
+  USD / 100000 / 150000 / yearly). Pure tests-only pass;
+  T01 already shipped the source-side fix (G-1 / FR-1).
+  Plus the FR-7 false-positive immunity case
+  (`"5 - 7 years experience" + country=GERMANY` →
+  all-`null` via the `lowerLimit` clamp at line ~709).
+  Plus a bench re-run check
+  (`npx jest packages/common/__tests__/helpers.bench`)
+  asserting p95 within ≤ +0.1 ms of the Spec 012 / T04
+  baseline. Pure tests + bench + no source edits.
+  Estimated 0.15 day.
+- **Out-of-scope reminders for run #63:** Stay strictly in
+  Phase 4 / T04 scope. Do NOT touch any source file —
+  T04 is a pure tests-only pass (T01's `$` registration
+  already shipped the source-side fix; T03's bare-regex
+  branch is now landed). Do NOT add a fifth or sixth
+  test case beyond what tasks.md / T04 spells out — the
+  spec is intentionally tight.
+
+---
+
 ## 2026-04-28 — Scheduled run #61 (Spec 014 / Phase 2 / T02 — apostrophe-in-regex extension landed)
 
 **Scope:** land Spec 014 / Phase 2 / T02 — extend

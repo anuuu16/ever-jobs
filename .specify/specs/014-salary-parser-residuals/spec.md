@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 014                                                                         |
 | Slug           | salary-parser-residuals                                                     |
-| Status         | T01..T02 landed runs #60..#61; T03..T05 pending                             |
+| Status         | T01..T03 landed runs #60..#62; T04..T05 pending                             |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #59)                                                        |
-| Last updated   | 2026-04-28 (run #61)                                                        |
+| Last updated   | 2026-04-28 (run #62)                                                        |
 | Supersedes     | (none — extends Spec 012's salary-parser surface in `@ever-jobs/common`)    |
 | Related specs  | 003 (Job Deduplication Engine), 012 (European Salary Parser)                |
 
@@ -417,7 +417,79 @@ Populated as T01..T05 land.)
   was rewritten to reflect both layers (regex tolerance +
   post-capture strip); this is the only collateral edit.
 
-_T03..T05 land in subsequent runs (#62..#64 if Spec 012's
+- **2026-04-28 (run #62 / T03)** — Bare-numeric-range third
+  branch landed at `extractSalary()`. New private
+  `buildSalaryRegexBare(numSrc: string): RegExp` mirrors the
+  prefix/suffix builders' four-capture shape (`[1] = min`,
+  `[2] = min K-suffix`, `[3] = max`, `[4] = max K-suffix`)
+  so the existing K-suffix arithmetic and per-locale number
+  parser handle the bare match without an extra branch.
+  `extractSalary()` body now tries `prefixPattern ??
+  suffixPattern ?? barePattern`, where `barePattern` is built
+  conditionally — `null` when `detected.confidence !==
+  'country'` so the bare regex is **never** built or matched
+  for symbol / ISO / default paths. Three implementation
+  observations resolved during the edit pass:
+
+  (1) **Conditional builder, not conditional match.** The
+  literal acceptance text said "IF `match` is null AND
+  `detected.confidence === 'country'`, try
+  `buildSalaryRegexBare(numSrc)`". A naïve reading would
+  build the bare regex unconditionally and only match it
+  when the guard fires — but `RegExp` construction is the
+  expensive part, not the match attempt. Conditional
+  construction (`barePattern = confidence === 'country' ?
+  buildSalaryRegexBare(numSrc) : null`) means the no-country-
+  hint hot path doesn't pay any regex-compile cost. The
+  match cascade then becomes a 3-arm null-coalesce
+  (`prefix ?? suffix ?? (bare ? salaryStr.match(bare) :
+  null)`) — slightly verbose but matches the FR-10
+  per-call-compilation discipline the prefix/suffix
+  builders already follow.
+
+  (2) **Three test cases shipped, not two.** The acceptance
+  text required 2 cases (literal § 8 case 12 + FR-7
+  negative). We added a third case — the symbol-present
+  substitute from Spec 012 / T04 — explicitly pinned. This
+  is load-bearing: the substitute is caught by the
+  SUFFIX-anchored regex, not the new bare regex; pinning
+  it alongside guarantees a future regression in the
+  suffix path (which still handles `100.000 € - 150.000 €`)
+  surfaces here, not silently downstream. Three cases =
+  the literal restored case (bare path) + the substitute
+  (suffix path) + the FR-7 negative (default path); each
+  exercises a distinct dispatcher branch.
+
+  (3) **`!== 'default'` rejected as the guard form.** The
+  acceptance text spelled out "the guard MUST be the
+  literal string check `=== 'country'` — NOT `!==
+  'default'`". We honoured the literal-check discipline.
+  Reasoning: `!== 'default'` would also pass through the
+  `'symbol'` and `'iso'` paths that already missed BOTH
+  anchored regex variants. A symbol-present input that
+  somehow misses prefix AND suffix is structurally
+  malformed (the symbol is in the input but neither
+  before nor after the numbers); a bare regex is the
+  WRONG fallback for that case — it would match a
+  bare-prose number range that happens to be in the same
+  string and emit a fake JobPostDto. The literal `===
+  'country'` check forecloses that path: only when the
+  COUNTRY tier resolved the currency does the bare regex
+  get a chance.
+
+  Verified locally: 70/70 helper tests pass after the edit
+  (was 67/67 before; T03 added 3). All 11 original USD
+  cases (FR-5) stay byte-for-byte green; the FR-7 default-
+  USD path still returns all-`null` for inputs without
+  any currency signal.
+
+  Out-of-scope reminder honoured: no module-level cache
+  for the bare regex (FR-10 per-call compilation
+  preserved); no public helper for `buildSalaryRegexBare`
+  (stays module-private); no fourth try-branch attempted
+  (the bare regex is the third and final variant).
+
+_T04..T05 land in subsequent runs (#63..#64 if Spec 012's
 lean one-task-per-run cadence holds)._
 
 ## 11. References
