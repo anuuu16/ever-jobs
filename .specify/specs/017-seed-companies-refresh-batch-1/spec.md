@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 017                                                                         |
 | Slug           | seed-companies-refresh-batch-1                                              |
-| Status         | T01 done (run #71); Phase 2..5 (T02..T05) pending                           |
+| Status         | T01..T02 done (runs #71/#72); Phase 3..5 (T03..T05) pending                 |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #70)                                                        |
-| Last updated   | 2026-04-28 (run #71)                                                        |
+| Last updated   | 2026-04-28 (run #72)                                                        |
 | Supersedes     | (none — first refresh of the four big-volume vendor slug tables in `docs/COMPANY_SLUG_DIRECTORY.md`) |
 | Related specs  | 006 (ATS Batch 1 — Avature / Gem / Join.com slug seeding precedent), 013 (ATS Batch 2 — Oracle / Mercor / Tesla slug seeding precedent), 016 (immediately-prior single-byte warm-up; Spec 016 closeout's "Notes for the next run" pinned **AC-8** as the run #70 default) |
 
@@ -454,6 +454,71 @@ Re-running the § 7.1 methodology against the same CSV produces the
 same 25 slugs (FR-6 reproducibility verified locally; the
 `existing` set, `L`, step, and indices are deterministic functions
 of the input).
+
+### Decision D-06 (run #72, T02) — Lever 25-slug selection verbatim
+
+**Context:** FR-11 requires the 25-slug selection per vendor to be
+recorded verbatim in the spec for audit. The § 7.1 methodology run
+against `OTHERS/Ats-scrapers/lever/lever_companies.csv` (1 912
+post-header rows) yielded a post-filter list length of **L = 1 910**
+(2 rows dropped: 1 pure-numeric `name` value `500` per D-02; 1
+case-insensitive duplicate of the existing 5 Lever rows — `Palantir`;
+0 empty-name cases). Step = `⌊1910/25⌋ = 76`. The 25 deterministic
+indices `[0, 76, 152, 228, 304, 380, 456, 532, 608, 684, 760, 836,
+912, 988, 1064, 1140, 1216, 1292, 1368, 1444, 1520, 1596, 1672, 1748,
+1824]` produced the following selection (CSV `name` → derived `slug`
+per § 7.2):
+
+| idx  | upstream `name`     | slug                  |
+| ---- | ------------------- | --------------------- |
+|    0 | 100Ms               | `100ms`               |
+|   76 | Allegiantair        | `allegiantair`        |
+|  152 | Asapp 2             | `asapp-2`             |
+|  228 | Blablacar           | `blablacar`           |
+|  304 | Cartrawler          | `cartrawler`          |
+|  380 | Coinmarketcap       | `coinmarketcap`       |
+|  456 | Deepsky             | `deepsky`             |
+|  532 | Ekohealth           | `ekohealth`           |
+|  608 | Findhelp            | `findhelp`            |
+|  684 | Glass Health Inc    | `glass-health-inc`    |
+|  760 | Hivemapper          | `hivemapper`          |
+|  836 | Jamcity             | `jamcity`             |
+|  912 | Lamudi              | `lamudi`              |
+|  988 | Madhappy            | `madhappy`            |
+| 1064 | Monkshillventures   | `monkshillventures`   |
+| 1140 | Numeris             | `numeris`             |
+| 1216 | Peoplegrove         | `peoplegrove`         |
+| 1292 | Princesspolly       | `princesspolly`       |
+| 1368 | Redwoodcu           | `redwoodcu`           |
+| 1444 | Sandboxvr           | `sandboxvr`           |
+| 1520 | Snappr              | `snappr`              |
+| 1596 | Sure                | `sure`                |
+| 1672 | Thrivecausemetics   | `thrivecausemetics`   |
+| 1748 | Unusual             | `unusual`             |
+| 1824 | Waveapps            | `waveapps`            |
+
+**Lever case-preservation note (§ 7.2):** every URL in the upstream
+CSV's `url` column is already lowercase (`https://jobs.lever.co/<slug>`
+where the slug equals the lowercased / dasherised name). The
+"preserve case" rule therefore yields 25 lowercase slugs — no
+mixed-case PascalCase variants appeared in the 25-row slice.
+The Watch-out note for run #72 anticipated mixed-case Lever slugs
+upstream, but none were represented at the deterministic indices.
+
+**Multi-word names (`Asapp 2`, `Glass Health Inc`):** the upstream
+URL converts internal whitespace to a single `-` (e.g.
+`https://jobs.lever.co/asapp-2`, `https://jobs.lever.co/glass-health-inc`).
+The `Slug` column reflects the literal URL last-path-segment per
+§ 7.2; the `Company` column carries the trimmed `name` field
+verbatim (matching the FR-9 / § 7.3 contract).
+
+Lever table row count after T02: **30** (5 preserved + 25
+appended), verified via
+`awk '/^## Lever$/,/^## Ashby$/' docs/COMPANY_SLUG_DIRECTORY.md
+| grep -c '^|'` reporting 32 (30 data rows + 2 header rows).
+
+Re-running the § 7.1 methodology against the same CSV produces the
+same 25 slugs (FR-6 reproducibility verified locally).
 
 ## 11. References
 

@@ -125,6 +125,31 @@ Lever slugs are the subdomain at `jobs.lever.co/{slug}`.
 | Atlassian | `atlassian` | Developer Tools |
 | Eventbrite | `eventbrite` | Events |
 | KPMG | `kpmg` | Consulting |
+| 100Ms | `100ms` | — |
+| Allegiantair | `allegiantair` | — |
+| Asapp 2 | `asapp-2` | — |
+| Blablacar | `blablacar` | — |
+| Cartrawler | `cartrawler` | — |
+| Coinmarketcap | `coinmarketcap` | — |
+| Deepsky | `deepsky` | — |
+| Ekohealth | `ekohealth` | — |
+| Findhelp | `findhelp` | — |
+| Glass Health Inc | `glass-health-inc` | — |
+| Hivemapper | `hivemapper` | — |
+| Jamcity | `jamcity` | — |
+| Lamudi | `lamudi` | — |
+| Madhappy | `madhappy` | — |
+| Monkshillventures | `monkshillventures` | — |
+| Numeris | `numeris` | — |
+| Peoplegrove | `peoplegrove` | — |
+| Princesspolly | `princesspolly` | — |
+| Redwoodcu | `redwoodcu` | — |
+| Sandboxvr | `sandboxvr` | — |
+| Snappr | `snappr` | — |
+| Sure | `sure` | — |
+| Thrivecausemetics | `thrivecausemetics` | — |
+| Unusual | `unusual` | — |
+| Waveapps | `waveapps` | — |
 
 ---
 

@@ -88,13 +88,13 @@
       pass (NFR-5).
   - **Estimate:** 0.15 day.
 
-## Phase 2 — Lever refresh (T02, run #72 — pending)
+## Phase 2 — Lever refresh (T02, run #72 — landed this run)
 
-- [ ] T02 — Append 25 deterministic-indexed Lever slug rows
+- [x] T02 — Append 25 deterministic-indexed Lever slug rows
   to the Lever table (FR-2 / FR-9). Sample from
   `OTHERS/Ats-scrapers/lever/lever_companies.csv`. Record
   selection as Decision D-06. Verify row count = 5 + 25 =
-  **30**.
+  **30**. **Landed run #72.**
   - **Files (planned):** mirror Phase 1 with Lever as the
     vendor.
   - **Acceptance:**
@@ -196,18 +196,31 @@
 
 ## Notes for the next run (after T00 lands)
 
-- **Default for run #72** = Spec 017 / Phase 2 / T02 — append
-  25 deterministic-indexed Lever slug rows. Sample from
-  `OTHERS/Ats-scrapers/lever/lever_companies.csv` (1 912
+- **Default for run #73** = Spec 017 / Phase 3 / T03 — append
+  25 deterministic-indexed Workable slug rows. Sample from
+  `OTHERS/Ats-scrapers/workable/workable_companies.csv` (4 028
   post-header rows). Apply § 7.1's deterministic-indexed
   sampling rule + the duplicate-and-numeric filter (D-02).
-  Land ~25 row appends with § 10 D-06 recording the selection
-  verbatim. Note Lever's case-preservation rule per § 7.2
-  (slug column preserves the upstream URL's case — Lever
-  slugs are case-sensitive in upstream URLs but the Ever Jobs
-  plugin lowercases them at request time, so both
-  presentations are valid). Verify Lever table row count =
-  5 + 25 = 30.
+  Land ~25 row appends with § 10 D-07 recording the selection
+  verbatim. **Workable-specific watch-out:** ~2 % of the CSV's
+  `name` field starts with a single space (e.g. ` Our Home`)
+  with corresponding URL `https://apply.workable.com/-our-home`
+  (literal leading `-`). Trim the `name` for the directory's
+  `Company` column; preserve the leading `-` in the `Slug`
+  column (it's a real Workable subdomain shape per § 7.2).
+  Verify Workable table row count = 2 + 25 = 27.
+
+- **Default for run #72 (DONE — landed run #72)** = Spec 017 /
+  Phase 2 / T02 — appended 25 deterministic-indexed Lever
+  slug rows. § 7.1 methodology produced L = 1 910 / step = 76;
+  selection recorded verbatim as D-06 in spec.md § 10. Two
+  rows dropped from the 1 912 raw corpus: 1 pure-numeric
+  (`500`) per D-02, 1 case-insensitive duplicate (`Palantir`).
+  All 25 selected slugs landed lowercase (no mixed-case
+  PascalCase variants in the slice). Multi-word company
+  names (`Asapp 2`, `Glass Health Inc`) carried hyphenated
+  slugs (`asapp-2`, `glass-health-inc`) per the upstream URL.
+  Lever table row count 30 = 5 preserved + 25 appended.
 
 - **Default for run #71 (DONE — landed run #71)** = Spec 017 /
   Phase 1 / T01 — appended 25 deterministic-indexed

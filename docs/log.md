@@ -5,6 +5,86 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #72 (Spec 017 / Phase 2 / T02 — 25 deterministic-indexed Lever slugs appended)
+
+**Scope:** land Spec 017 / Phase 2 / T02 — append 25
+deterministic-indexed Lever slug rows to
+`docs/COMPANY_SLUG_DIRECTORY.md` per § 7.1 sampling
+methodology. The verbatim selection list is recorded as
+Decision D-06 in spec.md § 10 (FR-11).
+
+**Selection mechanics:** L = **1 910** (post-duplicate-and-
+numeric filter against 1 912 raw rows; 2 dropped: pure-numeric
+`500` per D-02, case-insensitive duplicate `Palantir`); step =
+`⌊1910/25⌋ = 76`; indices `[0, 76, 152, …, 1824]`.
+
+**25 selected slugs** (alphabetically-spaced sample from
+`OTHERS/Ats-scrapers/lever/lever_companies.csv`):
+`100ms`, `allegiantair`, `asapp-2`, `blablacar`,
+`cartrawler`, `coinmarketcap`, `deepsky`, `ekohealth`,
+`findhelp`, `glass-health-inc`, `hivemapper`, `jamcity`,
+`lamudi`, `madhappy`, `monkshillventures`, `numeris`,
+`peoplegrove`, `princesspolly`, `redwoodcu`, `sandboxvr`,
+`snappr`, `sure`, `thrivecausemetics`, `unusual`, `waveapps`.
+
+All 25 slugs landed lowercase (the upstream CSV's `url`
+column uses lowercase / dasherised slugs uniformly — no
+PascalCase variants represented in the deterministic-indexed
+slice, despite the run #72 watch-out anticipating mixed
+case). Multi-word company names (`Asapp 2`, `Glass Health
+Inc`) carried hyphenated slugs (`asapp-2`,
+`glass-health-inc`) — the upstream URL converts internal
+whitespace to a single `-`. Lever table row count after
+T02: **30** (5 preserved + 25 appended).
+
+**No new questions opened this run.** Q-038 / Q-039 / Q-040
+(opened run #70) stay open; resolutions flip at T05.
+
+**No competitor-watch upstream churn** — fifty-first consecutive
+zero-churn run in `OTHERS/` (Ats-scrapers @ `3bacd6e`,
+JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4`).
+
+**Changes — docs / specs:**
+
+- `docs/COMPANY_SLUG_DIRECTORY.md` — 25 new rows appended to
+  the Lever section. Existing 5 rows byte-identical (FR-5).
+  New rows use em-dash `—` for `Industry` (D-03).
+- `.specify/specs/017-seed-companies-refresh-batch-1/spec.md`
+  — Status → "T01..T02 done (runs #71/#72); Phase 3..5
+  pending"; § 10 Decisions appended with D-06 (verbatim
+  25-slug selection table).
+- `.specify/specs/017-seed-companies-refresh-batch-1/tasks.md`
+  — T02 flipped `[x]`; Notes-for-the-next-run pin updated
+  to **Spec 017 / Phase 3 / T03** (Workable).
+- `docs/index.md` — Spec 017 row updated; footer bumped.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #72.
+- `/competitor-watch.md` — run #72 sync line at top.
+
+**Verification:** `lint:docs` pending; Lever table row
+count = 30 confirmed (`awk '/^## Lever$/,/^## Ashby$/'
+docs/COMPANY_SLUG_DIRECTORY.md | grep -c '^|'` = 32 with
+2 header rows); § 7.1 reproducibility holds; test suite
+delta = 0 (NFR-2).
+
+**Notes & follow-ups:**
+
+- **Default for run #73** = Spec 017 / Phase 3 / T03 —
+  Workable. Sample from
+  `OTHERS/Ats-scrapers/workable/workable_companies.csv`
+  (4 028 rows). **Workable-specific watch-out:** ~2 % of
+  the CSV's `name` field starts with a single space (e.g.
+  ` Our Home`) with corresponding URL
+  `https://apply.workable.com/-our-home` (literal leading
+  `-` is a real Workable subdomain shape per § 7.2). Trim
+  the `name` for the `Company` column; preserve the leading
+  `-` in the `Slug` column.
+- Specs **004 / 005 / 006 / 012 / 013 / 014 / 015 / 016**
+  stay complete. Spec **017** advances from "T01 done; T02..T05
+  pending" to "T01..T02 done; T03..T05 pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #71 (Spec 017 / Phase 1 / T01 — 25 deterministic-indexed Greenhouse slugs appended)
 
 **Scope:** land Spec 017 / Phase 1 / T01 — append 25
