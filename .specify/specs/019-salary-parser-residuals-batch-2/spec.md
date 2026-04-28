@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 019                                                                         |
 | Slug           | salary-parser-residuals-batch-2                                             |
-| Status         | draft (Phase 0 scaffolded run #78); Phase 1..3 pending                      |
+| Status         | T01 landed (run #79); T02 + T03 pending                                     |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #78)                                                        |
-| Last updated   | 2026-04-28 (run #78)                                                        |
+| Last updated   | 2026-04-28 (run #79)                                                        |
 | Supersedes     | Spec 015 / FR-8 (documented limitation re-classified as a closed gap)       |
 | Related specs  | 012 (European-style Salary Parser — established the multi-currency dispatcher); 014 (Salary Parser Residuals — `$` registration + apostrophe-thousands + bare-path Q-026); 015 (Salary Parser Locale & Prose Immunity — added the bare-path raw-value pre-check this spec retunes); 016 (`helpers.bench.spec.ts` TS1127 fix — restored the bench acceptance gate this spec re-runs at T01 / T02) |
 
@@ -362,8 +362,56 @@ bare path with no K-suffix.
 
 (Append-only log; entries prepended at run boundaries.)
 
-_(Empty at scaffold pass — Phase 0 / run #78. Decisions D-NN
-land at Phase 1..3 implementation passes.)_
+### D-01 — T01 source-side threshold bump landed (run #79, 2026-04-28)
+
+**Outcome:** FR-1 satisfied. The single-token edit at
+[`packages/common/src/utils/helpers.ts:803`](../../../packages/common/src/utils/helpers.ts:803)
+(`minSalary < lowerLimit / 12` → `minSalary < lowerLimit`)
+landed cleanly. Source diff is exactly one inequality token
+(four-token reduction). The accompanying lead-in comment block
+(lines 786–798 pre-edit; 786–803 post-edit) was refreshed to
+reference Spec 019 / Q-041 / FR-1 alongside the original
+Spec 015 / Q-036 / FR-2 attribution and to drop the literal
+pre-edit token (`lowerLimit / 12`) so FR-5 idempotence holds
+strictly (grep returns 0).
+
+**Acceptance evidence:**
+
+- (a) Regression sweep: `npx jest packages/common/__tests__/helpers.spec` →
+  **74/74 passed** in 7.153 s. _Note: spec § 7.2 / NFR-5 cited
+  73 as the pre-Spec-019 baseline; reality is 74 (off-by-one
+  doc drift — the actual `it(...)` block count in the file pre-
+  edit is 74). The Spec 019 / T02 test-count delta therefore
+  becomes **74 → 77** rather than **73 → 76**; the +3 delta
+  itself is unchanged. Spec § 7.2 / NFR-5 / tasks.md / T02 will
+  be reconciled at the run #80 pass when the three new cases
+  land — the literal case bodies in spec § 7.2 stay byte-exact._
+- (b) Bench: `npx jest packages/common/__tests__/helpers.bench` →
+  2/2 passed in 5.93 s; `dist/bench/helpers-salary.json` records
+  overall **p95 = 0.0176 ms** (Spec 016 baseline = 0.0174 ms;
+  delta = +0.0002 ms; well within the +0.1 ms NFR-1 budget and
+  far under the 0.5 ms NFR-1 ceiling and the 2.0 ms CI ceiling).
+  Per-currency p95 figures: USD 0.0141 / EUR 0.0190 / GBP 0.0168
+  / CHF 0.0127 / SEK 0.0189 / NOK 0.0129 / DKK 0.0211 / PLN
+  0.0169 ms. All eight currencies remain under the bench gate.
+- (c) FR-5 idempotence: `grep -c 'lowerLimit / 12'
+  packages/common/src/utils/helpers.ts` → **0** post-edit (was
+  **1** pre-edit). Re-running T01 produces a no-op diff.
+- (d) Diff scope: exactly one source file changed
+  (`packages/common/src/utils/helpers.ts`); the change is the
+  inequality threshold (line 803) plus the lead-in comment
+  refresh (lines 786–803) keeping the FR-5 grep clean. No
+  test-file edits at T01 (T02 owns those at run #80).
+
+**Forward-pointers:**
+
+- T02 (run #80) lands the three new `it(...)` cases per spec
+  § 7.2 verbatim. Reconcile the 73→76 / 74→77 count drift in
+  the same pass (update tasks.md / T02 acceptance row + spec
+  / § 7.2 narrative + NFR-5 target — text only; the case
+  bodies are byte-exact).
+- T03 (run #81) executes the closeout doc edit on
+  `PERFORMANCE_TUNING.md` per spec § 7 / FR-4.
 
 ## 11. References
 

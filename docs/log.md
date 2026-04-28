@@ -5,6 +5,145 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #79 (Spec 019 / Phase 1 — T01 source-side threshold bump landed at `helpers.ts:803`; closes Spec 015 / FR-8 documented limitation at the source-edit level; D-01 documents the 73→74 baseline doc drift reconciled forward into T02)
+
+**Scope:** Run #79 executes the Spec 019 / Phase 1 / T01 task
+per the Phase 0 scaffold's [`tasks.md` notes-for-the-next-run](../.specify/specs/019-salary-parser-residuals-batch-2/tasks.md)
+recipe: a single-token inequality-threshold bump on the bare-path
+raw-value pre-check inside
+[`extractSalary`](../packages/common/src/utils/helpers.ts).
+The pre-check now rejects any bare-path match whose raw `min`
+value is below `lowerLimit ≈ 1000` (was below `lowerLimit / 12
+≈ 83`). The narrowed admission band closes the Spec 015 / FR-8
+documented limitation at the source-edit level; T02 (run #80)
+will pin the new behaviour with three new `it(...)` blocks, and
+T03 (run #81) will run the closeout doc edit on
+`PERFORMANCE_TUNING.md`.
+
+**Source-side change (T01 / FR-1):** single-token edit at
+[`packages/common/src/utils/helpers.ts:803`](../packages/common/src/utils/helpers.ts:803)
+inside the `extractSalary` body — `minSalary < lowerLimit / 12`
+→ `minSalary < lowerLimit` (4 tokens deleted, 0 inserted; net
+-4 tokens). The edit lives in the bare-path raw-value pre-check
+block introduced by Spec 015 / FR-2 / run #66.
+
+**Comment refresh (FR-5 idempotence support):** the lead-in
+explanatory comment block (pre-edit lines 786–798; post-edit
+lines 786–803) was rewritten to (a) reference Spec 019 / Q-041
+/ FR-1 alongside the original Spec 015 / Q-036 / FR-2
+attribution; (b) drop the literal pre-edit token
+(`lowerLimit / 12`) so `grep -c 'lowerLimit / 12'
+helpers.ts` returns 0 strictly per FR-5; (c) preserve the
+audit-trail context (the comment still notes that Spec 019
+narrowed the prior `lowerLimit`-divided-by-12 sub-threshold and
+why). Without the comment refresh, the FR-5 grep would return
+1 (the comment retained the literal token), violating the
+strict reading of FR-5 idempotence.
+
+**Acceptance evidence (D-01 in spec § 10):**
+
+- Regression sweep: `npx jest
+  packages/common/__tests__/helpers.spec` → **74/74 passed**
+  in 7.153 s. _Spec § 7.2 / NFR-5 / tasks.md / T02 cited 73 as
+  the pre-Spec-019 baseline; reality is 74 (off-by-one doc
+  drift). The +3 test-count delta itself is unchanged; the
+  reconciled T02 expectation is **74 → 77** rather than
+  **73 → 76**. T02 (run #80) will reconcile the spec § 7.2
+  narrative + NFR-5 target + tasks.md / T02 acceptance row in
+  the same pass that lands the three new cases. The literal
+  case bodies in spec § 7.2 stay byte-exact._
+- Bench: `npx jest packages/common/__tests__/helpers.bench` →
+  2/2 passed in 5.93 s; `dist/bench/helpers-salary.json`
+  records overall **p95 = 0.0176 ms** (Spec 016 baseline =
+  0.0174 ms; delta = +0.0002 ms; well within the NFR-1 +0.1 ms
+  budget and far under the 0.5 ms NFR-1 ceiling and 2.0 ms CI
+  ceiling). All eight per-currency p95 figures land under the
+  bench gate (USD 0.0141 / EUR 0.0190 / GBP 0.0168 / CHF
+  0.0127 / SEK 0.0189 / NOK 0.0129 / DKK 0.0211 / PLN 0.0169
+  ms). The bench acceptance gate restored by Spec 016 / T01
+  (run #69) holds.
+- FR-5 idempotence: `grep -c 'lowerLimit / 12'
+  packages/common/src/utils/helpers.ts` → **0** post-edit
+  (was **1** pre-edit). Re-running T01 produces a no-op diff.
+- Diff scope: exactly one source file changed
+  (`packages/common/src/utils/helpers.ts`) — inequality
+  threshold token (line 803) + comment-block refresh (lines
+  786–803). No test-file edits at T01 (T02 owns those at
+  run #80).
+
+**Files touched (run #79):**
+
+- `packages/common/src/utils/helpers.ts` — line 803
+  inequality token (`lowerLimit / 12` → `lowerLimit`) +
+  lines 786–803 comment-block refresh referencing Spec 019 /
+  Q-041 / FR-1 alongside Spec 015 / Q-036 / FR-2 (FR-5-clean
+  text; no remaining literal of the pre-edit token).
+- `.specify/specs/019-salary-parser-residuals-batch-2/spec.md`
+  — header `Status` flipped from `draft (Phase 0 scaffolded
+  run #78); Phase 1..3 pending` to `T01 landed (run #79);
+  T02 + T03 pending`; `Last updated` bumped to `2026-04-28
+  (run #79)`; § 10 gains Decision D-01 (~50 lines)
+  documenting the T01 acceptance evidence (regression sweep
+  74/74, bench p95 0.0176 ms, FR-5 idempotence 1→0,
+  diff-scope check) + the 73→74 baseline-doc-drift forward-
+  pointer for T02.
+- `.specify/specs/019-salary-parser-residuals-batch-2/tasks.md`
+  — header `Last updated` bumped to `2026-04-28 (run #79)`;
+  T01 row Status flipped from `[ ]` to `[x]`; T01 acceptance
+  text updated to reflect the actual sweep count (74/74),
+  the actual bench p95 (0.0176 ms), the comment-block refresh
+  necessary to satisfy FR-5 strictly, and the D-01 evidence
+  pointer.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag bumped from `2026-04-28 (scheduled
+  run #78)` to `2026-04-28 (scheduled run #79)`.
+
+**No-change list (verified out-of-scope):** `helpers.ts`
+function signatures (`extractSalary`, `parseSalaryNumber`,
+`parseSalaryCurrency`, `resolveSalaryLocale`,
+`buildSalaryRegexBare`, `buildSalaryRegexPrefix`,
+`buildSalaryRegexSuffix`) all stay byte-identical;
+`SALARY_LOCALE_MAP`, `CURRENCY_TO_NATURAL_LOCALE`,
+`SALARY_NUMBER_REGEX_SRC`, `SALARY_SYMBOL_ALTERNATIONS` all
+stay byte-identical; the K-suffix bypass guard
+(`match[2] !== 'k' && match[4] !== 'k'`) stays byte-identical;
+`ExtractSalaryOptions` defaults (`lowerLimit`, `upperLimit`,
+`hourlyThreshold`, `monthlyThreshold`, `enforceAnnualSalary`)
+stay byte-identical; `helpers.spec.ts` is untouched (T02
+owns the test additions); `helpers.bench.spec.ts` is
+untouched (Spec 016 / T01 acceptance gate honoured); no
+plugin source code modified (FR-9 inherited from Spec 015 /
+019); no `package-lock.json` regeneration (zero deps added
+or bumped); no `docs/index.md` edit (Spec 019 row already
+exists; no Status change yet — that lands at T03 closeout).
+
+**Lockfile sync (npmjs.org rule):** zero net dep delta
+(T01 is a single-token source edit), so no
+`package-lock.json` regeneration this run; the existing
+lockfile retains the npmjs.org registry URLs from prior
+regenerations.
+
+**Out-of-repo upstream-watch ledger:** no row added (Spec 019
+is internal-correctness driven per Q-041; the
+external-snapshot tag set has not changed for 57
+consecutive runs through run #78). The Sync Log entry for
+run #79 is the appropriate parallel record (added).
+
+**Default for run #80:** Spec 019 / Phase 2 / T02 — append
+the three new `it(...)` blocks per spec § 7.2 verbatim
+(cases 75 / 76 / 77 in the actual file numbering, given the
+74-baseline reconciliation; spec § 7.2 / 7.3 narrative text
+also updates from `73 → 76` to `74 → 77`). T02 acceptance:
+77/77 green sweep, bench p95 within +0.1 ms of Spec 016
+baseline, doc-lint clean.
+
+**Default for run #81:** Spec 019 / Phase 3 / T03 — closeout
+doc edit on `PERFORMANCE_TUNING.md` per spec § 7 / FR-4 +
+Status flip on spec.md + index.md row + final D-03 entry +
+CLAUDE.md run-tag bump.
+
+---
+
 ## 2026-04-28 — Scheduled run #78 (Spec 019 / Phase 0 — `salary-parser-residuals-batch-2` scaffold pass; opens Q-041 for the bare-path threshold bump; closes Spec 015 / FR-8 documented limitation as the load-bearing residual)
 
 **Scope:** Spec 018 closed at run #77 — the prior agent-driven

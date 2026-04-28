@@ -783,24 +783,31 @@ export function extractSalary(
   let maxSalary = parseSalaryNumber(match[3], locale);
   if (minSalary === null || maxSalary === null) return result;
 
-  // Spec 015 / Q-036 / FR-2 — bare-path raw-value pre-check.
-  // The bare regex is necessarily greedy on plain digit ranges
+  // Spec 015 / Q-036 / FR-2 + Spec 019 / Q-041 / FR-1 —
+  // bare-path raw-value pre-check (threshold bumped to
+  // `lowerLimit` at run #79; closes Spec 015 / FR-8). The
+  // bare regex is necessarily greedy on plain digit ranges
   // ("5 - 7 years experience" captures 5/7); the country-tier
   // guard alone is not a sufficient prose-immunity safety net
   // because hourly annualisation (`* 2080`) lifts small numbers
   // above `lowerLimit` and the bounds check passes. Reject the
   // row dimensionally: if the bare path won, neither end is
-  // K-suffixed, and the raw min is below `lowerLimit / 12`
-  // (i.e. would not survive even monthly annualisation against
-  // the configured floor), return the all-`null` envelope. The
-  // threshold admits legitimate Continental low-end shapes like
-  // `"100 - 150"` (`100 ≥ 1000 / 12 ≈ 83`) — documented as the
-  // FR-8 known limitation in PERFORMANCE_TUNING.md.
+  // K-suffixed, and the raw min is below `lowerLimit`
+  // (i.e. would not survive even unitary admission against the
+  // configured floor), return the all-`null` envelope. Spec 019
+  // bumped the multiplier (was the prior `lowerLimit`-divided-by-12
+  // sub-threshold; now equals `lowerLimit ≈ 1000`) to reject
+  // shapes like `"team of 100 - 150 employees"` (`100 < 1000` →
+  // reject) that previously synthesised hourly EUR rows under a
+  // `country` hint.
+  // The Continental yearly bare-path shape stays admitted via
+  // continental-locale parsing (`"100.000 - 150.000"` →
+  // `100000 ≥ 1000`). See `docs/PERFORMANCE_TUNING.md`.
   if (
     matchedFromBare &&
     match[2].toLowerCase() !== 'k' &&
     match[4].toLowerCase() !== 'k' &&
-    minSalary < lowerLimit / 12
+    minSalary < lowerLimit
   ) {
     return result;
   }

@@ -10,7 +10,7 @@
 | Spec           | [`spec.md`](./spec.md)             |
 | Plan           | [`plan.md`](./plan.md)             |
 | Created        | 2026-04-28 (run #78)               |
-| Last updated   | 2026-04-28 (run #78)               |
+| Last updated   | 2026-04-28 (run #79)               |
 
 ---
 
@@ -27,7 +27,7 @@
 
 | ID  | Task                                                                                  | Acceptance                                                                                                                                                          | Status |
 | --- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| T01 | Single-token edit at [`packages/common/src/utils/helpers.ts:803`](../../../packages/common/src/utils/helpers.ts:803): `minSalary < lowerLimit / 12` → `minSalary < lowerLimit` (FR-1, spec § 7.1). | (a) `npx jest packages/common/__tests__/helpers.spec` returns 73/73 passed (no new test cases yet — regression sweep only). (b) `npx jest packages/common/__tests__/helpers.bench` reports p95 ≤ 0.1174 ms (Spec 016 baseline + 0.1 ms NFR-1). (c) FR-5 idempotence verified: `grep -c 'lowerLimit / 12' packages/common/src/utils/helpers.ts` returns 0 post-edit (was 1 pre-edit). (d) Diff shows exactly one file changed (`helpers.ts`) with the four-token reduction. (e) Spec 019 / spec.md / § 10 gains Decision D-01 documenting the T01 acceptance + bench p95 numbers + idempotence verification. (f) `docs/log.md` gains a run #79 entry. | [ ]    |
+| T01 | Single-token edit at [`packages/common/src/utils/helpers.ts:803`](../../../packages/common/src/utils/helpers.ts:803): `minSalary < lowerLimit / 12` → `minSalary < lowerLimit` (FR-1, spec § 7.1). | (a) `npx jest packages/common/__tests__/helpers.spec` returns 74/74 passed _(spec doc cited 73; off-by-one doc drift reconciled in D-01)_. (b) `npx jest packages/common/__tests__/helpers.bench` reports p95 = 0.0176 ms (Spec 016 baseline + 0.0002 ms — well under the +0.1 ms NFR-1 budget). (c) FR-5 idempotence verified: `grep -c 'lowerLimit / 12' packages/common/src/utils/helpers.ts` returns 0 post-edit (was 1 pre-edit; required a parallel comment-block refresh on lines 786–803 that drops the literal pre-edit token while preserving Spec 015 / Q-036 audit context). (d) Diff is exactly one file (`helpers.ts`) with the inequality threshold token + the comment-block refresh. (e) Spec 019 / spec.md / § 10 gains Decision D-01 documenting acceptance evidence + the 73→74 baseline reconciliation forward-pointer for T02. (f) `docs/log.md` gains a run #79 entry. | [x]    |
 
 ## Phase 2 — T02: test pins for new behaviour (target run #80)
 
