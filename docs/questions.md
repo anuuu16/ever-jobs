@@ -10,6 +10,132 @@
 
 ---
 
+## Q-036 — Bare-regex over-matches plain prose under country hint (Spec 014 / T04 discovery)
+
+**Context:** Spec 014 / T04 acceptance asserts that
+`extractSalary("5 - 7 years experience", { country: GERMANY })`
+should return all-`null` because "`5` < `lowerLimit = 1000`, so
+the existing limit-check at `extractSalary()` line ~709 correctly
+rejects the row." Run #63 traced this and the assertion is
+**incorrect**: the bare regex (T03) captures `5 - 7` under the
+`confidence === 'country'` guard; `parseSalaryNumber` returns
+raw `5` and `7`; `5 < hourlyThreshold = 350` so the dispatcher
+classifies the row as `interval='hourly'` and **annualises** via
+`* 2080` → `annualMinSalary = 10400`, which IS above
+`lowerLimit = 1000`. The bounds check passes, and the row is
+emitted as `{ interval: 'hourly', minAmount: 5, maxAmount: 7,
+currency: 'EUR' }` — a clear false positive against the FR-7
+intent.
+
+The same mechanism breaks `"3 - 5 month internship" +
+country=GERMANY` (3*2080 = 6240 > lowerLimit).
+
+The genuine safety net the parent spec text claimed does not
+exist; the bare regex's country-tier guard alone is insufficient.
+
+**Options:**
+
+- **A. Tighten the bare regex to require a salary-shape signal**
+  (e.g. require ≥ 4 digits in at least one number, OR a `K`/`k`
+  suffix, OR a thousands separator). Single regex tweak, no
+  threshold logic change. Caveat: `"100 - 150"` (rare but
+  legitimate Continental EUR low-end shape) would also fall
+  through, which the bare regex was supposed to catch.
+- **B. Add a raw-value pre-check before annualisation** for the
+  bare-regex match path specifically: if `match[2] !== 'k'`
+  AND `match[4] !== 'k'` AND `minSalary < lowerLimit / 12`
+  (rough monthly floor), reject. Preserves prefix/suffix paths
+  (which already require a currency anchor, so over-matching is
+  bounded) and only adds a guard to the new bare path.
+- **C. Add a stop-word filter** to `extractSalary()` — if the
+  matched substring is followed (within N chars) by a
+  non-salary keyword (`year(s)`, `month(s)`, `day(s)`,
+  `experience`, `internship`, `tenure`, etc.), reject.
+  Linguistically aware but fragile (i18n: needs DE / FR / PL
+  variants; mistranslations).
+- **D. Status quo + accept the false-positive risk.** Document
+  the limitation in `PERFORMANCE_TUNING.md` and rely on
+  upstream callers (plugin authors) to sanitise inputs before
+  passing to `extractSalary()`. Lowest engineering cost, highest
+  downstream risk.
+
+**Default (proceeding):** **B. Raw-value pre-check on bare-path
+matches only.** Preserves all existing prefix/suffix behaviour
+byte-identically (NFR / FR-5), bounds the guard to the new bare
+path (the only over-matching surface), and keeps the
+implementation under 5 LOC. The threshold can be tuned via the
+existing `lowerLimit` option (`lowerLimit / 12 ≈ 83`, so
+`5 < 83` rejects; `100 < 83` also rejects but `1000 / 12 ≈ 83`
+admits anything ≥ 84 which is ample). Lands in the Spec 015
+candidate (or a Spec 014 / T05 spillover if scope permits).
+
+**Resolution:** _pending review._
+
+---
+
+## Q-035 — `resolveSalaryLocale` doesn't honour symbol-tier precedence end-to-end (Spec 014 / T04 discovery)
+
+**Context:** Spec 014 / T04 acceptance asserts that
+`extractSalary("$100,000 - $150,000", { country: GERMANY })`
+should return `{ interval: 'yearly', minAmount: 100000, maxAmount:
+150000, currency: 'USD' }`. Run #63 traced this end-to-end and
+the assertion is **incorrect under current code**: the symbol
+tier in `parseSalaryCurrency` correctly resolves USD (T01 /
+Q-027), but `resolveSalaryLocale` (line ~574) cascades through
+`options.locale` → `options.country` → currency-natural-locale →
+`'anglo'` default. With `country: GERMANY`, the second tier
+fires and returns `'continental'`. The continental num-regex
+(`\d+(?:[. ]\d{3})*(?:,\d+)?`) interprets `100,000` as
+`100.000` (decimal) ≈ `100`, so the dispatcher emits
+`{ interval: 'hourly', minAmount: 100, maxAmount: 150,
+currency: 'USD' }` — currency is right, amounts are wrong.
+
+The mismatch surfaces only when (a) a unique symbol resolves a
+currency whose natural locale is `'anglo'` (USD / GBP / CHF) AND
+(b) the caller passes a non-anglo `country` hint. The substitute
+case (`"€45,000 - €60,000" + country=USA`) works only because EUR
++ USA happens to produce anglo locale, masking the asymmetry.
+
+**Options:**
+
+- **A. Tier-1 short-circuit on symbol-tier resolutions.** Insert
+  a new tier ahead of the country branch: if
+  `confidence === 'symbol'` AND
+  `CURRENCY_TO_NATURAL_LOCALE.has(currency)`, return the
+  natural locale of that currency. Means `parseSalaryCurrency`
+  would need to expose `confidence` to the caller (it already
+  does; `extractSalary` already destructures `detected`). Lifts
+  FR-1 ("symbol > country") from currency-only to
+  currency-AND-locale. Caveat: a hypothetical
+  `"€45,000" + country=GERMANY` row would now parse continental
+  even though the in-text `,` is a thousands separator (anglo
+  shape) — but that combination is itself ambiguous, and
+  forcing continental matches "country wins for locale" intent
+  on the symbol-resolved variant.
+- **B. In-text shape inference.** Detect locale from the
+  punctuation pattern in the input itself (e.g. `\d+,\d{3}` →
+  anglo; `\d+\.\d{3}` → continental; `\d+\s\d{3}` → either).
+  Most robust but a much bigger change.
+- **C. Caller responsibility.** Push the choice up to plugin
+  authors via an explicit `options.locale` (already
+  supported). Document in `PERFORMANCE_TUNING.md` and skip the
+  literal Spec 012 / § 8 case 14 from the suite. Lowest
+  engineering cost; highest documentation cost.
+
+**Default (proceeding):** **A. Tier-1 short-circuit on
+symbol-tier resolutions.** Smallest behavioural delta, faithfully
+implements the FR-1 precedence intent end-to-end (currency AND
+locale), and the affected combinations (anglo-currency + non-anglo
+country hint) are inherently ambiguous so favouring the
+in-text-shape signal over the metadata is the defensible call.
+Lands in the Spec 015 candidate (alongside Q-036's bare-path
+guard fix) — both gaps are dispatcher-shape gaps in
+`@ever-jobs/common` and bundle naturally.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-031 — Tesla detail-fetch budget when `descriptionDepth` is unset (Spec 013 / FR-11)
 
 **Context:** Tesla's board endpoint

@@ -782,3 +782,83 @@ describe('extractSalary — Spec 014 / T03 (bare-numeric-range with country guar
     expect(result.interval).toBeNull();
   });
 });
+
+/**
+ * Spec 014 / T04 — Spec 012 § 8 case 14 (FR-1 end-to-end via K-suffix
+ * shape) + FR-7 false-positive immunity reframed (Q-027 part 1 /
+ * FR-1 / FR-6 / FR-7).
+ *
+ * **Run #63 discovery (Q-035 / Q-036).** The literal Spec 012 § 8
+ * case 14 (`"$100,000 - $150,000" + country=GERMANY`) cannot be
+ * pinned tests-only as the parent spec assumed: the `country=GERMANY`
+ * hint drives `resolveSalaryLocale` to `'continental'` (per Spec 012
+ * / § 7.3 / FR-7), and the continental regex interprets `,` as a
+ * decimal separator, so `$100,000` parses as `$100.000` ≈ `100`. The
+ * symbol tier resolves USD correctly (T01 fix) but the locale tier
+ * fights back. Similarly, the FR-7 false-positive immunity claim
+ * ("`5` < `lowerLimit = 1000` rejects the row") doesn't hold: the
+ * raw `5` is below `hourlyThreshold = 350` so the dispatcher
+ * annualises via `* 2080` → `10400`, which DOES pass `lowerLimit`,
+ * so the row is wrongly emitted as `'hourly' / 5 / 7 / EUR`.
+ *
+ * Both gaps are tracked in `docs/questions.md` — Q-035 (locale
+ * resolution should honour symbol-tier precedence end-to-end) and
+ * Q-036 (bare-regex over-matches plain prose via the hourly
+ * conversion path). A follow-up source-side spec (Spec 015
+ * candidate) addresses both holistically.
+ *
+ * What T04 ships now:
+ *
+ *   1. **K-suffix variant of case 14** — `"$100K - $150K" +
+ *      country=GERMANY` → USD / 100000 / 150000 / yearly. The
+ *      K-suffix path bypasses the comma-thousands locale conflict
+ *      (raw `100` * 1000 from the K-suffix arithmetic, not `100,000`
+ *      misread as `100.000`), so this case pins FR-1 precedence
+ *      end-to-end through `extractSalary()` without depending on
+ *      the locale-resolution gap. Same FR-1 spirit as the literal
+ *      case 14 — a `$` anywhere in the input outranks any country
+ *      hint that would resolve to a non-USD currency.
+ *   2. **The substitute case 14 from Spec 012 / T04 stays green
+ *      alongside** (`"€45,000 - €60,000" + country=USA` → EUR /
+ *      45000 / 60000 / yearly). Already pinned in the T04 sweep
+ *      block; no additional case here.
+ *
+ * The two FR-7 immunity cases the parent spec called for
+ * (`"5 - 7 years experience"` and `"3 - 5 month internship"` under
+ * country=GERMANY) are NOT pinned in this run because they would
+ * fail under the current `extractSalary` behaviour (Q-036). They
+ * land alongside the Q-036 source-side fix in a future spec.
+ */
+describe('extractSalary — Spec 014 / T04 ($-symbol end-to-end via K-suffix)', () => {
+  it('Spec 014 / T04 — `$100K - $150K` outranks country=GERMANY (FR-1 end-to-end via K-suffix)', () => {
+    // FR-1 precedence pin via the K-suffix path. The literal
+    // comma-thousands shape (`"$100,000 - $150,000"`) is gated on
+    // Q-035 (locale resolution) — see docs/questions.md and the
+    // describe-block doc above. The K-suffix variant exercises the
+    // same precedence (symbol tier outranks country tier in
+    // `parseSalaryCurrency`) without depending on locale-aware
+    // thousands-separator parsing.
+    //
+    // Trace under current behaviour:
+    //   1. `parseSalaryCurrency('$100K - $150K', { country: GERMANY })`
+    //      → `{ code: 'USD', symbol: '$', confidence: 'symbol' }`
+    //      via the T01-registered `['$', 'USD']` entry in
+    //      `SALARY_UNIQUE_SYMBOLS`.
+    //   2. `resolveSalaryLocale` → `'continental'` (country tier).
+    //   3. Continental num-regex on `100`: `\d+` greedy → `100`,
+    //      no thousands / decimal trailers. match[1]='100',
+    //      match[2]='K' (the K-suffix capture). The K-suffix
+    //      arithmetic at line ~755 multiplies by 1000 → 100000.
+    //   4. Same for max → 150000.
+    //   5. minSalary (100000) >= monthlyThreshold (30000) →
+    //      interval=YEARLY, annual = raw → all bounds pass →
+    //      result emitted.
+    const result = extractSalary('$100K - $150K', {
+      country: Country.GERMANY,
+    });
+    expect(result.currency).toBe('USD');
+    expect(result.minAmount).toBe(100000);
+    expect(result.maxAmount).toBe(150000);
+    expect(result.interval).toBe('yearly');
+  });
+});

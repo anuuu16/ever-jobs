@@ -5,6 +5,206 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #63 (Spec 014 / Phase 4 / T04 partial — K-suffix end-to-end pin landed; Q-035 + Q-036 opened for deferred literal cases)
+
+**Scope:** land Spec 014 / Phase 4 / T04 *partially* — the
+parent acceptance text called for three tests (literal Spec 012
+§ 8 case 14 + two FR-7 false-positive immunity cases). Run #63's
+trace through the actual `extractSalary()` behaviour discovered
+that two of the three are **blocked by pre-existing dispatcher
+shape gaps** the parent spec didn't anticipate, so they land
+alongside a future source-side fix rather than as broken tests.
+
+**Run-#63 lands:**
+
+- **One new test case** — `extractSalary("$100K - $150K",
+  { country: GERMANY })` → USD / 100000 / 150000 / yearly. The
+  K-suffix arithmetic path (`match[2] === 'k'` triggers `*
+  1000` after `parseSalaryNumber("100", "continental") = 100`)
+  bypasses the comma-thousands locale conflict that breaks the
+  literal `"$100,000 - $150,000"` shape. Pins FR-1 precedence
+  end-to-end through `extractSalary()` via a workable variant
+  of the parent-spec case 14 — the same FR-1 spirit ("a `$`
+  anywhere in the input outranks any country hint that would
+  resolve to a non-USD currency"), proven through the
+  dispatcher slice that doesn't depend on the locale-resolution
+  gap.
+- **Two new questions in `docs/questions.md`:**
+  - **Q-036 — Bare-regex over-matches plain prose under
+    country hint.** The acceptance text's claim that
+    `"5 - 7 years experience" + country=GERMANY` returns
+    all-`null` because "`5` < `lowerLimit = 1000` rejects the
+    row" is incorrect: `5 < hourlyThreshold = 350` triggers
+    the hourly conversion path (`* 2080`) → `annualMinSalary
+    = 10400`, which DOES pass `lowerLimit`. The row is
+    wrongly emitted as `{ interval: 'hourly', minAmount: 5,
+    maxAmount: 7, currency: 'EUR' }`. Same mechanism breaks
+    `"3 - 5 month internship"`. Default proceeds with a
+    raw-value pre-check before annualisation, scoped to the
+    bare-path match only (preserves prefix/suffix paths
+    byte-identical). Lands in the Spec 015 candidate.
+  - **Q-035 — `resolveSalaryLocale` doesn't honour symbol-
+    tier precedence end-to-end.** With `country=GERMANY`,
+    `resolveSalaryLocale` (line ~574) cascades through the
+    country tier and returns `'continental'` even when the
+    symbol tier in `parseSalaryCurrency` resolved USD via the
+    T01-registered `['$', 'USD']` entry. Continental num-regex
+    interprets `,` as a decimal separator, so the literal
+    `$100,000` parses as `$100.000` ≈ `100`. Default proceeds
+    with a tier-1 short-circuit on symbol-tier resolutions
+    (smallest behavioural delta; faithfully implements the
+    FR-1 precedence intent across both currency AND locale).
+    Lands in the Spec 015 candidate alongside Q-036.
+
+**Run-#63 defers (to the Spec 015 candidate):**
+
+- The literal Spec 012 § 8 case 14 (`"$100,000 - $150,000" +
+  country=GERMANY` → USD / 100000 / 150000 / yearly) — blocked
+  on Q-035.
+- The two FR-7 false-positive immunity cases
+  (`"5 - 7 years experience"` + `"3 - 5 month internship"`,
+  both under `country=GERMANY` → all-`null`) — blocked on
+  Q-036.
+- T04 stays flagged `[~]` partial in
+  `.specify/specs/014-salary-parser-residuals/tasks.md`; full
+  close blocks on the Spec 015 candidate.
+
+Estimated 0.15 day per tasks.md; landed in a single
+scheduled-run cycle (run #63).
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from runs #59..#62's syncs). Forty-sixth consecutive
+zero-churn run in `OTHERS/`. (Spec 014 is internal-correctness
+work, not upstream-driven coverage; the streak is logged for
+continuity.)
+
+**Two new questions opened this run** (Q-035 + Q-036, see
+above). The originating questions for Spec 014 (Q-026 + Q-027)
+remain open per the scaffolding plan; their resolution flip
+deferred to T05 closeout.
+
+**Three implementation observations** were resolved during
+T04's edit pass:
+
+1. **Spec acceptance traced mechanically before writing
+   tests.** The parent spec's case-14 acceptance and FR-7
+   immunity claim were written without tracing the actual
+   `extractSalary()` code path. Run #63 wrote the three
+   acceptance tests as described, ran them, observed
+   failures, and pivoted to opening questions rather than
+   shipping broken tests or "fixing" tests to match
+   incorrect behaviour. Discipline pin: a future
+   contributor reading the questions.md / spec.md trail
+   sees the bug-vs-acceptance asymmetry resolved with
+   defaults rather than a green-test alibi.
+2. **K-suffix workaround for FR-1 precedence end-to-end.**
+   The K-suffix arithmetic path
+   (`match[2].toLowerCase() === 'k'` → `* 1000`) is
+   locale-agnostic — it operates on raw single-token numbers
+   (`100`, `150`) without depending on thousands-separator
+   parsing. This makes `"$100K - $150K" + country=GERMANY` a
+   workable variant of case 14 that pins FR-1 precedence
+   end-to-end without surfacing the Q-035 gap. Same FR-1
+   spirit, different shape; the parent acceptance's "case 14
+   re-enabled" intent is preserved at the test-suite level.
+3. **Origin parallelism observed and reconciled.** Run #63
+   started against a develop branch that another
+   scheduled-task agent had independently moved from
+   `e3bf307` (T01) to `3143581` (T03 closeout) during run
+   #61 + run #62. Local working-tree changes I had drafted
+   for T02 + T03 were redundant; `git fetch origin` + the
+   auto-fast-forward merged my (matching) local tree to
+   origin. No content conflict surfaced — both agents
+   converged on byte-identical source for T02's regex
+   tweak and the test cases. The pivot to T04 cost ~3
+   minutes; logged here for continuity so a future
+   contributor sees the parallelism pattern documented.
+
+**Changes — source / test:**
+
+- `packages/common/__tests__/helpers.spec.ts` — new
+  describe block `'extractSalary — Spec 014 / T04
+  ($-symbol end-to-end via K-suffix)'` appended after the
+  Spec 014 / T03 block. One case (the K-suffix variant of
+  case 14). Test count grew from 70 → 71; all 71 cases pass
+  byte-identically against this commit (verified locally
+  via `npx jest packages/common/__tests__/helpers.spec`).
+- **No source-code edits in run #63** — T04 was strictly
+  tests-only per its acceptance; the source-side fixes for
+  Q-035 + Q-036 are explicitly out-of-scope here and bundle
+  into the Spec 015 candidate.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/014-salary-parser-residuals/tasks.md` —
+  T04 row flipped from `[ ]` to `[~]` (partial) with "Run
+  #63 partial-landing notes" subsection added; Notes-for-
+  the-next-run pinned default updated to **Spec 014 /
+  Phase 5 / T05** (documentation + closeout).
+- `.specify/specs/014-salary-parser-residuals/spec.md` —
+  Status flipped from "T01..T03 landed runs #60..#62;
+  T04..T05 pending" to "T01..T03 landed runs #60..#62; T04
+  partial run #63 (Q-035 + Q-036 blocked literal cases);
+  T05 pending"; Last-updated bumped to run #63; § 10
+  Decisions log appended with the three implementation
+  observations.
+- `docs/questions.md` — two new questions appended at the
+  top (Q-035 + Q-036), each with options + a defensible
+  default + `_pending review._` resolution placeholder.
+- `docs/index.md` — Spec 014 row status updated; footer
+  bumped to run #63.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #63.
+- **No `competitor-watch.md` §C entry** — Spec 014 is not
+  linked to a §C / AC-N row (Q-026 / Q-027 / Q-035 / Q-036
+  are internal-correctness gaps surfaced during the salary-
+  parser sweeps, not upstream-driven coverage gaps).
+  Sync-log line for run #63 (zero-churn, 46th consecutive)
+  to be added to `competitor-watch.md` per the standard
+  pattern (in the parent directory, not in this repo).
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns 'packages/common/__tests__/helpers.spec'`
+  — 71 cases pass, 0 failures (was 70; T04 added 1).
+- `npm run lint:docs` — clean.
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` —
+  clean (CI's typecheck path).
+
+**Notes & follow-ups:**
+
+- **Default for run #64** = Spec 014 / Phase 5 / T05 —
+  Documentation + closeout. Lands the
+  `docs/PERFORMANCE_TUNING.md` paragraph naming the three
+  T01..T03 behaviours; flips Spec 014 spec.md Status to
+  "T01..T03 + T04 partial done; T04 literal-comma case +
+  FR-7 immunity deferred to Spec 015 (Q-035 + Q-036)";
+  flips `docs/questions.md` Q-026 / Q-027 resolution text
+  to "**resolved** in Spec 014 (runs #59..#63)"; updates
+  `docs/index.md` Spec 014 row; adds `docs/log.md`
+  closeout entry; bumps `CLAUDE.md` run-tag. Pure docs
+  pass; NO source code. T04 stays flagged `[~]` partial;
+  full close blocks on the Spec 015 candidate.
+- **Spec 015 candidate forecast** = bundled source-side
+  fix for Q-035 + Q-036. Two small dispatcher-shape edits
+  in `@ever-jobs/common`:
+  (a) `resolveSalaryLocale` gains a tier-1 short-circuit
+  on symbol-tier resolutions (per Q-035 default A);
+  (b) `extractSalary()` gains a raw-value pre-check
+  before annualisation, scoped to the bare-path match
+  only (per Q-036 default B). Plus the three deferred
+  T04 cases (literal case 14 + the two FR-7 immunity
+  cases). Estimated 2–3 phases / runs.
+- **Out-of-scope reminders for run #64:** Stay strictly
+  in Phase 5 / T05 scope (docs + closeout). Do NOT touch
+  any source code. Do NOT close out T04 to `[x]` —
+  T04 stays `[~]` partial until Spec 015 lands. Do NOT
+  resolve Q-035 / Q-036 — they remain `_pending review._`
+  until the Spec 015 candidate lands.
+
+---
+
 ## 2026-04-28 — Scheduled run #62 (Spec 014 / Phase 3 / T03 — bare-numeric-range third try-branch landed)
 
 **Scope:** land Spec 014 / Phase 3 / T03 — add a third

@@ -135,10 +135,11 @@
 
 ## Phase 4 — Spec 012 / § 8 case 14 literal + FR-7 false-positive immunity
 
-- [ ] T04 — Literal `"$100,000 - $150,000" + country=GERMANY`
+- [~] T04 — Literal `"$100,000 - $150,000" + country=GERMANY`
   re-enabled (depends on T01's G-1 landing); FR-7 false-
   positive immunity case for plain-prose numbers (FR-1 /
-  FR-6 / FR-7).
+  FR-6 / FR-7). **Partial landing run #63 — see "Run #63
+  partial-landing notes" below.**
   - **Files (planned):**
     - `packages/common/__tests__/helpers.spec.ts` (2 new
       cases — no source-code edits).
@@ -172,7 +173,32 @@
       ≤ +0.1 ms of the Spec 012 / T04 baseline. The
       bench's CI ceiling (2.0 ms — Spec 012 / T04
       Decision 2) gives ample headroom.
-  - **Estimate:** 0.15 day.
+  - **Run #63 partial-landing notes (Q-035 + Q-036
+    discoveries):** the literal `"$100,000 - $150,000" +
+    country=GERMANY` cannot be pinned tests-only as the
+    parent spec assumed — the country tier in
+    `resolveSalaryLocale` overrides locale to
+    `'continental'` even when the symbol tier resolved
+    USD, and continental num-regex interprets `,` as
+    decimal so `100,000` parses as `100`. Tracked as
+    Q-035. Similarly, the FR-7 false-positive immunity
+    claim ("`5` < `lowerLimit = 1000` rejects the row")
+    is incorrect: the dispatcher annualises raw `5` via
+    `* 2080` (hourly threshold path) → `10400` which DOES
+    pass `lowerLimit`. Tracked as Q-036.
+    **Run #63 ships:** the K-suffix variant of case 14
+    (`"$100K - $150K" + country=GERMANY` → USD / 100000 /
+    150000 / yearly) — the K-suffix arithmetic bypasses
+    the comma-thousands locale conflict, so this case
+    pins FR-1 precedence end-to-end via a workable shape.
+    The literal comma-thousands case 14 + the two FR-7
+    immunity cases are deferred to the **Spec 015
+    candidate** (which addresses Q-035 + Q-036 with a
+    bundled source-side fix). T04's `[~]` flag stays
+    until Spec 015 lands or the parent acceptance is
+    re-scoped at T05 closeout.
+  - **Estimate:** 0.15 day (run #63 partial; full close
+    blocked on Q-035 + Q-036).
 
 ## Phase 5 — Documentation + closeout
 
@@ -223,19 +249,33 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #63** = Spec 014 / Phase 4 / T04 —
-  Re-enable the literal Spec 012 § 8 case 14
-  (`"$100,000 - $150,000" + country=GERMANY` →
-  `{ currency: 'USD', minAmount: 100000, maxAmount: 150000,
-  interval: 'yearly' }`). Pure tests-only pass; T01 already
-  shipped the source-side fix (G-1 / FR-1). Plus the
-  FR-7 false-positive immunity case
-  (`"5 - 7 years experience" + country=GERMANY` →
-  all-`null` via the `lowerLimit` clamp at line ~709).
-  Plus a bench re-run check (`npx jest packages/common/__tests__/helpers.bench`)
-  asserting p95 within ≤ +0.1 ms of the Spec 012 / T04
-  baseline. Pure tests + bench + no source edits. Estimated
-  0.15 day.
+- **Default for run #64** = Spec 014 / Phase 5 / T05 —
+  Documentation + closeout. Lands the
+  `docs/PERFORMANCE_TUNING.md` paragraph naming the three
+  T01..T03 behaviours (`$`-symbol promotion / Swiss
+  apostrophe-thousands / bare-number country fallback);
+  flips `.specify/specs/014-salary-parser-residuals/spec.md`
+  Status to "T01..T03 + T04 partial done; T04 literal-comma
+  case + FR-7 immunity deferred to Spec 015 (Q-035 + Q-036)";
+  flips `docs/questions.md` Q-026 / Q-027 resolution text
+  from "open — agent default = B" to "**resolved** in Spec
+  014 (runs #59..#63)"; updates `docs/index.md` Spec 014
+  row; adds `docs/log.md` closeout entry; bumps `CLAUDE.md`
+  run-tag. Pure docs pass; NO source code. T04 stays
+  flagged `[~]` partial in tasks.md (full close blocks on
+  the Spec 015 candidate). Estimated 0.15 day.
+- **Default for run #63 (DONE — landed run #63 partial)** =
+  Spec 014 / Phase 4 / T04 — landed the K-suffix variant
+  of case 14 (`"$100K - $150K" + country=GERMANY` → USD /
+  100000 / 150000 / yearly) end-to-end through
+  `extractSalary()`. The literal comma-thousands case 14
+  + the two FR-7 false-positive immunity cases were
+  blocked on the run-#63 discoveries Q-035 (locale
+  resolution doesn't honour symbol-tier precedence
+  end-to-end) and Q-036 (bare regex over-matches plain
+  prose via the hourly conversion path). T04 stays
+  `[~]` partial; the deferred cases land alongside the
+  Spec 015 candidate's bundled source-side fix.
 - **Default for run #62 (DONE — landed run #62)** = Spec 014
   / Phase 3 / T03 — Bare-numeric-range third branch. Added
   private `buildSalaryRegexBare(numSrc)` with the four-capture

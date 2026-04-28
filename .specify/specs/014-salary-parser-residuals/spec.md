@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 014                                                                         |
 | Slug           | salary-parser-residuals                                                     |
-| Status         | T01..T03 landed runs #60..#62; T04..T05 pending                             |
+| Status         | T01..T03 landed runs #60..#62; T04 partial run #63 (Q-035 + Q-036 blocked literal cases); T05 pending |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #59)                                                        |
-| Last updated   | 2026-04-28 (run #62)                                                        |
+| Last updated   | 2026-04-28 (run #63)                                                        |
 | Supersedes     | (none — extends Spec 012's salary-parser surface in `@ever-jobs/common`)    |
 | Related specs  | 003 (Job Deduplication Engine), 012 (European Salary Parser)                |
 
@@ -489,7 +489,64 @@ Populated as T01..T05 land.)
   (stays module-private); no fourth try-branch attempted
   (the bare regex is the third and final variant).
 
-_T04..T05 land in subsequent runs (#63..#64 if Spec 012's
+- **2026-04-28 (run #63 / T04 partial)** — T04 lands a single
+  test case (the K-suffix variant of case 14:
+  `extractSalary("$100K - $150K", { country: GERMANY })` →
+  USD / 100000 / 150000 / yearly) end-to-end through
+  `extractSalary()`. The literal comma-thousands case 14 +
+  the two FR-7 false-positive immunity cases the parent
+  acceptance called for were **discovered to be blocked by
+  pre-existing dispatcher behaviour** during run #63's trace:
+
+  (1) **Q-035 — locale resolution doesn't honour symbol-tier
+  precedence end-to-end.** With `country: GERMANY`,
+  `resolveSalaryLocale` (line ~574) cascades through the
+  country tier and returns `'continental'` even when the
+  symbol tier in `parseSalaryCurrency` has already resolved
+  USD via the T01-registered `['$', 'USD']` entry. The
+  continental num-regex interprets `,` as a decimal
+  separator, so `$100,000` parses as `$100.000` ≈ `100`.
+  The literal Spec 012 / § 8 case 14 (with comma thousands)
+  cannot be pinned tests-only; it requires a one-tier
+  short-circuit in `resolveSalaryLocale` for symbol-tier
+  resolutions. Tracked in `docs/questions.md` Q-035 with
+  default = A (tier-1 short-circuit on symbol-tier
+  resolutions). Lands in the Spec 015 candidate.
+
+  (2) **Q-036 — bare regex over-matches plain prose via
+  the hourly conversion path.** The acceptance text claimed
+  the FR-7 immunity case (`"5 - 7 years experience" +
+  country=GERMANY`) returns all-`null` because "`5` <
+  `lowerLimit = 1000`". Run #63's trace shows otherwise:
+  the dispatcher classifies raw `5` as an hourly rate
+  (`5 < hourlyThreshold = 350`) and **annualises** via
+  `* 2080` → `annualMinSalary = 10400`, which DOES pass
+  `lowerLimit`. The row is wrongly emitted as
+  `{ interval: 'hourly', minAmount: 5, maxAmount: 7,
+  currency: 'EUR' }`. Same mechanism breaks
+  `"3 - 5 month internship"`. Tracked in `docs/questions.md`
+  Q-036 with default = B (raw-value pre-check before
+  annualisation, scoped to the bare-path match only).
+  Lands in the Spec 015 candidate.
+
+  Run #63 ships:
+  - One T04 test case (the K-suffix variant), pinning FR-1
+    precedence end-to-end via the K-suffix arithmetic path
+    that bypasses the comma-thousands locale conflict
+    described in Q-035.
+  - Two new questions (Q-035 + Q-036) in `docs/questions.md`,
+    each with options + a defensible default.
+  - Spec 014 / T04 stays flagged `[~]` partial in tasks.md;
+    full close blocks on the Spec 015 candidate.
+
+  Out-of-scope reminder honoured: no source-code edits in
+  run #63 (all changes are tests + docs). The Spec 014 / T04
+  scope was strictly tests-only per its acceptance text; the
+  source-side fixes for Q-035 + Q-036 are explicitly
+  out-of-scope here and bundled into the Spec 015 candidate.
+
+_T05 lands in run #64; T04's two deferred sub-cases land
+alongside the Spec 015 candidate (run #65+ if Spec 012's
 lean one-task-per-run cadence holds)._
 
 ## 11. References
