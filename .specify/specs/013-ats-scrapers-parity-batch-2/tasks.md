@@ -213,7 +213,8 @@
 
 ## Phase 5 — Tesla-Playwright (OPTIONAL companion)
 
-- [ ] T09 — `TeslaPlaywrightService.scrape(input)` lazy-Playwright path.
+- [x] T09 — `TeslaPlaywrightService.scrape(input)` lazy-Playwright path.
+  **Landed run #52.**
   - **Files (planned):** `packages/plugins/source-tesla-playwright/src/tesla-playwright.service.ts`,
     `…/tesla-playwright.types.ts`, `…/tesla-playwright.constants.ts`,
     `packages/plugins/source-tesla-playwright/package.json` (declares
@@ -221,19 +222,26 @@
   - **Acceptance (FR-13):**
     - Lazy `import('playwright')` inside `scrape()`; caught when
       missing → sentinel `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE` + empty
-      `JobResponseDto`.
+      `JobResponseDto`. Implemented via `Function('s', 'return import(s)')(...)`
+      indirection so ts-jest doesn't statically resolve the missing
+      module at compile time (typical TypeScript-tooling-vs-optional-dep
+      friction; same trick the upstream `pino` / `pretty-print`
+      ecosystem uses).
     - Headless Chromium launched with anti-automation flags mirroring
-      upstream Python (`--disable-blink-features=AutomationControlled`).
-    - Navigate to `https://www.tesla.com/careers/search/`; settle for
-      ≥ 5 s; in-page fetch through the established session.
-    - Same `JobPostDto[]` mapping as `TeslaService` (FR-10) so dedup
-      treats both plugins' rows as collisions per
-      `(site, externalId)` — actually we want them to dedup as
-      `('tesla', externalId)` so the operator running BOTH plugins
-      doesn't get duplicate emissions; **that is a follow-up
-      decision** logged in `docs/questions.md` Q-032 (default = emit
-      under `Site.TESLA_PLAYWRIGHT`, dedup-engine collapses by
-      `externalId` cross-site per Spec 003 / FR-3 hash strategy).
+      upstream Python (`--disable-blink-features=AutomationControlled`
+      plus `--disable-dev-shm-usage` and `--no-sandbox` for sandboxed
+      CI hardening).
+    - Navigate to `https://www.tesla.com/careers/search/`; wait for
+      `networkidle` with 60 s timeout; settle 5 s after navigation;
+      in-page `fetch()` through the established session.
+    - Same `JobPostDto[]` mapping as `TeslaService` (FR-10) but
+      emitting `Site.TESLA_PLAYWRIGHT` (not `Site.TESLA`) per Q-032
+      default — dedup-engine's hash strategy collapses cross-site
+      duplicates via `externalId`.
+    - Three sentinel codes: `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE` (missing
+      `playwright`), `ERR_TESLA_PLAYWRIGHT_NAV_FAILED` (careers-page
+      goto failed), `ERR_TESLA_PLAYWRIGHT_FETCH_FAILED` (in-page fetch
+      failed or unexpected error). Browser always closed in `finally`.
   - **Estimate:** 0.8 day.
 
 - [ ] T10 — Tesla-Playwright unit tests (≥ 4 cases).
@@ -337,26 +345,28 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #52** = Spec 013 / Phase 5 / T09 —
-  `TeslaPlaywrightService.scrape(input)` lazy-Playwright path in
-  the OPTIONAL companion package. Real
-  `tesla-playwright.service.ts` + `tesla-playwright.types.ts` +
-  `tesla-playwright.constants.ts`. Lazy `import('playwright')`
-  inside `scrape()`; caught when missing → sentinel
-  `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE` + empty `JobResponseDto`.
-  Headless Chromium launched with anti-automation flags
-  (`--disable-blink-features=AutomationControlled`) mirroring
-  upstream Python (`OTHERS/Ats-scrapers/tesla/main.py:60-63`).
-  Navigate to `https://www.tesla.com/careers/search/`; settle
-  for ≥ 5 s; in-page fetch through the established session.
-  Same `JobPostDto[]` mapping as `TeslaService` (FR-10) so dedup
-  treats both plugins' rows as collisions per
-  `(site, externalId)` — emit under `Site.TESLA_PLAYWRIGHT`
-  (Q-032 default). Declare `playwright` as
-  `peerDependency` + `optionalDependency` ONLY in the package's
-  own `package.json`; root `package.json` does NOT declare it
-  (lockfile-registry rule applies for any future regen).
-  Estimated 0.8 day.
+- **Default for run #53** = Spec 013 / Phase 5 / T10 — Tesla-
+  Playwright behavioural unit-test sweep. Extend
+  `__tests__/tesla-playwright.service.spec.ts` to ≥ 4 cases
+  (happy path with stubbed `playwright` module via
+  `jest.mock('playwright', () => ({...}))` factory; `playwright`
+  not installed sentinel `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE`
+  carry-over from T09 — already exercised; Akamai bypass
+  succeeds — board+detail fetches return populated JSON via
+  the stubbed `page.evaluate()`; page navigation timeout
+  returns empty via stubbed `page.goto()` rejecting with
+  `TimeoutError`). Mirror the Oracle T04 / Mercor T06 / Tesla
+  T08 fixture-mock pattern. Estimated 0.5 day.
+- **Default for run #52 (DONE — landed run #52)** = Spec 013 /
+  Phase 5 / T09 — `TeslaPlaywrightService.scrape(input)`
+  lazy-Playwright path in the OPTIONAL companion package.
+  Real `tesla-playwright.service.ts` + `tesla-playwright.types.ts`
+  + `tesla-playwright.constants.ts` shipped. Lazy import via
+  `Function('s', 'return import(s)')` indirection (avoids
+  ts-jest's static-resolution friction with optional deps);
+  three sentinel codes (`ERR_TESLA_PLAYWRIGHT_UNAVAILABLE` /
+  `_NAV_FAILED` / `_FETCH_FAILED`); browser always closed in
+  `finally`. Emits `Site.TESLA_PLAYWRIGHT` (Q-032 default).
 - **Default for run #51 (DONE — landed run #51)** = Spec 013 /
   Phase 4 / T08 — Tesla behavioural unit-test sweep. Spec file
   grew from 7 → 14 cases (7 carry-over + 7 behavioural —

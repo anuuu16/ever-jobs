@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | T07 + T08 landed run #51; T09..T15 pending           |
+| Status         | T09 landed run #52; T10..T15 pending                 |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-28 (run #51)                                 |
+| Last updated   | 2026-04-28 (run #52)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -332,6 +332,78 @@ records.)
   'detail-all'` with `'detail-25'` the default).
 
 ## 10. Decisions
+
+- **2026-04-28 (run #52 / T09)** — `TeslaPlaywrightService.scrape(input)`
+  shipped in the OPTIONAL companion package against the live
+  Tesla careers site via headless Chromium. Three load-bearing
+  decisions resolved during implementation:
+
+  (1) **Lazy-import indirection via `Function('s', 'return
+  import(s)')(specifier)`.** A naïve `await import('playwright')`
+  inside `scrape()` triggers ts-jest's static module resolution
+  at compile time — it tries to resolve `playwright` against
+  the workspace's TypeScript paths AND the node_modules tree,
+  and fails the build (`Cannot find module 'playwright'`) even
+  though we want the runtime failure. Wrapping the dynamic
+  import in a `Function(...)` constructor moves it past the
+  static analyzer; the indirection is otherwise semantically
+  identical (same async resolution, same error shape on miss).
+  Same trick the upstream `pino` / `pretty-print` ecosystem and
+  the AWS SDK v3's optional-region modules use. Result: the
+  package compiles cleanly without `playwright` installed AND
+  the runtime miss surfaces as `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE`.
+
+  (2) **Three-sentinel error model (over the spec's single-
+  sentinel FR-13 baseline).** FR-13 named only
+  `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE`. Implementation surfaced
+  two additional failure modes that needed separate logging:
+  navigation failure (the `goto(careers-search)` either times
+  out or throws — typical of network issues OR a 60+ s Akamai
+  challenge) and in-page fetch failure (the established
+  Playwright session can still see HTTP 5xx on the API
+  endpoints even after the challenge resolves). Adopted the
+  same pattern Oracle / Mercor / Tesla use:
+  `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE` for missing dep,
+  `ERR_TESLA_PLAYWRIGHT_NAV_FAILED` for careers-page goto
+  failure, `ERR_TESLA_PLAYWRIGHT_FETCH_FAILED` for in-page
+  fetch + unexpected-error catch. All three caught + logged
+  via `Logger.warn`; never re-thrown.
+
+  (3) **`Site.TESLA_PLAYWRIGHT` emitted on each `JobPostDto`,
+  not `Site.TESLA`.** Q-032's "follow-up decision" line in
+  T09's original tasks.md acceptance text noted that operators
+  running BOTH plugins would otherwise emit duplicate rows
+  under the same `(site, externalId)` tuple. We honour Q-032's
+  default A: emit under `Site.TESLA_PLAYWRIGHT` (so the
+  per-source breaker policy can track the two plugins
+  independently per Spec 005 / FR-1) and rely on
+  `dedup-hybrid`'s hash strategy (Spec 003 / FR-3) to collapse
+  cross-site duplicates via `externalId`. This matches the
+  Greenhouse-vs-Greenhouse-RSS pattern that Spec 003 already
+  handles cleanly.
+
+  Additional shape notes carried forward to T10's mock
+  authoring:
+  - `playwright` mock factory provides `chromium.launch()` →
+    `{ newPage(), close() }`. `newPage()` returns a stub with
+    `goto()` and `evaluate()` methods. `evaluate()` receives
+    a callback as a string-or-function and a URL parameter;
+    the mock returns whatever the test pre-configures.
+  - For the missing-dep case, leaving `playwright` genuinely
+    uninstalled (the workspace's reality) and exercising the
+    real failure path is preferred over `jest.mock('playwright',
+    () => { throw ... })`. Real-failure-path tests catch
+    indirection bugs that mocked-rejection tests miss.
+  - For the navigation-timeout case, mock `page.goto()` to
+    reject with `{ name: 'TimeoutError', message: 'Timeout
+    60000ms exceeded' }`. The service catches and logs
+    `ERR_TESLA_PLAYWRIGHT_NAV_FAILED`; `scrape()` returns an
+    empty `JobResponseDto`.
+  - For the happy-path case, mock `page.evaluate()` to return
+    a 3-listing board envelope on first call and per-job
+    detail envelopes on subsequent calls (in board-emit
+    order). Assert the `JobPostDto[]` length, mapping, and
+    `description` population for the first listing.
 
 - **2026-04-28 (run #51 / T08)** — Tesla behavioural unit-test
   sweep landed alongside the 50-listing × 6-location × 5-department

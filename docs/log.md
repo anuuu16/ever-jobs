@@ -5,6 +5,172 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #52 (Spec 013 / Phase 5 / T09 — Tesla-Playwright service landed)
+
+**Scope:** land Spec 013 / Phase 5 / T09 —
+`TeslaPlaywrightService.scrape(input)` lazy-Playwright path in
+the OPTIONAL companion package. Three new files
+(`packages/plugins/source-tesla-playwright/src/tesla-playwright.{constants,types,service}.ts`)
+plus barrel re-export refresh and stub-test rewrite (3 → 5
+cases). `playwright` lazy-loaded via
+`Function('s', 'return import(s)')` indirection (defeats
+ts-jest's static module resolution which otherwise fails on
+the missing optional dep). Three sentinel codes recorded via
+`Logger.warn`: `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE` (missing
+dep), `ERR_TESLA_PLAYWRIGHT_NAV_FAILED` (careers-page goto
+failure), `ERR_TESLA_PLAYWRIGHT_FETCH_FAILED` (in-page fetch
+failure or unexpected error during scrape). Browser always
+closed in `finally`. Plugin emits `Site.TESLA_PLAYWRIGHT` (per
+Q-032 default) so the per-source breaker policy tracks the two
+Tesla plugins independently; cross-site dedup happens via
+`dedup-hybrid`'s hash strategy (Spec 003 / FR-3). Estimated
+0.8 day per tasks.md; landed in a single scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #51's sync). Thirty-sixth consecutive
+zero-churn run in `OTHERS/`.
+
+**No new questions opened this run.** Q-032 (cross-plugin
+dedup strategy = emit under `Site.TESLA_PLAYWRIGHT` and let
+the dedup-engine collapse cross-site duplicates) is now
+implementation-ratified by this run; its resolution graduates
+from "follow-up decision" to "resolved" in the T15 closeout
+pass. Q-026 / Q-027 retain their **Spec 014 candidate** label.
+
+**Three load-bearing decisions** were resolved during T09's
+implementation pass (full prose in Spec 013 § 10):
+
+1. **Lazy-import indirection via
+   `Function('s', 'return import(s)')(specifier)`.** A naïve
+   `await import('playwright')` triggers ts-jest's static
+   resolution at compile time and fails the build with
+   "Cannot find module 'playwright'" even though we want the
+   runtime failure. The `Function(...)` wrapper moves the
+   import past the static analyzer; semantically identical
+   at runtime. Same trick `pino` / `pretty-print` and AWS SDK
+   v3's optional-region modules use.
+2. **Three-sentinel error model.** FR-13 named only
+   `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE`. Implementation
+   surfaced two additional failure modes (navigation timeout
+   on the careers-search goto; in-page fetch failure on the
+   API endpoints) that needed separate logging. Adopted the
+   same pattern Oracle / Mercor / Tesla use.
+3. **`Site.TESLA_PLAYWRIGHT` emitted on each `JobPostDto`
+   (not `Site.TESLA`).** Honours Q-032 default A: per-source
+   breaker policy can track the two plugins independently;
+   `dedup-hybrid`'s hash strategy collapses cross-site
+   duplicates via `externalId` (Spec 003 / FR-3 — same
+   Greenhouse-vs-Greenhouse-RSS pattern that already works).
+
+**Changes — source / test:**
+
+- `packages/plugins/source-tesla-playwright/src/tesla-playwright.constants.ts`
+  — NEW. ~85 LOC. Exports the public Tesla origin, the
+  careers-search landing URL, board / detail endpoint paths
+  (locally inlined per "no peer plugin imports" rule),
+  description-budget map (mirrors `source-tesla` per Q-031),
+  Chromium launch flags
+  (`--disable-blink-features=AutomationControlled` plus
+  hardening flags for sandboxed CI), 5 s settle window, 60 s
+  goto timeout, and the three sentinel error codes.
+- `packages/plugins/source-tesla-playwright/src/tesla-playwright.types.ts`
+  — NEW. ~50 LOC. Mirrors the same board + detail envelope
+  shapes as `source-tesla`'s types (locally duplicated per
+  AGENTS.md §5 "no peer plugin imports").
+- `packages/plugins/source-tesla-playwright/src/tesla-playwright.service.ts`
+  — REWRITTEN from T02 stub. ~290 LOC. Real `scrape(input)`
+  implementation: lazy `playwright` load via `Function(...)`
+  indirection, headless Chromium launch with anti-automation
+  flags, `goto(careers-search)` with `networkidle` + 60 s
+  timeout, 5 s settle, in-page `page.evaluate()` JSON fetch
+  for board + detail endpoints, sequential detail-fetch loop
+  budgeted by `descriptionDepth`, four-section `\n\n`-joined
+  description compose, `JobPostDto` mapping (`tesla-${id}` ID,
+  literal `'Tesla'` companyName, slug-decorative jobUrl,
+  `Site.TESLA_PLAYWRIGHT` site, location resolved via
+  `lookup.locations[l]`, department via `lookup.departments[d]`,
+  isRemote heuristic), browser always closed in `finally`.
+- `packages/plugins/source-tesla-playwright/src/index.ts` —
+  barrel refreshed to re-export the constants and types
+  modules so T10's mock-fixture authors can import the same
+  literals.
+- `packages/plugins/source-tesla-playwright/__tests__/tesla-playwright.service.spec.ts`
+  — bumped from 3 → 5 cases. New cases: DI resolution
+  (carry-over), `Site.TESLA_PLAYWRIGHT` literal pin
+  (carry-over), description-budget map pin, anti-automation
+  flag pin, missing-dependency real-failure-path test
+  (exercises the genuine `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE`
+  sentinel without mocking — the workspace genuinely lacks
+  `playwright`). Behavioural sweep (≥ 4 cases — happy path
+  with stubbed playwright module; missing-dep already
+  exercised; Akamai bypass succeeds; navigation timeout
+  returns empty) lands in T10 alongside a `jest.mock('playwright',
+  ...)` factory.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  T09 row flipped from `[ ]` to `[x]` with "Landed run #52"
+  annotation; acceptance text updated to mention the
+  `Function(...)` indirection trick + the three sentinel
+  codes; Notes-for-the-next-run pinned default updated to
+  **Spec 013 / Phase 5 / T10** (≥ 4-case behavioural sweep
+  with stubbed `playwright` mock).
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  Status flipped to "T09 landed run #52; T10..T15 pending";
+  Last-updated bumped to run #52; new entry appended to § 10
+  Decisions covering the three load-bearing choices above
+  plus four shape notes carried forward to T10's mock
+  authoring.
+- `docs/index.md` — Spec 013 row status updated; footer
+  bumped to run #52.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #52.
+- `/competitor-watch.md` — run #52 sync line appended at top
+  of Sync Log; AC-6 row prefix updated to "Spec 013 / Phase
+  5 / T09 landed run #52; T10..T15 pending"; AC-4 / AC-5
+  unchanged.
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean.
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` —
+  clean (CI's typecheck path).
+- `npx jest --testPathPatterns 'packages/plugins/source-tesla-playwright'`
+  — 5 cases pass, 0 failures (including the genuine
+  missing-dep real-failure-path case).
+
+**Notes & follow-ups:**
+
+- **Default for run #53** = Spec 013 / Phase 5 / T10 — extend
+  `__tests__/tesla-playwright.service.spec.ts` to ≥ 4
+  behavioural cases (happy path with stubbed `playwright`
+  mock factory returning a board envelope + detail envelopes
+  via `page.evaluate()` callbacks; missing-dep sentinel
+  carry-over; Akamai bypass succeeds — full mapping
+  assertion; page navigation timeout returns empty via
+  stubbed `page.goto()` rejecting with TimeoutError). Mirror
+  the Oracle T04 / Mercor T06 / Tesla T08 fixture-mock
+  pattern. Estimated 0.5 day.
+- **Out-of-scope reminders for run #53:** Stay strictly
+  inside `packages/plugins/source-tesla-playwright/__tests__/`.
+  Do NOT touch the service, constants, or types — those
+  settled in this run. Do NOT add real-`playwright` install
+  to root `package.json` — it's an OPTIONAL dep that
+  operators choose to install themselves. Tests use
+  `jest.mock('playwright', ...)` factories.
+- **Active backlog after Spec 013 closes:** Spec 014
+  candidates = Q-026/Q-027 salary residuals OR AC-8
+  (seed-companies refresh) OR AC-9 (Workable diff). Pick at
+  Spec 013 / T15 closeout.
+- Specs **004 / 005 / 006 / 012** stay complete; **001 /
+  003** retain their statuses unchanged. Spec **013**
+  advances from "Phase 4 done" to "T09 landed; T10..T15
+  pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #51 (Spec 013 / Phase 4 / T08 — Tesla behavioural unit-test sweep landed)
 
 **Scope:** land Spec 013 / Phase 4 / T08 — extend
