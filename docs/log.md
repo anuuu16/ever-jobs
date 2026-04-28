@@ -5,6 +5,85 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #85 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0152 ms; lint:docs clean; external-snapshot tag set held identical for the 64th consecutive run)
+
+**Scope:** Run #85 executes the **maintenance-loop continuation default** forward-pointed
+by run #84's `docs/log.md` closeout (the 3rd-consecutive-maintenance-run escalation gate
+was discharged at run #84 by opening Q-042 with default C). Per Q-042 default C, run #85
+condenses the health-check evidence block to the abbreviated form authorised at run #84's
+forward-pointer (".. one-line abbreviated form acceptable from run #85 onward — the full
+health-check evidence block may be condensed").
+
+**Health-check evidence (abbreviated, per run #84 forward-pointer):**
+
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 5.946 s**.
+  Case count unchanged (77 cases pinned by Spec 019 / T02 at run #80).
+- `npx jest packages/common/__tests__/helpers.bench --colors=false` → **2/2 passed in 5.936 s**.
+  `dist/bench/helpers-salary.json` records overall **p95 = 0.0152 ms** (delta from run #84 =
+  +0.0012 ms — slight upward drift; delta from Spec 016 baseline 0.0174 ms = -0.0022 ms;
+  delta from Spec 019 / T02 reading 0.0248 ms = -0.0096 ms — still favourable). Drift sits
+  far inside the +0.1 ms NFR-1 budget. Per-currency p95: USD 0.0126 ms; EUR 0.0151 ms;
+  GBP 0.0115 ms — all well under the 0.5 ms NFR-1 target and the 2.0 ms CI ceiling.
+- `npm run lint:docs` exits 0.
+
+**External-snapshot tag set (FR-2 of the maintenance default):**
+
+`git pull --ff-only` on all three watched repos returns `Already up to date.` SHAs unchanged
+since run #21:
+
+| Repo            | Tip SHA       |
+| --------------- | ------------- |
+| Ats-scrapers    | `3bacd6e`     |
+| JobSpy          | `fda080a`     |
+| Jobspy-api      | `26bb6f4`     |
+
+**64th consecutive zero-churn run** in the external-snapshot tag set (since run #21).
+
+**Files touched (run #85):**
+
+- `docs/log.md` — this run #85 entry prepended above the run #84 entry.
+- `CLAUDE.md` — run-tag bumped from `2026-04-28 (scheduled run #84)` to
+  `2026-04-28 (scheduled run #85)`.
+- `competitor-watch.md` (workspace-root, outside the ever-jobs repo) — Sync Log run #85
+  entry prepended.
+
+**No changes (FR-9 of the maintenance default — explicit non-edits):**
+
+- No `.ts` / `.tsx` / `.js` source or test file in the run #85 diff.
+- No `.specify/specs/*/spec.md` / `tasks.md` flips at run #85 — Spec 019 stays `complete`;
+  no Spec 020 scaffolded (Q-042 default C explicitly defers Spec 020 promotion).
+- No `docs/index.md` § 7 row update.
+- No `docs/questions.md` change — Q-042 stays `_pending review._`; Q-041 stays
+  `_open — agent default = A_`. Per run #84 closeout note, the 3rd-maintenance-run
+  escalation gate was discharged at run #84 and the agent should not re-open the question
+  at run #85..#94 unless a concrete trigger fires.
+- No `package.json` / `package-lock.json` change.
+
+**Forward-pointers / default for run #86:**
+
+- **Default for run #86 = maintenance loop continuation under Q-042 default C** (same as
+  run #85). Each subsequent maintenance run records the zero-churn streak in
+  `docs/log.md` (abbreviated form) plus the parallel `competitor-watch.md` Sync Log entry.
+- If the external-snapshot tag set churns at run #86+, fresh `AC-NN` rows in
+  `competitor-watch.md` § C pre-empt the maintenance default; the run pickup flips to
+  "score the new commit, open AC-NN, scaffold the absorption spec".
+- If the maintenance state persists past run #100 with Q-042 still `_pending review_`, the
+  agent at run #100+ should re-prompt the user owner (one-line `docs/log.md` reminder
+  entry suffices; do not re-open Q-042 itself).
+- Q-041 Resolution stays `_open — agent default = A_`; not flipped at run #85.
+
+**Acceptance:**
+
+- `npm run lint:docs` exit 0 (verified pre-commit).
+- 77/77 jest cases for `packages/common/__tests__/helpers.spec.ts` (unchanged from run #84).
+- 2/2 jest cases for `packages/common/__tests__/helpers.bench.ts`; bench p95 = 0.0152 ms.
+- All three external repos at the same SHAs as run #84.
+- No `.ts` file in the run #85 diff (FR-9 / Non-Goal honoured).
+- No spec.md / tasks.md flip at run #85.
+- Q-042 Resolution unchanged (`_pending review._`).
+
+---
+
 ## 2026-04-28 — Scheduled run #84 (3rd consecutive maintenance sweep + escalation gate; no spec landed; Q-042 opened with default C; helpers regression 77/77 green; bench p95 = 0.014 ms; lint:docs clean; external-snapshot tag set held identical for the 63rd consecutive run)
 
 **Scope:** Run #84 executes the **escalation-gate default** forward-pointed by run #83's
