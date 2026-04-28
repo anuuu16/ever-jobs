@@ -28,69 +28,89 @@
     - No `.ts` file modified (FR-6 / NFR-3).
   - **Estimate:** 0.1 day.
 
-## Phase 1 — Verdict closeout + AC-9 flip (T01, planned for run #77)
+## Phase 1 — Verdict closeout + AC-9 flip (T01, run #77)
 
-- [ ] T01 — Land Decision D-01 (verdict text from § 7.2
-  formalised in § 10) plus any D-02..D-NN discovery notes from
-  re-reading
+- [x] T01 — Decision D-01 (verdict text from § 7.2 formalised
+  in § 10) landed; no `D-02..D-NN` discovery notes opened
+  (the re-read of
   [`workable.service.ts`](../../../packages/plugins/source-ats-workable/src/workable.service.ts)
-  against the upstream coverage matrix; flip
-  `competitor-watch.md` § C row AC-9 from `agent` to
-  `agent ✅`; flip Spec 018 spec.md Status to `All phases done
-  (T01 run #77); spec complete`.
-  - **Files (planned):**
+  against the upstream coverage matrix surfaced no additional
+  ambiguity). `competitor-watch.md` § C row AC-9 flipped
+  from `agent` to `agent ✅ (run #77)`; Spec 018 spec.md Status
+  flipped to `All phases done (T01 run #77); spec complete`.
+  **Landed run #77** — six docs-only file edits committed in a
+  single closeout commit; zero `.ts` file changes.
+  - **Files (landed run #77):**
     - `.specify/specs/018-workable-upstream-parity/spec.md` —
-      Status field flip; § 10 Decisions appended with D-01
-      verdict text.
+      Status field flipped; Last updated bumped to
+      `2026-04-28 (run #77)`; § 10 Decisions appended with
+      D-01 verdict text (re-read of `WorkableService` against
+      the § 7.3 coverage matrix; consequences enumerated).
     - `.specify/specs/018-workable-upstream-parity/tasks.md` —
       this T01 row flipped from `[ ]` to `[x]`.
-    - `competitor-watch.md` § C row AC-9 — `agent` → `agent ✅`
-      with run number `(run #77)`; Sync Log run #77 entry
-      prepended.
+    - `competitor-watch.md` § C row AC-9 — `agent` →
+      `agent ✅ (run #77)`; Sync Log run #77 entry prepended.
     - `docs/index.md` — Spec 018 row Status updated to match
-      spec.md; footer bumped.
-    - `docs/log.md` — run #77 closeout entry prepended.
+      spec.md (`All phases done (T01 run #77); spec complete`);
+      footer bumped to `2026-04-28 (run #77)`.
+    - `docs/log.md` — run #77 closeout entry prepended at top.
     - `CLAUDE.md` — run-tag bumped → #77.
-  - **Source:** _none._ No `.ts` file changes (FR-6 / NFR-3).
-  - **Acceptance:**
-    - `npm run lint:docs` clean (NFR-5).
-    - `npx jest --testPathPatterns 'packages/plugins/source-ats-workable'`
-      sanity sweep — existing test count unchanged, all green
-      (NFR-2 / Test Plan #3).
+  - **Source:** _none._ Zero `.ts` file changes (FR-6 / NFR-3).
+  - **Acceptance (verified at T01 closeout):**
+    - `npm run lint:docs` clean (NFR-5; exit 0).
     - `git show 312c7b6 -- workable/main.py` in
       `OTHERS/Ats-scrapers/` matches Spec 018 § 7.1
-      byte-for-byte (FR-5 idempotence; Test Plan #4).
+      byte-for-byte (FR-5 idempotence re-verified; Test Plan #4).
     - `competitor-watch.md` § C row AC-9 reads `agent ✅`
       (FR-4; Test Plan #5).
-    - Spec 018 spec.md Status reads `All phases done (T01 run #77);
-      spec complete` (Test Plan #6).
+    - Spec 018 spec.md Status reads
+      `All phases done (T01 run #77); spec complete`
+      (Test Plan #6).
     - `docs/index.md` Spec 018 row matches spec.md Status.
-    - `docs/log.md` run #77 entry includes Decision D-01 verdict
-      summary.
+    - `docs/log.md` run #77 entry includes Decision D-01
+      verdict summary.
+    - Existing
+      [`__tests__/workable.e2e-spec.ts`](../../../packages/plugins/source-ats-workable/__tests__/workable.e2e-spec.ts)
+      3-case suite untouched (NFR-2 / Test Plan #3 — test
+      count delta = 0). Sandbox cannot run `npx jest` (no
+      `node_modules`); CI on push validates the test count
+      stays exact.
   - **Estimate:** 0.05 day.
 
-## Notes for the next run (after Phase 0 lands)
+## Notes for the next run (after Spec 018 closes — landed run #77)
 
-- **Default for run #77** = **Spec 018 / Phase 1 / T01** —
-  verdict closeout. The full deliverable list is the row above:
-  flip AC-9 to `agent ✅`, append Decision D-01 to spec.md § 10,
-  flip Spec 018 spec.md Status to `All phases done`, flip
-  tasks.md T01 row to `[x]`, prepend run #77 entries to
-  `docs/log.md` + `competitor-watch.md`, bump `CLAUDE.md`
-  run-tag, sanity-sweep jest against the Workable plugin
-  (existing test count unchanged), `npm run lint:docs` clean.
-  Estimated 0.05 day.
+- **Default for run #76 (DONE — landed run #76)** = Spec
+  018 / Phase 0 — scaffold pass. Three new spec-folder files +
+  four ledger surfaces threaded; AC-9 stayed at `agent` until
+  T01 run #77 flipped it.
+
+- **Default for run #77 (DONE — landed run #77)** = Spec 018 /
+  Phase 1 / T01 — verdict closeout. Six docs-only file edits
+  committed in a single closeout commit: AC-9 flipped to
+  `agent ✅ (run #77)`, Decision D-01 appended to spec.md § 10,
+  Spec 018 spec.md Status flipped to `All phases done (T01 run #77); spec complete`,
+  tasks.md T01 row flipped from `[ ]` to `[x]`, run #77 entries
+  prepended to `docs/log.md` + `competitor-watch.md`, `CLAUDE.md`
+  run-tag bumped → #77, `npm run lint:docs` clean (NFR-5
+  verified; exit 0). FR-5 idempotence re-verified at T01
+  closeout (`git show 312c7b6 -- workable/main.py` matches
+  § 7.1 byte-for-byte). Zero `.ts` files modified across Spec
+  018's full lifecycle (FR-6 / NFR-3 honoured). Existing
+  3-case `workable.e2e-spec.ts` suite untouched (NFR-2 — test
+  count delta = 0).
 
 - **Default for run #78 (after Spec 018 closes)** = **next
-  backlog candidate**. Spec 018 closes the AC-9 row in
+  backlog candidate**. Spec 018 closed the AC-9 row in
   `competitor-watch.md` § C; the section's remaining
-  agent-owned rows at run #76 are:
+  agent-owned rows post-run-#77 are:
   - **AC-3..AC-7** — all `agent ✅` (closed in earlier
     spec passes).
   - **AC-8** — `agent ✅` (closed runs #71..#74 by Spec 017).
-  - **AC-9** — flips to `agent ✅` at run #77 (this spec).
+  - **AC-9** — `agent ✅ (run #77)` (closed by this spec).
   After AC-9 closes, the agent-driven backlog in § C is
-  exhausted for the current upstream snapshot. The next
+  exhausted for the current upstream snapshot (Ats-scrapers @
+  `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` — all
+  unchanged for 56 consecutive zero-churn runs). The next
   pickup choices are:
   - **(a) Q-026 / Q-027 / Q-035 / Q-036** — internal-correctness
     salary-parser residuals still open in `docs/questions.md`.
@@ -107,11 +127,6 @@
   on the same rationale as Spec 014 → Spec 015 → Spec 016
   cadence (warm-internal-correctness backlog vs. cold-external
   upstream backlog after AC-9 closes).
-
-- **Default for run #76 (DONE — landed run #76)** = Spec
-  018 / Phase 0 — scaffold pass. Three new spec-folder files +
-  four ledger surfaces threaded; AC-9 stays at `agent` until
-  T01 run #77 flips it.
 
 ## Out-of-scope reminders (do NOT do these in Spec 018)
 

@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 018                                                                         |
 | Slug           | workable-upstream-parity                                                    |
-| Status         | draft (scaffolded run #76); Phase 0 only — Phase 1 (T01) pending            |
+| Status         | All phases done (T01 run #77); spec complete                                |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #76)                                                        |
-| Last updated   | 2026-04-28 (run #76)                                                        |
+| Last updated   | 2026-04-28 (run #77)                                                        |
 | Supersedes     | (none — first absorption pass against `OTHERS/Ats-scrapers/workable/`)      |
 | Related specs  | 006 (ATS-Scrapers Parity Batch 1 — established the absorption pattern), 013 (ATS-Scrapers Parity Batch 2 — most recent precedent), 017 (Seed-Companies Refresh Batch 1 — owned the Workable directory rows that this spec's plugin scrapes against) |
 
@@ -294,11 +294,146 @@ by the existing Spec 004 / Spec 005 boundaries. No new
 
 ## 10. Decisions
 
-(Append-only log of decisions made during implementation. T01
-will land Decision D-01 — verdict text formalised — and any
-discovery-driven decisions D-02..D-NN if the implementation pass
-surfaces additional notes. Run #76 scaffold pass adds no
-decisions yet.)
+(Append-only log of decisions made during implementation.)
+
+### D-01 — `312c7b6` is a documented no-op absorption at the `source-ats-workable` plugin layer (run #77, T01 closeout)
+
+**Date:** 2026-04-28 (run #77, Spec 018 / Phase 1 / T01).
+
+**Context.** `competitor-watch.md` § C row AC-9 named upstream
+commit `312c7b6` ("Improve workable scraper", 2025-12-24,
++6 / −2 lines, 1 hunk in `OTHERS/Ats-scrapers/workable/main.py`)
+as the diff anchor for absorption into the
+[`source-ats-workable`](../../../packages/plugins/source-ats-workable/)
+plugin. The diff adds three new conditional `print()` calls
+inside the `# Log decision to scrape` block of
+`scrape_workable_jobs`:
+
+1. `if force:` → `Forcing scrape for '<slug>' (force=True).`
+2. `elif not company_data.get("last_scraped"):` → distinguishes
+   "field absent" from the prior catch-all else.
+3. final `else:` → surfaces the previously-silent
+   "field present but ISO-parse-failed" path under the
+   `should_scrape_company` `(ValueError, TypeError)` catch.
+
+The diff is a **diagnostic-logging refinement only** — no new
+return values, no new function parameters, no new HTTP
+behaviour, no new retry semantics, no new file-cache layout
+(§ 7.1). FR-5 idempotence re-verified at T01 closeout:
+`git show 312c7b6 -- workable/main.py` in
+`OTHERS/Ats-scrapers/` reproduces the patch text in § 7.1
+byte-for-byte.
+
+**Decision.** The absorption is a **documented no-op** at the
+`source-ats-workable` plugin level. No source-code edit is
+landed against
+[`workable.service.ts`](../../../packages/plugins/source-ats-workable/src/workable.service.ts),
+[`workable.constants.ts`](../../../packages/plugins/source-ats-workable/src/workable.constants.ts),
+[`workable.module.ts`](../../../packages/plugins/source-ats-workable/src/workable.module.ts),
+[`workable.types.ts`](../../../packages/plugins/source-ats-workable/src/workable.types.ts),
+or
+[`__tests__/workable.e2e-spec.ts`](../../../packages/plugins/source-ats-workable/__tests__/workable.e2e-spec.ts)
+across Spec 018's full lifecycle (FR-6 / NFR-3 — `.ts` byte
+delta = 0; NFR-2 — test count delta = 0; the existing 3-case
+e2e suite stays exact).
+
+**Rationale.** The three new `print()` branches refine the
+upstream's `should_scrape_company` checkpoint subsystem — a
+Python-script-level concern rooted in the `companies/<slug>.json`
+JSON cache file plus the `--force` CLI flag plus the
+`hours_elapsed` 12-hour cooldown. None of those concerns map
+onto our `WorkableService` contract:
+
+| Upstream concern                                           | Ever Jobs layer that owns it                                                             |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `should_scrape_company` 12-hour cooldown                   | BullMQ queue scheduling (cron / aggregator level, not per-scraper).                      |
+| `last_scraped` JSON cache (`companies/<slug>.json`)        | `persistence-postgres` plugin (Spec 004 boundary; opt-in via `EVER_JOBS_STORE`).         |
+| `force=True` re-scrape flag                                | API caller invokes `.scrape()` again with the same `ScraperInputDto`; no cache to bypass. |
+| Diagnostic `print()` of skip / scrape reason               | NestJS `Logger` from `@nestjs/common` — already wired in `WorkableService` constructor.   |
+| Bulk-loop iteration over CSV slug → name mapping           | `JobsAggregator` fan-out + `Promise.allSettled` across registered sources.                |
+| Per-iteration `random.uniform()` jitter                    | `p-limit` bounded concurrency at the aggregator layer (orchestration concern).            |
+
+The `IScraper` contract from `@ever-jobs/models`
+(`packages/models/src/interfaces/scraper.interface.ts`) is
+**stateless by design** — `IScraper.scrape(input: ScraperInputDto): Promise<JobResponseDto>`
+carries no `force?: boolean` flag, no last-scraped checkpoint,
+no per-company JSON cache, no skip-reason emission channel,
+no bulk-loop scheduler. Absorbing the upstream `print()`
+branches at the plugin layer would first require
+introducing the entire checkpoint subsystem at the plugin
+layer — work that explicitly lives in `persistence-postgres`
+(Spec 004 boundary) and `JobsAggregator` (Spec 005 boundary),
+not in `source-ats-workable`.
+
+**Re-read of `WorkableService`** (per § 7.3 row coverage matrix
+and the T01 acceptance criteria): the plugin already absorbs
+every upstream behaviour where the architectural shape
+permits. Specifically:
+
+- **Widget API URL parity (`mirrored`):** `WORKABLE_API_URL`
+  in `workable.constants.ts:2` (`https://apply.workable.com/api/v1/widget/accounts/`)
+  is byte-identical to the upstream URL constructed at
+  `workable/main.py:113`.
+- **404 / non-200 graceful empty (`mirrored`):** the plugin
+  catches all errors via `try { ... } catch (err: any)` →
+  `logger.error` + returns empty `JobResponseDto`. Slightly
+  broader than upstream's specific 404 path but functionally
+  equivalent.
+- **Retry policy (`mirrored-elsewhere`):** `createHttpClient`
+  in
+  [`packages/common/src/http/http-client.ts`](../../../packages/common/src/http/http-client.ts)
+  exposes `retryDelay` / `retryBackoff` / `retryMaxDelay`
+  knobs. The numeric profile differs slightly (linear default
+  vs. linear + jitter) but the resilience contract is met.
+- **Bulk-loop scheduling (`mirrored-elsewhere`):** Ever Jobs
+  ships this at the `JobsAggregator` layer + `p-limit`
+  bounded concurrency, not at the plugin layer.
+- **Slug-from-URL extraction (`out-of-scope-for-plugin`):** the
+  plugin receives `companySlug` directly from
+  `ScraperInputDto.companySlug`; URL-to-slug parsing is a
+  CLI-side / caller-side concern.
+- **`last_scraped` checkpoint (`out-of-scope-for-plugin`):**
+  the per-tenant scrape-record persistence is a fleet-aware
+  concern (`persistence-postgres` plugin, Spec 004 boundary),
+  not a per-scraper one.
+- **`--force` flag (`out-of-scope-for-plugin`):** the plugin
+  contract carries no `force` knob; callers re-invoke
+  `.scrape()` to retry.
+
+No `D-02..D-NN` discovery notes opened at T01 closeout — the
+re-read of `workable.service.ts` against the § 7.3 coverage
+matrix surfaced no additional ambiguity. The `gap-acknowledged`
+§ 7.3 row 5 (`aiohttp.TCPConnector(ssl=False)`) **stays
+unpromoted** as a follow-on spec candidate — the divergence is
+a **security upgrade** in Ever Jobs's favour (TLS verification
+on by default), not a regression.
+
+**Consequences.**
+
+- `competitor-watch.md` § C row AC-9 flips from `agent` to
+  `agent ✅` with the run-number stamp `(run #77)` (FR-4).
+- Spec 018 spec.md Status flips from `draft (scaffolded run #76); Phase 0 only — Phase 1 (T01) pending`
+  to `All phases done (T01 run #77); spec complete`
+  (Test Plan #6).
+- Spec 018's tasks.md T01 row flips from `[ ]` to `[x]`
+  with the run-number stamp.
+- The `source-ats-workable` plugin's surface is **byte-frozen**
+  against the post-Spec-013 shape until either (a) a future
+  `competitor-watch.md` § C row adds a fresh diff anchor, or
+  (b) a Spec 020+ deliberately scopes a Workable-plugin
+  feature (e.g. authenticated SPI v3 sweep, custom-domain
+  resolution).
+- Future absorption passes against `OTHERS/Ats-scrapers/workable/`
+  start their own diff cursor at upstream commit `312c7b6 +1`
+  (i.e. anything after the diff anchor), not against the
+  Spec 001-era plugin scaffold.
+- AC-9 is the **last agent-owned § C row** in
+  `competitor-watch.md` for the current upstream snapshot
+  (AC-3..AC-7 closed in earlier passes, AC-8 closed by Spec 017).
+  Run #78 picks the next backlog candidate per the tasks.md
+  "Default for run #78" guidance — recommended pick is
+  **(a) salary-parser-residuals-batch-2** (Q-026 / Q-027 /
+  Q-035 / Q-036) on the warm-internal-correctness rationale.
 
 ## 11. References
 

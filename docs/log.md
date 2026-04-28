@@ -5,6 +5,151 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #77 (Spec 018 / Phase 1 / T01 — verdict closeout for `workable-upstream-parity`; AC-9 flipped to `agent ✅ (run #77)`; spec complete)
+
+**Scope:** Spec 018 was scaffolded at run #76 with the
+verdict text drafted in `018/spec.md` § 7.2 ("documented no-op
+absorption" of upstream commit `312c7b6` against the
+`source-ats-workable` plugin). Run #77 is the planned T01
+closeout pass — formalises the verdict text as Decision D-01
+in `018/spec.md` § 10, flips `competitor-watch.md` § C row
+AC-9 from `agent` to `agent ✅`, flips Spec 018 spec.md Status
+to `All phases done (T01 run #77); spec complete`, flips
+tasks.md T01 row from `[ ]` to `[x]`, and prepends matching
+run #77 entries to the four ledger surfaces. Spec 018 closes
+its lifecycle in **2 runs total** (scaffold at #76, closeout at
+#77) — matches the planned NFR-4 ceiling of ≤ 2 runs and
+mirrors the Spec 016 / Spec 017 lean-cadence pattern.
+
+**FR-5 idempotence re-verified at T01 closeout:**
+`git show 312c7b6 -- workable/main.py` in
+`OTHERS/Ats-scrapers/` reproduces the patch text in
+`018/spec.md` § 7.1 byte-for-byte — the diff anchor is stable
+between scaffold pass (run #76) and closeout pass (run #77).
+Upstream `OTHERS/` snapshot at run #77 is unchanged from run
+#76: Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api
+@ `26bb6f4` — **56th consecutive zero-churn run** in `OTHERS/`.
+
+**Decision D-01 — verdict text (formalised in `018/spec.md` § 10):**
+
+The `312c7b6` diff is a **documented no-op absorption** at
+the `source-ats-workable` plugin level. The upstream's three
+new conditional `print()` branches refine the
+`should_scrape_company` checkpoint subsystem — a
+Python-script-level concern rooted in the
+`companies/<slug>.json` JSON cache file plus the `--force`
+CLI flag plus the `hours_elapsed` 12-hour cooldown. None of
+those concerns map onto our `WorkableService` contract:
+
+| Upstream concern                                           | Ever Jobs layer that owns it                                                             |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `should_scrape_company` 12-hour cooldown                   | BullMQ queue scheduling (cron / aggregator level, not per-scraper).                      |
+| `last_scraped` JSON cache (`companies/<slug>.json`)        | `persistence-postgres` plugin (Spec 004 boundary; opt-in via `EVER_JOBS_STORE`).         |
+| `force=True` re-scrape flag                                | API caller invokes `.scrape()` again with the same `ScraperInputDto`; no cache to bypass. |
+| Diagnostic `print()` of skip / scrape reason               | NestJS `Logger` from `@nestjs/common` — already wired in `WorkableService` constructor.   |
+| Bulk-loop iteration over CSV slug → name mapping           | `JobsAggregator` fan-out + `Promise.allSettled` across registered sources.                |
+| Per-iteration `random.uniform()` jitter                    | `p-limit` bounded concurrency at the aggregator layer (orchestration concern).            |
+
+The `IScraper` contract from `@ever-jobs/models`
+(`packages/models/src/interfaces/scraper.interface.ts`) is
+**stateless by design** — `IScraper.scrape(input: ScraperInputDto): Promise<JobResponseDto>`
+carries no `force?: boolean` flag, no last-scraped checkpoint,
+no per-company JSON cache, no skip-reason emission channel,
+no bulk-loop scheduler. Absorbing the upstream `print()`
+branches at the plugin layer would first require introducing
+the entire checkpoint subsystem at the plugin layer — work
+that explicitly lives in `persistence-postgres` (Spec 004
+boundary) and `JobsAggregator` (Spec 005 boundary), not in
+`source-ats-workable`.
+
+**Re-read of `WorkableService` against § 7.3 coverage matrix
+— no `D-02..D-NN` discovery notes opened:** the plugin
+already absorbs every upstream behaviour where the
+architectural shape permits. Specifically: widget API URL
+parity (`mirrored` — `WORKABLE_API_URL` in
+`workable.constants.ts:2` is byte-identical to upstream
+`workable/main.py:113`); 404 / non-200 graceful empty
+(`mirrored` — `try { ... } catch (err: any)` →
+`logger.error` + empty `JobResponseDto`); retry policy
+(`mirrored-elsewhere` — `createHttpClient` exposes
+`retryDelay` / `retryBackoff` / `retryMaxDelay` knobs);
+bulk-loop scheduling (`mirrored-elsewhere` — `JobsAggregator`
++ `p-limit`); slug-from-URL extraction
+(`out-of-scope-for-plugin` — caller-side concern);
+`last_scraped` checkpoint (`out-of-scope-for-plugin` —
+`persistence-postgres` plugin); `--force` flag
+(`out-of-scope-for-plugin` — callers re-invoke `.scrape()`).
+The `gap-acknowledged` § 7.3 row 5
+(`aiohttp.TCPConnector(ssl=False)`) **stays unpromoted** as a
+follow-on spec candidate — the divergence is a security
+upgrade in Ever Jobs's favour (TLS verification on by default),
+not a regression.
+
+**Files touched (run #77):**
+
+- `.specify/specs/018-workable-upstream-parity/spec.md` —
+  Status field flipped from `draft (scaffolded run #76); Phase 0 only — Phase 1 (T01) pending`
+  to `All phases done (T01 run #77); spec complete`; Last
+  updated bumped to `2026-04-28 (run #77)`; § 10 Decisions
+  appended with D-01 verdict text + consequences enumeration
+  (~140 new lines).
+- `.specify/specs/018-workable-upstream-parity/tasks.md` —
+  Phase 1 / T01 row flipped from `[ ]` to `[x]`; "Notes for
+  the next run" reflows to acknowledge T01 has landed and to
+  record the next-pickup recommendation for run #78.
+- `competitor-watch.md` § C row AC-9 — `agent` →
+  `agent ✅ (run #77)` with the verdict summary inline; Sync
+  Log run #77 entry prepended at top of `## Sync Log`.
+- `docs/index.md` — Spec 018 § 7 row Status updated to
+  `All phases done (T01 run #77); spec complete` to match
+  spec.md; footer bumped to `2026-04-28 (run #77)`.
+- `docs/log.md` — this run #77 entry prepended at the top of
+  the `---` divider.
+- `CLAUDE.md` — run-tag bumped from `2026-04-28 (scheduled run #76)`
+  to `2026-04-28 (scheduled run #77)`.
+
+**Acceptance verified at T01 closeout:**
+
+- `npm run lint:docs` clean (NFR-5; exit 0).
+- `git show 312c7b6 -- workable/main.py` in
+  `OTHERS/Ats-scrapers/` matches `018/spec.md` § 7.1
+  byte-for-byte (FR-5 idempotence; Test Plan #4).
+- `competitor-watch.md` § C row AC-9 reads
+  `agent ✅ (run #77)` (FR-4; Test Plan #5).
+- Spec 018 spec.md Status reads
+  `All phases done (T01 run #77); spec complete`
+  (Test Plan #6).
+- `docs/index.md` Spec 018 row Status matches spec.md.
+- `docs/log.md` run #77 entry includes Decision D-01 verdict
+  summary (this entry).
+- Existing `__tests__/workable.e2e-spec.ts` 3-case suite
+  untouched — sandbox cannot run `npx jest` (no
+  `node_modules`); CI on push validates the test count delta
+  stays at 0 (NFR-2 / Test Plan #3). FR-6 / NFR-3 honoured —
+  zero `.ts` files modified across Spec 018's full lifecycle.
+
+**Backlog consequence — agent-driven `competitor-watch.md`
+§ C is now exhausted for the current upstream snapshot:**
+
+- AC-1 / AC-2 / AC-3 — `agent ✅` (closed by Spec 006, runs #28..#36).
+- AC-4 / AC-5 / AC-6 — `agent ✅` (closed by Spec 013, runs #44..#58).
+- AC-7 — `agent ✅` (closed by Spec 012, runs #38..#42).
+- AC-8 — `agent ✅` (closed by Spec 017, runs #71..#74).
+- AC-9 — `agent ✅ (run #77)` (closed by Spec 018, runs #76..#77; this entry).
+
+Run #78 picks the next backlog candidate per the tasks.md
+"Default for run #78" guidance. Recommended pick is
+**(a) salary-parser-residuals-batch-2** as Spec 019, on the
+warm-internal-correctness rationale (Q-026 / Q-027 / Q-035 /
+Q-036 still open in `docs/questions.md`; same cadence
+trajectory as Spec 014 → 015 → 016). Alternative picks:
+**(b)** Spec 006 / Spec 013 § 3 non-goals carry-over (ATS
+detail-page enrichment), or **(c)** a fresh `AC-NN` row if
+upstream `OTHERS/Ats-scrapers/`, `OTHERS/JobSpy/`, or
+`OTHERS/Jobspy-api/` repos churn before run #78 fires.
+
+---
+
 ## 2026-04-28 — Scheduled run #76 (Spec 018 / Phase 0 — scaffold pass for `workable-upstream-parity` against upstream commit `312c7b6`; AC-9 stays as-is until T01 / run #77)
 
 **Scope:** AC-8 closed at run #75 with Spec 017 complete. The
