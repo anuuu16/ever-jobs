@@ -69,14 +69,19 @@ existing `lowerLimit` option (`lowerLimit / 12 ≈ 83`, so
 admits anything ≥ 84 which is ample). Lands in the Spec 015
 candidate (or a Spec 014 / T05 spillover if scope permits).
 
-**Resolution:** **partially resolved** in Spec 015 / T01
-(run #66) — the raw-value pre-check landed in
-`extractSalary()` (Spec 015 / FR-2) gated on `matchedFromBare
-&& !K-suffix && minSalary < lowerLimit / 12`. The two T02 cases
+**Resolution:** **resolved** in Spec 015 (runs #65..#68) —
+the raw-value pre-check landed in `extractSalary()` (Spec
+015 / FR-2) at T01 (run #66), gated on `matchedFromBare &&
+!K-suffix && minSalary < lowerLimit / 12`; the two T02 cases
 (`"5 - 7 years experience"` and `"3 - 5 month internship"` +
-`country=GERMANY` → all-`null`) will pin the behaviour at T02.
-Final flip to "**resolved**" awaits T02 + T03 closeout (see
-Spec 015 / tasks.md).
+`country=GERMANY` → all-`null`) pinned the behaviour at T02
+(run #67); T03 closeout (run #68) bumped
+`docs/PERFORMANCE_TUNING.md` with the new behaviour + the
+FR-8 documented limitation (`"100 - 150" + country=GERMANY`
+still emits because `100 ≥ lowerLimit / 12 ≈ 83`). See
+Spec 015 / spec.md / § 10 Decisions log entries D-01 / D-02
+(run #67) / D-03 (run #68) for the full implementation
+trace.
 
 ---
 
@@ -139,26 +144,28 @@ Lands in the Spec 015 candidate (alongside Q-036's bare-path
 guard fix) — both gaps are dispatcher-shape gaps in
 `@ever-jobs/common` and bundle naturally.
 
-**Resolution:** **partially resolved** in Spec 015 / T01
-(run #66) — landed as Option A but with an **anglo-only
-narrowing**: the new tier-1 short-circuit fires only when the
-symbol-tier currency's natural locale is `'anglo'` (USD / GBP /
-CHF). The narrowing was forced by the substitute-case
-regression risk flagged in Spec 015 / plan.md / § 5: applying
-the broader Option A literal would have routed
-`"€45,000 - €60,000" + country=USA` through continental locale
-(EUR's natural locale) and mis-parsed `45,000` as `45.0`,
-breaking FR-6 ("70 existing cases stay byte-for-byte green").
-The asymmetric narrowing reflects the asymmetric regex
-character classes: anglo accepts `,` / ` ` / `'` thousands;
-continental treats `,` as the decimal separator. The deferred
-T02 case (`"$100,000 - $150,000" + country=GERMANY` → USD /
-100000 / 150000 / yearly) falls into the anglo-natural branch
-and will pin the behaviour at T02. Final flip to
-"**resolved**" awaits T02 + T03 closeout (see Spec 015 /
-tasks.md). Spec 015 / spec.md / § 10 Decisions log entry
-"narrowing rationale" carries the full implementation
-observation.
+**Resolution:** **resolved** in Spec 015 (runs #65..#68) —
+landed as Option A but with an **anglo-only narrowing**: the
+new tier-1 short-circuit fires only when the symbol-tier
+currency's natural locale is `'anglo'` (USD / GBP / CHF).
+The narrowing was forced by the substitute-case regression
+risk flagged in Spec 015 / plan.md / § 5: applying the
+broader Option A literal would have routed
+`"€45,000 - €60,000" + country=USA` through continental
+locale (EUR's natural locale) and mis-parsed `45,000` as
+`45.0`, breaking FR-6 ("70 existing cases stay byte-for-byte
+green"). The asymmetric narrowing reflects the asymmetric
+regex character classes: anglo accepts `,` / ` ` / `'`
+thousands; continental treats `,` as the decimal separator.
+The literal Spec 012 / § 8 case 14
+(`"$100,000 - $150,000" + country=GERMANY` → USD / 100000 /
+150000 / yearly) falls into the anglo-natural branch and was
+pinned at T02 (run #67); T03 closeout (run #68) bumped
+`docs/PERFORMANCE_TUNING.md` with the new behaviour. Spec
+015 / spec.md / § 10 Decisions log entry D-01 (run #66)
+carries the full narrowing-rationale implementation
+observation; D-02 (run #67) and D-03 (run #68) carry the
+T02 + T03 closeout traces.
 
 ---
 

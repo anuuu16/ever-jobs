@@ -135,11 +135,16 @@
 
 ## Phase 4 — Spec 012 / § 8 case 14 literal + FR-7 false-positive immunity
 
-- [~] T04 — Literal `"$100,000 - $150,000" + country=GERMANY`
+- [x] T04 — Literal `"$100,000 - $150,000" + country=GERMANY`
   re-enabled (depends on T01's G-1 landing); FR-7 false-
   positive immunity case for plain-prose numbers (FR-1 /
   FR-6 / FR-7). **Partial landing run #63 — see "Run #63
-  partial-landing notes" below.**
+  partial-landing notes" below; closed via Spec 015 (runs
+  #65..#68). The literal comma-thousands case 14 + the two
+  FR-7 false-positive immunity cases all landed in Spec 015 /
+  T02 (run #67) under the source-side fixes shipped at
+  Spec 015 / T01 (run #66). T03 closeout (run #68) flipped
+  this row from `[~]` partial to `[x]` closed.**
   - **Files (planned):**
     - `packages/common/__tests__/helpers.spec.ts` (2 new
       cases — no source-code edits).

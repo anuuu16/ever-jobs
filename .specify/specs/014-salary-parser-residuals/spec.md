@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 014                                                                         |
 | Slug           | salary-parser-residuals                                                     |
-| Status         | T01..T03 + T05 done (runs #60..#64); T04 partial run #63 (Q-035 + Q-036 blocked literal cases — deferred to Spec 015 candidate) |
+| Status         | All phases done (T01..T05 runs #60..#64); T04 closed via Spec 015 (runs #65..#68) |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #59)                                                        |
-| Last updated   | 2026-04-28 (run #64)                                                        |
+| Last updated   | 2026-04-28 (run #68)                                                        |
 | Supersedes     | (none — extends Spec 012's salary-parser surface in `@ever-jobs/common`)    |
 | Related specs  | 003 (Job Deduplication Engine), 012 (European Salary Parser)                |
 

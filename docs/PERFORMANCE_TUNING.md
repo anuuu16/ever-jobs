@@ -163,18 +163,83 @@ existing barrel.
   // → { interval: null, minAmount: null, maxAmount: null, currency: null }
   ```
 
-  Known false-positive risk: a plain-prose number range like
-  `"5 - 7 years experience"` under `country=GERMANY` is
-  captured by the bare regex; raw `5 < hourlyThreshold` so
-  the dispatcher annualises (`5 * 2080 = 10400`) past
-  `lowerLimit = 1000`, and the row is wrongly emitted as
-  `{ interval: 'hourly', minAmount: 5, maxAmount: 7,
-  currency: 'EUR' }`. Tracked as
-  [Q-036](questions.md#q-036--bare-regex-over-matches-plain-prose-under-country-hint-spec-014--t04-discovery).
-  Plugin authors who pass `country` should pre-sanitise
-  input strings (strip phrases like `"X years experience"` /
-  `"X month internship"`) until the Spec 015 candidate
-  lands the bare-path raw-value pre-check.
+  The Spec 014 / T04 partial close left two false-positive
+  shapes uncovered (Q-035 + Q-036); Spec 015 (runs #65..#68)
+  closes both. See "Spec 015 locale & prose-immunity
+  extensions" below.
+
+### Spec 015 locale & prose-immunity extensions (T01..T03)
+
+Spec 015 (runs #65..#68) closes the two dispatcher-asymmetry
+gaps Spec 014 / T04 surfaced ([Q-035](questions.md#q-035--resolvesalarylocale-doesnt-honour-symbol-tier-precedence-end-to-end-spec-014--t04-discovery)
++ [Q-036](questions.md#q-036--bare-regex-over-matches-plain-prose-under-country-hint-spec-014--t04-discovery))
+and re-enables the three deferred Spec 014 / T04 cases. Both
+fixes are localised to `resolveSalaryLocale()` and
+`extractSalary()`'s body in `@ever-jobs/common`; no plugin
+source change is required — plugins pick up the new behaviour
+transparently via the existing barrel.
+
+- **(d) Locale short-circuit on symbol-tier resolutions
+  (Spec 015 / T01 / FR-1).** `resolveSalaryLocale()` gains a
+  new tier ahead of the country branch: when
+  `detected.confidence === 'symbol'` AND the resolved
+  currency's natural locale (per the new
+  `CURRENCY_TO_NATURAL_LOCALE` lookup) is `'anglo'`
+  (USD / GBP / CHF), return `'anglo'` immediately, bypassing
+  the country tier. The narrowing to anglo-only is
+  load-bearing — see Spec 015 / spec.md / § 10 / D-01 — and
+  preserves the substitute case `"€45,000 - €60,000" +
+  country=USA` (FR-6) which would otherwise mis-parse as
+  `45.0` under continental locale. Lifts the FR-1 precedence
+  rule "symbol > country" from currency-only to
+  currency-AND-locale on the affected branch. Example:
+
+  ```ts
+  extractSalary('$100,000 - $150,000', { country: Country.GERMANY });
+  // → { interval: 'yearly', minAmount: 100000, maxAmount: 150000, currency: 'USD' }
+  // (was: { interval: 'hourly', minAmount: 100, maxAmount: 150, currency: 'USD' }
+  //  — country tier routed continental locale and mis-parsed 100,000 as decimal 100)
+  ```
+
+- **(e) Bare-path raw-value pre-check (Spec 015 / T01 /
+  FR-2).** `extractSalary()` gains a 3-line guard inserted
+  AFTER `parseSalaryNumber` returns and BEFORE the K-suffix
+  multiplication: if the match came from the bare regex
+  (NOT prefix / suffix), AND neither `match[2]` nor
+  `match[4]` is `'k'`, AND `minSalary < lowerLimit / 12`
+  (≈ 83 with the default `lowerLimit = 1000`), return the
+  all-`null` envelope. Bounds the bare-regex
+  over-matching surface introduced in Spec 014 / T03
+  without disturbing the prefix / suffix paths (FR-5).
+  Example:
+
+  ```ts
+  extractSalary('5 - 7 years experience', { country: Country.GERMANY });
+  // → { interval: null, minAmount: null, maxAmount: null, currency: null }
+  // (was: { interval: 'hourly', minAmount: 5, maxAmount: 7, currency: 'EUR' }
+  //  — raw 5 annualised via * 2080 = 10400 passed lowerLimit = 1000)
+
+  extractSalary('3 - 5 month internship', { country: Country.GERMANY });
+  // → { interval: null, minAmount: null, maxAmount: null, currency: null }
+  ```
+
+  The K-suffix bypass is intentional: `extractSalary("$100K -
+  $150K", { country: Country.GERMANY })` continues to emit
+  USD / 100000 / 150000 / yearly because the K-multiplier
+  renders `5K` = `5000` ≥ `lowerLimit / 12 ≈ 83` regardless
+  of the threshold (FR-7).
+
+  **Documented limitation (Spec 015 / FR-8):** the bare-path
+  low-end Continental shape `"100 - 150" + country=GERMANY`
+  still emits because `100 ≥ lowerLimit / 12 ≈ 83`. The
+  raw-value pre-check rejects the prose-shape `"5 - 7"` (and
+  `"3 - 5"`) while admitting `"100"` — chosen over the
+  alternative regex-tightening (Spec 015 / non-goals) because
+  legitimate Continental EUR low-end shapes like `"100 - 150"`
+  are rare-but-real in entry-level postings. Plugin authors
+  who need stricter prose-immunity should pre-sanitise input
+  strings (strip phrases like `"X years experience"` /
+  `"X month internship"`) before passing to `extractSalary()`.
 
 ### Example call patterns
 

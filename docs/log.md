@@ -5,6 +5,159 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #68 (Spec 015 / Phase 3 / T03 — closeout pass; Spec 015 complete; Spec 014 / T04 promoted to closed)
+
+**Scope:** land Spec 015 / Phase 3 / T03 — pure docs-only
+closeout pass. Eight files touched (zero source-code edits):
+
+1. `docs/PERFORMANCE_TUNING.md` — appended a new
+   "Spec 015 locale & prose-immunity extensions (T01..T03)"
+   subsection below the existing "Spec 014 residual extensions"
+   block. The subsection names the two new behaviours
+   ((d) anglo-only locale short-circuit; (e) bare-path raw-
+   value pre-check) with one example apiece (the literal
+   canonical case `"$100,000 - $150,000" + country=GERMANY`
+   → USD / 100000 / 150000 / yearly via the new tier; and
+   the prose-immunity case `"5 - 7 years experience" +
+   country=GERMANY` → all-`null` via the threshold guard)
+   plus the FR-8 documented limitation
+   (`"100 - 150" + country=GERMANY` still emits because
+   `100 ≥ lowerLimit / 12 ≈ 83`). The pre-existing
+   "Known false-positive risk" paragraph in the Spec 014
+   block was rewritten to point at the Spec 015 subsection
+   below ("The Spec 014 / T04 partial close left two false-
+   positive shapes uncovered (Q-035 + Q-036); Spec 015
+   (runs #65..#68) closes both."). ~75 LOC added net.
+2. `.specify/specs/015-salary-parser-locale-and-prose-immunity/spec.md`
+   — Status flipped from "T01..T02 done (runs #65..#67);
+   T03 pending" to "All phases done (T01..T03 runs #65..#68);
+   spec complete"; Last-updated bumped to run #68; § 10
+   Decisions log appended with D-03 (closeout pass +
+   Spec 014 / T04 cross-spec promotion + verification gate).
+3. `.specify/specs/015-salary-parser-locale-and-prose-immunity/tasks.md`
+   — T03 row flipped from `[ ]` pending to `[x]` done with
+   "Landed run #68" annotation; "Notes for the next run"
+   block restructured to historicise the T03 default-pin
+   and pin the Spec 016 candidate slot for run #69
+   (recommended: Q-037 single-run warm-up; alternates
+   AC-8 / AC-9).
+4. `.specify/specs/014-salary-parser-residuals/tasks.md` —
+   T04 row flipped from `[~]` partial to `[x]` closed with
+   the cross-spec annotation: "closed via Spec 015 (runs
+   #65..#68). The literal comma-thousands case 14 + the two
+   FR-7 false-positive immunity cases all landed in Spec 015 /
+   T02 (run #67) under the source-side fixes shipped at
+   Spec 015 / T01 (run #66). T03 closeout (run #68) flipped
+   this row from `[~]` partial to `[x]` closed."
+5. `.specify/specs/014-salary-parser-residuals/spec.md` —
+   Status flipped from "T01..T03 + T05 done (runs #60..#64);
+   T04 partial run #63 (Q-035 + Q-036 blocked literal cases —
+   deferred to Spec 015 candidate)" to "All phases done
+   (T01..T05 runs #60..#64); T04 closed via Spec 015 (runs
+   #65..#68)"; Last-updated bumped to run #68.
+6. `docs/questions.md` — Q-035 + Q-036 resolution text both
+   flipped from "**partially resolved** in Spec 015 / T01
+   (run #66)" to "**resolved** in Spec 015 (runs #65..#68)"
+   with the full T01 → T02 → T03 closeout trace appended
+   (D-01 / D-02 / D-03 cross-references in spec.md / § 10).
+7. `docs/index.md` — Spec 014 + Spec 015 rows updated to
+   reflect closeout statuses; footer Last-revised bumped
+   to run #68.
+8. `CLAUDE.md` — Last-revised bumped to run #68.
+
+**No competitor-watch upstream churn this run** — forty-ninth
+consecutive zero-churn run in `OTHERS/`. Spec 015 is
+internal-correctness work; the streak is logged for
+continuity. **No `competitor-watch.md` entry** — Spec 015 is
+not linked to a `§C / AC-N` row (Q-035 / Q-036 are
+internal-correctness gaps surfaced during Spec 014's sweep,
+not upstream-driven coverage gaps).
+
+**No new questions opened this run.** The active backlog
+after Spec 015 closes:
+- **Q-037** (helpers.bench.spec.ts TS1127 fix) — Spec 016
+  candidate; one-character source edit; recommended pick
+  for run #69 as a single-run warm-up.
+- **AC-8** (`seed-companies` refresh) — multi-run effort.
+- **AC-9** (Workable diff) — multi-run effort; new ATS
+  scraper plugin scaffold.
+
+**One implementation observation** (full prose in Spec 015 /
+spec.md / § 10 / D-03): the documented FR-8 limitation
+(`"100 - 150" + country=GERMANY` still emits) is named
+explicitly in the doc paragraph rather than left implicit.
+The chosen pre-check threshold (`lowerLimit / 12 ≈ 83`)
+admits any value ≥ 84, and `100 ≥ 84`. Plugin authors with
+stricter prose-immunity needs are directed to pre-sanitise
+inputs upstream of `extractSalary()`. The non-goals (regex
+tightening, stop-word filter) capture why a tighter
+dimensional gate was rejected — the chosen approach
+preserves legitimate rare-but-real Continental EUR low-end
+shapes like `"100 - 150"`.
+
+**Changes — source / test:** none (T03 is pure docs).
+
+**Changes — docs / specs:**
+
+- `docs/PERFORMANCE_TUNING.md` — new "Spec 015 locale &
+  prose-immunity extensions (T01..T03)" subsection (~75 LOC
+  added) + minor rewrite of the Spec 014 (c) "Known
+  false-positive risk" paragraph to point forward to Spec
+  015's closeout block.
+- `.specify/specs/015-salary-parser-locale-and-prose-immunity/spec.md`
+  — Status flip + § 10 D-03 entry.
+- `.specify/specs/015-salary-parser-locale-and-prose-immunity/tasks.md`
+  — T03 row flip + Notes-for-the-next-run restructure.
+- `.specify/specs/014-salary-parser-residuals/spec.md` —
+  Status flip.
+- `.specify/specs/014-salary-parser-residuals/tasks.md` —
+  T04 row flip with cross-spec annotation.
+- `docs/questions.md` — Q-035 + Q-036 resolution text flipped.
+- `docs/index.md` — Spec 014 + 015 row updates + footer.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #68.
+- **No `competitor-watch.md` entry.**
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns 'packages/common/__tests__/helpers.spec'`
+  — 74 cases pass, 0 failures (no source-code edit; T02's
+  74-case baseline holds byte-for-byte).
+- `npm run lint:docs` — pending (run before commit).
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` —
+  pending (run before commit; expected clean since no
+  source-code edit).
+
+**Notes & follow-ups:**
+
+- **Default for run #69** = open Spec 016 candidate slot.
+  Recommended pick: **Q-037** (helpers.bench.spec.ts TS1127
+  fix at line 190 — `×` → ASCII `x`). Tiniest scope; restores
+  the bench acceptance gate that Spec 015 / T01 (D-02)
+  deferred. One-character source edit + a CHANGELOG note.
+  Estimated 0.05 day. Alternates: AC-8 (`seed-companies`
+  refresh, ~0.5..0.75 day) or AC-9 (Workable diff,
+  ~1.5..2 days, multi-run).
+- **Out-of-scope reminders for run #69:** the Spec 016
+  scaffolding pass should follow the standard three-phase
+  structure (T01 source-side fix, T02 test pin, T03 closeout
+  + docs bump). For Q-037 specifically, the test pin at T02
+  is "running `npx jest packages/common/__tests__/helpers.bench`
+  produces non-zero `Tests: N total` output and writes
+  `dist/bench/helpers-salary.json`" — exercising the gate
+  that's been advisory-only since Spec 012 / T04.
+- **Active backlog after Spec 015 closes:** Q-037 (Spec 016
+  candidate) ≫ AC-8 (seed-companies) ≫ AC-9 (Workable
+  diff). Order is by scope-ascending; the agent should
+  pick the smallest queued candidate per the per-run
+  cadence guidance.
+- Specs **004 / 005 / 006 / 012 / 013** stay complete;
+  **001 / 003** unchanged. Specs **014 / 015** both flip
+  to fully complete this run (014 was previously partial;
+  015 was previously T01..T02 done).
+
+---
+
 ## 2026-04-28 — Scheduled run #67 (Spec 015 / Phase 2 / T02 — three deferred Spec 014 / T04 cases landed)
 
 **Scope:** land Spec 015 / Phase 2 / T02 — pure tests-only

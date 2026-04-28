@@ -93,10 +93,11 @@
 
 ## Phase 3 — Documentation + closeout
 
-- [ ] T03 — Doc bump in `PERFORMANCE_TUNING.md`; spec status
+- [x] T03 — Doc bump in `PERFORMANCE_TUNING.md`; spec status
   flip; questions resolution flip; Spec 014 / T04 row
   promoted from `[~]` partial to `[x]` closed; `docs/index.md`
   row update; `docs/log.md` entry; `CLAUDE.md` run-tag.
+  **Landed run #68.**
   - **Files (planned):**
     - `docs/PERFORMANCE_TUNING.md` (~10-line addition to the
       existing Spec 014 closeout paragraph naming the two
@@ -150,26 +151,45 @@
       014's sweep, not upstream-driven coverage gaps).
   - **Estimate:** 0.1 day.
 
-## Notes for the next run (after T02 landed)
+## Notes for the next run (after T03 landed — Spec 015 closed)
 
-- **Default for run #68** = Spec 015 / Phase 3 / T03 —
-  documentation + closeout pass. Add a paragraph to
-  `docs/PERFORMANCE_TUNING.md` naming the two new
-  behaviours (Q-035 anglo-only locale short-circuit +
-  Q-036 bare-path raw-value pre-check) with one example
-  apiece + the FR-8 documented limitation
-  (`"100 - 150" + country=GERMANY` still emits because
-  `100 ≥ lowerLimit / 12 ≈ 83`). Flip Q-035 + Q-036
-  resolution text in `docs/questions.md` from "_pending
-  review_" to "**resolved** in Spec 015 (runs
-  #65..#68)". Flip Spec 015 spec.md Status to "All
-  phases done (T01..T03 runs #65..#68); spec complete";
-  flip Spec 014 / T04 row from `[~]` partial to `[x]`
-  closed with cross-spec annotation. Update
-  `docs/index.md` Spec 015 row + footer; bump CLAUDE.md
-  run-tag → #68; add docs/log.md run #68 closeout
-  entry. **No `competitor-watch.md` entry.** Estimated
-  0.1 day.
+- **Default for run #69** = open Spec 016 candidate slot.
+  Three queued candidates from the active backlog:
+  - **Q-037** — `helpers.bench.spec.ts` TS1127 fix at
+    line 190 (`×` → ASCII `x`); tiniest scope; restores
+    the bench acceptance gate that Spec 015 / T01 (D-02)
+    deferred. One-character source edit + a CHANGELOG
+    note. Estimated 0.05 day.
+  - **AC-8** — `seed-companies` refresh (competitor-watch
+    backlog row). Touches `packages/persistence-postgres`
+    seed fixtures. Estimated 0.5..0.75 day depending on
+    upstream churn.
+  - **AC-9** — Workable diff (competitor-watch backlog
+    row). New ATS scraper plugin scaffold. Estimated
+    1.5..2 days; would consume multiple runs.
+  Recommended pick: **Q-037** as a single-run warm-up
+  before AC-8 / AC-9 commit to a multi-run effort. The
+  scheduled-task agent should pick up Q-037 at run #69
+  unless a higher-priority signal surfaces (e.g. a
+  competitor-watch upstream churn that overtakes the
+  backlog ordering).
+
+- **Default for run #68 (DONE — landed run #68)** = Spec
+  015 / Phase 3 / T03 — documentation + closeout pass.
+  Doc paragraph added to `docs/PERFORMANCE_TUNING.md`
+  (new "Spec 015 locale & prose-immunity extensions"
+  subsection); Q-035 + Q-036 resolution text flipped
+  from "_partially resolved_" to "**resolved** in
+  Spec 015 (runs #65..#68)"; Spec 015 spec.md Status
+  flipped to "All phases done (T01..T03 runs #65..#68);
+  spec complete"; Spec 014 / T04 row flipped from `[~]`
+  partial to `[x]` closed with "Closed via Spec 015
+  (runs #65..#68)" annotation; Spec 014 / spec.md Status
+  updated; `docs/index.md` Spec 015 row + footer
+  refreshed; CLAUDE.md run-tag bumped → #68;
+  `docs/log.md` run #68 closeout entry appended. No
+  `competitor-watch.md` entry. Pure docs-only pass; 0
+  source-code edits.
 
 - **Default for run #67 (DONE — landed run #67)** = Spec
   015 / Phase 2 / T02 — three deferred test cases landed

@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 015                                                                         |
 | Slug           | salary-parser-locale-and-prose-immunity                                     |
-| Status         | T01..T02 done (runs #65..#67); T03 pending                                  |
+| Status         | All phases done (T01..T03 runs #65..#68); spec complete                     |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #65)                                                        |
-| Last updated   | 2026-04-28 (run #67)                                                        |
+| Last updated   | 2026-04-28 (run #68)                                                        |
 | Supersedes     | (none — extends Spec 014's `extractSalary()` surface in `@ever-jobs/common`) |
 | Related specs  | 003 (Job Deduplication Engine), 012 (European Salary Parser), 014 (Salary Parser Residuals) |
 
@@ -432,6 +432,58 @@ in the existing 71 (FR-6 honoured).
 edits. The describe block is appended at the bottom of
 `helpers.spec.ts` after the existing Spec 014 / T03 +
 T04 partial blocks.
+
+### Decision D-03 (run #68, T03) — closeout pass; Spec 014 / T04 promoted to closed via Spec 015
+
+**Context:** Spec 015 / Phase 3 / T03 — pure docs-only
+closeout pass. The two source-side fixes (T01, run #66) and
+the three test cases (T02, run #67) were already in tree;
+the only remaining work was the documentation bump in
+`PERFORMANCE_TUNING.md` (extending the existing Spec 014
+extensions block with two new behaviours plus the FR-8
+documented limitation), plus the cross-spec status flips:
+Spec 015 spec.md / tasks.md statuses, Spec 014 tasks.md /
+spec.md T04 row promotion from `[~]` to `[x]` with
+"Closed via Spec 015 (runs #65..#68)" annotation,
+Q-035 + Q-036 resolution text in `docs/questions.md`
+flipped from "_partially resolved_" to "**resolved** in
+Spec 015 (runs #65..#68)", `docs/index.md` Spec 015 row
+update, `docs/log.md` run #68 closeout entry, and
+`CLAUDE.md` run-tag bump.
+
+**Decision:** the `PERFORMANCE_TUNING.md` extension is
+appended as a new "Spec 015 locale & prose-immunity
+extensions (T01..T03)" subsection below the existing
+"Spec 014 residual extensions (T01..T03)" block — mirroring
+the Spec 014 / T05 closeout structure. The two new
+behaviours (d) + (e) carry one example apiece (the literal
+canonical case + the prose-immunity case) plus the FR-8
+documented limitation. Spec 014 / T04 is promoted from
+`[~]` partial to `[x]` closed with the cross-spec
+annotation; Spec 014 / spec.md Status text is updated to
+reflect that T04 is now fully closed via Spec 015 rather
+than partial.
+
+**Implementation observation:** the documented FR-8
+limitation (`"100 - 150" + country=GERMANY` still emits)
+is named explicitly in the doc paragraph rather than left
+implicit — the chosen pre-check threshold
+(`lowerLimit / 12 ≈ 83`) admits any value ≥ 84, and
+`100 ≥ 84`. Plugin authors with stricter prose-immunity
+needs (e.g. heavy free-form description text where
+"X - Y" prose ranges are common at the low end) are
+directed to pre-sanitise inputs upstream of
+`extractSalary()`. The non-goals (regex tightening,
+stop-word filter) capture why a tighter dimensional gate
+was rejected.
+
+**Verification gate:** all 74 helpers.spec cases stay
+byte-for-byte green (no source-edit in T03);
+`npm run lint:docs` reports clean across the changed doc
+files; no `competitor-watch.md` entry (Spec 015 is not
+linked to a `§C / AC-N` row — Q-035 / Q-036 are
+internal-correctness gaps surfaced during Spec 014's
+sweep).
 
 ## 11. References
 
