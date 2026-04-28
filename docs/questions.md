@@ -10,6 +10,120 @@
 
 ---
 
+## Q-042 — How to handle the agent-driven backlog exhaustion (3rd-consecutive maintenance run, no concrete observable trigger)
+
+**Context:** Run #84 is the documented escalation gate per
+run #83's `docs/log.md` forward-pointer. After Spec 019 closed
+its full lifecycle at run #81, the agent-driven backlog has
+been emptied:
+
+- All `competitor-watch.md` § C `AC-NN` rows closed (last:
+  AC-9 / Spec 018 at run #77).
+- Spec 019 (`salary-parser-residuals-batch-2`) closed at run
+  #81 (T01..T03 at runs #79..#81).
+- Q-026 / Q-027 carry-over candidates for a future
+  `salary-parser-residuals-batch-3` remain noted but
+  **unsurfaced** — neither has produced a concrete observable
+  trigger (failing fixture, customer-reported synthetic row,
+  telemetry signal) in the four runs since Spec 019 closed.
+- The three watched upstream repos held identical SHAs since
+  run #21 — **63rd consecutive zero-churn run** at run #84.
+- Spec 015 / D-02's TS5.x U+00D7 rejection investigation
+  remains a long-tail forward-pointer in
+  `docs/PERFORMANCE_TUNING.md`; still too speculative for a
+  Spec 020 scope at this snapshot.
+
+The agent has been running 3 consecutive maintenance-only
+passes (runs #82, #83, #84). Constitution Article 2 forbids
+coding without a load-bearing spec; promoting Q-026 / Q-027
+to a Spec 020 scaffold without a concrete trigger would
+violate that rule. But repeating the maintenance default
+indefinitely without a documented rationale erodes the
+"every run produces meaningful forward motion" convention.
+Run #84 must record an explicit policy decision for the
+maintenance-only state.
+
+**Options:**
+
+- **A. Open Spec 020 from Q-026** (Spec 014 / Q-026
+  prose-immunity carry-over — `"100 - 150 EUR monthly grocery
+  allowance"` and similar prose shapes on the suffix path).
+  Promotes a noted-but-unsurfaced candidate to a load-bearing
+  spec without a concrete trigger. Violates Constitution
+  Article 2's spirit even if the scaffolding itself is
+  docs-only. Risks shipping speculative-correctness work that
+  no upstream consumer asked for.
+- **B. Open Spec 020 from Q-027** (Spec 014 / Q-027
+  K-suffix-bypass-on-suffix-path — symmetric extension of
+  the bare-path K-bypass to the suffix path). Same Article 2
+  concern as Option A. The K-suffix-bypass-on-suffix-path
+  question is even more speculative because no observed call
+  path triggers it; the bare-path bypass came from a real
+  Q-036 trigger, the suffix-path symmetry is purely
+  hypothetical.
+- **C. Continue the maintenance loop indefinitely pending
+  external churn** (current default). Each run pulls the
+  three watched repos, runs the helpers regression + bench,
+  records the zero-churn streak in `docs/log.md` +
+  `competitor-watch.md` Sync Log, and pins the next concrete
+  spec **only** when a concrete observable trigger surfaces.
+  Triggers eligible for promotion to Spec 020:
+  - Fresh upstream commit on Ats-scrapers / JobSpy /
+    Jobspy-api (any of the three repos at the watched tip).
+  - Failing helpers / bench / lint:docs / CI gate at any run.
+  - Customer-reported synthetic salary row matching a Q-026
+    / Q-027 shape.
+  - User-owner directive or new external observation.
+- **D. Pause the autonomous loop** by scheduling a wakeup
+  with a long delay (e.g. 24 h) until the human owner
+  reviews. Reduces wall-clock cost of zero-value maintenance
+  passes; opens a slow-feedback risk if a real trigger
+  surfaces between checks.
+
+**Default (proceeding):** **C. Continue the maintenance loop
+indefinitely pending external churn.** Reasons:
+
+- **Constitution Article 2 alignment.** Options A and B
+  promote unsurfaced candidates without a load-bearing
+  trigger; the Constitution explicitly prohibits this and
+  the trade-off (avoid drift vs. shipping speculative work)
+  consistently favours the no-speculation side at this
+  project's maturity.
+- **Cheap maintenance verifies real invariants.** Each
+  maintenance run rebenches the parser (NFR-1 budget guard),
+  re-runs the regression suite (silently catches third-party
+  dep regressions), pulls fresh upstream tips (catches
+  external churn within 1 h), and re-validates `lint:docs`
+  (catches doc-side rot). The maintenance loop is **not**
+  cosmetic; it's a continuous-integration stand-in that
+  triggers fast on real signal.
+- **External signal will surface.** The three watched repos
+  averaged ~1 commit per 10–20 days during early adoption
+  (runs #1..#20). The zero-churn streak (runs #21..#84) is
+  a stretch but historically all three repos have churned at
+  least quarterly; the scheduled-task agent should be ready
+  for the moment they do.
+- **Option D's slow-feedback risk** outweighs the wall-clock
+  savings — the hourly cadence is the convention, and the
+  cost (one cron tick + ~15 s of agent time) is genuinely
+  trivial.
+
+**If a concrete trigger surfaces between runs #84 and ~#100**:
+the agent should immediately deviate from Option C, score the
+trigger, and open the appropriate Spec 020 scaffold (or a
+`competitor-watch.md` § C `AC-10` row if upstream-driven).
+Trigger-detection is owned by each maintenance run's
+health-check sweep; the scoring rubric is "does this signal
+match a noted question / acceptance / regression at this
+project's current state?".
+
+**Resolution:** _pending review._ The default C policy is in
+effect for runs #84..whenever-a-trigger-fires; if the human
+owner prefers Option A / B / D, the next run's pickup will
+honour the resolution.
+
+---
+
 ## Q-041 — Bare-path raw-value pre-check threshold bump for Spec 019 (`salary-parser-residuals-batch-2`)
 
 **Context:** Spec 015 / FR-2 (run #66) added a raw-value

@@ -5,6 +5,116 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #84 (3rd consecutive maintenance sweep + escalation gate; no spec landed; Q-042 opened with default C; helpers regression 77/77 green; bench p95 = 0.014 ms; lint:docs clean; external-snapshot tag set held identical for the 63rd consecutive run)
+
+**Scope:** Run #84 executes the **escalation-gate default** forward-pointed by run #83's
+`docs/log.md` closeout entry: this is the documented 3rd-consecutive-maintenance-run threshold
+where two decisions are due — (a) open a Spec 020 scaffold from Q-026 / Q-027 if a concrete
+observable trigger has surfaced, OR (b) record an explicit "maintenance-only" rationale via a
+new `Q-042` question with options A / B / C / D and pick a defensible default. **No trigger has
+surfaced** at runs #79..#84, so path (b) executes: Q-042 opened with **default = C (continue
+maintenance loop indefinitely pending external churn)**. The agent-driven backlog has been
+exhausted since AC-9 closed at run #77; Spec 019 closed at run #81; the three watched upstream
+repos have held identical SHAs for the 63rd consecutive run.
+
+**Health-check evidence (FR-1 / NFR-1 / NFR-7 of the maintenance default):**
+
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 5.983 s**.
+  Case count is unchanged from runs #82 / #83 (77 cases pinned by Spec 019 / T02 at run #80).
+  No regression in the bare-path threshold logic landed at Spec 019 / T01 (run #79). All Spec
+  012 + Spec 014 + Spec 015 + Spec 019 cases remain byte-for-byte green.
+- `npx jest packages/common/__tests__/helpers.bench --colors=false` → **2/2 passed in 5.977 s**.
+  `dist/bench/helpers-salary.json` records overall **p95 = 0.014 ms** (delta from run #83 =
+  +0.0001 ms — essentially identical; delta from Spec 016 baseline 0.0174 ms = -0.0034 ms;
+  delta from Spec 019 / T02 reading 0.0248 ms = -0.0108 ms — favourable drift). Drift sits far
+  inside the +0.1 ms NFR-1 budget. The bench acceptance gate restored by Spec 016 / T01 (run
+  #69) holds. Per-currency p95 (top): USD 0.0113 ms; well under the 0.5 ms NFR-1 target and
+  the 2.0 ms CI ceiling.
+- `npm run lint:docs` exits 0.
+
+**External-snapshot tag set (FR-2 of the maintenance default):**
+
+`git pull --ff-only` on all three watched repos returns `Already up to date.` SHAs verified
+post-pull and unchanged since run #21:
+
+| Repo            | Tip SHA       |
+| --------------- | ------------- |
+| Ats-scrapers    | `3bacd6e`     |
+| JobSpy          | `fda080a`     |
+| Jobspy-api      | `26bb6f4`     |
+
+**63rd consecutive zero-churn run** in the external-snapshot tag set (since run #21).
+
+**Q-042 opened (escalation-gate default per run #83 forward-pointer):**
+
+- **Title:** "How to handle the agent-driven backlog exhaustion (3rd-consecutive maintenance
+  run, no concrete observable trigger)".
+- **Options:** A (open Spec 020 from Q-026), B (open Spec 020 from Q-027), C (continue
+  maintenance loop indefinitely pending external churn), D (pause autonomous loop with
+  long-delay wakeup).
+- **Default:** **C**. Reasons recorded in the question body: Constitution Article 2 forbids
+  speculative-correctness work without a load-bearing trigger; cheap maintenance still
+  verifies real invariants (NFR-1 bench, regression suite, upstream pulls, lint:docs); the
+  three watched repos have historically churned at least quarterly so external signal will
+  eventually surface; Option D's slow-feedback risk outweighs the wall-clock savings.
+- **Trigger-detection convention:** if a concrete trigger surfaces between runs #84 and
+  ~#100 (fresh upstream commit, failing helpers / bench / lint:docs / CI, customer-reported
+  synthetic salary row, user-owner directive), the agent immediately deviates from C, scores
+  the trigger, and opens the appropriate Spec 020 scaffold (or a `competitor-watch.md` § C
+  `AC-10` row if upstream-driven). Each maintenance run's health-check sweep owns
+  trigger-detection.
+- **Resolution:** stays `_pending review._` — the human owner reviews.
+
+**Files touched (run #84):**
+
+- `docs/questions.md` — Q-042 prepended at the top of the file (above Q-041 per the
+  newest-on-top convention).
+- `docs/log.md` — this run #84 entry prepended above the run #83 entry.
+- `CLAUDE.md` — run-tag bumped from `2026-04-28 (scheduled run #83)` to
+  `2026-04-28 (scheduled run #84)`.
+- `competitor-watch.md` (workspace-root, outside the ever-jobs repo) — Sync Log run #84
+  entry prepended.
+
+**No changes (FR-9 of the maintenance default — explicit non-edits):**
+
+- No `.ts` / `.tsx` / `.js` source or test file in the run #84 diff.
+- No `.specify/specs/*/spec.md` / `tasks.md` flips at run #84 — Spec 019 stays `complete`;
+  no Spec 020 scaffolded (Q-042 default C explicitly defers Spec 020 promotion).
+- No `docs/index.md` § 7 row update — last edit at run #81; the index reflects the
+  post-run-#81 state and remains accurate at run #84.
+- No `package.json` / `package-lock.json` change.
+
+**Forward-pointers / default for run #85:**
+
+- **Default for run #85 = maintenance loop continuation under Q-042 default C.** Each
+  subsequent maintenance run records the zero-churn streak in `docs/log.md` (one-line
+  abbreviated form acceptable from run #85 onward — the full health-check evidence block
+  may be condensed) plus the parallel `competitor-watch.md` Sync Log entry. Q-042
+  Resolution stays `_pending review._` until the human owner decides; if resolution flips
+  to A / B / D, the next run's pickup will honour the resolution.
+- The 3rd-maintenance-run escalation gate has now been **discharged** at run #84; the
+  agent should not re-open the question at run #85..#94 unless a concrete trigger fires.
+  If the maintenance state persists past run #100 with Q-042 still `_pending review_`, the
+  agent at run #100+ should re-prompt the user owner (a one-line `docs/log.md` reminder
+  entry suffices; do not re-open Q-042 itself).
+- If the external-snapshot tag set churns at run #85+, fresh `AC-NN` rows in
+  `competitor-watch.md` § C pre-empt the maintenance default; the run pickup flips to
+  "score the new commit, open AC-NN, scaffold the absorption spec".
+- Q-041 Resolution stays `_open — agent default = A` per Spec 019 / D-03 closeout note;
+  not flipped at run #84.
+
+**Acceptance:**
+
+- `npm run lint:docs` exit 0 (verified pre-commit).
+- 77/77 jest cases for `packages/common/__tests__/helpers.spec.ts` (unchanged from run #83).
+- 2/2 jest cases for `packages/common/__tests__/helpers.bench.ts`; bench p95 = 0.014 ms.
+- All three external repos at the same SHAs as run #83.
+- No `.ts` file in the run #84 diff (FR-9 / Non-Goal honoured).
+- No spec.md / tasks.md flip at run #84.
+- Q-042 prepended in `docs/questions.md` with default C and `_pending review._` resolution.
+
+---
+
 ## 2026-04-28 — Scheduled run #83 (2nd consecutive maintenance sweep; no spec landed; helpers regression 77/77 green; bench p95 = 0.0139 ms; lint:docs clean; external-snapshot tag set held identical for the 62nd consecutive run)
 
 **Scope:** Run #83 executes the maintenance-sweep default forward-pointed by run #82's
