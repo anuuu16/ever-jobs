@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | T07 landed run #50; T08..T15 pending                 |
+| Status         | T07 + T08 landed run #51; T09..T15 pending           |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-28 (run #50)                                 |
+| Last updated   | 2026-04-28 (run #51)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -332,6 +332,76 @@ records.)
   'detail-all'` with `'detail-25'` the default).
 
 ## 10. Decisions
+
+- **2026-04-28 (run #51 / T08)** — Tesla behavioural unit-test
+  sweep landed alongside the 50-listing × 6-location × 5-department
+  board fixture and the four detail-envelope fixtures. Three
+  load-bearing test-shape decisions resolved during authoring:
+
+  (1) **Fixture sized at 50 listings spanning 6 distinct
+  `lookup.locations` keys and 5 `lookup.departments` keys, both
+  over the FR-spec minimum (≥ 5 / ≥ 3).** The extra location
+  (Shanghai) reserves headroom for an APAC-region branch in a
+  future enrichment spec without re-shaping the fixture; the
+  extra department (Vehicle Service alongside Sales & Service)
+  exercises a real-world Tesla taxonomy split that upstream
+  Python reflects but the FR-spec table does not enumerate.
+  Listings 200049 (`d: null`) + 200050 (`l: null`) reserve
+  explicit slots for the missing-`l` / missing-`d` defensive
+  paths in `toJobPost()` — these are out-of-band relative to
+  the ≥ 6 acceptance line but cheap to land now (cheaper than
+  re-shaping the fixture for Spec 016 detail-page enrichment).
+
+  (2) **`description !== null` for the first 3 listings is
+  achieved via three DIFFERENT detail-envelope shapes (4-field /
+  2-field / 1-field), not three copies of the same shape.** The
+  acceptance line only requires "first 3 have description !==
+  null", but heterogeneous shapes pin three load-bearing
+  branches in `composeDescription()` (all-fields-present /
+  partial / single-field) that would otherwise share one mock.
+  The "remainder description === null" cases use TWO failure
+  modes (missing-all-four envelope on listing 4 +
+  silently-swallowed HTTP 404 on listing 5) — again to pin
+  both `composeDescription` and `fetchDetail` failure paths
+  separately. Mercor T06 used the same heterogeneous-mock
+  technique for the compensation-null branch (two listings
+  with different reasons for null).
+
+  (3) **`descriptionDepth='board'` skips-detail-loop case
+  added even though it is NOT in the ≥ 6 acceptance line.**
+  The acceptance line covers the cap-applied-pre-detail-fetch
+  invariant via `resultsWanted: 2`; `descriptionDepth: 'board'`
+  exercises the SAME structural invariant via the
+  `TESLA_DESCRIPTION_BUDGET[depthKey] === 0` branch — also
+  zero detail GETs but for a different reason. Both pinned
+  because the budget=0 path is the operating mode an operator
+  selects when they want catalogue latency without per-job
+  follow-ups, and silent-regression on it would be hard to
+  notice without an explicit test.
+
+  Five shape notes carried forward to T11's three-plugin
+  integration spec:
+  - The 50-listing board fixture is shareable across T08
+    (Tesla unit) and T11 (three-plugin integration) via
+    `__tests__/fixtures/tesla-board.json` — `path.join` from
+    the integration spec's `__tests__` root works without a
+    second copy of the corpus.
+  - Detail fixtures (`tesla-job-200001..200003.json` +
+    `tesla-job-missing.json`) are similarly shareable.
+  - Listings 200049 / 200050 (missing-`l` / missing-`d`)
+    surface `null` in `JobPostDto.{location, department}`. The
+    dedup-engine's `(site, externalId)` hash strategy treats
+    `null` location as a non-key field, so these listings still
+    dedup correctly under the Spec 003 / FR-3 hash regardless
+    of the missing display string.
+  - The `_comment` JSON field at the top of every fixture
+    documents the upstream-Python source line + the test cases
+    each fixture exercises. Future contributors can `git diff`
+    the comment block when the fixture shape rotates.
+  - The `regions` lookup map ships with 3 keys even though
+    `toJobPost()` does not currently consume `r` — keeping the
+    upstream envelope shape complete avoids a fixture re-shape
+    when a future enrichment spec adds region-aware filtering.
 
 - **2026-04-28 (run #50 / T07)** — `TeslaService.scrape(input)`
   shipped against the live `/cua-api/apps/careers/state` board

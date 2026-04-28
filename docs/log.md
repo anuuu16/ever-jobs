@@ -5,6 +5,196 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #51 (Spec 013 / Phase 4 / T08 — Tesla behavioural unit-test sweep landed)
+
+**Scope:** land Spec 013 / Phase 4 / T08 — extend
+`packages/plugins/source-tesla/__tests__/tesla.service.spec.ts`
+from 7 cases (T07 registration / wire-format / budget-map /
+Akamai-403 / HTML-Akamai / HTTP-500) → 14 cases (7 carry-over +
+7 behavioural per the acceptance line: happy-path with detail
+fetches asserting first 3 have `description !== null` and
+remainder `description === null` / empty `listings[]` /
+non-Akamai HTTP 500 with no detail fetches / Akamai 503 /
+resultsWanted cap pre-detail-fetch / `descriptionDepth='board'`
+budget=0 skip-detail-loop / lookup-key null-fallback paths).
+Five new on-disk fixtures ship a sanitised 50-listing × 6-location
+× 5-department × 3-region board corpus
+(`__tests__/fixtures/tesla-board.json`) plus four detail
+envelopes (`tesla-job-200001.json` full 4-field /
+`tesla-job-200002.json` partial 2-field / `tesla-job-200003.json`
+single-field / `tesla-job-missing.json` missing-all-four → null
+description). Same shape as Spec 013 / T06 (Mercor behavioural
+sweep, run #49) and Spec 013 / T04 (Oracle behavioural sweep,
+run #47). Estimated 0.5 day per tasks.md; landed in a single
+scheduled-run cycle at ~0.3 day actual.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #50's sync). Thirty-fifth consecutive
+zero-churn run in `OTHERS/`.
+
+**No new questions opened this run.** Q-028 (Tesla Playwright
+dep strategy = pure-HTTP default + opt-in companion) and Q-031
+(Tesla `descriptionDepth` default = `'detail-25'` cap of 25) are
+now both exercised by the live default service AND the new
+behavioural test sweep — their resolutions remain
+"implementation-ratified" pending the T15 closeout docs touch.
+Q-026 / Q-027 retain their **Spec 014 candidate** label.
+
+**Three load-bearing decisions** were resolved during T08's
+authoring (full prose in Spec 013 § 10):
+
+1. **Fixture sized at 50 × 6 × 5 (over the FR minimums of ≥ 50 /
+   ≥ 5 / ≥ 3)** — the extra location (Shanghai) reserves
+   headroom for an APAC-region branch in a future enrichment
+   spec; the extra department (Vehicle Service alongside Sales
+   & Service) reflects the real-world Tesla taxonomy split
+   upstream Python uses but the FR-spec table does not
+   enumerate. Listings 200049 (`d: null`) and 200050 (`l: null`)
+   reserve explicit slots for the missing-`l` / missing-`d`
+   defensive paths in `toJobPost()` even though those were not
+   on the ≥ 6 acceptance line — cheaper to land now than to
+   re-shape the fixture for Spec 016.
+2. **Heterogeneous detail fixtures (4-field / 2-field / 1-field
+   / missing-all-four), not three copies of the same shape.**
+   The acceptance line only required "first 3 have description
+   !== null", but heterogeneous shapes pin three load-bearing
+   branches in `composeDescription()` (all-fields / partial /
+   single-field) that would otherwise share one mock. The
+   "remainder description === null" cases use TWO failure modes
+   (missing-all-four envelope on listing 4 + silently-swallowed
+   HTTP 404 on listing 5) to pin both `composeDescription` and
+   `fetchDetail` failure paths separately. Same heterogeneous
+   technique Mercor T06 used for the compensation-null branch.
+3. **`descriptionDepth='board'` skips-detail-loop case added
+   even though it is NOT in the ≥ 6 acceptance line.** The
+   acceptance line covers cap-applied-pre-detail-fetch via
+   `resultsWanted: 2`; `descriptionDepth: 'board'` exercises
+   the SAME structural invariant via the
+   `TESLA_DESCRIPTION_BUDGET[depthKey] === 0` branch — also
+   zero detail GETs, but for a different reason. Both are
+   pinned because budget=0 is the operating mode operators pick
+   when they want catalogue latency without per-job follow-ups,
+   and silent-regression on it would be hard to notice.
+
+**Changes — source / test:**
+
+- `packages/plugins/source-tesla/__tests__/tesla.service.spec.ts`
+  — bumped from 7 → 14 cases. Module-level fixture loads (4 ×
+  detail + 1 × board) via `fs.readFileSync(path.join(__dirname,
+  'fixtures', …), 'utf8')` mirroring Mercor T06 / Oracle T04.
+  New cases under `describe(...)` blocks: happy-path with
+  mixed populated / null branches (asserts mockGet was called 6
+  times — 1 board + 5 detail GETs — and pins first-row mapping
+  AND the remote-detection branch on listing 200002); empty
+  `listings[]` (no detail fetches); non-Akamai HTTP 500 (no
+  detail fetches); Akamai 503 sentinel (no detail fetches);
+  resultsWanted cap pre-detail-fetch (50 → 2 listings, exactly
+  3 mockGet calls); `descriptionDepth='board'` skips details
+  entirely (1 mockGet call); lookup-key null fallbacks
+  (listings 200049 + 200050 surface `department === null` /
+  `location === null + isRemote === false` respectively).
+- `packages/plugins/source-tesla/__tests__/fixtures/tesla-board.json`
+  — NEW. ~70 LOC. 50-listing JSON corpus spanning 6
+  `lookup.locations` keys + 5 `lookup.departments` keys + 3
+  `lookup.regions` keys (regions reserved for future enrichment).
+  Listings 200049 / 200050 carry the `d: null` / `l: null`
+  defensive-path triggers.
+- `packages/plugins/source-tesla/__tests__/fixtures/tesla-job-200001.json`
+  — NEW. Full 4-field detail envelope (`jobDescription` +
+  `jobResponsibilities` + `jobRequirements` +
+  `jobCompensationAndBenefits`).
+- `packages/plugins/source-tesla/__tests__/fixtures/tesla-job-200002.json`
+  — NEW. Partial 2-field envelope (`jobDescription` +
+  `jobResponsibilities` only).
+- `packages/plugins/source-tesla/__tests__/fixtures/tesla-job-200003.json`
+  — NEW. Single-field envelope (`jobCompensationAndBenefits`
+  only).
+- `packages/plugins/source-tesla/__tests__/fixtures/tesla-job-missing.json`
+  — NEW. Missing-all-four envelope (only `department` +
+  `timeType` metadata; the four free-text fields are absent so
+  `composeDescription()` resolves to `null`).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  T08 row flipped from `[ ]` to `[x]` with "Landed run #51"
+  annotation; acceptance text updated to mention the +1-over
+  acceptance-line case count (7 carry-over + 7 behavioural = 14
+  total) and the heterogeneous fixture shape
+  (4-field / 2-field / 1-field / missing-all-four);
+  Notes-for-the-next-run pinned default updated to **Spec 013 /
+  Phase 5 / T09** (Tesla-Playwright lazy-import companion
+  service).
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  Status flipped to "T07 + T08 landed run #51; T09..T15
+  pending"; Last-updated bumped to run #51; new entry appended
+  to § 10 Decisions (immediately above the run #50 / T07
+  entry) covering the three load-bearing test-shape choices
+  above plus five shape notes carried forward to T11
+  (three-plugin integration spec).
+- `docs/index.md` — Spec 013 row status updated to "T01..T08
+  landed runs #44..#51; T09..T15 pending"; footer bumped to
+  run #51.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #51.
+- `/competitor-watch.md` — run #51 sync line appended at top
+  of Sync Log; AC-6 row prefix updated to "Spec 013 / Phase
+  4 / T07 + T08 landed run #51; T09..T15 pending"; AC-4 / AC-5
+  unchanged.
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean.
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` —
+  clean (CI's typecheck path).
+- `npx jest --testPathPatterns 'packages/plugins/source-tesla'`
+  — 17 tests pass across 2 suites (14 in `source-tesla` +
+  3 in `source-tesla-playwright` stub spec). First-row mapping,
+  remote-detection, lookup-key null fallbacks, jobUrl slug
+  composition, and the budget=0 / cap-pre-detail-fetch
+  invariants all exercise their target branches.
+
+**Notes & follow-ups:**
+
+- **Default for run #52** = Spec 013 / Phase 5 / T09 —
+  `TeslaPlaywrightService.scrape(input)` lazy-Playwright path
+  in the OPTIONAL companion package. Real
+  `tesla-playwright.service.ts` + `tesla-playwright.types.ts` +
+  `tesla-playwright.constants.ts`. Lazy `import('playwright')`
+  inside `scrape()`; caught when missing → sentinel
+  `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE` + empty `JobResponseDto`.
+  Headless Chromium launched with anti-automation flags
+  (`--disable-blink-features=AutomationControlled`) per
+  upstream Python (`OTHERS/Ats-scrapers/tesla/main.py:60-63`).
+  Same `JobPostDto[]` mapping as `TeslaService` (FR-10) so
+  dedup treats both plugins' rows as collisions per
+  `(site, externalId)` — emit under `Site.TESLA_PLAYWRIGHT`
+  per Q-032 default. Declare `playwright` as
+  `peerDependency` + `optionalDependency` ONLY in the package's
+  own `package.json`; root `package.json` does NOT declare it
+  (lockfile-registry rule applies for any future regen).
+  Estimated 0.8 day.
+- **Out-of-scope reminders for run #52:** Stay strictly inside
+  `packages/plugins/source-tesla-playwright/`. Do NOT touch
+  `source-tesla` (default scraper settled in runs #50 + #51).
+  Do NOT add `TeslaPlaywrightModule` to `ALL_SOURCE_MODULES`
+  even when the package compiles — opt-in companion per
+  FR-13. Do NOT add `playwright` to root `package.json` — the
+  optional dep is declared on the companion package only so
+  operators who don't need Akamai-bypass aren't forced into
+  the heavy install footprint.
+- **Active backlog after Spec 013 closes:** Spec 014 candidates
+  = Q-026/Q-027 salary residuals OR AC-8 (seed-companies
+  refresh) OR AC-9 (Workable diff). Pick at Spec 013 / T15
+  closeout.
+- Specs **004 / 005 / 006 / 012** stay complete; **001 / 003**
+  retain their statuses unchanged. Spec **013** advances from
+  "T07 landed; T08..T15 pending" to "T07 + T08 landed; T09..T15
+  pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #50 (Spec 013 / Phase 4 / T07 — Tesla service landed)
 
 **Scope:** land Spec 013 / Phase 4 / T07 —

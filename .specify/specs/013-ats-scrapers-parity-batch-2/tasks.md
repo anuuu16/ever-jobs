@@ -173,16 +173,43 @@
     - HTTP via `@ever-jobs/common.createHttpClient`.
   - **Estimate:** 0.7 day.
 
-- [ ] T08 — Tesla unit tests (≥ 6 cases).
+- [x] T08 — Tesla unit tests (≥ 6 cases).
+  **Landed run #51.**
   - **Files (planned):** `packages/plugins/source-tesla/__tests__/tesla.service.spec.ts`
     (extend), `…/__tests__/fixtures/tesla-board.json`,
     `…/__tests__/fixtures/tesla-job-{id}.json`.
+  - **Files (actual):** matched plan exactly. The spec file grew
+    from 7 cases (T07 registration / wire-format / budget-map /
+    Akamai-403 / HTML-Akamai / HTTP-500) → 14 cases (7 carry-over
+    + 7 behavioural — one extra over the ≥ 6 acceptance line so
+    the `descriptionDepth='board'` budget=0 path AND the
+    lookup-key null-fallback paths both get explicit pins).
+    `tesla-board.json` ships a sanitised 50-listing corpus
+    spanning **6** distinct `lookup.locations` keys (Palo Alto /
+    Austin / Fremont / Remote-US / Berlin / Shanghai) and **5**
+    `lookup.departments` keys (Engineering / Manufacturing /
+    Sales & Service / Software & IT / Vehicle Service) — both
+    over the minimum of ≥ 5 / ≥ 3. Plus 3 `lookup.regions` keys
+    (Americas / EMEA / APAC) even though `r` is not currently
+    consumed by `toJobPost()` (carries the upstream envelope
+    shape forward for future enrichment specs). Listings 200049
+    has `d: null` and 200050 has `l: null` to exercise the
+    `toJobPost()` defensive paths. Detail fixtures:
+    `tesla-job-200001.json` (FULL 4-field envelope),
+    `tesla-job-200002.json` (PARTIAL 2-field — Description +
+    Responsibilities only), `tesla-job-200003.json` (SINGLE-field
+    — Compensation only), `tesla-job-missing.json` (the
+    missing-all-four branch — only `department` + `timeType`
+    metadata flows; the four free-text fields are absent so
+    `composeDescription()` resolves to `null`).
   - **Acceptance:**
     - Cases: happy path with detail fetches (assert first 3 have
       `description !== null`, remainder `description === null`),
       empty `lookup.listings[]`, HTTP 500, Akamai 403 sentinel,
       Akamai 503 sentinel, resultsWanted cap pre-detail-fetch.
-  - **Estimate:** 0.5 day.
+  - **Estimate:** 0.5 day. **Actual:** ~0.3 day (matches Spec 006 /
+    T04 actual at run #31, Spec 013 / T04 actual at run #47, and
+    Spec 013 / T06 actual at run #49).
 
 ## Phase 5 — Tesla-Playwright (OPTIONAL companion)
 
@@ -310,20 +337,39 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #51** = Spec 013 / Phase 4 / T08 — Tesla
-  behavioural unit-test sweep. Extend
-  `__tests__/tesla.service.spec.ts` to ≥ 6 cases (happy path with
-  detail fetches asserting first 3 have `description !== null`
-  and remainder `description === null`; empty `listings[]`; HTTP
-  500; Akamai 403 sentinel; Akamai 503 sentinel; `resultsWanted`
-  cap pre-detail-fetch). Add `__tests__/fixtures/tesla-board.json`
-  (≥ 50 listings spanning ≥ 5 distinct `lookup.locations` keys
-  plus ≥ 3 `lookup.departments` keys) and a small
-  `tesla-job-{id}.json` corpus exercising the four-field detail
-  envelope (jobDescription / jobResponsibilities / jobRequirements
-  / jobCompensationAndBenefits) plus a "missing all four" branch
-  to verify the `description: null` fallback. Mirror the Oracle
-  T04 / Mercor T06 pattern. Estimated 0.5 day.
+- **Default for run #52** = Spec 013 / Phase 5 / T09 —
+  `TeslaPlaywrightService.scrape(input)` lazy-Playwright path in
+  the OPTIONAL companion package. Real
+  `tesla-playwright.service.ts` + `tesla-playwright.types.ts` +
+  `tesla-playwright.constants.ts`. Lazy `import('playwright')`
+  inside `scrape()`; caught when missing → sentinel
+  `ERR_TESLA_PLAYWRIGHT_UNAVAILABLE` + empty `JobResponseDto`.
+  Headless Chromium launched with anti-automation flags
+  (`--disable-blink-features=AutomationControlled`) mirroring
+  upstream Python (`OTHERS/Ats-scrapers/tesla/main.py:60-63`).
+  Navigate to `https://www.tesla.com/careers/search/`; settle
+  for ≥ 5 s; in-page fetch through the established session.
+  Same `JobPostDto[]` mapping as `TeslaService` (FR-10) so dedup
+  treats both plugins' rows as collisions per
+  `(site, externalId)` — emit under `Site.TESLA_PLAYWRIGHT`
+  (Q-032 default). Declare `playwright` as
+  `peerDependency` + `optionalDependency` ONLY in the package's
+  own `package.json`; root `package.json` does NOT declare it
+  (lockfile-registry rule applies for any future regen).
+  Estimated 0.8 day.
+- **Default for run #51 (DONE — landed run #51)** = Spec 013 /
+  Phase 4 / T08 — Tesla behavioural unit-test sweep. Spec file
+  grew from 7 → 14 cases (7 carry-over + 7 behavioural —
+  +1 over the ≥ 6 acceptance line for explicit `board=0`-budget
+  + lookup-key null-fallback pins);
+  `__tests__/fixtures/tesla-board.json` shipped (50 listings ×
+  6 locations × 5 departments × 3 regions; listings 200049 /
+  200050 exercise the missing-`d` / missing-`l` branches);
+  detail fixtures `tesla-job-200001.json` (full 4-field) /
+  `tesla-job-200002.json` (partial 2-field) /
+  `tesla-job-200003.json` (single-field) /
+  `tesla-job-missing.json` (missing-all-four → composeDescription
+  returns null) ship the documented detail-envelope variants.
 - **Default for run #50 (DONE — landed run #50)** = Spec 013 /
   Phase 4 / T07 — `TeslaService.scrape(input)` HTTP-only board +
   detail path. Real `tesla.service.ts` + `tesla.types.ts` +
@@ -331,6 +377,11 @@
   `ERR_TESLA_AKAMAI_CHALLENGE` (403 / 503 / non-JSON body) +
   `ERR_TESLA_FETCH_FAILED` (other HTTP failures) recorded via
   `Logger.warn`. Detail-fetch budget honoured per Q-031 / FR-11.
+  Three load-bearing decisions resolved during implementation
+  (board envelope path divergence from FR-10; two-sentinel error
+  model symmetric with Oracle/Mercor; broadened Akamai detection
+  beyond status codes to "any non-JSON-shaped payload"); see § 10
+  Decisions log of spec.md.
 - **Default for run #49 (DONE — landed run #49)** = Spec 013 /
   Phase 3 / T06 — Mercor behavioural unit-test sweep. Spec file
   grew from 5 → 11 cases; `__tests__/fixtures/mercor-explore.json`
