@@ -216,6 +216,37 @@ describe('parseSalaryCurrency (Spec 012 / T01)', () => {
     expect(result.code).toBe('EUR');
     expect(result.confidence).toBe('country');
   });
+
+  // ─── Spec 014 / T01 — `$` symbol promotion (Q-027 / FR-1) ─────────
+  //
+  // Before T01, `$` was implicit USD via the FR-7 default branch.
+  // The Q-027 promotion makes `$` a first-class symbol-tier match,
+  // so an explicit `$` outranks any country hint that would
+  // otherwise resolve to a non-USD currency. The two cases below
+  // pin that precedence (Spec 014 § 1 G-1) plus the documented
+  // "any `$` wins" semantic from Spec 014 § 7.2.
+
+  it('Spec 014 / T01 — `$`-prefixed input outranks country=GERMANY (USD via symbol tier)', () => {
+    const result = parseSalaryCurrency('$100,000', {
+      country: Country.GERMANY,
+    });
+    expect(result).toEqual({
+      code: 'USD',
+      symbol: '$',
+      confidence: 'symbol',
+    });
+  });
+
+  it('Spec 014 / T01 — any `$` in input wins (documented in § 7.2; intentional)', () => {
+    const result = parseSalaryCurrency('see $TODO inline', {
+      country: Country.GERMANY,
+    });
+    expect(result).toEqual({
+      code: 'USD',
+      symbol: '$',
+      confidence: 'symbol',
+    });
+  });
 });
 
 /**

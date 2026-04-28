@@ -5,6 +5,137 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #60 (Spec 014 / Phase 1 / T01 — `$`-symbol promotion landed)
+
+**Scope:** land Spec 014 / Phase 1 / T01 — promote `$` from
+the implicit FR-7 default-USD branch to a first-class
+`'symbol'`-tier entry in `SALARY_UNIQUE_SYMBOLS`. Two file
+edits:
+- `packages/common/src/utils/helpers.ts` — single-array entry
+  `['$', 'USD']` appended at the END of
+  `SALARY_UNIQUE_SYMBOLS` (preserves byte-identical iteration
+  order for the existing four entries).
+- `packages/common/__tests__/helpers.spec.ts` — two new cases
+  appended to the `describe('parseSalaryCurrency …')` block:
+  the required "outranks country=GERMANY" precedence pin AND
+  the documented "any `$` wins" fast-fail check (Spec 014 §
+  7.2 semantic).
+
+Estimated 0.15 day per tasks.md; landed in a single
+scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #59's sync). Forty-third consecutive
+zero-churn run in `OTHERS/`. (Spec 014 is internal-correctness
+work, not upstream-driven coverage; the zero-churn count is
+no longer load-bearing for the spec but the streak is logged
+for continuity.)
+
+**No new questions opened this run.** Spec 014 is the
+resolution path for Q-026 + Q-027 (Spec 012 / T04 spillover);
+their `docs/questions.md` resolution text flips at T05
+closeout per the scaffolding plan, not now.
+
+**Two implementation observations** were resolved during T01's
+edit pass (full prose in Spec 014 § 10):
+
+1. **Iteration order preserved by appending at END.** The
+   `for (const [symbol, code] of SALARY_UNIQUE_SYMBOLS)` loop
+   in `parseSalaryCurrency` hits the existing four entries
+   (`€` / `£` / `zł` / `Fr.`) in their original order before
+   reaching the new `$` entry. No current symbol overlaps
+   with `$`, so the ordering choice is forward-compatible
+   insurance rather than a load-bearing invariant today —
+   but pinning the discipline now means a future contributor
+   adding a `$`-prefixed shape (e.g. `$U` for Uruguay's
+   peso uruguayo) won't accidentally invert precedence.
+2. **Two test cases shipped, not one.** The acceptance text
+   required ≥ 1 case ("outranks country=GERMANY"). We added
+   that PLUS the documented fast-fail check (`'see $TODO
+   inline'` → still resolves to USD via symbol tier) so the
+   "any `$` wins" semantic from § 7.2 is pinned in the test
+   suite, not just in spec prose. A future contributor
+   reading the test file cold can convince themselves the
+   broad-match semantic is intentional.
+
+**Changes — source / test:**
+
+- `packages/common/src/utils/helpers.ts` —
+  `SALARY_UNIQUE_SYMBOLS` array length grew from 4 → 5; new
+  entry `['$', 'USD']` appended at END. ~7 LOC of inline
+  comment documenting the FR-1 precedence rationale + the
+  byte-identical-iteration-order discipline.
+- `packages/common/__tests__/helpers.spec.ts` — two new cases
+  appended to `describe('parseSalaryCurrency (Spec 012 /
+  T01)')`: (a) `parseSalaryCurrency('$100,000', { country:
+  Country.GERMANY })` → USD via symbol tier (the required
+  precedence pin); (b) `parseSalaryCurrency('see $TODO
+  inline', { country: Country.GERMANY })` → same envelope
+  (the broad-match documentation pin). Test count grew from
+  63 → 65; all 65 pass byte-for-byte (verified via
+  `npx jest packages/common/__tests__/helpers.spec`).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/014-salary-parser-residuals/tasks.md` —
+  T01 row flipped from `[ ]` to `[x]` with "Landed run #60"
+  annotation; Notes-for-the-next-run pinned default updated
+  to **Spec 014 / Phase 2 / T02** (apostrophe-in-regex
+  extension).
+- `.specify/specs/014-salary-parser-residuals/spec.md` —
+  Status flipped from "draft (scaffolded run #59); T01
+  pending" to "T01 landed run #60; T02..T05 pending";
+  Last-updated bumped to run #60; § 10 Decisions log
+  populated with the two implementation observations.
+- `docs/index.md` — Spec 014 row status updated; footer
+  bumped to run #60.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #60.
+- **No `competitor-watch.md` entry** — Spec 014 is not
+  linked to a §C / AC-N row (Q-026 / Q-027 are
+  internal-correctness gaps surfaced during Spec 012's
+  sweep, not upstream-driven coverage gaps; tasks.md / T05
+  acceptance pins this).
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns 'packages/common/__tests__/helpers.spec'`
+  — 65 cases pass, 0 failures (was 63; T01 added 2).
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` —
+  clean (CI's typecheck path).
+- `npm run lint:docs` — pending (run before commit).
+
+**Notes & follow-ups:**
+
+- **Default for run #61** = Spec 014 / Phase 2 / T02 —
+  apostrophe-in-regex extension. Edit
+  `SALARY_NUMBER_REGEX_SRC.anglo` to add `'` to the
+  thousands-separator character class (`[,\\u00A0]` →
+  `[,\\u00A0']`); add the literal Spec 012 § 8 case 5
+  (`extractSalary("CHF 90'000 – CHF 120'000")`). One-
+  character source edit + ≥ 1 unit case. Continental regex
+  source UNCHANGED. All 11 original USD cases must stay
+  byte-identical (FR-5).
+- **Out-of-scope reminders for run #61:** Stay strictly
+  inside `SALARY_NUMBER_REGEX_SRC.anglo`. Do NOT touch the
+  `continental` shape — dual-decimal Continental forms like
+  `"45'000,50"` would mis-classify if the `'` were lifted
+  into the regex itself. Do NOT change the
+  apostrophe-strip line in `parseSalaryNumber`; that defence-
+  in-depth path stays as-is.
+- **Active backlog after Spec 014 closes (T05 — run #64 or
+  later):** Spec 015 candidates = AC-8 (seed-companies
+  refresh) OR AC-9 (Workable diff); pick at T05 closeout
+  based on upstream signal. Spec 016 = the loser of that
+  pair; Spec 017 = ATS detail-page enrichment carry-over.
+- Specs **004 / 005 / 006 / 012 / 013** stay complete;
+  **001 / 003** retain their statuses unchanged. Spec
+  **014** advances from "draft (scaffolded run #59)" to
+  "T01 landed; T02..T05 pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #59 (Spec 014 scaffolding pass — three Spec-Kit artefacts; NO source code)
 
 **Scope:** scaffold **Spec 014 — Salary Parser Residuals** per

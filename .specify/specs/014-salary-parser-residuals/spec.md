@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 014                                                                         |
 | Slug           | salary-parser-residuals                                                     |
-| Status         | draft (scaffolded run #59); T01 pending                                     |
+| Status         | T01 landed run #60; T02..T05 pending                                        |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #59)                                                        |
-| Last updated   | 2026-04-28 (run #59)                                                        |
+| Last updated   | 2026-04-28 (run #60)                                                        |
 | Supersedes     | (none — extends Spec 012's salary-parser surface in `@ever-jobs/common`)    |
 | Related specs  | 003 (Job Deduplication Engine), 012 (European Salary Parser)                |
 
@@ -334,7 +334,49 @@ question slots if implementation surfaces something unexpected:
 (Append-only log of decisions made during implementation.
 Populated as T01..T05 land.)
 
-_None yet — scaffolded run #59._
+- **2026-04-28 (run #60 / T01)** — `$` registered in
+  `SALARY_UNIQUE_SYMBOLS` as the FIFTH (final) entry. The
+  scaffolding spec named the entry `['$', 'USD']`; the
+  implementation matches verbatim. Two implementation
+  observations resolved during the edit pass:
+
+  (1) **Iteration order preserved by appending at END.** The
+  acceptance text required "appended at the END (preserves
+  existing iteration order so EUR / GBP / PLN / CHF detection
+  paths stay byte-for-byte identical)". The edit honoured
+  that — `parseSalaryCurrency` line 187's
+  `for (const [symbol, code] of SALARY_UNIQUE_SYMBOLS)` loop
+  hits `€` / `£` / `zł` / `Fr.` in their original order
+  before reaching the new `$` entry. A regression that
+  re-ordered the array (e.g. by alphabetic symbol) would
+  have changed the precedence of overlapping shapes —
+  `Fr.` vs `F` is the standing example, but no current
+  symbol overlaps with `$`, so the ordering choice is
+  forward-compatible insurance rather than a load-bearing
+  invariant today.
+
+  (2) **Two test cases shipped, not one.** The acceptance
+  text required ≥ 1 case ("`parseSalaryCurrency('$100,000',
+  { country: GERMANY })` → USD via symbol tier"). We added
+  the required case PLUS the documented fast-fail check
+  (`parseSalaryCurrency('see $TODO inline', { country:
+  GERMANY })` → same envelope) so the "any `$` wins"
+  semantic from § 7.2 is pinned in the test suite, not just
+  in prose. A future contributor reading the test file cold
+  can convince themselves the broad-match semantic is
+  intentional. The FR-7 default-USD case
+  (`parseSalaryCurrency('foo bar')` → `confidence: 'default'`)
+  stays byte-identical — verified locally (65/65 helper
+  tests pass after the edit; was 63/63 before).
+
+  Out-of-scope reminder honoured: `SALARY_UNIQUE_SYMBOLS`
+  was NOT extended beyond the one new entry. Multi-`$`
+  disambiguation (CAD / AUD / NZD / SGD / HKD) remains a
+  future-spec candidate; the in-spec line at § 8 logs it as
+  Q-033 if a fixture demands it.
+
+_T02..T05 land in subsequent runs (#61..#64 if Spec 012's
+lean one-task-per-run cadence holds)._
 
 ## 11. References
 

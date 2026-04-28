@@ -67,6 +67,13 @@ const SALARY_UNIQUE_SYMBOLS: ReadonlyArray<readonly [string, string]> = [
   ['£', 'GBP'],
   ['zł', 'PLN'],
   ['Fr.', 'CHF'],
+  // Spec 014 / Q-027 / FR-1 — `$` was historically un-registered
+  // (USD as the FR-7 default carried it implicitly). The promotion
+  // to a `'symbol'`-tier match means an explicit `$` outranks a
+  // `country` hint, matching the precedence rule "symbol → ISO →
+  // country → default" end-to-end. Appended at END so the iteration
+  // order for the other four entries stays byte-identical (FR-5).
+  ['$', 'USD'],
 ];
 
 /**

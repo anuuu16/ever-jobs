@@ -78,7 +78,7 @@
 | 006 | [ATS-Scrapers Parity, Batch 1 (Avature / Gem / Join.com)](../.specify/specs/006-ats-scrapers-parity-batch-1/spec.md) — [plan](../.specify/specs/006-ats-scrapers-parity-batch-1/plan.md) — [tasks](../.specify/specs/006-ats-scrapers-parity-batch-1/tasks.md) | All phases done (T01..T13 runs #29..#36); spec complete |
 | 012 | [European-style Salary Parser](../.specify/specs/012-european-salary-parser/spec.md) — [plan](../.specify/specs/012-european-salary-parser/plan.md) — [tasks](../.specify/specs/012-european-salary-parser/tasks.md) | All phases done (T01..T05 runs #38..#42); spec complete |
 | 013 | [ATS-Scrapers Parity, Batch 2 (Oracle HCM Cloud / Mercor / Tesla)](../.specify/specs/013-ats-scrapers-parity-batch-2/spec.md) — [plan](../.specify/specs/013-ats-scrapers-parity-batch-2/plan.md) — [tasks](../.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md) | All phases done (T01..T15 runs #44..#58); spec complete |
-| 014 | [Salary Parser Residuals (`$` symbol / Swiss apostrophe / bare-number country fallback)](../.specify/specs/014-salary-parser-residuals/spec.md) — [plan](../.specify/specs/014-salary-parser-residuals/plan.md) — [tasks](../.specify/specs/014-salary-parser-residuals/tasks.md) | draft (scaffolded run #59); T01 pending |
+| 014 | [Salary Parser Residuals (`$` symbol / Swiss apostrophe / bare-number country fallback)](../.specify/specs/014-salary-parser-residuals/spec.md) — [plan](../.specify/specs/014-salary-parser-residuals/plan.md) — [tasks](../.specify/specs/014-salary-parser-residuals/tasks.md) | T01 landed run #60; T02..T05 pending |
 
 ## 8. Templates
 
@@ -90,4 +90,4 @@
 
 ---
 
-_Last revised: 2026-04-28 (run #59)._
+_Last revised: 2026-04-28 (run #60)._

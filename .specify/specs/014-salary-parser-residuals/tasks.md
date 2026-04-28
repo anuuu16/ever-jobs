@@ -4,9 +4,10 @@
 
 ## Phase 1 — `$` registration + helper-test pin
 
-- [ ] T01 — `SALARY_UNIQUE_SYMBOLS` includes `['$', 'USD']`;
+- [x] T01 — `SALARY_UNIQUE_SYMBOLS` includes `['$', 'USD']`;
   `parseSalaryCurrency('$', { country: <non-USA> })` resolves
   to USD via the symbol tier (FR-1 / FR-8).
+  **Landed run #60.**
   - **Files (planned):**
     - `packages/common/src/utils/helpers.ts` (extend
       `SALARY_UNIQUE_SYMBOLS`).
@@ -220,13 +221,27 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #60** = Spec 014 / Phase 1 / T01 — `$`
-  registration in `SALARY_UNIQUE_SYMBOLS` + 1 new helper test
-  case. Smallest possible first phase: 1-LOC source edit + 1
-  test case. The load-bearing acceptance check is the FR-7
-  default-USD case staying green byte-for-byte (the new
-  `$`-symbol entry MUST NOT shadow the no-signal path). See
-  Spec 014 / § 1 G-1 for full context.
+- **Default for run #61** = Spec 014 / Phase 2 / T02 —
+  Apostrophe-in-regex extension. Edit
+  `SALARY_NUMBER_REGEX_SRC.anglo` to add `'` to the
+  thousands-separator character class (`[,\\u00A0]` →
+  `[,\\u00A0']`); add the literal Spec 012 § 8 case 5
+  (`extractSalary("CHF 90'000 – CHF 120'000")` → CHF /
+  90000 / 120000 / yearly). One-character source edit + ≥ 1
+  unit case. Continental regex source UNCHANGED (regression
+  guard: `parseSalaryNumber("45'000,50", 'continental')`
+  must keep mis-classifying-by-design path intact via the
+  apostrophe-strip in `parseSalaryNumber`, NOT via the
+  regex itself). All 11 original USD cases must stay byte-
+  identical — character class is union, not replacement.
+  Estimated 0.15 day.
+- **Default for run #60 (DONE — landed run #60)** = Spec 014
+  / Phase 1 / T01 — `$` registration in
+  `SALARY_UNIQUE_SYMBOLS` + 2 new helper test cases (the
+  required "outranks country=GERMANY" + the documented
+  "any `$` wins" fast-fail check). 65/65 helper tests pass;
+  the FR-7 default-USD case (`parseSalaryCurrency('foo bar')`
+  → all-`null` symbol) stays byte-identical.
 - **Default for run #59 (DONE — landed run #59)** = Spec 014
   scaffolding pass. Three new artefacts under
   `.specify/specs/014-salary-parser-residuals/` (spec.md +
