@@ -5,6 +5,101 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #75 (Spec 017 / Phase 5 / T05 — closeout; AC-8 flipped to `agent ✅`; SOURCE_ADOPTION_BACKLOG `(seed lists)` shipped; spec complete)
+
+**Scope:** land Spec 017 / Phase 5 / T05 — closeout pass
+across the four ledger surfaces (`competitor-watch.md` §C
+`AC-8` row, `docs/SOURCE_ADOPTION_BACKLOG.md` `(seed lists)`
+row, Spec 017 spec.md Status field, `docs/index.md` § 7
+Spec 017 row). Q-038 / Q-039 / Q-040 (opened run #70) flipped
+from `_pending review_` to `**resolved** in Spec 017 (runs
+#70..#75)`. **Spec 017 is complete** — first refresh of the
+four high-volume Western-tier ATS slug tables since the Spec
+001 / 003 era.
+
+**`competitor-watch.md` §C `AC-8` flip:**
+
+```
+| AC-8 | **DONE (runs #71..#74)** — Spec 017 refreshed seed
+       company lists across all four Western-tier ATS sections
+       of `docs/COMPANY_SLUG_DIRECTORY.md`: Greenhouse 28 → 53
+       (run #71), Lever 5 → 30 (run #72), Workable 2 → 27
+       (run #73), SmartRecruiters 4 → 29 (run #74). 25
+       deterministic-indexed slugs per vendor sampled from
+       the upstream `OTHERS/Ats-scrapers/<vendor>/<vendor>_companies.csv`
+       corpora; selections recorded verbatim as Decisions
+       D-05..D-08 in `017/spec.md` § 10.            | agent ✅ |
+```
+
+**`docs/SOURCE_ADOPTION_BACKLOG.md` `(seed lists)` flip:**
+
+- Status `proposed` → `shipped`.
+- Description: `Refresh COMPANY_SLUG_DIRECTORY.md from latest
+  public seed lists (Greenhouse ≥ 5 K, Lever ≥ 3.7 K, Workable
+  ≥ 7.5 K, SmartRecruiters ≥ 0.8 K).` → `≥ 25 sampled per
+  vendor (Greenhouse 53 / Lever 30 / Workable 27 /
+  SmartRecruiters 29 — refreshed Spec 017 runs #71..#74).`
+- File footer "Last revised" bumped from `2026-04-26` to
+  `2026-04-28 (run #75)`.
+
+**Spec 017 spec.md Status flip:**
+
+`T01..T04 done (runs #71/#72/#73/#74); Phase 5 (T05) pending`
+→ `All phases done (T01..T05 runs #71..#75); spec complete`.
+"Last updated" bumped from `2026-04-28 (run #74)` to
+`2026-04-28 (run #75)`.
+
+**`docs/index.md` § 7 Spec 017 row Status flip:** mirrors the
+spec.md Status — `T01..T04 done (runs #71/#72/#73/#74); Phase
+5 (T05) pending` → `All phases done (T01..T05 runs #71..#75);
+spec complete`. File footer "Last revised" bumped to
+`2026-04-28 (run #75)`.
+
+**Spec 017 final-state summary:**
+
+| Phase | Run    | Vendor          | Pre-existing rows | Appended | Final |
+| ----- | ------ | --------------- | ----------------- | -------- | ----- |
+| 0     | #70    | (scaffolding)   | —                 | —        | —     |
+| 1     | #71    | Greenhouse      | 28                | 25       | 53    |
+| 2     | #72    | Lever           | 5                 | 25       | 30    |
+| 3     | #73    | Workable        | 2                 | 25       | 27    |
+| 4     | #74    | SmartRecruiters | 4                 | 25       | 29    |
+| 5     | #75    | (closeout)      | —                 | —        | —     |
+
+**Acceptance:**
+
+- `npm run lint:docs` exit 0.
+- `competitor-watch.md` §C grep for `AC-8` returns the
+  `agent ✅` marker with the run-number range.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` `(seed lists)` row reads
+  `≥ 25 sampled per vendor (Greenhouse 53 / Lever 30 /
+  Workable 27 / SmartRecruiters 29 — refreshed Spec 017 runs
+  #71..#74)`.
+- Spec 017 spec.md Status reads `All phases done (T01..T05
+  runs #71..#75); spec complete`.
+- `docs/index.md` Spec 017 row Status matches spec.md
+  Status.
+- T05 row `[ ]` → `[x]` in tasks.md.
+- No `.ts` file modified. No source-side test added (NFR-2
+  honoured end-to-end across all five Spec 017 phases).
+- Q-038 / Q-039 / Q-040 resolution lines flipped from
+  `_pending review_` to `**resolved** in Spec 017 (runs
+  #70..#75)`.
+
+**Default for run #76:** next backlog candidate. Spec 017 is
+complete with this run. The most natural next pickup is
+**AC-9** in `competitor-watch.md` §C (Workable scraper logic
+diff against upstream commit `312c7b6` and absorb relevant
+behaviour into our plugin). AC-9 is a code-touching task
+(`source-ats-workable` plugin), so a new spec authoring pass
+— `018-workable-upstream-parity` — is the right shape:
+scaffold spec.md / plan.md / tasks.md, open any required
+`Q-NNN` entries in `docs/questions.md`, append a Spec 018 row
+to `docs/index.md` § 7, and pin Phase 1 (vendor-diff sweep
+against the upstream Python source) as the run #77 default.
+
+---
+
 ## 2026-04-28 — Scheduled run #74 (Spec 017 / Phase 4 / T04 — 25 deterministic-indexed SmartRecruiters slugs appended; all-lowercase slice / no PascalCase URL slugs)
 
 **Scope:** land Spec 017 / Phase 4 / T04 — append 25

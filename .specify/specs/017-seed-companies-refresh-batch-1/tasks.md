@@ -160,9 +160,9 @@
       flags any case-preserved-mixed-case slugs.
   - **Estimate:** 0.15 day.
 
-## Phase 5 — Closeout (T05, run #75 — pending)
+## Phase 5 — Closeout (T05, run #75 — landed this run)
 
-- [ ] T05 — Flip `AC-8` to `agent ✅` in `competitor-watch.md`
+- [x] T05 — Flip `AC-8` to `agent ✅` in `competitor-watch.md`
   §C (workspace-root file, outside the ever-jobs repo) with
   the four phase run-numbers. Refresh
   [`docs/SOURCE_ADOPTION_BACKLOG.md`](../../../docs/SOURCE_ADOPTION_BACKLOG.md)
@@ -197,23 +197,45 @@
 
 ## Notes for the next run (after T00 lands)
 
-- **Default for run #75** = Spec 017 / Phase 5 / T05 — closeout.
-  Flip `AC-8` to `agent ✅` in `competitor-watch.md` §C
-  (workspace-root file, outside the ever-jobs repo) with the
-  four phase run-numbers `#71/#72/#73/#74`. Refresh
-  `docs/SOURCE_ADOPTION_BACKLOG.md` `(seed lists)` row to read
-  "≥ 25 sampled per vendor (Greenhouse 53 / Lever 30 /
-  Workable 27 / SmartRecruiters 29 — refreshed Spec 017 runs
-  #71..#74)" (FR-7 / FR-8). Flip Spec 017 spec.md Status to
-  "All phases done (T01..T05 runs #71..#75); spec complete".
-  Update `docs/index.md` Spec 017 row Status to match.
-  **Closeout-specific watch-out:** double-check that the
-  `competitor-watch.md` `AC-8` flip preserves the existing
-  table column alignment; the markdown table uses
-  pipe-and-dash formatting that's strict about column widths.
-  The SOURCE_ADOPTION_BACKLOG `(seed lists)` row is the third
-  row in the "Logic-improvement candidates" table — line up
-  the `(seed lists)` cell width with the existing column.
+- **Default for run #76** = next backlog candidate. Spec 017
+  is complete with run #75. The most natural next pickup is
+  **AC-9** (Workable scraper logic diff against upstream
+  commit `312c7b6` and absorb relevant behaviour into our
+  plugin) — the only remaining unfinished `agent` item in
+  `competitor-watch.md` §C. AC-9 is a code-touching task
+  (`source-ats-workable` plugin), so a new spec authoring
+  pass — `018-workable-upstream-parity` — is the right
+  shape: scaffold spec.md / plan.md / tasks.md, open any
+  required `Q-NNN` entries in `docs/questions.md`, append a
+  Spec 018 row to `docs/index.md` § 7, and pin Phase 1
+  (vendor-diff sweep against the upstream Python source) as
+  the run #77 default. Alternative: a smaller "Batch 2 of
+  the seed-companies refresh" spec for the under-seeded
+  vendors not in this scope (Workday / iCIMS / Taleo /
+  SuccessFactors / BambooHR / Recruitee / Manatal /
+  Phenom) — out of Spec 017's scope per the closing
+  reminder. Choose at run #76 pickup based on upstream
+  signal at that point.
+
+- **Default for run #75 (DONE — landed run #75)** = Spec 017 /
+  Phase 5 / T05 — closeout. Flipped `AC-8` to `agent ✅` in
+  `competitor-watch.md` §C with the four phase run-numbers
+  `#71/#72/#73/#74`. Refreshed
+  `docs/SOURCE_ADOPTION_BACKLOG.md` `(seed lists)` row from
+  `proposed` to `shipped` with the four post-refresh row
+  counts (Greenhouse 53 / Lever 30 / Workable 27 /
+  SmartRecruiters 29 — refreshed Spec 017 runs #71..#74)
+  (FR-7 / FR-8). Flipped Spec 017 spec.md Status to "All
+  phases done (T01..T05 runs #71..#75); spec complete".
+  Updated `docs/index.md` Spec 017 row Status to match.
+  Q-038 / Q-039 / Q-040 (opened run #70) flipped from
+  `_pending review_` to `**resolved** in Spec 017 (runs
+  #70..#75)`. Spec 017 is **complete** — first refresh of
+  the four high-volume Western-tier ATS slug tables since
+  the Spec 001 / 003 era. Total directory delta: +100 rows
+  (~+10.4 KB), well under NFR-4 ceiling of +12 KB. Test
+  suite delta = 0 (NFR-2 — Spec 017 was docs-only
+  end-to-end).
 
 - **Default for run #74 (DONE — landed run #74)** = Spec 017 /
   Phase 4 / T04 — appended 25 deterministic-indexed

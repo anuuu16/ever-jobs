@@ -58,11 +58,16 @@ agent doesn't have. Option D delivers determinism + spread; it
 costs a few lines of methodology in spec § 7.1 but no
 runtime infrastructure.
 
-**Resolution:** _pending review._ The Spec 017 phases T01..T04
-will land 100 rows total under this default; if the human
-owner prefers a different methodology, those rows can be
-re-sampled in a follow-on spec without affecting the existing
-preserved rows (FR-5).
+**Resolution:** **resolved** in Spec 017 (runs #70..#75). The
+Spec 017 phases T01..T04 landed 100 rows total under this
+default — Greenhouse 25 (run #71), Lever 25 (run #72), Workable
+25 (run #73), SmartRecruiters 25 (run #74) — recorded verbatim
+as Decisions D-05..D-08 in `017/spec.md` § 10. Re-running the
+§ 7.1 methodology against the same upstream CSVs reproduces the
+exact same 100 slugs (FR-6 determinism). If the human owner
+prefers a different methodology, those rows can be re-sampled
+in a follow-on spec without affecting the existing preserved
+rows (FR-5).
 
 ---
 
@@ -102,7 +107,11 @@ that count or pick a different N?
   authoritative for full-corpus discovery, and the directory's
   job is fast-path lookup not exhaustive listing.
 
-**Resolution:** _pending review._
+**Resolution:** **resolved** in Spec 017 (runs #70..#75). N = 25
+landed across all four phases (Greenhouse 53 / Lever 30 /
+Workable 27 / SmartRecruiters 29 — final row counts =
+preserved + 25). NFR-4 honoured (directory delta well under
+the +12 KB ceiling).
 
 ---
 
@@ -149,7 +158,11 @@ Crunchbase / LinkedIn dataset / a structured open-source
 mapping) is the right path for replacing the placeholders;
 that's out of scope for Spec 017.
 
-**Resolution:** _pending review._
+**Resolution:** **resolved** in Spec 017 (runs #70..#75). All
+100 new rows landed with the literal em-dash placeholder
+(`—`) in the `Industry` column. The four-column markdown
+shape renders cleanly; an enrichment pass remains a future
+spec opportunity.
 
 ---
 

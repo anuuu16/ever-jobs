@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 017                                                                         |
 | Slug           | seed-companies-refresh-batch-1                                              |
-| Status         | T01..T04 done (runs #71/#72/#73/#74); Phase 5 (T05) pending                  |
+| Status         | All phases done (T01..T05 runs #71..#75); spec complete                     |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #70)                                                        |
-| Last updated   | 2026-04-28 (run #74)                                                        |
+| Last updated   | 2026-04-28 (run #75)                                                        |
 | Supersedes     | (none — first refresh of the four big-volume vendor slug tables in `docs/COMPANY_SLUG_DIRECTORY.md`) |
 | Related specs  | 006 (ATS Batch 1 — Avature / Gem / Join.com slug seeding precedent), 013 (ATS Batch 2 — Oracle / Mercor / Tesla slug seeding precedent), 016 (immediately-prior single-byte warm-up; Spec 016 closeout's "Notes for the next run" pinned **AC-8** as the run #70 default) |
 

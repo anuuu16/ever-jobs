@@ -37,7 +37,7 @@
 | proposed   | `source-ats-workable`  | Audit recent upstream behaviour change in pagination/rate-limit handling — diff and absorb. |
 | proposed   | `source-ats-workday`   | Add a search-URL discovery helper for tenants without a known career-site URL. |
 | proposed   | `source-company-apple` | Adopt cache-manager + dedicated api-client decomposition for memory ergonomics. |
-| proposed   | (seed lists)           | Refresh `COMPANY_SLUG_DIRECTORY.md` from latest public seed lists (Greenhouse ≥ 5 K, Lever ≥ 3.7 K, Workable ≥ 7.5 K, SmartRecruiters ≥ 0.8 K). |
+| shipped    | (seed lists)           | ≥ 25 sampled per vendor (Greenhouse 53 / Lever 30 / Workable 27 / SmartRecruiters 29 — refreshed Spec 017 runs #71..#74). |
 
 ## Conventions
 
@@ -50,4 +50,4 @@
 
 ---
 
-_Last revised: 2026-04-26._
+_Last revised: 2026-04-28 (run #75)._
