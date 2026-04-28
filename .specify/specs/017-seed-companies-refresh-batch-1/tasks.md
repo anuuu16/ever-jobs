@@ -47,7 +47,7 @@
 
 ## Phase 1 — Greenhouse refresh (T01, run #71 — pending)
 
-- [ ] T01 — Append 25 deterministic-indexed Greenhouse slug
+- [x] T01 — Append 25 deterministic-indexed Greenhouse slug
   rows to the Greenhouse table in
   [`docs/COMPANY_SLUG_DIRECTORY.md`](../../../docs/COMPANY_SLUG_DIRECTORY.md)
   (FR-1 / FR-9). Sample from
@@ -56,6 +56,7 @@
   duplicate-and-numeric filter). Record the 25 selected
   slugs as Decision D-05 in `spec.md` § 10 (FR-11). Verify
   Greenhouse table row count = 28 + 25 = **53**.
+  **Landed run #71.**
   - **Files (planned):**
     - `docs/COMPANY_SLUG_DIRECTORY.md` — +25 rows under
       Greenhouse section; existing 28 rows preserved
@@ -195,13 +196,31 @@
 
 ## Notes for the next run (after T00 lands)
 
-- **Default for run #71** = Spec 017 / Phase 1 / T01 — append
-  25 deterministic-indexed Greenhouse slug rows. Sample from
-  `OTHERS/Ats-scrapers/greenhouse/greenhouse_companies.csv`
-  (2 805 post-header rows). Apply § 7.1's deterministic-indexed
-  sampling rule + the duplicate-and-numeric filter (D-02). Land
-  ~25 row appends with §10 D-05 recording the selection
-  verbatim.
+- **Default for run #72** = Spec 017 / Phase 2 / T02 — append
+  25 deterministic-indexed Lever slug rows. Sample from
+  `OTHERS/Ats-scrapers/lever/lever_companies.csv` (1 912
+  post-header rows). Apply § 7.1's deterministic-indexed
+  sampling rule + the duplicate-and-numeric filter (D-02).
+  Land ~25 row appends with § 10 D-06 recording the selection
+  verbatim. Note Lever's case-preservation rule per § 7.2
+  (slug column preserves the upstream URL's case — Lever
+  slugs are case-sensitive in upstream URLs but the Ever Jobs
+  plugin lowercases them at request time, so both
+  presentations are valid). Verify Lever table row count =
+  5 + 25 = 30.
+
+- **Default for run #71 (DONE — landed run #71)** = Spec 017 /
+  Phase 1 / T01 — appended 25 deterministic-indexed
+  Greenhouse slug rows. § 7.1 methodology produced
+  L = 2 793 / step = 111; selection recorded verbatim as D-05
+  in spec.md § 10. All 25 selected rows landed under the
+  modern `job-boards.greenhouse.io/<slug>` URL shape (no
+  legacy `boards.greenhouse.io/<slug>` rows in this slice;
+  both extraction rules collapse to the same lowercase
+  last-path-segment regardless). Greenhouse table row count
+  53 = 28 preserved + 25 appended (verified via
+  `awk '/^## Greenhouse$/,/^## Workday$/' docs/COMPANY_SLUG_DIRECTORY.md
+  | grep -c '^|'` = 55 with 2 header rows).
 
 - **Watch-out for run #71 (Greenhouse-specific):** the upstream
   CSV has BOTH modern (`job-boards.greenhouse.io/<slug>`) and

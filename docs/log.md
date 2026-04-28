@@ -5,6 +5,74 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #71 (Spec 017 / Phase 1 / T01 — 25 deterministic-indexed Greenhouse slugs appended)
+
+**Scope:** land Spec 017 / Phase 1 / T01 — append 25
+deterministic-indexed Greenhouse slug rows to
+`docs/COMPANY_SLUG_DIRECTORY.md` per § 7.1 sampling
+methodology. The verbatim selection list is recorded as
+Decision D-05 in spec.md § 10 (FR-11).
+
+**Selection mechanics:** L = **2 793** (post-duplicate-and-
+numeric filter against 2 805 raw rows); step =
+`⌊2793/25⌋ = 111`; indices `[0, 111, 222, …, 2664]`.
+
+**25 selected slugs** (alphabetically-spaced sample from
+`OTHERS/Ats-scrapers/greenhouse/greenhouse_companies.csv`):
+`10alabs`, `alixpartners`, `arlosolutionsllc`, `bigid`,
+`cadencesolutions`, `clevelandguardiansbops`,
+`danieloconnellssons`, `effectual`, `fastly`,
+`garnerhealth`, `guild`, `iherb`, `juvare`, `lightningai`,
+`meridianpartners`, `nationallifeinsurancecompany`,
+`olly`, `penninteractive`, `qualia`, `royalvet`, `simula`,
+`stemhealthcare`, `thatlot`, `twitch`, `vulcanelements`.
+
+All 25 rows landed under the modern
+`job-boards.greenhouse.io/<slug>` URL shape (the CSV uses
+that form exclusively for these indices). No `?gh_jid=…`
+query suffixes appeared. Greenhouse table row count after
+T01: **53** (28 preserved + 25 appended).
+
+**No new questions opened this run.** Q-038 / Q-039 / Q-040
+(opened run #70) stay open; resolutions flip at T05.
+
+**No competitor-watch upstream churn** — fiftieth consecutive
+zero-churn run in `OTHERS/`.
+
+**Changes — docs / specs:**
+
+- `docs/COMPANY_SLUG_DIRECTORY.md` — 25 new rows appended to
+  the Greenhouse section. Existing 28 rows byte-identical
+  (FR-5). New rows use em-dash `—` for `Industry` (D-03).
+- `.specify/specs/017-seed-companies-refresh-batch-1/spec.md`
+  — Status → "T01 done (run #71); Phase 2..5 pending";
+  § 10 Decisions appended with D-05 (verbatim 25-slug
+  selection table).
+- `.specify/specs/017-seed-companies-refresh-batch-1/tasks.md`
+  — T01 flipped `[x]`; Notes-for-the-next-run pin updated
+  to **Spec 017 / Phase 2 / T02** (Lever).
+- `docs/index.md` — Spec 017 row updated; footer bumped.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #71.
+- `/competitor-watch.md` — run #71 sync line at top.
+
+**Verification:** `lint:docs` pending; Greenhouse table row
+count = 53 confirmed; § 7.1 reproducibility holds; test
+suite delta = 0 (NFR-2).
+
+**Notes & follow-ups:**
+
+- **Default for run #72** = Spec 017 / Phase 2 / T02 —
+  Lever. Sample from
+  `OTHERS/Ats-scrapers/lever/lever_companies.csv` (1 912
+  rows). Lever's case-preservation rule (§ 7.2) — slug
+  column preserves upstream URL case.
+- Specs **004 / 005 / 006 / 012 / 013 / 014 / 015 / 016**
+  stay complete. Spec **017** advances from "Phase 0 only"
+  to "T01 done; T02..T05 pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #70 (Spec 017 / Phase 0 — scaffolding pass for `seed-companies-refresh-batch-1` (AC-8); Q-038 / Q-039 / Q-040 opened with defaults; no row-append yet)
 
 **Scope:** open **Spec 017** — the long-pending `AC-8`

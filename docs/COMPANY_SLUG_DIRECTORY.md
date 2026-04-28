@@ -61,6 +61,31 @@ Greenhouse slugs are the subdomain used in `boards.greenhouse.io/{slug}`.
 | Coinbase | `coinbase` | Crypto / Finance |
 | HubSpot | `hubspot` | Marketing / CRM |
 | Plaid | `plaid` | Fintech |
+| 10Alabs | `10alabs` | — |
+| Alixpartners | `alixpartners` | — |
+| Arlosolutionsllc | `arlosolutionsllc` | — |
+| Bigid | `bigid` | — |
+| Cadencesolutions | `cadencesolutions` | — |
+| Clevelandguardiansbops | `clevelandguardiansbops` | — |
+| Danieloconnellssons | `danieloconnellssons` | — |
+| Effectual | `effectual` | — |
+| Fastly | `fastly` | — |
+| Garnerhealth | `garnerhealth` | — |
+| Guild | `guild` | — |
+| Iherb | `iherb` | — |
+| Juvare | `juvare` | — |
+| Lightningai | `lightningai` | — |
+| Meridianpartners | `meridianpartners` | — |
+| Nationallifeinsurancecompany | `nationallifeinsurancecompany` | — |
+| Olly | `olly` | — |
+| Penninteractive | `penninteractive` | — |
+| Qualia | `qualia` | — |
+| Royalvet | `royalvet` | — |
+| Simula | `simula` | — |
+| Stemhealthcare | `stemhealthcare` | — |
+| Thatlot | `thatlot` | — |
+| Twitch | `twitch` | — |
+| Vulcanelements | `vulcanelements` | — |
 
 ---
 

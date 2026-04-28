@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 017                                                                         |
 | Slug           | seed-companies-refresh-batch-1                                              |
-| Status         | draft (scaffolded run #70); Phase 0 only — Phase 1..5 pending                |
+| Status         | T01 done (run #71); Phase 2..5 (T02..T05) pending                           |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #70)                                                        |
-| Last updated   | 2026-04-28 (run #70)                                                        |
+| Last updated   | 2026-04-28 (run #71)                                                        |
 | Supersedes     | (none — first refresh of the four big-volume vendor slug tables in `docs/COMPANY_SLUG_DIRECTORY.md`) |
 | Related specs  | 006 (ATS Batch 1 — Avature / Gem / Join.com slug seeding precedent), 013 (ATS Batch 2 — Oracle / Mercor / Tesla slug seeding precedent), 016 (immediately-prior single-byte warm-up; Spec 016 closeout's "Notes for the next run" pinned **AC-8** as the run #70 default) |
 
@@ -395,6 +395,65 @@ is deferred to run #71. Reasons:
 `docs/COMPANY_SLUG_DIRECTORY.md`. T01..T05 run in #71..#75
 (modulo competitor-watch upstream churn that may interpose
 an unrelated spec).
+
+### Decision D-05 (run #71, T01) — Greenhouse 25-slug selection verbatim
+
+**Context:** FR-11 requires the 25-slug selection per vendor to be
+recorded verbatim in the spec for audit. The § 7.1 methodology run
+against `OTHERS/Ats-scrapers/greenhouse/greenhouse_companies.csv`
+(2 805 post-header rows) yielded a post-filter list length of
+**L = 2 793** (12 rows dropped: 2 pure-numeric `name` values like
+`103644278` and `123456789101010`; 0 duplicates with the existing 28
+Greenhouse rows; the rest were rare empty-name cases). Step =
+`⌊2793/25⌋ = 111`. The 25 deterministic indices `[0, 111, 222, …,
+2664]` produced the following selection (CSV `name` → derived
+`slug` per § 7.2):
+
+| idx  | upstream `name`              | slug                            |
+| ---- | ---------------------------- | ------------------------------- |
+|    0 | 10Alabs                      | `10alabs`                       |
+|  111 | Alixpartners                 | `alixpartners`                  |
+|  222 | Arlosolutionsllc             | `arlosolutionsllc`              |
+|  333 | Bigid                        | `bigid`                         |
+|  444 | Cadencesolutions             | `cadencesolutions`              |
+|  555 | Clevelandguardiansbops       | `clevelandguardiansbops`        |
+|  666 | Danieloconnellssons          | `danieloconnellssons`           |
+|  777 | Effectual                    | `effectual`                     |
+|  888 | Fastly                       | `fastly`                        |
+|  999 | Garnerhealth                 | `garnerhealth`                  |
+| 1110 | Guild                        | `guild`                         |
+| 1221 | Iherb                        | `iherb`                         |
+| 1332 | Juvare                       | `juvare`                        |
+| 1443 | Lightningai                  | `lightningai`                   |
+| 1554 | Meridianpartners             | `meridianpartners`              |
+| 1665 | Nationallifeinsurancecompany | `nationallifeinsurancecompany`  |
+| 1776 | Olly                         | `olly`                          |
+| 1887 | Penninteractive              | `penninteractive`               |
+| 1998 | Qualia                       | `qualia`                        |
+| 2109 | Royalvet                     | `royalvet`                      |
+| 2220 | Simula                       | `simula`                        |
+| 2331 | Stemhealthcare               | `stemhealthcare`                |
+| 2442 | Thatlot                      | `thatlot`                       |
+| 2553 | Twitch                       | `twitch`                        |
+| 2664 | Vulcanelements               | `vulcanelements`                |
+
+All 25 slugs land under the modern `job-boards.greenhouse.io/<slug>`
+URL shape (the CSV's URL column uses `https://job-boards.greenhouse.io/<lowercase-name>`
+exclusively — the legacy `boards.greenhouse.io/<slug>` form anticipated
+in the Watch-out note for run #71 wasn't represented in this 25-row
+slice; both extraction rules in § 7.2 collapse to the same lowercase
+last-path-segment regardless). No `?gh_jid=…` query suffixes appeared
+in the selected rows.
+
+Greenhouse table row count after T01: **53** (28 preserved + 25
+appended), verified via
+`awk '/^## Greenhouse$/,/^## Workday$/' docs/COMPANY_SLUG_DIRECTORY.md
+| grep -c '^|'` reporting 55 (53 data rows + 2 header rows).
+
+Re-running the § 7.1 methodology against the same CSV produces the
+same 25 slugs (FR-6 reproducibility verified locally; the
+`existing` set, `L`, step, and indices are deterministic functions
+of the input).
 
 ## 11. References
 
