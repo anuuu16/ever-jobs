@@ -450,8 +450,10 @@ on by default), not a regression.
   `createHttpClient` retry / backoff implementation (Coverage Matrix § 7.3 row 3).
 - [`packages/models/src/interfaces/scraper.interface.ts`](../../../packages/models/src/interfaces/scraper.interface.ts) —
   `IScraper` contract; § 7.2 quoted shape.
-- [`competitor-watch.md`](../../../../competitor-watch.md) §C —
-  AC-9 row; flips to `agent ✅` at T01 closeout.
+- `competitor-watch.md` §C — AC-9 row (the file lives at the
+  workspace root outside the ever-jobs repo, so referenced as a
+  plain backticked path; flipped to `agent ✅ (run #77)` at T01
+  closeout).
 - `.specify/specs/006-ats-scrapers-parity-batch-1/spec.md` —
   established the absorption pattern; closed run #36.
 - `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
