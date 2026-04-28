@@ -929,3 +929,97 @@ describe('extractSalary — Spec 015 / T02 (deferred Spec 014 / T04 cases)', () 
     expect(result.interval).toBeNull();
   });
 });
+
+/**
+ * # Spec 019 / T02 — Bare-Path Threshold Bump test pins
+ *
+ * Spec 019 / FR-1 bumped the bare-path raw-value pre-check threshold
+ * from `lowerLimit / 12 ≈ 83` (Spec 015 baseline) to `lowerLimit ≈
+ * 1000` at run #79 / T01. The bump narrows the bare-path admission
+ * band from `83 ≤ minSalary` to `1000 ≤ minSalary` (no K-suffix
+ * shapes). Effect: any input that synthesised an `{ interval:
+ * 'hourly', minAmount: < 1000 }` row from the bare path under a
+ * country hint now returns the all-`null` envelope.
+ *
+ * The three cases below pin the new behaviour at the threshold
+ * boundary:
+ *
+ * Case 74 (FR-2.a — reject literal):
+ *   `"100 - 150" + country=GERMANY`. Pre-T01: bare regex captured
+ *   `100 - 150`; `100 ≥ 83` admitted; hourly classification
+ *   annualised `100 * 2080 = 208000`; row emitted as `{ interval:
+ *   'hourly', minAmount: 100, maxAmount: 150, currency: 'EUR' }`
+ *   — the **Spec 015 / FR-8 documented limitation**. Post-T01:
+ *   `100 < 1000` rejects on the new threshold; all-`null` returned.
+ *
+ * Case 75 (FR-2.b — reject prose immunity, additive coverage):
+ *   `"team of 100 - 150 employees" + country=GERMANY`. The bare
+ *   regex captures the `100 - 150` substring inside the prose; the
+ *   country-tier guard fires on the country hint. Pre-T01: same
+ *   synthetic hourly EUR row as Case 74 (FR-8 documented limitation
+ *   was not specific to standalone digit ranges). Post-T01: same
+ *   threshold rejection (`100 < 1000`).
+ *
+ * Case 76 (FR-2.c — admit at threshold boundary):
+ *   `"1000 - 1500" + country=GERMANY`. The bare regex captures
+ *   `1000 - 1500`; `1000 ≥ 1000` admits on the new threshold;
+ *   `1000 < 30000` (monthlyThreshold default) classifies as
+ *   monthly; annualised `1000 * 12 = 12000 ≥ lowerLimit = 1000`
+ *   passes the bounds check; row emitted as `{ interval:
+ *   'monthly', minAmount: 1000, maxAmount: 1500, currency: 'EUR' }`
+ *   (raw amounts because `enforceAnnualSalary` defaults to `false`).
+ *   This boundary admit verifies the threshold bump did NOT bleed
+ *   over into legitimate Continental monthly ranges.
+ *
+ * Originating question: Q-041 (threshold-bump default). Default
+ * Option A pinned at scaffold pass (run #78); confirmed at T01
+ * implementation (run #79); pinned by these test cases at T02
+ * (this run).
+ */
+describe('extractSalary — Spec 019 / T02 (bare-path threshold bump)', () => {
+  it('Spec 019 / T02 — Case 1 (FR-2.a): reject literal `100 - 150` + country=GERMANY (Spec 015 / FR-8 documented limitation closed)', () => {
+    // Pre-T01 baseline (Spec 015 / FR-8 documented limitation):
+    //   { interval: 'hourly', minAmount: 100, maxAmount: 150,
+    //     currency: 'EUR' } via 100 * 2080 = 208000 annualisation.
+    // Post-T01: 100 < lowerLimit = 1000 rejects on the new threshold.
+    const result = extractSalary('100 - 150', {
+      country: Country.GERMANY,
+    });
+    expect(result.currency).toBeNull();
+    expect(result.minAmount).toBeNull();
+    expect(result.maxAmount).toBeNull();
+    expect(result.interval).toBeNull();
+  });
+
+  it('Spec 019 / T02 — Case 2 (FR-2.b): reject prose-immunity additive — `team of 100 - 150 employees` + country=GERMANY', () => {
+    // Bare regex captures `100 - 150` inside the prose. The
+    // country-tier guard on Country.GERMANY → EUR fires. Pre-T01:
+    // same synthetic hourly EUR row as Case 1 (FR-8 was not
+    // specific to standalone digit ranges). Post-T01: 100 < 1000
+    // rejects on the new threshold.
+    const result = extractSalary('team of 100 - 150 employees', {
+      country: Country.GERMANY,
+    });
+    expect(result.currency).toBeNull();
+    expect(result.minAmount).toBeNull();
+    expect(result.maxAmount).toBeNull();
+    expect(result.interval).toBeNull();
+  });
+
+  it('Spec 019 / T02 — Case 3 (FR-2.c): admit at threshold boundary — `1000 - 1500` + country=GERMANY → monthly EUR', () => {
+    // Boundary admit. 1000 ≥ lowerLimit = 1000 (boundary inclusive)
+    // passes the new threshold; 1000 < monthlyThreshold = 30000
+    // classifies as monthly; annualised 1000 * 12 = 12000 ≥
+    // lowerLimit passes bounds check. Raw amounts because
+    // enforceAnnualSalary defaults to false. This case verifies
+    // the bump did NOT bleed into legitimate Continental monthly
+    // ranges (FR-8 closure does not regress FR-2 / FR-7).
+    const result = extractSalary('1000 - 1500', {
+      country: Country.GERMANY,
+    });
+    expect(result.currency).toBe('EUR');
+    expect(result.minAmount).toBe(1000);
+    expect(result.maxAmount).toBe(1500);
+    expect(result.interval).toBe('monthly');
+  });
+});

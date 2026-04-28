@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 019                                                                         |
 | Slug           | salary-parser-residuals-batch-2                                             |
-| Status         | T01 landed (run #79); T02 + T03 pending                                     |
+| Status         | T01 + T02 landed (runs #79..#80); T03 pending                               |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #78)                                                        |
-| Last updated   | 2026-04-28 (run #79)                                                        |
+| Last updated   | 2026-04-28 (run #80)                                                        |
 | Supersedes     | Spec 015 / FR-8 (documented limitation re-classified as a closed gap)       |
 | Related specs  | 012 (European-style Salary Parser — established the multi-currency dispatcher); 014 (Salary Parser Residuals — `$` registration + apostrophe-thousands + bare-path Q-026); 015 (Salary Parser Locale & Prose Immunity — added the bare-path raw-value pre-check this spec retunes); 016 (`helpers.bench.spec.ts` TS1127 fix — restored the bench acceptance gate this spec re-runs at T01 / T02) |
 
@@ -361,6 +361,66 @@ bare path with no K-suffix.
 ## 10. Decisions
 
 (Append-only log; entries prepended at run boundaries.)
+
+### D-02 — T02 test pins landed (run #80, 2026-04-28)
+
+**Outcome:** FR-2 satisfied. The three new `it(...)` blocks
+landed verbatim against spec § 7.2 case literals — case 74
+(FR-2.a — `"100 - 150" + country=GERMANY` → all-`null`),
+case 75 (FR-2.b — `"team of 100 - 150 employees" +
+country=GERMANY` → all-`null`; additive prose-immunity
+coverage), case 76 (FR-2.c — `"1000 - 1500" +
+country=GERMANY` → `{ interval: 'monthly', minAmount: 1000,
+maxAmount: 1500, currency: 'EUR' }` — boundary admit). The
+new describe block is `extractSalary — Spec 019 / T02
+(bare-path threshold bump)`; placed at end-of-file after the
+existing Spec 015 / T02 block, with a multi-line lead-in
+comment threading the Spec 015 / FR-8 → Spec 019 / FR-1
+narrative and per-case behavioural derivations.
+
+**Acceptance evidence:**
+
+- (a) Regression sweep: `npx jest packages/common/__tests__/helpers.spec` →
+  **77/77 passed** in 6.905 s. Pre-T02 baseline was 74 (per
+  D-01 reconciliation); +3 cases lands exactly 77 (NFR-5
+  honoured at +3 delta — text reconciliation 73→76 vs 74→77
+  carried forward to T03 closeout).
+- (b) Bench: `npx jest packages/common/__tests__/helpers.bench` →
+  2/2 passed in 5.997 s; `dist/bench/helpers-salary.json`
+  records overall **p95 = 0.0248 ms** (delta from D-01's
+  0.0176 ms = +0.0072 ms; from Spec 016 baseline 0.0174 ms =
+  +0.0074 ms; well within +0.1 ms NFR-1 budget). Per-currency
+  p95 figures all stay under the 0.5 ms NFR-1 ceiling and the
+  2.0 ms CI ceiling. The slight upward drift from D-01 is
+  within natural CI/sandbox jitter (separate runs produce
+  ±0.005–0.010 ms swings on this machine; the bench fixture is
+  unchanged so source-attributable delta is zero).
+- (c) Diff scope: exactly one file changed
+  (`packages/common/__tests__/helpers.spec.ts`); the change is
+  the appended `describe('extractSalary — Spec 019 / T02
+  (bare-path threshold bump)', ...)` block (~95 added lines
+  including doc comment + 3 `it(...)` blocks). No source-file
+  edit at T02; the dispatcher behaviour was set by T01 and
+  T02 only pins it.
+- (d) Test count delta verified: `grep -c '^  it(' helpers.spec.ts` →
+  **77** post-edit (was **74** pre-edit). NFR-5 +3 delta
+  honoured.
+
+**Forward-pointers:**
+
+- T03 (run #81) executes the closeout doc edit on
+  `docs/PERFORMANCE_TUNING.md` per spec § 7 / FR-4 — rewrite
+  the Spec 015 / FR-8 paragraph to reflect closure (the
+  `"100 - 150" + country=GERMANY` shape is now rejected;
+  recommended escape hatches are prefix-anchored EUR symbol
+  or suffix-anchored EUR ISO). Status flips from
+  `T01 + T02 landed (runs #79..#80); T03 pending` to
+  `All phases done (T03 run #81); spec complete`.
+- The 73→76 / 74→77 doc-drift reconciliation surfaced at D-01
+  is rolled into T03's spec-text refresh (spec § 7.2 narrative
+  + NFR-5 target line + tasks.md T02 acceptance line).
+- Q-041 Resolution stays `_open — agent default = A` until
+  the human owner reviews; T03 does not flip it.
 
 ### D-01 — T01 source-side threshold bump landed (run #79, 2026-04-28)
 

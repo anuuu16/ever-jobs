@@ -10,7 +10,7 @@
 | Spec           | [`spec.md`](./spec.md)             |
 | Plan           | [`plan.md`](./plan.md)             |
 | Created        | 2026-04-28 (run #78)               |
-| Last updated   | 2026-04-28 (run #79)               |
+| Last updated   | 2026-04-28 (run #80)               |
 
 ---
 
@@ -33,7 +33,7 @@
 
 | ID  | Task                                                                                  | Acceptance                                                                                                                                                          | Status |
 | --- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| T02 | Add three new `it(...)` blocks in [`packages/common/__tests__/helpers.spec.ts`](../../../packages/common/__tests__/helpers.spec.ts) per spec § 7.2. Cases 74 (FR-2.a — `"100 - 150"` reject), 75 (FR-2.b — `"team of 100 - 150 employees"` reject), 76 (FR-2.c — `"1000 - 1500"` admit at threshold boundary). | (a) `npx jest packages/common/__tests__/helpers.spec` returns 76/76 passed (Spec 015's 73 + Spec 019's 3). (b) Bench p95 stays ≤ 0.1174 ms. (c) Diff shows exactly one file changed (`helpers.spec.ts`); no source-side edit. (d) NFR-5 verified: test count delta is exactly +3 (73 → 76). (e) Spec 019 / spec.md / § 10 gains Decision D-02 documenting the T02 acceptance + the three case literals. (f) `docs/log.md` gains a run #80 entry. | [ ]    |
+| T02 | Add three new `it(...)` blocks in [`packages/common/__tests__/helpers.spec.ts`](../../../packages/common/__tests__/helpers.spec.ts) per spec § 7.2. Cases 74 (FR-2.a — `"100 - 150"` reject), 75 (FR-2.b — `"team of 100 - 150 employees"` reject), 76 (FR-2.c — `"1000 - 1500"` admit at threshold boundary). | (a) `npx jest packages/common/__tests__/helpers.spec` returned **77/77 passed** in 6.905 s (D-01 reconciled the pre-Spec-019 baseline from 73 → 74; +3 delta lands at 77 — NFR-5 honoured). (b) Bench p95 = **0.0248 ms** (D-01 baseline 0.0176 ms + 0.0072 ms; well within +0.1 ms NFR-1 budget; 2/2 bench cases passed in 5.997 s). (c) Diff is exactly one file (`helpers.spec.ts`) with the appended `describe('extractSalary — Spec 019 / T02 (bare-path threshold bump)', ...)` block (~95 added lines: doc comment + 3 `it(...)` blocks). No source-side edit at T02. (d) NFR-5 verified: test count delta is exactly +3 (74 → 77 per D-01 reconciliation; +3 delta unchanged). (e) Spec 019 / spec.md / § 10 gains Decision D-02 documenting acceptance evidence + forward-pointer to T03 doc-drift reconciliation. (f) `docs/log.md` gains a run #80 entry. | [x]    |
 
 ## Phase 3 — T03: closeout (target run #81)
 
@@ -43,49 +43,59 @@
 
 ---
 
-## Notes for the next run (run #79)
+## Notes for the next run (run #81)
 
-- **Default for run #79** = Spec 019 / Phase 1 / T01 — single-
-  token source edit at
-  [`helpers.ts:803`](../../../packages/common/src/utils/helpers.ts:803):
-  `minSalary < lowerLimit / 12` → `minSalary < lowerLimit`.
-  T01 is the load-bearing source-side change; T02 (test pins)
-  and T03 (closeout) cannot proceed without T01 landed.
+- **Default for run #81** (after T01 + T02 landed) = Spec 019 /
+  Phase 3 / T03 — closeout pass. T03 is docs-only; rewrites
+  the Spec 015 / FR-8 paragraph in
+  [`docs/PERFORMANCE_TUNING.md`](../../../docs/PERFORMANCE_TUNING.md)
+  to reflect closure (the `"100 - 150" + country=GERMANY`
+  shape is now rejected; recommended escape hatches are
+  prefix-anchored EUR symbol or suffix-anchored EUR ISO).
 
-  **T01 acceptance recipe:**
+  **T03 acceptance recipe:**
 
-  1. Edit `helpers.ts:803` per spec § 7.1.
-  2. `npx jest packages/common/__tests__/helpers.spec` —
-     expect 73/73 passed (regression sweep). If a regression
-     surfaces, abort; the bump narrowed too aggressively.
-     Investigate via Spec 019 / plan.md / § 3.1 (substitute-
-     case regression risk) before proceeding.
-  3. `npx jest packages/common/__tests__/helpers.bench` —
-     expect p95 ≤ 0.1174 ms (Spec 016 baseline + 0.1 ms NFR-1
-     budget).
-  4. `grep -c 'lowerLimit / 12' packages/common/src/utils/helpers.ts`
-     — expect 0 (FR-5 idempotence).
-  5. Append D-01 to Spec 019 / spec.md / § 10 with the bench
-     p95 number + the regression-sweep result.
-  6. Flip Spec 019 / tasks.md / T01 row from `[ ]` to `[x]`.
-  7. Prepend run #79 entry to `docs/log.md`.
-  8. Bump `CLAUDE.md` run-tag to `2026-04-28 (scheduled run #79)`.
-  9. `npm run lint:docs` clean.
-  10. Commit + push.
+  1. Open
+     [`docs/PERFORMANCE_TUNING.md`](../../../docs/PERFORMANCE_TUNING.md)
+     and locate the Spec 015 / FR-8 paragraph (search for
+     "100 - 150" or "FR-8 known limitation").
+  2. Rewrite the paragraph: keep the audit trail (the
+     limitation existed under Spec 015; Spec 019 closed it),
+     update the current-behaviour line to "Spec 019 / FR-1
+     rejected", document the escape hatches (prefix-anchored
+     EUR symbol, suffix-anchored EUR ISO).
+  3. Reconcile the 73→76 / 74→77 doc-drift surfaced at D-01:
+     update spec § 7.2 narrative + NFR-5 target line to
+     reference the actual baseline (74 → 77) while leaving
+     the case literals byte-exact.
+  4. Flip Spec 019 / spec.md Status from
+     `T01 + T02 landed (runs #79..#80); T03 pending` to
+     `All phases done (T03 run #81); spec complete`.
+  5. Update `docs/index.md` Spec 019 row Status to match.
+  6. Append Decision D-03 to Spec 019 / § 10 documenting T03
+     acceptance + the doc edit summary.
+  7. Prepend run #81 entry to `docs/log.md`.
+  8. Bump `CLAUDE.md` run-tag to `2026-04-28 (scheduled run #81)`.
+  9. Flip Spec 019 / tasks.md / T03 row from `[ ]` to `[x]`.
+  10. `npm run lint:docs` clean.
+  11. Commit + push.
 
-- **Default for run #80** (after T01 lands) = Spec 019 /
-  Phase 2 / T02 — add three new `it(...)` blocks in
-  `helpers.spec.ts` per spec § 7.2. T02 acceptance is 76/76
-  green + bench p95 within range.
+  Spec 019 closes its full lifecycle in 4 runs (1 scaffold +
+  3 implementation) — matches Spec 014 / Spec 015 cadence.
 
-- **Default for run #81** (after T01 + T02 land) = Spec 019 /
-  Phase 3 / T03 — closeout pass. Doc-edit
-  `PERFORMANCE_TUNING.md` + status flips. T03 acceptance is
-  doc-lint clean + zero `.ts` in diff.
+- **Default for run #82** (after Spec 019 closes) = next
+  backlog candidate. The agent-driven upstream-watch backlog
+  has been exhausted since run #77; the salary-parser-
+  residuals-batch-2 work item closes at run #81. Open
+  candidates per Spec 015 / D-02 (root-cause investigation
+  on TS5.x rejecting U+00D7 in template literals — Spec 016
+  forward-pointer), Spec 019 / plan.md § 8 (forward-compat
+  graduated thresholds — Spec 020 candidate if telemetry
+  warrants), or any new external-snapshot tag set churn.
 
-- **If the external-snapshot tag set changes at run #79..#81**:
+- **If the external-snapshot tag set changes at run #81**:
   prepend a fresh row to the out-of-repo upstream-watch ledger
-  capturing the new tag, but do NOT block Spec 019. The
+  capturing the new tag, but do NOT block T03. The
   internal-correctness backlog (Spec 019) and the
   upstream-driven backlog (out-of-repo ledger) are independent.
 
