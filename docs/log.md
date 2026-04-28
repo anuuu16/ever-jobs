@@ -5,6 +5,163 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #57 (Spec 013 / Phase 6 / T14 — Performance benches landed)
+
+**Scope:** land Spec 013 / Phase 6 / T14 — performance benches.
+Three new bench files under each plugin's `__tests__/` directory
+(`oracle.bench.ts` / `mercor.bench.ts` / `tesla.bench.ts`,
+≈ 175–185 LOC each) plus four new npm scripts appended to the
+root `package.json`. Estimated 0.4 day per tasks.md; landed in a
+single scheduled-run cycle (~0.3 day actual, matching the Spec
+006 / T12 batch-1 bench landing cadence).
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #56's sync). Forty-first consecutive
+zero-churn run in `OTHERS/`.
+
+**No new questions opened this run.** Q-026 / Q-027 retain
+their **Spec 014 candidate** label. All other Spec-013 questions
+(Q-028..Q-032) remain implementation-ratified through their
+respective T07..T13 landings.
+
+**Two load-bearing authoring decisions** were resolved during
+T14's editing pass (full prose in Spec 013 § 10):
+
+1. **Tesla bench pins `descriptionDepth: 'detail-25'` explicitly
+   rather than relying on the service's default.** The default IS
+   `'detail-25'` (`TESLA_DEFAULT_DESCRIPTION_DEPTH`), so the
+   explicit pin is technically redundant — but the emitted JSON
+   record's `fixture.descriptionDepth` field documents the wire
+   shape the bench is measuring. NFR-2's "Tesla < 12 s
+   (HTTP-only, ≤ 25 detail fetches)" wording is only meaningful
+   for the default-depth path; pinning it inline makes the bench
+   self-explanatory when a future contributor reads the JSON
+   output cold. The same record carries `detailBudget: 25` and
+   `describedPerScrape: <count>` so the fan-out is visible.
+
+2. **Oracle bench feeds the same fixture on every GET rather than
+   paginating to an empty page (Avature pattern).** Oracle's loop
+   terminates on EITHER `requisitionList[]` empty OR
+   `requisitions.length < ORACLE_RECORDS_PER_PAGE` (= 100). The
+   fixture carries 5 rows < 100 → the short-page condition fires
+   after the first GET, so each scrape issues exactly one request
+   regardless of whether subsequent calls would return the same
+   fixture or an empty page. Avature's bench needed the explicit
+   `PAGE_1_HTML → PAGE_EMPTY_HTML` switch because Avature's loop
+   ONLY terminates on empty (no short-page exit). The simpler
+   stub is honest about what's measured. The Mercor bench follows
+   the same single-GET shape for the same reason (catalogue-wide
+   endpoint, no pagination).
+
+**Changes — source / test:**
+
+- `packages/plugins/source-ats-oracle/__tests__/oracle.bench.ts`
+  — NEW. ~175 LOC. Patches `@ever-jobs/common.createHttpClient`
+  via the deepest-module `httpClientModule.createHttpClient = …`
+  override BEFORE requiring `OracleService` (same pattern as
+  Spec 006 / T12 trio). 3 warm-ups + 20 timed iterations against
+  `oracle-page-1.json` with `companySlug='eeho-us2'` /
+  `resultsWanted=100`. Emits a JSON record at
+  `dist/bench/source-ats-oracle.json` carrying
+  `min/median/mean/p95/p99/max`, `memory_bytes.{before,after,
+  delta}`, `nfr2_ceiling_ms=6000`, `p95_under_ceiling`,
+  `headroom_pct`, `node_version`. Single-fixture stub
+  (`createHttpClient` factory always returns the cloned
+  `oracle-page-1.json`) honours Oracle's short-page exit
+  condition.
+- `packages/plugins/source-ats-mercor/__tests__/mercor.bench.ts`
+  — NEW. ~175 LOC. Same shape as `oracle.bench.ts` but pinned
+  to `mercor-explore.json` (50 listings × 12 companies).
+  Feeds `siteType=[Site.MERCOR]` + `resultsWanted=100` with
+  empty `companySlug` so the full-catalogue mapping path is
+  exercised (most expensive of the two filter modes — every
+  fixture row mapped through `toCompensation()` + `slugify()`).
+  Emits to `dist/bench/source-ats-mercor.json` with
+  `nfr2_ceiling_ms=1500`. Records both `exploreListings` and
+  `distinctCompanyNames` in the fixture metadata for future
+  diff-against-fixture audits.
+- `packages/plugins/source-tesla/__tests__/tesla.bench.ts` —
+  NEW. ~185 LOC (largest of the three because of the URL-keyed
+  router). Loads all five Tesla fixtures
+  (`tesla-board.json` + `tesla-job-200001/200002/200003.json` +
+  `tesla-job-missing.json`); routes by URL substring:
+  `/cua-api/apps/careers/state` → board fixture;
+  `/cua-api/careers/job/<id>` → matching detail fixture (with
+  `tesla-job-missing.json` fallback for IDs 200004..200050).
+  Same router shape T11 (integration) and T12 (e2e) use, so a
+  future contributor can `git diff` the three test runners and
+  convince themselves the bench measures the real wire shape.
+  Pins `descriptionDepth: 'detail-25'` + `resultsWanted=100`;
+  records `detailBudget: 25` and the per-scrape
+  `describedPerScrape` count. Emits to
+  `dist/bench/source-tesla.json` with `nfr2_ceiling_ms=12000`.
+- `package.json` — four new npm scripts appended after the
+  existing `bench:ats-batch-1`: `bench:oracle`, `bench:mercor`,
+  `bench:tesla`, `bench:ats-batch-2` (umbrella that chains the
+  three with `&&`). Same `ts-node --project tsconfig.base.json
+  -r tsconfig-paths/register` invocation shape Spec 006 / T12
+  introduced.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  T14 row flipped from `[ ]` to `[x]` with "Landed run #57"
+  annotation; "Files (actual)" subsection added; Notes-for-
+  the-next-run pinned default updated to **Spec 013 / Phase 7
+  / T15** (Spec 013 closeout).
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  Status flipped to "T14 landed run #57; T15 pending";
+  Last-updated bumped to run #57; new entry appended to § 10
+  Decisions covering the two load-bearing authoring choices.
+- `docs/index.md` — Spec 013 row status updated from
+  "T01..T13 landed runs #44..#56; T14..T15 pending" →
+  "T01..T14 landed runs #44..#57; T15 pending"; footer
+  bumped to run #57.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #57.
+- `/competitor-watch.md` — run #57 sync line appended at top
+  of Sync Log; AC-4 / AC-5 / AC-6 row prefixes updated to
+  "Spec 013 / Phase 6 / T14 landed run #57; T15 pending".
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean (verified before commit).
+- Bench files use the `*.bench.ts` suffix so jest's
+  `*.spec.ts` / `*.e2e-spec.ts` glob does not pick them up
+  (matches Spec 006 / T12 convention exactly).
+- Three new files compile cleanly under `tsconfig.base.json`'s
+  paths; no new deps added (same `ts-node` /
+  `tsconfig-paths/register` toolchain Spec 006 / T12 introduced).
+
+**Notes & follow-ups:**
+
+- **Default for run #58** = Spec 013 / Phase 7 / T15 — Spec
+  013 closeout. Status field flipped to "All phases done
+  (T01..T15 runs #44..#58); spec complete"; AC-4 / AC-5 /
+  AC-6 marked **DONE** with run-tag attributions and ✅ glyph;
+  `docs/log.md` closeout entry; `docs/index.md` Spec 013
+  status row updated to "All phases done"; `competitor-watch.md
+  §C` rows finalised. Pin Spec 014 candidate at closeout time
+  based on upstream signal: AC-8 (seed-companies refresh) /
+  Q-026 / Q-027 salary residuals / AC-9 (Workable diff).
+  Estimated 0.25 day.
+- **Out-of-scope reminders for run #58:** The closeout pass is
+  pure docs / spec metadata — no source / test code changes.
+  Do NOT touch any plugin's `service.ts` / `constants.ts` /
+  `types.ts` / `__tests__/`. CI-gating-on-bench-breach
+  remains deferred to a future spec (boundary same as Spec 006
+  / T12).
+- **Active backlog after Spec 013 closes (run #58):** Spec 014
+  candidates = Q-026/Q-027 salary residuals OR AC-8
+  (seed-companies refresh) OR AC-9 (Workable diff). Pick at T15
+  closeout based on upstream signal.
+- Specs **004 / 005 / 006 / 012** stay complete; **001 / 003**
+  retain their statuses unchanged. Spec **013** advances from
+  "T13 landed" to "T14 landed; T15 pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #56 (Spec 013 / Phase 6 / T13 — Coverage docs landed)
 
 **Scope:** land Spec 013 / Phase 6 / T13 — coverage docs.

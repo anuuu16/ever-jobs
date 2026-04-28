@@ -24,7 +24,11 @@
     "bench:avature": "ts-node --project tsconfig.base.json -r tsconfig-paths/register packages/plugins/source-ats-avature/__tests__/avature.bench.ts",
     "bench:gem": "ts-node --project tsconfig.base.json -r tsconfig-paths/register packages/plugins/source-ats-gem/__tests__/gem.bench.ts",
     "bench:joincom": "ts-node --project tsconfig.base.json -r tsconfig-paths/register packages/plugins/source-ats-joincom/__tests__/joincom.bench.ts",
-    "bench:ats-batch-1": "npm run bench:avature && npm run bench:gem && npm run bench:joincom"
+    "bench:ats-batch-1": "npm run bench:avature && npm run bench:gem && npm run bench:joincom",
+    "bench:oracle": "ts-node --project tsconfig.base.json -r tsconfig-paths/register packages/plugins/source-ats-oracle/__tests__/oracle.bench.ts",
+    "bench:mercor": "ts-node --project tsconfig.base.json -r tsconfig-paths/register packages/plugins/source-ats-mercor/__tests__/mercor.bench.ts",
+    "bench:tesla": "ts-node --project tsconfig.base.json -r tsconfig-paths/register packages/plugins/source-tesla/__tests__/tesla.bench.ts",
+    "bench:ats-batch-2": "npm run bench:oracle && npm run bench:mercor && npm run bench:tesla"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",

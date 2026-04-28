@@ -400,12 +400,27 @@
       single-tenant).
   - **Estimate:** 0.4 day. **Actual:** ~0.3 day.
 
-- [ ] T14 — Performance benches.
+- [x] T14 — Performance benches.
+  **Landed run #57.**
   - **Files (planned):** `packages/plugins/source-ats-oracle/__tests__/oracle.bench.ts`,
     `packages/plugins/source-ats-mercor/__tests__/mercor.bench.ts`,
     `packages/plugins/source-tesla/__tests__/tesla.bench.ts`,
     plus four new npm-script entry points (`bench:oracle`,
     `bench:mercor`, `bench:tesla`, `bench:ats-batch-2`).
+  - **Files (actual):** matched plan exactly. Three new bench files
+    (≈ 175 LOC each — Oracle / Mercor / Tesla) and four new npm
+    scripts appended after `bench:ats-batch-1` in the root
+    `package.json`. The Tesla bench is the longest (~185 LOC)
+    because of the URL-keyed router that dispatches `/cua-api/apps/
+    careers/state` → `tesla-board.json` and `/cua-api/careers/job/
+    <id>` → matching detail fixture (200001 / 200002 / 200003)
+    with `tesla-job-missing.json` as the fallback. Same router
+    shape Spec 013 / T11 (integration) and T12 (e2e) use, so a
+    future contributor can `git diff` the three test runners and
+    convince themselves the bench measures the real wire shape.
+    Oracle and Mercor benches each issue ONE GET per scrape (Oracle
+    short-page-termination on the 5-row fixture; Mercor
+    catalogue-wide endpoint with no pagination).
   - **Acceptance:**
     - Each bench runs 3 warm-ups + 20 timed iterations against the
       `__tests__/fixtures/` corpus; patches
@@ -419,7 +434,8 @@
     - Bench reports `p95_under_ceiling` + `headroom_pct` but does
       NOT exit non-zero on breach (CI gating is a follow-up spec,
       same boundary as Spec 006 / T12).
-  - **Estimate:** 0.4 day.
+  - **Estimate:** 0.4 day. **Actual:** ~0.3 day (matches the Spec
+    006 / T12 batch-1 bench landing cadence).
 
 ## Phase 7 — Closeout
 
@@ -446,19 +462,34 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #57** = Spec 013 / Phase 6 / T14 — performance
-  benches. Three new bench files
+- **Default for run #58** = Spec 013 / Phase 7 / T15 — Spec 013
+  closeout. Status field flipped to "All phases done (T01..T15
+  runs #44..#58); spec complete"; `competitor-watch.md §C` rows
+  AC-4 / AC-5 / AC-6 marked **DONE** with run-tag attributions
+  and ✅ glyph; `docs/log.md` closeout entry; `docs/index.md`
+  Spec 013 status row updated. Pin Spec 014 candidate at closeout
+  time based on upstream signal: AC-8 (seed-companies refresh),
+  Q-026 / Q-027 salary residuals, or AC-9 (Workable diff).
+  Estimated 0.25 day.
+- **Default for run #57 (DONE — landed run #57)** = Spec 013 /
+  Phase 6 / T14 — performance benches. Three new bench files
   (`packages/plugins/source-ats-oracle/__tests__/oracle.bench.ts`,
   `packages/plugins/source-ats-mercor/__tests__/mercor.bench.ts`,
-  `packages/plugins/source-tesla/__tests__/tesla.bench.ts`),
-  each running 3 warm-ups + 20 timed iterations against the
-  existing `__tests__/fixtures/` corpus and emitting JSON to
-  `dist/bench/<plugin>.json`. NFR-2 ceilings pinned: Oracle <
-  6 s, Mercor < 1.5 s, Tesla (HTTP-only, ≤ 25 detail fetches) <
-  12 s. Plus four new npm scripts (`bench:oracle`, `bench:mercor`,
+  `packages/plugins/source-tesla/__tests__/tesla.bench.ts`), each
+  running 3 warm-ups + 20 timed iterations against the existing
+  `__tests__/fixtures/` corpus and emitting JSON to
+  `dist/bench/<plugin>.json`. NFR-2 ceilings pinned: Oracle < 6 s,
+  Mercor < 1.5 s, Tesla (HTTP-only, ≤ 25 detail fetches) < 12 s.
+  Plus four new npm scripts (`bench:oracle`, `bench:mercor`,
   `bench:tesla`, `bench:ats-batch-2`). Mirror the Spec 006 / T12
-  bench pattern; CI gating is a follow-up spec (no exit-non-zero
-  on breach). Estimated 0.4 day.
+  bench pattern; CI gating deferred. Two load-bearing decisions
+  resolved during T14's authoring pass (full prose in spec.md
+  § 10): Tesla bench pins `descriptionDepth: 'detail-25'` inline
+  even though it's the service default (so the emitted JSON
+  record self-documents the wire shape); Oracle bench uses a
+  single-fixture stub instead of Avature's page-1 / page-empty
+  switch (Oracle's loop has a short-page exit, Avature's only
+  exits on empty).
 - **Default for run #56 (DONE — landed run #56)** = Spec 013 /
   Phase 6 / T13 — coverage docs. Three new H3 sections in
   `ATS_INTEGRATIONS.md` (Oracle / Mercor / Tesla, with Tesla

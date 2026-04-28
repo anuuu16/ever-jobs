@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | T13 landed run #56; T14..T15 pending                 |
+| Status         | T14 landed run #57; T15 pending                      |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-28 (run #56)                                 |
+| Last updated   | 2026-04-28 (run #57)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -332,6 +332,50 @@ records.)
   'detail-all'` with `'detail-25'` the default).
 
 ## 10. Decisions
+
+- **2026-04-28 (run #57 / T14)** — Performance benches landed under
+  each plugin's `__tests__/` directory: `oracle.bench.ts` /
+  `mercor.bench.ts` / `tesla.bench.ts` (≈ 175–185 LOC each, +43 net
+  LOC vs. the Spec 006 / T12 batch-1 trio because Tesla's URL-keyed
+  fixture router is structurally richer than Avature's page-1 / page-
+  empty pair). Plus four new npm scripts (`bench:oracle`,
+  `bench:mercor`, `bench:tesla`, `bench:ats-batch-2`) appended after
+  the existing `bench:ats-batch-1` chain. Two load-bearing authoring
+  decisions:
+
+  (1) **Tesla bench pins `descriptionDepth: 'detail-25'` explicitly
+  rather than relying on the service's default.** The default IS
+  `'detail-25'` (`TESLA_DEFAULT_DESCRIPTION_DEPTH`), so the explicit
+  pin is technically redundant — but the emitted JSON record's
+  `fixture.descriptionDepth` field documents the wire shape the
+  bench is measuring. NFR-2's "Tesla < 12 s (HTTP-only, ≤ 25 detail
+  fetches)" wording is only meaningful for the default-depth path;
+  pinning it inline makes the bench self-explanatory when a future
+  contributor reads the JSON output cold. The same record carries
+  `detailBudget: 25` and `describedPerScrape: <count>` so the
+  fan-out is visible.
+
+  (2) **Oracle bench feeds the same fixture on every GET rather
+  than paginating to an empty page (Avature pattern).** Oracle's
+  loop terminates on EITHER `requisitionList[]` empty OR
+  `requisitions.length < ORACLE_RECORDS_PER_PAGE` (= 100). The
+  fixture carries 5 rows < 100 → the short-page condition fires
+  after the first GET, so each scrape issues exactly one request
+  regardless of whether subsequent calls would return the same
+  fixture or an empty page. Avature's bench needed the explicit
+  `PAGE_1_HTML → PAGE_EMPTY_HTML` switch because Avature's loop
+  ONLY terminates on empty (no short-page exit). The simpler stub
+  is honest about what's measured (single-page Oracle scrape) and
+  doesn't introduce a state machine the test isn't actually
+  exercising. The Mercor bench follows the same single-GET shape
+  for the same reason (catalogue-wide endpoint, no pagination).
+
+  Bonus: the bench output records (`dist/bench/<plugin>.json`) carry
+  `nfr2_ceiling_ms` + `p95_under_ceiling` + `headroom_pct` fields
+  per the acceptance text. CI gating against breach is deferred to
+  a follow-up spec — same boundary as Spec 006 / T12. The bench
+  files use the `*.bench.ts` suffix so jest's `*.spec.ts` /
+  `*.e2e-spec.ts` glob does not pick them up.
 
 - **2026-04-28 (run #56 / T13)** — Coverage docs landed across
   `docs/ATS_INTEGRATIONS.md` (three new H3 sections) and
