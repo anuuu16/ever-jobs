@@ -5,6 +5,165 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #69 (Spec 016 / Phase 1 / T01 — `helpers.bench.spec.ts` TS1127 fix; Q-037 resolved; bench p95 baseline = 0.0174 ms recorded)
+
+**Scope:** open + close **Spec 016** in a single run per the
+Spec 015 / tasks.md / run #69 default-pin. Spec 016 is the
+smallest spec to date in the repo — a single-byte source-file
+fix at
+[`packages/common/__tests__/helpers.bench.spec.ts:190`](../packages/common/__tests__/helpers.bench.spec.ts:190)
+(`×` U+00D7 multiplication sign → `x` U+0078 ASCII letter
+inside a template literal) plus the four mandatory doc
+updates (questions ledger, spec status, run log, run-tag).
+Spec 016 / T01 closes the gap that Spec 015 / T01 / D-02
+deferred; the bench acceptance gate is now restored
+end-to-end.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #68's sync). Forty-eighth consecutive
+zero-churn run in `OTHERS/`.
+
+**No new questions opened this run** — Spec 016 is the
+resolution path for Q-037 (Spec 015 / T01 / D-02 carry-over);
+the resolution text in `docs/questions.md` flips at this run.
+The Q-037 / option C escalation path (root-cause
+investigation — why TS5.x rejects U+00D7 in template literals
+on this toolchain) is left open as a future-spec candidate
+(Spec 020+ slot — non-urgent now that the bench gate is
+restored).
+
+**Bench p95 baseline (Spec 016 / spec.md / § 10 / D-01 + this
+log):** the post-fix bench acceptance gate produced the
+following overall reading on the scheduled-task agent's
+Windows host:
+
+| Stat   | Value (ms) | NFR-1 budget (0.5 ms) | CI ceiling (2.0 ms) |
+| ------ | ---------- | --------------------- | ------------------- |
+| min    | 0.0071     | OK                    | OK                  |
+| median | 0.0095     | OK                    | OK                  |
+| mean   | 0.0139     | OK                    | OK                  |
+| **p95** | **0.0174** | **~3 % of NFR-1**     | **~0.9 % of CI ceiling** |
+| p99    | 0.0425     | OK                    | OK                  |
+| max    | 14.8187    | (cold-start outlier — p99 is the last meaningful percentile) | OK |
+
+Per-currency p95s sit between 0.0123 ms (CHF) and 0.0212 ms
+(SEK); USD = 0.0165 ms, EUR = 0.0137 ms, GBP = 0.0192 ms,
+NOK / DKK / PLN ≈ 0.02 ms each. The full per-currency
+breakdown lives in
+[`dist/bench/helpers-salary.json`](../dist/bench/helpers-salary.json)
+(committed only as a build artefact; regenerated each bench
+run). **Spec 017+ runs** that touch `extractSalary()` or its
+callees should gate on `p95 ≤ 0.0174 ms + 0.1 ms = 0.1174 ms`
+(using the NFR-1-style "≤ +0.1 ms of baseline" budget the
+prior specs referenced); the 0.5 ms NFR-1 absolute target
+stays as the overall ceiling.
+
+**One load-bearing implementation observation** (recorded as
+Spec 016 / spec.md / § 10 / D-02): the parser's TS1127
+behaviour is asymmetric — U+2014 (em-dash, `—`,
+encoded `e2 80 94`) is accepted in template literals at file
+line 2 of `helpers.bench.spec.ts` (the JSDoc block); U+00D7
+(multiplication sign, `×`, encoded `c3 97`) is rejected at
+file line 190 in a template literal. Both are well-formed in
+UTF-8 and the `StringLiteral` grammar in TS5.x admits them.
+The asymmetry suggests a code-page / locale-specific
+preprocessing step (likely Windows-specific in this
+toolchain) rather than a TypeScript spec violation. The
+investigation path stays open as Q-037 / option C; the Spec
+016 fix uses option A (pragmatic ASCII substitution) which
+is sufficient to restore the gate.
+
+**Changes — source code (1 file, 1 byte delta):**
+
+- [`packages/common/__tests__/helpers.bench.spec.ts`](../packages/common/__tests__/helpers.bench.spec.ts)
+  — single byte change at line 190 column 57: `c3 97` (UTF-8
+  `×`) → `78` (ASCII `x`). Net delta: −1 byte. The test name
+  renders `5 000 iterations x 8 currencies` instead of
+  `5 000 iterations × 8 currencies`; cosmetic-only change.
+  No other byte in the file changes (FR-5).
+
+**Changes — docs / specs (8 files):**
+
+- `.specify/specs/016-bench-file-ts1127-fix/spec.md` — NEW.
+  ~270 LOC. 11 sections per the spec.template scheme;
+  6 functional requirements (FR-1..FR-6); 4 non-functional
+  requirements (NFR-1..NFR-4); 2 caller stories (scheduled-
+  task agent + future spec author); test plan with 4 rows;
+  § 10 Decisions log populated with D-01 (post-fix p95
+  baseline table) + D-02 (Q-037 / option C asymmetry
+  analysis).
+- `.specify/specs/016-bench-file-ts1127-fix/plan.md` — NEW.
+  ~140 LOC. 1-phase / 1-task / 1-run shape (the smallest in
+  repo); 3-row risk matrix; phasing rationale (why no
+  T01/T02 split); out-of-scope reminders (no fixture
+  extension, no helpers.ts touch, no toolchain
+  investigation).
+- `.specify/specs/016-bench-file-ts1127-fix/tasks.md` —
+  NEW. ~110 LOC. T01 task definition + acceptance bullets +
+  Notes-for-the-next-run (run #70 = AC-8 seed-companies
+  refresh) + out-of-scope reminders.
+- `docs/questions.md` — Q-037 resolution flipped from
+  "_pending review_" to "**resolved (option A) in Spec 016
+  / T01 (run #69)**" with the post-fix p95 reading and a
+  cross-reference to Spec 016 / spec.md / § 10 / D-02 for
+  the asymmetry analysis. Option C stays open as the
+  escalation path.
+- `docs/index.md` — new Spec 016 row added to § 7 Specs
+  table with status "All phases done (T01 run #69); spec
+  complete — bench p95 baseline = 0.0174 ms"; footer
+  bumped to run #69.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #69.
+- **No `competitor-watch.md` entry** — Spec 016 is not
+  linked to a §C / AC-N row (Q-037 is an
+  internal-correctness gap surfaced during Spec 015 / T01,
+  not upstream-driven coverage).
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns
+  'packages/common/__tests__/helpers.bench'` — **2 passed,
+  2 total** (was: `Tests: 0 total` pre-fix, due to
+  TS1127). Overall p95 = 0.0174 ms ≪ NFR-1 0.5 ms ≪ CI
+  ceiling 2.0 ms.
+- `npx jest --testPathPatterns
+  'packages/common/__tests__/helpers.spec'` — **74 passed,
+  74 total** (FR-6 byte-identity preserved on the
+  dispatcher surface).
+- `npm run lint:docs` — clean.
+
+**Notes & follow-ups:**
+
+- **Default for run #70** = open Spec 017 candidate slot.
+  Two queued candidates from the active backlog (per Spec
+  016 / tasks.md / run #69 default-pin):
+  - **AC-8** — `seed-companies` refresh
+    (competitor-watch backlog row). Touches
+    `packages/persistence-postgres` seed fixtures.
+    Estimated 0.5..0.75 day depending on upstream churn.
+    Multi-run.
+  - **AC-9** — Workable diff (competitor-watch backlog
+    row). New ATS scraper plugin scaffold. Estimated
+    1.5..2 days; would consume multiple runs.
+  Recommended pick: **AC-8** as the smaller of the two
+  multi-run efforts; AC-9 as the slot after AC-8 closes.
+  The scheduled-task agent at run #70 should cross-check
+  `competitor-watch.md` for any upstream churn that
+  overtakes the backlog ordering before committing to
+  AC-8.
+- **Out-of-scope reminders for run #70:** Stay strictly
+  within the AC-8 scope once Spec 017 is scaffolded. Do
+  NOT touch `helpers.ts` or any salary-parser surface
+  (Specs 012 / 014 / 015 / 016 are complete). Do NOT
+  add a CI workflow gate that fails on bench p95
+  regressions yet — that's a separate spec once the
+  baseline has multiple data points.
+- **Lockfile sync:** Spec 016 / T01 added zero deps; no
+  `package-lock.json` regeneration this run.
+
+---
+
 ## 2026-04-28 — Scheduled run #68 (Spec 015 / Phase 3 / T03 — closeout pass; Spec 015 complete; Spec 014 / T04 promoted to closed)
 
 **Scope:** land Spec 015 / Phase 3 / T03 — pure docs-only

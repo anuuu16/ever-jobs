@@ -80,6 +80,7 @@
 | 013 | [ATS-Scrapers Parity, Batch 2 (Oracle HCM Cloud / Mercor / Tesla)](../.specify/specs/013-ats-scrapers-parity-batch-2/spec.md) — [plan](../.specify/specs/013-ats-scrapers-parity-batch-2/plan.md) — [tasks](../.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md) | All phases done (T01..T15 runs #44..#58); spec complete |
 | 014 | [Salary Parser Residuals (`$` symbol / Swiss apostrophe / bare-number country fallback)](../.specify/specs/014-salary-parser-residuals/spec.md) — [plan](../.specify/specs/014-salary-parser-residuals/plan.md) — [tasks](../.specify/specs/014-salary-parser-residuals/tasks.md) | All phases done (T01..T05 runs #60..#64); T04 closed via Spec 015 (runs #65..#68) |
 | 015 | [Salary Parser Locale & Prose Immunity (`resolveSalaryLocale` symbol-tier short-circuit / bare-path raw-value pre-check)](../.specify/specs/015-salary-parser-locale-and-prose-immunity/spec.md) — [plan](../.specify/specs/015-salary-parser-locale-and-prose-immunity/plan.md) — [tasks](../.specify/specs/015-salary-parser-locale-and-prose-immunity/tasks.md) | All phases done (T01..T03 runs #65..#68); spec complete |
+| 016 | [`helpers.bench.spec.ts` TS1127 fix (`×` U+00D7 → ASCII `x` in template literal)](../.specify/specs/016-bench-file-ts1127-fix/spec.md) — [plan](../.specify/specs/016-bench-file-ts1127-fix/plan.md) — [tasks](../.specify/specs/016-bench-file-ts1127-fix/tasks.md) | All phases done (T01 run #69); spec complete — bench p95 baseline = 0.0174 ms |
 
 ## 8. Templates
 
@@ -91,4 +92,4 @@
 
 ---
 
-_Last revised: 2026-04-28 (run #68)._
+_Last revised: 2026-04-28 (run #69)._

@@ -10,7 +10,7 @@
  * latency stats.
  *
  * **Why a `.spec.ts` extension instead of `.bench.ts`?** Jest's
- * `testMatch` only picks up `**/__tests__/**/*.spec.ts` (see
+ * `testMatch` only picks up paths under `__tests__` ending in `.spec.ts` (see
  * [jest.config.js](../../../jest.config.js)). The Spec 012 / T04
  * Notes-for-the-next-run pinned **"Bench is a Jest test, not a
  * standalone script"** — to satisfy that AND keep the file
@@ -18,7 +18,7 @@
  * here under `*.spec.ts` (with the `bench.spec.ts` infix making the
  * dual nature obvious in `git ls-files`). The shape of the bench
  * loop mirrors the three Spec 006 / T12 plugin benches under
- * `packages/plugins/source-ats-*/__tests__/*.bench.ts` (same
+ * `packages/plugins/source-ats-<plugin>/__tests__/<plugin>.bench.ts` (same
  * `process.hrtime.bigint()` measurement pattern; same
  * `dist/bench/<name>.json` output convention).
  *
@@ -187,7 +187,7 @@ describe('extractSalary — Spec 012 / T04 bench (NFR-1)', () => {
     }
   });
 
-  it(`p95 < ${CI_CEILING_MS} ms across 5 000 iterations × 8 currencies`, () => {
+  it(`p95 < ${CI_CEILING_MS} ms across 5 000 iterations x 8 currencies`, () => {
     // === Warm-up — discount JIT / V8 inline-cache / regex compile costs.
     for (let i = 0; i < WARMUPS; i++) {
       const fx = FIXTURES[i % FIXTURES.length];

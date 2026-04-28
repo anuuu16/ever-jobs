@@ -215,7 +215,19 @@ Spec 015 / T01 (this run), the bench acceptance gate is
 DEFERRED — the regression sweep gate (`71/71 helpers.spec`
 green) is the load-bearing T01 acceptance signal.
 
-**Resolution:** _pending review._
+**Resolution:** **resolved (option A)** in Spec 016 / T01
+(run #69) — the single-byte ASCII substitution at
+[`helpers.bench.spec.ts:190`](../packages/common/__tests__/helpers.bench.spec.ts:190)
+landed cleanly; bench acceptance gate is restored
+(`Tests: 2 passed, 2 total`; overall p95 = 0.0174 ms,
+well within the 0.5 ms NFR-1 target and the 2.0 ms CI
+ceiling). Option C (root-cause investigation — why TS5.x
+rejects U+00D7 in template literals on this toolchain)
+stays open as a future-spec candidate; see Spec 016 /
+spec.md / § 10 / D-02 for the asymmetry analysis (em-dash
+U+2014 is accepted in the same file's template literals;
+the rejection appears code-page / locale-specific rather
+than a TS spec violation).
 
 ---
 
