@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | T14 landed run #57; T15 pending                      |
+| Status         | All phases done (T01..T15 runs #44..#58); spec complete |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-28 (run #57)                                 |
+| Last updated   | 2026-04-28 (run #58)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -332,6 +332,127 @@ records.)
   'detail-all'` with `'detail-25'` the default).
 
 ## 10. Decisions
+
+- **2026-04-28 (run #58 / T15)** — **Spec 013 closeout — `All
+  phases done (T01..T15 runs #44..#58); spec complete`.** Three
+  ATS-Scrapers Parity Batch-2 plugins shipped end-to-end across
+  fifteen tasks and seven phases over fifteen consecutive
+  scheduled runs:
+
+  - **Phase 1 — Bootstrap** (runs #44 + #45): Site enum +
+    tsconfig + jest mapper + DTO extensions (T01); four plugin
+    package scaffolds with three appended to `ALL_SOURCE_MODULES`
+    (`Site.TESLA_PLAYWRIGHT` deliberately excluded per FR-13)
+    (T02).
+  - **Phase 2 — Oracle HCM Cloud** (runs #46 + #47):
+    `OracleService.scrape(input)` REST + finder-string
+    implementation against `recruitingCEJobRequisitions` (T03);
+    10-case behavioural unit-test sweep + sanitised `eeho-us2`
+    fixture (T04).
+  - **Phase 3 — Mercor** (runs #48 + #49):
+    `MercorService.scrape(input)` single-GET catalogue-wide
+    implementation against `/work/listings-explore-page` with
+    literal `Authorization: Bearer` empty-token header (T05);
+    11-case unit sweep + 50-listing × 12-company fixture (T06).
+  - **Phase 4 — Tesla** (runs #50 + #51): `TeslaService.scrape(input)`
+    HTTP-only board + detail implementation with broadened
+    Akamai detection (any non-`{listings,lookup}` payload triggers
+    sentinel) (T07); 14-case unit sweep + 50-listing × 6-location
+    × 5-department board fixture + four detail envelopes (T08).
+  - **Phase 5 — Tesla-Playwright (OPTIONAL companion)** (runs
+    #52 + #53): `TeslaPlaywrightService.scrape(input)`
+    lazy-Playwright via `Function('s','return import(s)')`
+    indirection; three-sentinel error model
+    (`UNAVAILABLE` / `NAV_FAILED` / `FETCH_FAILED`); browser
+    always closed in `finally` (T09); 10-case behavioural sweep
+    via `jest.spyOn(loadPlaywright)` boundary mock (T10).
+  - **Phase 6 — Integration & Docs** (runs #54..#57): three-
+    plugin integration spec with `Site.TESLA_PLAYWRIGHT`
+    absence guard (T11); three-plugin e2e spec via supertest
+    HTTP layer (T12); coverage docs in `ATS_INTEGRATIONS.md` +
+    `COMPANY_SLUG_DIRECTORY.md` (T13); performance benches with
+    NFR-2 ceiling pins (Oracle < 6 s / Mercor < 1.5 s / Tesla
+    < 12 s) (T14).
+  - **Phase 7 — Closeout** (run #58): this entry.
+
+  **Five questions resolved during the spec lifecycle:**
+  Q-028 (Tesla Playwright dep strategy = pure-HTTP default +
+  opt-in companion plugin) graduated implementation-ratified
+  at run #50 / T07. Q-029 (Mercor catalogue-wide input
+  semantics = empty-slug full / populated-slug post-filter)
+  ratified at run #48 / T05. Q-030 (Oracle `siteNumber`
+  default = `'CX_45001'`) ratified at run #46 / T03. Q-031
+  (Tesla `descriptionDepth` default = `'detail-25'` cap of 25)
+  ratified at run #50 / T07. Q-032 (cross-plugin dedup strategy
+  = emit under `Site.TESLA_PLAYWRIGHT`, dedup-engine collapses
+  cross-site duplicates via `externalId`) ratified at run #52
+  / T09.
+
+  **Seven cross-cutting design decisions** (carried forward
+  from per-run § 10 entries — full prose remains in each run's
+  entry below):
+  - Three sentinel-code pairs adopted symmetrically across
+    Oracle / Mercor / Tesla / Tesla-Playwright:
+    `<plugin>_BAD_TENANT|ENVELOPE` (semantic shape failure) +
+    `<plugin>_FETCH_FAILED|FINDER_REJECTED|AKAMAI_CHALLENGE`
+    (network / wire failure). Original spec text named only
+    one sentinel per plugin; the second-sentinel additions
+    proved necessary symmetry during implementation.
+  - Wire-format divergences from spec.md prose at three
+    plugin boundaries (Oracle finder-string comma+semicolon
+    split per upstream Python; Tesla board envelope path
+    `listings[]` at top level, NOT `data.lookup.listings[]`;
+    Mercor `Origin`/`Referer` headers required by gateway
+    even though FR-8 named only `Authorization: Bearer`).
+    Each divergence documented in spec.md § 10 + the
+    corresponding plugin's `*.constants.ts` + the relevant
+    test's wire-format-pin assertion.
+  - Two implementation tricks for ts-jest friction:
+    (1) `Function('s','return import(s)')` for the optional
+    `playwright` dep; (2) `jest.spyOn(loadPlaywright)` for the
+    Playwright-mock boundary (lazy-import indirection defeats
+    Jest's hoisted `jest.mock` system).
+  - Description-budget map (`board:0` / `detail-25:25` /
+    `detail-all:Infinity`) shared between `source-tesla` and
+    `source-tesla-playwright` (locally duplicated rather than
+    cross-imported per AGENTS.md §5 "no peer plugin imports").
+  - Compensation mapping included on initial Mercor
+    implementation rather than deferred to detail-page
+    enrichment, since the explore-page envelope already
+    carries `rateMin` / `rateMax` / `payRateFrequency`.
+  - Tesla single-tenant slug treatment: documented as a single
+    `tesla` entry in `COMPANY_SLUG_DIRECTORY.md` (per-plugin
+    clarification overrides the umbrella "≥ 10 seed slugs"
+    line in tasks.md / T13).
+  - `Site.TESLA_PLAYWRIGHT` absence guard added to T11's
+    integration spec — fires loudly in CI if a future
+    contributor accidentally appends `TeslaPlaywrightModule`
+    to `ALL_SOURCE_MODULES`.
+
+  **Closeout deliverables shipped this run:**
+  - Status field on this spec flipped to "All phases done
+    (T01..T15 runs #44..#58); spec complete".
+  - `competitor-watch.md §C` rows AC-4 / AC-5 / AC-6 marked
+    **DONE (runs #44..#58)** with ✅ glyph in the Owner
+    column.
+  - `docs/index.md` Spec 013 row updated to mirror the
+    spec.md status field.
+  - `docs/log.md` closeout entry under run #58 heading.
+  - tasks.md T15 row flipped from `[ ]` to `[x]`;
+    Notes-for-the-next-run pinned to **Spec 014** = Q-026 /
+    Q-027 salary-parser residuals (chosen over AC-8 due to
+    upstream signal asymmetry — 41 consecutive zero-churn
+    runs in `OTHERS/` mean AC-8's "refresh from CSVs"
+    carries no fresh signal, while Q-026 / Q-027 have
+    remained open with documented defaults since Spec 012 /
+    T04 at run #41 and represent a known parser-correctness
+    gap). AC-8 deferred to Spec 015; AC-9 to Spec 016; ATS
+    detail-page enrichment (Spec 006 / Spec 013 § 3
+    non-goals carry-over) renumbered to Spec 017.
+
+  **Forty-second consecutive zero-churn run in `OTHERS/`** —
+  Ats-scrapers @ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @
+  `26bb6f4`. The closeout pass introduces no new questions.
 
 - **2026-04-28 (run #57 / T14)** — Performance benches landed under
   each plugin's `__tests__/` directory: `oracle.bench.ts` /

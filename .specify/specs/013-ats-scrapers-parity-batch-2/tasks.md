@@ -439,38 +439,85 @@
 
 ## Phase 7 — Closeout
 
-- [ ] T15 — Spec 013 graduates to "All phases done".
+- [x] T15 — Spec 013 graduates to "All phases done".
+  **Landed run #58.**
   - **Files (planned):** `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md`
     (Status flip), `competitor-watch.md §C` (rows AC-4 / AC-5 / AC-6
     marked DONE with run-tag attributions), `docs/log.md` (closeout
     entry), `docs/index.md` (Spec 013 status update).
+  - **Files (actual):** matched plan exactly. Status field on
+    spec.md flipped to "All phases done (T01..T15 runs #44..#58);
+    spec complete". `competitor-watch.md §C` rows AC-4 / AC-5 /
+    AC-6 each gained the ✅ glyph in the Owner column and the
+    "**DONE (runs #44..#58)**" prefix.
+    `docs/index.md` Spec 013 row updated to read
+    "All phases done (T01..T15 runs #44..#58); spec complete".
+    `docs/log.md` gained a closeout entry under the standard
+    run-#58 heading. Spec 014 candidate pinned to **Q-026 /
+    Q-027 salary residuals** rather than AC-8 (seed-companies
+    refresh) — rationale: 41 consecutive zero-churn runs in
+    `OTHERS/` mean AC-8's "refresh from CSVs" carries no fresh
+    upstream signal, while Q-026 / Q-027 have remained open
+    with documented defaults since Spec 012 / T04 (run #41) and
+    represent a known parser-correctness gap. AC-8 deferred to
+    Spec 015 candidate; AC-9 to Spec 016 candidate; ATS
+    detail-page enrichment (Spec 006 / Spec 013 § 3 non-goals
+    carry-over) renumbered to Spec 017 candidate.
   - **Acceptance:**
     - Status field reads "All phases done (T01..T15 runs #44..#XX);
       spec complete".
     - §C rows AC-4 / AC-5 / AC-6 marked **DONE** with run-tag
       attributions and ✅ glyph.
     - Notes-for-the-next-run pinned to:
-      * Spec 014 candidate = AC-8 (seed-companies refresh) OR
-        Q-026/Q-027 salary residuals (whichever has more upstream
-        signal at closeout time).
-      * Spec 015 candidate = AC-9 (Workable diff).
-      * Spec 016 candidate = ATS detail-page enrichment (carry-over
-        from Spec 006 / Spec 013 § 3 non-goals).
-  - **Estimate:** 0.25 day.
+      * Spec 014 candidate = Q-026 / Q-027 salary residuals
+        (chosen over AC-8 due to upstream signal asymmetry — see
+        Files (actual) above).
+      * Spec 015 candidate = AC-8 (seed-companies refresh —
+        revisit when upstream CSV churn resumes).
+      * Spec 016 candidate = AC-9 (Workable diff).
+      * Spec 017 candidate = ATS detail-page enrichment
+        (carry-over from Spec 006 / Spec 013 § 3 non-goals).
+  - **Estimate:** 0.25 day. **Actual:** ~0.2 day (matches Spec 006
+    / T13 actual at run #36).
 
 ---
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #58** = Spec 013 / Phase 7 / T15 — Spec 013
-  closeout. Status field flipped to "All phases done (T01..T15
-  runs #44..#58); spec complete"; `competitor-watch.md §C` rows
-  AC-4 / AC-5 / AC-6 marked **DONE** with run-tag attributions
-  and ✅ glyph; `docs/log.md` closeout entry; `docs/index.md`
-  Spec 013 status row updated. Pin Spec 014 candidate at closeout
-  time based on upstream signal: AC-8 (seed-companies refresh),
-  Q-026 / Q-027 salary residuals, or AC-9 (Workable diff).
-  Estimated 0.25 day.
+- **Default for run #59** = **Spec 014** scaffolding pass for
+  Q-026 / Q-027 salary-parser residuals. Three new artefacts
+  under `.specify/specs/014-salary-parser-residuals/` (spec.md +
+  plan.md + tasks.md) addressing the two open questions logged
+  at Spec 012 / T04 (run #41):
+  - **Q-026** — bare-number country fallback: when
+    `extractSalary` is given an input like `"50000-80000"` (no
+    currency symbol, no ISO code) and an explicit
+    `options.country`, the parser currently falls through to
+    its default-currency branch instead of consulting the
+    `country → currency` map. Documented default = honour
+    `options.country` for the currency dispatch; only fall
+    through when both currency-detection paths AND
+    `options.country` are absent.
+  - **Q-027** — `$` symbol registration + apostrophe-in-numSrc:
+    the current symbol regex does not register `$` as a USD
+    detector (USD is the default; the symbol's absence is a
+    historical oversight). Apostrophes inside the number-source
+    capture (`"$50'000"` for Swiss formatting OR escaped
+    apostrophes inside JS string literals) need an additional
+    Swiss-locale tolerance branch in `parseSalaryNumber`.
+  Pure docs / Spec-Kit scaffolding pass; NO source code. Spec
+  covers FR-1..FR-N (TBD during scaffolding) addressing both
+  residuals; T01..T05 across three phases (Phase 1: enum +
+  helper signature pass; Phase 2: per-residual implementation
+  + unit cases; Phase 3: closeout). Estimated 0.5 day for the
+  scaffolding pass.
+- **Default for run #58 (DONE — landed run #58)** = Spec 013 /
+  Phase 7 / T15 — Spec 013 closeout. Status flipped to "All
+  phases done (T01..T15 runs #44..#58); spec complete";
+  AC-4 / AC-5 / AC-6 marked **DONE** with ✅ glyph; Spec 014
+  pinned to Q-026 / Q-027 salary residuals (chosen over AC-8
+  due to upstream signal asymmetry — 41 consecutive zero-churn
+  runs in `OTHERS/`).
 - **Default for run #57 (DONE — landed run #57)** = Spec 013 /
   Phase 6 / T14 — performance benches. Three new bench files
   (`packages/plugins/source-ats-oracle/__tests__/oracle.bench.ts`,

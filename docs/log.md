@@ -5,6 +5,193 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #58 (Spec 013 / Phase 7 / T15 — **Spec 013 closeout; spec complete**)
+
+**Scope:** land Spec 013 / Phase 7 / T15 — the closeout pass.
+Pure docs / metadata: `spec.md` Status field flipped to "All
+phases done (T01..T15 runs #44..#58); spec complete";
+`competitor-watch.md §C` rows AC-4 / AC-5 / AC-6 each marked
+**DONE (runs #44..#58)** with ✅ glyph in the Owner column;
+`docs/index.md` Spec 013 row updated; `tasks.md` T15 row
+flipped from `[ ]` to `[x]` with "Landed run #58" annotation;
+this `docs/log.md` entry; `CLAUDE.md` run-tag → #58.
+Notes-for-the-next-run pinned to **Spec 014** = Q-026 / Q-027
+salary-parser residuals scaffolding pass. Estimated 0.25 day
+per tasks.md; landed in a single scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #57's sync). Forty-second consecutive
+zero-churn run in `OTHERS/` — the OSS reference codebases
+have been quiescent for the entirety of Spec 013's fifteen-run
+lifecycle.
+
+**No new questions opened this run.** Spec 013 closes with
+**five** questions resolved across its lifecycle:
+- **Q-028** (Tesla Playwright dep strategy = pure-HTTP default
+  + opt-in companion) — implementation-ratified at run #50 / T07.
+- **Q-029** (Mercor catalogue-wide input semantics =
+  empty-slug full / populated-slug post-filter) —
+  implementation-ratified at run #48 / T05.
+- **Q-030** (Oracle `siteNumber` default = `'CX_45001'`) —
+  implementation-ratified at run #46 / T03.
+- **Q-031** (Tesla `descriptionDepth` cap of 25, default
+  `'detail-25'`) — implementation-ratified at run #50 / T07.
+- **Q-032** (cross-plugin dedup strategy = emit under
+  `Site.TESLA_PLAYWRIGHT`, dedup-engine collapses cross-site
+  duplicates via `externalId`) — implementation-ratified at
+  run #52 / T09.
+
+Q-026 / Q-027 (Spec 012 / T04 spillover) remain open and
+graduate from "Spec 014 candidate" to **Spec 014 pinned**
+this run — see Spec 014 Selection below.
+
+**One load-bearing decision** was resolved during T15's
+closeout pass:
+
+**Spec 014 Selection — Q-026 / Q-027 salary residuals over
+AC-8 / AC-9.** Tasks.md T15 acceptance gave three candidates
+for the Spec 014 pin: AC-8 (seed-companies refresh from
+upstream CSVs), Q-026/Q-027 (salary parser residuals), or
+AC-9 (Workable diff). The selection rule is "whichever has
+more upstream signal at closeout time". With **42 consecutive
+zero-churn runs in `OTHERS/`**, AC-8's "refresh from CSVs"
+carries no fresh upstream signal — the CSVs haven't moved
+since run #16 and won't move tomorrow either. Q-026 / Q-027
+have remained open with documented defaults since Spec 012 /
+T04 (run #41) and represent a known parser-correctness gap
+in production code; they're code-shape work, not data
+refresh, so the absence of upstream churn doesn't gate them.
+AC-9 (Workable diff) carries similar zero-churn weather.
+Decision: **Spec 014 = Q-026 / Q-027 salary residuals**.
+AC-8 deferred to Spec 015 candidate; AC-9 to Spec 016
+candidate; ATS detail-page enrichment (Spec 006 / Spec 013
+§ 3 non-goals carry-over) renumbered to Spec 017 candidate.
+
+**Spec 013 lifecycle summary (15 runs across 7 phases):**
+
+| Phase | Runs | Tasks | Outcome |
+| ----- | ---- | ----- | ------- |
+| 1 — Bootstrap | #44 + #45 | T01..T02 | Site enum + tsconfig + jest mapper + DTO extensions; four plugin scaffolds with three appended to `ALL_SOURCE_MODULES` |
+| 2 — Oracle HCM Cloud | #46 + #47 | T03..T04 | `OracleService.scrape(input)` REST + finder-string; 10-case unit sweep + `eeho-us2` fixture |
+| 3 — Mercor | #48 + #49 | T05..T06 | `MercorService.scrape(input)` single-GET catalogue-wide; 11-case unit sweep + 50 × 12-company fixture |
+| 4 — Tesla (default, pure-HTTP) | #50 + #51 | T07..T08 | `TeslaService.scrape(input)` board + detail with broadened Akamai detection; 14-case unit sweep + 50 × 6 × 5 fixtures |
+| 5 — Tesla-Playwright (OPTIONAL) | #52 + #53 | T09..T10 | `TeslaPlaywrightService.scrape(input)` lazy-Playwright via `Function('s', 'return import(s)')` indirection; 10-case behavioural sweep |
+| 6 — Integration & Docs | #54..#57 | T11..T14 | Three-plugin integration + e2e specs; coverage docs in `ATS_INTEGRATIONS.md` + `COMPANY_SLUG_DIRECTORY.md`; performance benches with NFR-2 ceiling pins |
+| 7 — Closeout | #58 | T15 | This entry |
+
+**Cross-cutting design decisions** carried forward across all
+fifteen runs (full prose in spec.md § 10):
+
+1. **Three sentinel-code pairs adopted symmetrically** across
+   Oracle / Mercor / Tesla / Tesla-Playwright:
+   `<plugin>_BAD_TENANT|ENVELOPE` (semantic shape failure) +
+   `<plugin>_FETCH_FAILED|FINDER_REJECTED|AKAMAI_CHALLENGE`
+   (network / wire failure). Original spec text named only one
+   sentinel per plugin; the second-sentinel additions proved
+   necessary symmetry during implementation.
+2. **Three wire-format divergences from spec.md prose:**
+   (a) Oracle finder-string uses commas between params +
+   semicolons inside facets per upstream Python (FR-2's
+   all-semicolon variant rejected by live API);
+   (b) Tesla board envelope places `listings[]` at the top
+   level with `lookup` as a sibling map (NOT
+   `data.lookup.listings[]` per FR-10);
+   (c) Mercor requires `Origin` + `Referer` headers
+   (`https://work.mercor.com`) in addition to the literal
+   `Authorization: Bearer` named in FR-8.
+3. **Two ts-jest friction tricks:** `Function('s', 'return
+   import(s)')` for the optional `playwright` dep (T09);
+   `jest.spyOn(loadPlaywright)` for the Playwright-mock
+   boundary (T10) — Jest's hoisted `jest.mock` system can't
+   intercept the `Function`-wrapped dynamic import.
+4. **Description-budget map** (`board:0` / `detail-25:25` /
+   `detail-all:Infinity`) shared between `source-tesla` and
+   `source-tesla-playwright` — locally duplicated rather than
+   cross-imported per AGENTS.md §5 "no peer plugin imports".
+5. **Compensation mapping included on initial Mercor
+   implementation** rather than deferred to detail-page
+   enrichment, since the explore-page envelope already carries
+   `rateMin` / `rateMax` / `payRateFrequency` (one of the few
+   places we go BEYOND upstream Python's behaviour).
+6. **Tesla single-tenant slug treatment:** documented as a
+   single `tesla` entry in `COMPANY_SLUG_DIRECTORY.md`
+   (per-plugin clarification overrides the umbrella "≥ 10 seed
+   slugs" line in T13's acceptance text — internally
+   inconsistent, the per-plugin line reflects actual scraper
+   shape).
+7. **`Site.TESLA_PLAYWRIGHT` absence guard** added to T11's
+   integration spec — fires loudly in CI if a future
+   contributor accidentally appends `TeslaPlaywrightModule` to
+   `ALL_SOURCE_MODULES`. Exact regression mode FR-13 is trying
+   to prevent.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  Status field flipped from "T14 landed run #57; T15 pending"
+  to "All phases done (T01..T15 runs #44..#58); spec
+  complete"; Last-updated bumped to run #58; new § 10 entry
+  appended summarising the seven-phase lifecycle, five
+  resolved questions, seven cross-cutting decisions, and the
+  Spec 014 selection rationale.
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  T15 row flipped from `[ ]` to `[x]` with "Landed run #58"
+  annotation + "Files (actual)" subsection; Notes-for-the-
+  next-run pinned default updated to **Spec 014 scaffolding
+  pass** for Q-026 / Q-027 salary-parser residuals.
+- `docs/index.md` — Spec 013 row status updated to "All phases
+  done (T01..T15 runs #44..#58); spec complete"; footer
+  bumped to run #58.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #58.
+- `/competitor-watch.md` — run #58 closeout sync line at top
+  of Sync Log; §C rows AC-4 / AC-5 / AC-6 each rewritten to
+  "**DONE (runs #44..#58)**" prose with ✅ glyph in Owner
+  column. Each row's prose now narrates the full per-plugin
+  shipping summary (service + tests + fixtures + integration
+  + e2e + coverage docs + perf bench) rather than the
+  in-progress status line.
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean (verified before commit).
+- No source / test code modified — pure docs / metadata
+  closeout pass.
+
+**Notes & follow-ups:**
+
+- **Default for run #59** = Spec 014 scaffolding pass. Three
+  new artefacts under `.specify/specs/014-salary-parser-residuals/`
+  (spec.md + plan.md + tasks.md) addressing Q-026 (bare-number
+  country fallback in `extractSalary`) and Q-027 (`$` symbol
+  registration + apostrophe-in-numSrc Swiss-locale tolerance
+  in `parseSalaryNumber`). Pure docs / Spec-Kit scaffolding;
+  NO source code. Spec covers both residuals as a small
+  unified follow-up to Spec 012; T01..T05 across three phases
+  (Phase 1: helper signature + lookup table delta;
+  Phase 2: per-residual implementation + unit cases;
+  Phase 3: closeout). Estimated 0.5 day for the scaffolding
+  pass; Q-026 / Q-027 implementations land in subsequent runs
+  per the standard task-by-task cadence.
+- **Out-of-scope reminders for run #59:** Stay strictly inside
+  `.specify/specs/014-salary-parser-residuals/`. Do NOT touch
+  `packages/common/src/utils/helpers.ts` — the helper edits
+  land at the Phase-2 / T02 implementation pass, not the
+  scaffolding pass. Do NOT change `Currency` literal-type or
+  `SalaryLocale` enum — Q-027's `$`-symbol tweak is pure
+  detection-table delta, not a type change.
+- **Active backlog after Spec 014 closes:** Spec 015
+  candidates = AC-8 (seed-companies refresh; revisit when
+  upstream CSV churn resumes); Spec 016 = AC-9 (Workable
+  diff); Spec 017 = ATS detail-page enrichment carry-over.
+- Specs **004 / 005 / 006 / 012** stay complete; **001 /
+  003** retain their statuses unchanged. Spec **013** is now
+  **complete** — joins the "All phases done" club at the
+  bottom of `docs/index.md` § 7.
+
+---
+
 ## 2026-04-28 — Scheduled run #57 (Spec 013 / Phase 6 / T14 — Performance benches landed)
 
 **Scope:** land Spec 013 / Phase 6 / T14 — performance benches.
