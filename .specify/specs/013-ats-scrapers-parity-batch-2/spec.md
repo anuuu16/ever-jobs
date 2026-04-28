@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | T12 landed run #55; T13..T15 pending                 |
+| Status         | T13 landed run #56; T14..T15 pending                 |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-28 (run #55)                                 |
+| Last updated   | 2026-04-28 (run #56)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -332,6 +332,64 @@ records.)
   'detail-all'` with `'detail-25'` the default).
 
 ## 10. Decisions
+
+- **2026-04-28 (run #56 / T13)** — Coverage docs landed across
+  `docs/ATS_INTEGRATIONS.md` (three new H3 sections) and
+  `docs/COMPANY_SLUG_DIRECTORY.md` (three new H2 sections with
+  15 / 12 / 1 entries for Oracle / Mercor / Tesla). Three load-
+  bearing authoring decisions:
+
+  (1) **Tesla Playwright companion folded into the main `### Tesla`
+  prose, NOT given its own H3.** The original tasks.md acceptance
+  text said "Tesla-Playwright noted as opt-in companion in a
+  sub-row". Markdown doesn't have first-class sub-row support
+  inside a top-level H3 sequence — H4s would visually flatten
+  alongside the bullet lists, and a separate H3 for the
+  OPTIONAL companion would imply parity with the default plugin
+  on the supported-platforms register (it isn't — operators
+  must opt in). Decision: the `### Tesla` section opens with a
+  prose paragraph that explicitly enumerates BOTH plugins with
+  bold subheaders, then transitions into a unified bullet list
+  covering both. This treats the companion as an architectural
+  detail of "the Tesla integration" rather than a peer entry,
+  matching its actual deployment story.
+
+  (2) **Tesla seed-slug entry collapsed to a single row,
+  honouring the per-plugin "single-tenant" line over the
+  umbrella "≥ 10 seed slugs each" line.** Tasks.md / T13's
+  acceptance text contains BOTH (a) "≥ 10 seed slugs each for
+  Oracle / Mercor / Tesla" AND (b) "for Tesla a single entry
+  (`tesla`, since it is single-tenant)" — internally
+  inconsistent. The per-plugin clarification was authored later
+  (in tasks.md drafting) and reflects the actual scraper shape;
+  the umbrella line was written before the spec recognised
+  Tesla's single-tenant pattern. Decision: 1 Tesla entry,
+  ≥ 10 each for Oracle and Mercor (15 / 12 actual). The
+  Tesla section opens with a paragraph explaining why a single
+  entry is correct so a future contributor doesn't read it as
+  an oversight.
+
+  (3) **Oracle seeds curated for industry diversity rather than
+  copying the first 15 rows of `oracle_companies.csv`.** The
+  CSV's natural ordering is by alphabetic subdomain
+  (`bun-em2`, `cbct-em2`, `cbha-us2`, …), which clusters all
+  the `eb*-us2` and `cb*-em2` tenants together — not
+  representative of the platform's industry diversity.
+  Decision: hand-curate 15 entries spanning enterprise software
+  (Oracle), government (City of Atlanta), rail / logistics
+  (TTX), healthcare (CooperCompanies / Apollo Hospitals /
+  Hologic), engineering consulting (EXP / Galliford Try),
+  risk advisory (Kroll), retail (Macy's / Mountaire), banking
+  (Westpac / DTCC), electronics (Mouser), imaging (Ricoh), and
+  food (Mountaire). Each entry references the upstream CSV's
+  exact `<subdomain>-<region>` derivation so a future audit
+  can verify the slug is real. The pattern matches Avature /
+  Gem / Join.com sections in the same directory which all
+  curate rather than copy.
+
+  Bonus: the `Last Updated:` header on `COMPANY_SLUG_DIRECTORY.md`
+  bumped from 2026-04-27 → 2026-04-28 to match the new entries
+  — the doc-lint rule that pins this is honoured.
 
 - **2026-04-28 (run #55 / T12)** — Three-plugin e2e spec landed at
   `apps/api/__tests__/e2e/source-ats-batch-2.e2e-spec.ts`. The

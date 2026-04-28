@@ -304,6 +304,44 @@ European-focused recruiting platform with strong adoption in Germany, Austria, a
 - **Polite Pacing**: 0.5 s between paginated calls (matches upstream Python's `time.sleep(0.5)`)
 - **Notable Users**: Awork, Alteos, Aitad, Capitalmind, Brandcircle, Cinnamood, Brandneo, Brunathelabel, Allunity, Citychickennhas490
 
+### Oracle HCM Cloud (Oracle Recruiting Cloud)
+
+Enterprise-grade multi-tenant ATS within Oracle's HCM Cloud suite. Tenants typically host at `https://<subdomain>.fa.<region>.oraclecloud.com` (e.g. `eeho.fa.us2.oraclecloud.com` for Oracle's own careers site). The CandidateExperience REST API exposes a finder-string-driven `recruitingCEJobRequisitions` endpoint that paginates at 100 per page.
+
+- **Method**: REST GET against `/hcmRestApi/resources/latest/recruitingCEJobRequisitions` with a `findReqs;<finder-string>` finder (commas between params, semicolons between facets — matches upstream Python's wire format; the all-semicolon variant suggested in spec drafts was rejected by the live API)
+- **Auth**: None (public CandidateExperience namespace)
+- **Data Format**: JSON — `response.items[0].requisitionList[]`; each row carries `Id` / `Title` / `PrimaryLocation` / `PostedDate` / `EmployerName` plus optional `ExternalUrl` / `ExternalUrlSeo` for canonical apply links
+- **Tenant Resolution**: `companyUrl` (full URL override, canonical) ⇒ used verbatim; `companySlug` (`<subdomain>-<region>` form, e.g. `eeho-us2`) ⇒ composed to `https://<subdomain>.fa.<region>.oraclecloud.com`
+- **`siteNumber` Override**: Optional `ScraperInputDto.siteNumber` field defaulting to `'CX_45001'` (Q-030 — upstream Python's documented default; ≥ 95 % of tenants honour it)
+- **Pagination**: `offset=N` increments by 100 until `requisitionList[]` is empty OR `resultsWanted` cap; first page omits `offset=` for canonical request shape
+- **Notable Users**: Oracle, City of Atlanta, TTX, CooperCompanies, EXP, Kroll, Macy's, Westpac Group, DTCC, Hologic, Mountaire, Mouser, Ricoh, Galliford Try, Apollo Hospitals, Standard Aero, Proskauer, Euroclear, Arcadis, BDO USA, Onity, Hillside, Dubai World Trade Centre, Zeus
+
+### Mercor
+
+Talent marketplace (NOT a per-company ATS) where companies post contract / full-time opportunities. The explore page returns the **entire public catalogue** in one GET — no per-company URL segmentation, no pagination — so per-company filtering is a client-side substring match on `companyName` rather than a slug-keyed dispatch.
+
+- **Method**: Single REST GET to `https://aws.api.mercor.com/work/listings-explore-page`
+- **Auth**: Literal `Authorization: Bearer` header (empty token — mirrors upstream Python's `MercorClient.session.headers`); `Origin` + `Referer` (`https://work.mercor.com`) required by the API gateway
+- **Data Format**: JSON — `response.listings[]`; each row carries `listingId` / `title` / `companyName` / `location` / `postedAt` plus a `rateMin / rateMax / payRateFrequency` triple (mapped into `JobPostDto.compensation` directly — no detail fetch required)
+- **Filtering Semantics**: `companySlug` is a **case-insensitive substring filter** on `companyName` (e.g. `companySlug='stripe'` retains rows whose `companyName.toLowerCase()` contains `'stripe'`). Empty slug ⇒ full catalogue, capped by `resultsWanted` (cap applies AFTER the filter so a 5-row Stripe slice is genuinely 5 Stripe rows)
+- **Detail Fetch**: Not exercised — explore-page envelope already carries enough fields for `JobPostDto` mapping. Detail-page enrichment deferred to candidate Spec 016
+- **Notable Users**: Stripe, OpenAI, Anthropic, Notion, Airbnb, Figma, Vercel, Linear, Discord, Coinbase, Plaid, Ramp (sample of the catalogue at time of writing — the explore page surfaces ≥ 200 distinct employers across software, finance, design, and operations)
+
+### Tesla
+
+Single-company custom careers portal at `https://www.tesla.com/careers/search/`. Tesla operates its own internal `/cua-api/` endpoint pair (board + per-job detail) protected by Akamai Bot Manager. Ever Jobs ships **two** Tesla plugins:
+
+- **Default `source-tesla` (pure-HTTP):** Calls the board endpoint directly with rotated UA + `Accept: application/json`. Akamai-challenge surfaces (HTTP 403 / 503 OR a `text/html` body when JSON was requested) return an empty `JobResponseDto` with the `ERR_TESLA_AKAMAI_CHALLENGE` sentinel logged.
+- **Optional `source-tesla-playwright` (browser-automation companion):** Lazy-loads `playwright` via `Function('s', 'return import(s)')(specifier)` indirection (defeats ts-jest's static module resolution). Launches headless Chromium with `--disable-blink-features=AutomationControlled`, navigates to the careers-search landing page, settles 5 s for Akamai's challenge JS to resolve, then issues in-page `fetch()` calls through the established session. Per Q-028, this companion is **NOT** auto-registered via `ALL_SOURCE_MODULES` — operators opt in by importing `TeslaPlaywrightModule` directly.
+
+- **Method (default)**: REST GET to `https://www.tesla.com/cua-api/apps/careers/state` (board) followed by per-job GETs to `/cua-api/careers/job/{id}` (detail)
+- **Method (companion)**: Headless Chromium navigation to `/careers/search/` → in-page `fetch()` for board + detail (lazy `import('playwright')`)
+- **Auth**: None for either path (public careers API; companion adds a real browser session for Akamai bypass)
+- **Data Format**: JSON — `response.listings[]` at top level + `response.lookup` as a sibling map (location-id / department-id dictionaries; the spec draft's `data.lookup.listings[]` path was incorrect and is corrected in the implementation)
+- **Description Budget**: `ScraperInputDto.descriptionDepth` controls per-job detail-fetch fan-out: `'board'` → 0 follow-ups (descriptions stay null), `'detail-25'` (default per Q-031) → 25 follow-ups, `'detail-all'` → ∞. Detail-fetch failures are silently swallowed; the affected listing keeps `description: null` but still emits as a `JobPostDto`
+- **Cross-Plugin Dedup**: When both Tesla plugins are enabled, rows emit under different `Site` keys (`Site.TESLA` vs `Site.TESLA_PLAYWRIGHT`) so per-source breaker policies (Spec 005 / FR-1) track them independently. `dedup-hybrid`'s hash strategy (Spec 003 / FR-3) collapses cross-site duplicates by `externalId` (per Q-032 default)
+- **Notable Users**: Tesla (single-tenant; no per-company variation)
+
 ---
 
 ## Architecture

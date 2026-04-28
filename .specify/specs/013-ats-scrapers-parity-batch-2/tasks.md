@@ -365,13 +365,29 @@
   - **Estimate:** 0.4 day. **Actual:** ~0.3 day (matches Spec 006
     / T10 actual at run #35).
 
-- [ ] T13 — Coverage docs.
+- [x] T13 — Coverage docs.
+  **Landed run #56.**
   - **Files (planned):** `docs/ATS_INTEGRATIONS.md` (three new
     matrix rows for Oracle / Mercor / Tesla; Tesla-Playwright noted
     as opt-in companion in a sub-row), `docs/COMPANY_SLUG_DIRECTORY.md`
     (≥ 10 seed slugs each for Oracle / Mercor / Tesla — Mercor's
     "slugs" are case-insensitive substring matches against
     `companyName`).
+  - **Files (actual):** matched plan exactly.
+    `docs/ATS_INTEGRATIONS.md` gained three new H3 sections after
+    Join.com (`### Oracle HCM Cloud (Oracle Recruiting Cloud)` /
+    `### Mercor` / `### Tesla`) — the Tesla section folds the
+    Playwright companion into the prose as the second of two
+    bullet variants (matches the spec's "sub-row" framing without
+    introducing a new H3 just for the OPTIONAL companion).
+    `docs/COMPANY_SLUG_DIRECTORY.md` gained three new H2 sections
+    after Join.com (`## Oracle HCM Cloud` / `## Mercor` /
+    `## Tesla`) with 15 / 12 / 1 entries respectively. Tesla's
+    single entry honours the per-plugin "single-tenant" line
+    over the umbrella "≥ 10" line — documented inline so a
+    future contributor doesn't read it as an oversight. The
+    `Last Updated:` header on the directory bumped from
+    2026-04-27 → 2026-04-28.
   - **Acceptance:**
     - Matrix rows include: Method (REST / GraphQL / Playwright),
       Data Format, Notable Users (sampled from upstream
@@ -382,7 +398,7 @@
       visible companies on the explore page (e.g. `stripe`, `notion`,
       `airbnb`); for Tesla a single entry (`tesla`, since it is
       single-tenant).
-  - **Estimate:** 0.4 day.
+  - **Estimate:** 0.4 day. **Actual:** ~0.3 day.
 
 - [ ] T14 — Performance benches.
   - **Files (planned):** `packages/plugins/source-ats-oracle/__tests__/oracle.bench.ts`,
@@ -430,15 +446,26 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #56** = Spec 013 / Phase 6 / T13 — coverage
-  docs. Two file edits: `docs/ATS_INTEGRATIONS.md` (three new
-  matrix rows for Oracle / Mercor / Tesla; Tesla-Playwright noted
-  as opt-in companion in a sub-row) and `docs/COMPANY_SLUG_DIRECTORY.md`
-  (≥ 10 seed slugs for Oracle from `OTHERS/Ats-scrapers/oracle/oracle_companies.csv`,
-  ≥ 10 curated Mercor `companyName` substring slugs, single
-  Tesla entry since it is single-tenant). Acceptance: matrix rows
-  include Method / Data Format / Notable Users / URL pattern.
-  Estimated 0.4 day.
+- **Default for run #57** = Spec 013 / Phase 6 / T14 — performance
+  benches. Three new bench files
+  (`packages/plugins/source-ats-oracle/__tests__/oracle.bench.ts`,
+  `packages/plugins/source-ats-mercor/__tests__/mercor.bench.ts`,
+  `packages/plugins/source-tesla/__tests__/tesla.bench.ts`),
+  each running 3 warm-ups + 20 timed iterations against the
+  existing `__tests__/fixtures/` corpus and emitting JSON to
+  `dist/bench/<plugin>.json`. NFR-2 ceilings pinned: Oracle <
+  6 s, Mercor < 1.5 s, Tesla (HTTP-only, ≤ 25 detail fetches) <
+  12 s. Plus four new npm scripts (`bench:oracle`, `bench:mercor`,
+  `bench:tesla`, `bench:ats-batch-2`). Mirror the Spec 006 / T12
+  bench pattern; CI gating is a follow-up spec (no exit-non-zero
+  on breach). Estimated 0.4 day.
+- **Default for run #56 (DONE — landed run #56)** = Spec 013 /
+  Phase 6 / T13 — coverage docs. Three new H3 sections in
+  `ATS_INTEGRATIONS.md` (Oracle / Mercor / Tesla, with Tesla
+  folding the Playwright companion into the prose) + three new
+  H2 sections in `COMPANY_SLUG_DIRECTORY.md` (15 Oracle seeds /
+  12 Mercor `companyName`-substring seeds / 1 Tesla single-tenant
+  entry).
 - **Default for run #55 (DONE — landed run #55)** = Spec 013 /
   Phase 6 / T12 — three-plugin e2e spec under
   `apps/api/__tests__/e2e/source-ats-batch-2.e2e-spec.ts`. 5-case

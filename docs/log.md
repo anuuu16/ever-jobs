@@ -5,6 +5,130 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #56 (Spec 013 / Phase 6 / T13 — Coverage docs landed)
+
+**Scope:** land Spec 013 / Phase 6 / T13 — coverage docs.
+Two file edits: `docs/ATS_INTEGRATIONS.md` (three new H3
+sections after Join.com — Oracle / Mercor / Tesla, with
+Tesla-Playwright folded into the Tesla section's prose as the
+second of two bullet variants per FR-13's opt-in framing) and
+`docs/COMPANY_SLUG_DIRECTORY.md` (three new H2 sections after
+Join.com — 15 Oracle seeds curated for industry diversity from
+`OTHERS/Ats-scrapers/oracle/oracle_companies.csv`, 12 Mercor
+seeds matching the explore-page corpus' substring-filter
+contract, single Tesla seed honouring the per-plugin
+single-tenant clarification). `Last Updated:` header on the
+slug directory bumped from 2026-04-27 → 2026-04-28.
+Estimated 0.4 day per tasks.md; landed in a single
+scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #55's sync). Fortieth consecutive
+zero-churn run in `OTHERS/`.
+
+**No new questions opened this run.** Q-026 / Q-027 retain
+their **Spec 014 candidate** label. All other Spec-013 questions
+(Q-028..Q-032) remain implementation-ratified through their
+respective T07..T12 landings.
+
+**Three load-bearing authoring decisions** were resolved during
+T13's editing pass (full prose in Spec 013 § 10):
+
+1. **Tesla Playwright companion folded into the main `### Tesla`
+   prose, NOT given its own H3.** Markdown sub-rows aren't
+   first-class; a separate H3 would imply parity with the
+   default plugin on the supported-platforms register (it
+   isn't — operators must opt in). The unified `### Tesla`
+   section opens with prose enumerating BOTH plugins in bold,
+   then transitions into a single bullet list.
+2. **Tesla seed-slug entry collapsed to a single row.** Tasks.md
+   T13's acceptance text contains both "≥ 10 seed slugs each"
+   AND "for Tesla a single entry (`tesla`, since it is
+   single-tenant)" — internally inconsistent. The per-plugin
+   clarification reflects the actual scraper shape; the
+   umbrella line predates the spec recognising Tesla's
+   single-tenant pattern. 1 Tesla entry chosen + explicit
+   rationale paragraph so future contributors don't read it
+   as an oversight.
+3. **Oracle seeds curated for industry diversity rather than
+   copying the first 15 rows of `oracle_companies.csv`.** The
+   CSV's natural ordering clusters tenants by alphabetic
+   subdomain; hand-curating spans enterprise software /
+   government / rail / healthcare / banking / retail / etc.
+   Each entry references its exact `<subdomain>-<region>`
+   derivation so a future audit can verify against the CSV.
+
+**Changes — docs / specs:**
+
+- `docs/ATS_INTEGRATIONS.md` — three new H3 sections appended
+  after `### Join.com`. Each section documents Method (REST /
+  GraphQL / Playwright), Auth (where relevant), Data Format,
+  URL pattern, and Notable Users sampled from the upstream
+  CSVs (Oracle: ~24 employers from oracle_companies.csv;
+  Mercor: 12 employers from the explore-page corpus; Tesla:
+  single-tenant). Tesla section additionally documents the
+  `descriptionDepth` budget map (board / detail-25 / detail-all)
+  and the cross-plugin dedup contract (`Site.TESLA` vs
+  `Site.TESLA_PLAYWRIGHT` separation per Q-032).
+- `docs/COMPANY_SLUG_DIRECTORY.md` — three new H2 sections
+  appended after `## Join.com`. Each section opens with a
+  prose paragraph explaining the slug semantics: Oracle's
+  `<subdomain>-<region>` form + last-dash split; Mercor's
+  catalogue-wide substring filter on `companyName`; Tesla's
+  single-tenant slug-ignored design. `Last Updated:` header
+  bumped to 2026-04-28.
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  T13 row flipped from `[ ]` to `[x]` with "Landed run #56"
+  annotation; "Files (actual)" subsection added; Notes-for-
+  the-next-run pinned default updated to **Spec 013 / Phase
+  6 / T14** (performance benches under each plugin's
+  `__tests__/`).
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  Status flipped to "T13 landed run #56; T14..T15 pending";
+  Last-updated bumped to run #56; new entry appended to § 10
+  Decisions covering the three load-bearing authoring
+  choices.
+- `docs/index.md` — Spec 013 row status updated; footer
+  bumped to run #56.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #56.
+- `/competitor-watch.md` — run #56 sync line appended at top
+  of Sync Log; AC-4 / AC-5 / AC-6 row prefixes updated to
+  "Spec 013 / Phase 6 / T13 landed run #56; T14..T15 pending".
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean (verified before commit).
+- No source / test code modified — pure docs pass.
+
+**Notes & follow-ups:**
+
+- **Default for run #57** = Spec 013 / Phase 6 / T14 —
+  performance benches. Three new bench files under each
+  plugin's `__tests__/` (oracle.bench.ts / mercor.bench.ts /
+  tesla.bench.ts), each running 3 warm-ups + 20 timed
+  iterations against the existing fixtures and emitting JSON
+  to `dist/bench/<plugin>.json`. NFR-2 ceilings pinned:
+  Oracle < 6 s, Mercor < 1.5 s, Tesla (HTTP-only, ≤ 25 detail
+  fetches) < 12 s. Plus four new npm scripts. Mirror Spec 006
+  / T12. Estimated 0.4 day.
+- **Out-of-scope reminders for run #57:** Stay strictly
+  inside `__tests__/` directories. Do NOT touch service /
+  constants / types — those settled in T03 / T05 / T07 / T09.
+  Do NOT add CI gating on bench breach (deferred to a follow-
+  up spec, same boundary as Spec 006 / T12).
+- **Active backlog after Spec 013 closes (T15 — run #58 or
+  later):** Spec 014 candidates = Q-026/Q-027 salary residuals
+  OR AC-8 (seed-companies refresh) OR AC-9 (Workable diff).
+  Pick at T15 closeout based on upstream signal.
+- Specs **004 / 005 / 006 / 012** stay complete; **001 /
+  003** retain their statuses unchanged. Spec **013**
+  advances from "T12 landed" to "T13 landed; T14..T15
+  pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #55 (Spec 013 / Phase 6 / T12 — Three-plugin e2e spec landed)
 
 **Scope:** land Spec 013 / Phase 6 / T12 — three-plugin e2e

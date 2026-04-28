@@ -2,7 +2,7 @@
 
 > A curated list of verified company slugs organized by ATS platform. Use these with the `companySlug` parameter to search jobs at specific companies.
 
-**Last Updated:** 2026-04-27
+**Last Updated:** 2026-04-28
 
 ---
 
@@ -310,6 +310,57 @@ Join.com career pages live at `join.com/companies/<slug>`. Slugs sampled from th
 | Big City Beats | `bigcitybeats` | Music / Events |
 | AXSOL | `axsol` | Power / Energy Storage |
 | Career Sancovia | `career-sancovia` | Career Services |
+
+## Oracle HCM Cloud
+
+Oracle slugs follow the `<subdomain>-<region>` form (e.g. `eeho-us2`) — they expand into the canonical career-portal URL `https://<subdomain>.fa.<region>.oraclecloud.com`. For multi-segment subdomains like `careers-portal-us2`, the resolver splits on the LAST `-` (`subdomain=careers-portal`, `region=us2`). Operators with a non-default `siteNumber` finder parameter pass it via `ScraperInputDto.siteNumber` (defaults to `'CX_45001'` per Q-030). Slugs sampled from the upstream `OTHERS/Ats-scrapers/oracle/oracle_companies.csv` reference list — the corpus is dominated by enterprises across financial services, retail, healthcare, and government.
+
+| Company | Slug | Industry |
+| ------- | ---- | -------- |
+| Oracle | `eeho-us2` | Enterprise Software |
+| City of Atlanta | `ehxr-us2` | Government |
+| TTX | `ejjc-us6` | Rail / Logistics |
+| CooperCompanies | `hcjy-us2` | Healthcare / MedTech |
+| EXP | `elcn-us2` | Engineering Consulting |
+| Kroll | `hcxs-us2` | Risk / Financial Advisory |
+| Macy's | `ebwh-us2` | Retail |
+| Westpac Group | `ebuu-ap1` | Banking |
+| DTCC | `ebxr-us2` | Financial Infrastructure |
+| Hologic | `ebwb-us2` | Medical Devices |
+| Mountaire | `ebtg-us2` | Food / Poultry |
+| Mouser | `eabw-us2` | Electronics Distribution |
+| Ricoh | `cbha-us2` | Imaging / Technology |
+| Galliford Try | `cbct-em2` | Construction |
+| Apollo Hospitals | `cgs-ap2` | Healthcare |
+
+## Mercor
+
+Mercor is a **catalogue-wide** scraper — the explore-page endpoint returns the entire public listing set in one GET, with no per-company URL segmentation. The "slug" passed via `ScraperInputDto.companySlug` is therefore a **case-insensitive substring filter** on `companyName` rather than a URL-keyed identifier. Empty slug returns the full catalogue (capped by `resultsWanted`, default 100); populated slug narrows the result via `companyName.toLowerCase().includes(slug.toLowerCase())`. Sample employers below are taken from the explore-page corpus at time of writing — Mercor's catalogue is fluid, so the list evolves as companies post and close roles.
+
+| Company | Slug | Industry |
+| ------- | ---- | -------- |
+| Stripe | `stripe` | Payments |
+| OpenAI | `openai` | AI / Foundation Models |
+| Anthropic | `anthropic` | AI / Foundation Models |
+| Notion | `notion` | Productivity SaaS |
+| Airbnb | `airbnb` | Travel / Marketplace |
+| Figma | `figma` | Design Tools |
+| Vercel | `vercel` | Developer Infrastructure |
+| Linear | `linear` | Productivity / DevTools |
+| Discord | `discord` | Social / Communication |
+| Coinbase | `coinbase` | Crypto / Finance |
+| Plaid | `plaid` | Fintech / Open Banking |
+| Ramp | `ramp` | Fintech / Spend Management |
+
+## Tesla
+
+Tesla is a **single-tenant** scraper — `companyUrl` and `companySlug` are both ignored; the service always targets `https://www.tesla.com/careers/search/`. Operators don't pass a slug; the single canonical entry below is documented for symmetry with the other plugins and for the directory's auto-discovery tooling. Operators control output volume via `resultsWanted` (cap on listings) and `descriptionDepth` (per-job detail-fetch budget — `'board'` skips details, `'detail-25'` default caps at 25 follow-ups, `'detail-all'` fetches every job).
+
+| Company | Slug | Industry |
+| ------- | ---- | -------- |
+| Tesla | `tesla` | Electric Vehicles / Energy |
+
+The OPTIONAL `source-tesla-playwright` companion plugin is opt-in (per Q-028 / FR-13) — operators must manually import `TeslaPlaywrightModule` AND install `playwright` (`npm install playwright && npx playwright install chromium`) to enable the Akamai-bypass path. Both plugins emit jobs against the same single `tesla` slug; the dedup engine collapses cross-plugin duplicates by `externalId` per Spec 003 / FR-3.
 
 ---
 
