@@ -5,6 +5,148 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #65 (Spec 015 scaffolding pass — three Spec-Kit artefacts; NO source code)
+
+**Scope:** open **Spec 015 — Salary Parser Locale & Prose
+Immunity** per Spec 014 / T05 closeout (run #64) Notes-for-the-
+next-run pin. Three new artefacts under
+`.specify/specs/015-salary-parser-locale-and-prose-immunity/`
+(spec.md + plan.md + tasks.md). Pure docs / Spec-Kit pass; NO
+source code touched. The scaffolding addresses Q-035
+(`resolveSalaryLocale` symbol-tier short-circuit) + Q-036
+(bare-regex prose immunity via raw-value pre-check) plus the
+three Spec 014 / T04 deferred test cases (literal Spec 012 § 8
+case 14 + two FR-7 false-positive immunity cases). Estimated
+0.5 day for the scaffolding pass + downstream T01..T03
+implementation runs.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #64's sync). Forty-sixth consecutive
+zero-churn run in `OTHERS/`. (Spec 015 is internal-correctness
+work, not upstream-driven coverage; the streak is logged for
+continuity but isn't load-bearing for the spec.)
+
+**No new questions opened this run.** Spec 015 is the
+resolution path for Q-035 + Q-036 (Spec 014 / T04 spillover);
+their `docs/questions.md` resolution text flips at T03
+closeout per the scaffolding plan.
+
+**Three load-bearing scaffolding decisions** were resolved
+during the spec / plan / tasks authoring pass:
+
+1. **Bundle Q-035 + Q-036 into one spec, not two.** Both gaps
+   surfaced during the same Spec 014 / T04 trace (run #63);
+   both live in `extractSalary()` and its locale resolver in
+   `@ever-jobs/common`; both block the same set of three
+   deferred Spec 014 / T04 test cases. Splitting into two
+   specs would have meant either (a) Spec 015a (Q-035) blocks
+   on Spec 015b (Q-036) for its test cases (since case 14
+   needs both fixes — locale routing AND raw-value filter
+   don't independently rescue it), or (b) duplicate test
+   cases across two specs. Bundled.
+2. **3 phases / 3 tasks / 3 runs (lean cadence).** Mirrors
+   Spec 014's post-T01-T03 cadence: T01 = source-side edits;
+   T02 = test cases land; T03 = doc + closeout. The two
+   source-side fixes go into ONE phase (T01) because they're
+   small (~10 + ~5 LOC) and together unblock all three
+   deferred cases — splitting them would create a half-pass
+   that can't pass any of the three T02 cases cleanly.
+3. **Q-035 default = Option A (tier-1 short-circuit).** Smallest
+   behavioural delta among the three documented options;
+   faithfully implements the FR-1 precedence intent end-to-
+   end (currency AND locale). The substitute-case regression
+   risk (`"€45,000 - €60,000" + country=USA`) is flagged in
+   plan.md / § 5 Risks as the load-bearing concern; the T01
+   acceptance section gates on a 70-case regression sweep
+   that would catch a regression before T02 even attempts to
+   land.
+
+   Q-036 default = Option B (raw-value pre-check on bare-path
+   matches). Preserves prefix/suffix paths byte-identically;
+   the 5-LOC guard adds dimensional rather than linguistic
+   filtering (Option C's stop-word filter rejected as
+   fragile). Threshold `lowerLimit / 12 ≈ 83` admits
+   `"100 - 150"` legitimate Continental low-end shapes while
+   rejecting `"5 - 7"` prose; the FR-8 documented limitation
+   names the remaining false-positive shapes admitted by the
+   threshold.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/015-salary-parser-locale-and-prose-immunity/spec.md`
+  — NEW. ~290 LOC. 11 sections per the spec.template scheme;
+  10 functional requirements (FR-1..FR-10); 6 non-functional
+  requirements (NFR-1..NFR-6); 2 user stories (Stepstone-DE
+  plugin author + JobSpy/GreenHouse plugin author); test
+  plan with 3 new cases (T02) + 5 regression cases (existing
+  coverage that must stay green); references to upstream
+  Spec 012 / 014 + the Q-035 / Q-036 entries.
+- `.specify/specs/015-salary-parser-locale-and-prose-immunity/plan.md`
+  — NEW. ~150 LOC. Approach paragraph + 3-phase breakdown
+  (T01 source-side / T02 deferred test cases / T03
+  closeout) + phasing rationale (rejected the T01-split
+  alternative) + dependencies + 4-row risk matrix +
+  acceptance gates per phase + estimated lifecycle.
+- `.specify/specs/015-salary-parser-locale-and-prose-immunity/tasks.md`
+  — NEW. ~190 LOC. T01..T03 task definitions with files-
+  planned + acceptance bullets + estimates; Notes-for-the-
+  next-run pinning run #66 to T01; out-of-scope reminder
+  list (no `'swiss'` locale, no multi-`$` ambiguity, no
+  stop-word filter, no bare-regex tightening, no plugin
+  edits).
+- `docs/index.md` — Spec 015 row added (Section 7 / Specs);
+  Spec 014 row text trimmed from "deferred to Spec 015
+  candidate" → "deferred to Spec 015"; footer bumped to
+  run #65.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #65.
+- **No `competitor-watch.md` entry** — Spec 015 is not
+  linked to a §C / AC-N row.
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — pending (run before commit).
+- No source / test code modified — pure docs / scaffolding
+  pass.
+
+**Notes & follow-ups:**
+
+- **Default for run #66** = Spec 015 / Phase 1 / T01 — two-
+  fix source-side pass. Adds new `CURRENCY_TO_NATURAL_LOCALE`
+  ReadonlyMap (8 entries) near `SALARY_NUMBER_REGEX_SRC`;
+  inserts tier-1 short-circuit at the top of
+  `resolveSalaryLocale()` body (after `options.locale`
+  tier, before `options.country` tier); adds 3-line raw-
+  value pre-check in `extractSalary()` between
+  `parseSalaryNumber` returns and K-suffix multiplication.
+  No new test cases in T01 — those land at T02. Acceptance
+  gate: 70-case regression sweep stays green + bench p95
+  within ≤ +0.1 ms of baseline. Estimated 0.25 day.
+- **Out-of-scope reminders for run #66:** Stay strictly
+  inside `packages/common/src/utils/helpers.ts`. Do NOT
+  touch the test file (T02 owns that). Do NOT change
+  `parseSalaryCurrency` or `parseSalaryNumber` signatures —
+  both stay UNCHANGED (FR-9). The Q-035 substitute-case
+  regression risk
+  (`"€45,000 - €60,000" + country=USA`) is the load-bearing
+  concern — investigate whether the new tier changes the
+  routed locale for that case BEFORE proceeding to T02.
+- **Active backlog after Spec 015 closes (T03 — run #68 or
+  later):** Spec 016 candidates = AC-8 (seed-companies
+  refresh) OR AC-9 (Workable diff); pick at T03 closeout
+  based on upstream signal. Spec 017 = the loser of that
+  pair; Spec 018 = ATS detail-page enrichment carry-over.
+  (Numbering shifted +1 vs the Spec 014 closeout pin
+  because Spec 015 inserted itself ahead of the previous
+  Spec 015 / 016 / 017 candidate slots — those candidates
+  renumber to 016 / 017 / 018.)
+- Specs **004 / 005 / 006 / 012 / 013 / 014** stay
+  complete-or-partial-as-of-run-#64; **001 / 003** retain
+  their statuses unchanged. Spec **015** is NEW (draft).
+
+---
+
 ## 2026-04-28 — Scheduled run #64 (Spec 014 / Phase 5 / T05 — documentation + closeout pass landed)
 
 **Scope:** land Spec 014 / Phase 5 / T05 — the documentation +
