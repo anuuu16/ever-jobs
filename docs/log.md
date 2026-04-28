@@ -5,6 +5,45 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #92 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0147 ms; lint:docs clean; external-snapshot tag set held identical for the 71st consecutive run)
+
+**Scope:** Run #92 continues the Q-042 default-C maintenance loop. Abbreviated
+health-check evidence form.
+
+**Health-check evidence (abbreviated):**
+
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 5.914 s**.
+- `npx jest packages/common/__tests__/helpers.bench --colors=false` → **2/2 passed in 6.122 s**.
+  `dist/bench/helpers-salary.json` records overall **p95 = 0.0147 ms** (delta from run #91 =
+  -0.0030 ms — favourable downward drift; delta from Spec 016 baseline 0.0174 ms = -0.0027 ms;
+  well within +0.1 ms NFR-1 budget). Per-currency p95 figures all stay under the 0.5 ms
+  NFR-1 target and the 2.0 ms CI ceiling.
+- `npm run lint:docs` exits 0.
+
+**External-snapshot tag set:** all three watched repos return `Already up to date.` SHAs
+unchanged since run #21: Ats-scrapers `3bacd6e`, JobSpy `fda080a`, Jobspy-api `26bb6f4`.
+**71st consecutive zero-churn run** (since run #21).
+
+**Files touched (run #92):**
+
+- `docs/log.md` — this run #92 entry prepended above the run #91 entry.
+- `CLAUDE.md` — run-tag bumped from `2026-04-28 (scheduled run #91)` to
+  `2026-04-28 (scheduled run #92)`.
+- `competitor-watch.md` (workspace-root, outside the ever-jobs repo) — Sync Log run #92
+  entry prepended.
+
+**No changes (FR-9):** No `.ts` / `.tsx` / `.js` source or test file in the run #92 diff.
+No spec.md / tasks.md flip; no `docs/index.md` § 7 update; no `docs/questions.md` change.
+No `package.json` / `package-lock.json` change.
+
+**Forward-pointers / default for run #93:** continue the Q-042 default-C maintenance loop.
+Q-041 + Q-042 Resolutions stay `_open` until the human owner reviews.
+
+**Acceptance:** lint:docs exit 0; 77/77 jest; bench p95 = 0.0147 ms (well under NFR-1);
+all three external repos at the same SHAs as run #91; no `.ts` in run #92 diff.
+
+---
+
 ## 2026-04-28 — Scheduled run #91 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0177 ms; lint:docs clean; external-snapshot tag set held identical for the 70th consecutive run)
 
 **Scope:** Run #91 continues the Q-042 default-C maintenance loop. Abbreviated
