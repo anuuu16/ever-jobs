@@ -562,20 +562,45 @@ const CURRENCY_TO_NATURAL_LOCALE: ReadonlyMap<string, SalaryLocale> = new Map([
  * call. Cascade:
  *
  *   1. Explicit `options.locale` — operator told us directly.
- *   2. `options.country` → `pickLocale(country)` — country hint
+ *   2. **Spec 015 / Q-035 / FR-1 — symbol-tier anglo short-circuit.**
+ *      When the currency was resolved by a unique symbol AND the
+ *      currency's natural locale is `'anglo'` (USD / GBP / CHF),
+ *      lift the FR-1 precedence rule "symbol > country" from
+ *      currency-only to currency-AND-locale: return `'anglo'`
+ *      directly, bypassing the country tier. This rescues the
+ *      `"$100,000 - $150,000" + country=GERMANY` case (Spec 012 /
+ *      § 8 case 14) where the prior cascade picked Germany's
+ *      continental locale and mis-parsed `100,000` as `100`.
+ *
+ *      The short-circuit is **anglo-only by design** (see Spec 015
+ *      / § 10 Decisions log entry "narrowing rationale"). For
+ *      symbol-tier continental currencies (EUR / SEK / NOK / DKK /
+ *      PLN), the country tier is preserved because anglo-shape
+ *      input strings (e.g. `"€45,000 - €60,000" + country=USA`)
+ *      would mis-parse under the continental regex. The asymmetric
+ *      narrowing reflects the asymmetric character class semantics
+ *      of the two regexes: anglo accepts `,` / ` ` / `'`
+ *      thousands, while continental treats `,` as the decimal
+ *      separator.
+ *   3. `options.country` → `pickLocale(country)` — country hint
  *      drives the locale.
- *   3. Detected `currency` → natural locale via
+ *   4. Detected `currency` → natural locale via
  *      {@link CURRENCY_TO_NATURAL_LOCALE} — preserves intent when
  *      neither operator hint is supplied (e.g. a `'45.000 €'` ad
  *      should be parsed continental even without a country).
- *   4. `'anglo'` default (preserves USD byte-for-byte behaviour;
+ *   5. `'anglo'` default (preserves USD byte-for-byte behaviour;
  *      Spec 012 / FR-10).
  */
 function resolveSalaryLocale(
   options: ExtractSalaryOptions | undefined,
   currency: string,
+  confidence: ParseSalaryCurrencyResult['confidence'],
 ): SalaryLocale {
   if (options?.locale) return options.locale;
+  if (confidence === 'symbol') {
+    const naturalLocale = CURRENCY_TO_NATURAL_LOCALE.get(currency);
+    if (naturalLocale === 'anglo') return 'anglo';
+  }
   if (options?.country !== undefined) return pickLocale(options.country);
   return CURRENCY_TO_NATURAL_LOCALE.get(currency) ?? 'anglo';
 }
@@ -713,7 +738,7 @@ export function extractSalary(
     country: options?.country,
     defaultCode: options?.defaultCurrency,
   });
-  const locale = resolveSalaryLocale(options, detected.code);
+  const locale = resolveSalaryLocale(options, detected.code, detected.confidence);
   const symbolAlt = SALARY_SYMBOL_ALTERNATIONS.get(detected.code);
   if (!symbolAlt) return result;
 
@@ -742,15 +767,43 @@ export function extractSalary(
     detected.confidence === 'country'
       ? buildSalaryRegexBare(numSrc)
       : null;
-  const match =
-    salaryStr.match(prefixPattern) ??
-    salaryStr.match(suffixPattern) ??
-    (barePattern ? salaryStr.match(barePattern) : null);
+  // Spec 015 / Q-036 / FR-2 — track the matched path so the bare-
+  // path raw-value pre-check below can fire only when the bare
+  // regex won. Prefix/suffix paths stay byte-identical (FR-6).
+  let matchedFromBare = false;
+  let match = salaryStr.match(prefixPattern);
+  if (!match) match = salaryStr.match(suffixPattern);
+  if (!match && barePattern) {
+    match = salaryStr.match(barePattern);
+    if (match) matchedFromBare = true;
+  }
   if (!match) return result;
 
   let minSalary = parseSalaryNumber(match[1], locale);
   let maxSalary = parseSalaryNumber(match[3], locale);
   if (minSalary === null || maxSalary === null) return result;
+
+  // Spec 015 / Q-036 / FR-2 — bare-path raw-value pre-check.
+  // The bare regex is necessarily greedy on plain digit ranges
+  // ("5 - 7 years experience" captures 5/7); the country-tier
+  // guard alone is not a sufficient prose-immunity safety net
+  // because hourly annualisation (`* 2080`) lifts small numbers
+  // above `lowerLimit` and the bounds check passes. Reject the
+  // row dimensionally: if the bare path won, neither end is
+  // K-suffixed, and the raw min is below `lowerLimit / 12`
+  // (i.e. would not survive even monthly annualisation against
+  // the configured floor), return the all-`null` envelope. The
+  // threshold admits legitimate Continental low-end shapes like
+  // `"100 - 150"` (`100 ≥ 1000 / 12 ≈ 83`) — documented as the
+  // FR-8 known limitation in PERFORMANCE_TUNING.md.
+  if (
+    matchedFromBare &&
+    match[2].toLowerCase() !== 'k' &&
+    match[4].toLowerCase() !== 'k' &&
+    minSalary < lowerLimit / 12
+  ) {
+    return result;
+  }
 
   if (match[2].toLowerCase() === 'k' || match[4].toLowerCase() === 'k') {
     minSalary *= 1000;

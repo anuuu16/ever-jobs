@@ -69,7 +69,14 @@ existing `lowerLimit` option (`lowerLimit / 12 ≈ 83`, so
 admits anything ≥ 84 which is ample). Lands in the Spec 015
 candidate (or a Spec 014 / T05 spillover if scope permits).
 
-**Resolution:** _pending review._
+**Resolution:** **partially resolved** in Spec 015 / T01
+(run #66) — the raw-value pre-check landed in
+`extractSalary()` (Spec 015 / FR-2) gated on `matchedFromBare
+&& !K-suffix && minSalary < lowerLimit / 12`. The two T02 cases
+(`"5 - 7 years experience"` and `"3 - 5 month internship"` +
+`country=GERMANY` → all-`null`) will pin the behaviour at T02.
+Final flip to "**resolved**" awaits T02 + T03 closeout (see
+Spec 015 / tasks.md).
 
 ---
 
@@ -131,6 +138,75 @@ in-text-shape signal over the metadata is the defensible call.
 Lands in the Spec 015 candidate (alongside Q-036's bare-path
 guard fix) — both gaps are dispatcher-shape gaps in
 `@ever-jobs/common` and bundle naturally.
+
+**Resolution:** **partially resolved** in Spec 015 / T01
+(run #66) — landed as Option A but with an **anglo-only
+narrowing**: the new tier-1 short-circuit fires only when the
+symbol-tier currency's natural locale is `'anglo'` (USD / GBP /
+CHF). The narrowing was forced by the substitute-case
+regression risk flagged in Spec 015 / plan.md / § 5: applying
+the broader Option A literal would have routed
+`"€45,000 - €60,000" + country=USA` through continental locale
+(EUR's natural locale) and mis-parsed `45,000` as `45.0`,
+breaking FR-6 ("70 existing cases stay byte-for-byte green").
+The asymmetric narrowing reflects the asymmetric regex
+character classes: anglo accepts `,` / ` ` / `'` thousands;
+continental treats `,` as the decimal separator. The deferred
+T02 case (`"$100,000 - $150,000" + country=GERMANY` → USD /
+100000 / 150000 / yearly) falls into the anglo-natural branch
+and will pin the behaviour at T02. Final flip to
+"**resolved**" awaits T02 + T03 closeout (see Spec 015 /
+tasks.md). Spec 015 / spec.md / § 10 Decisions log entry
+"narrowing rationale" carries the full implementation
+observation.
+
+---
+
+## Q-037 — `helpers.bench.spec.ts` fails to compile (TS1127 at line 190 — `×` in template literal)
+
+**Context:** Spec 015 / T01 (run #66) attempted to exercise
+the bench p95 acceptance gate (`npx jest
+packages/common/__tests__/helpers.bench`) and surfaced a
+**pre-existing** TS1127 ("Invalid character") failure at
+[`packages/common/__tests__/helpers.bench.spec.ts:190`](../packages/common/__tests__/helpers.bench.spec.ts):
+
+```
+it(`p95 < ${CI_CEILING_MS} ms across 5 000 iterations × 8 currencies`, () => {
+```
+
+The U+00D7 multiplication sign (`×`, encoded as `c3 97` in
+UTF-8) is being rejected by the TypeScript parser inside the
+template literal. The file has been broken since it landed in
+Spec 012 / T04 (commit `836a6c6`); jest reports
+`Tests: 0 total` rather than producing the bench numbers. No
+prior scheduled run flagged the failure because the bench
+acceptance gate has been treated as advisory rather than
+hard-blocking (see e.g. Spec 014 / T04 acceptance text in
+`docs/log.md` / run #63 which references the bench but did
+not gate on it).
+
+**Options:**
+
+- **A. Replace the `×` literal with the ASCII letter `x`.**
+  One-character edit at line 190; fully restores bench
+  compilation. Trivial, semantics-preserving (the `×` was
+  decorative).
+- **B. Replace the `×` with a Unicode escape inside the
+  template literal** (e.g. `×`). Same effect as A but
+  preserves the rendered glyph in the test name.
+- **C. Investigate the root cause.** TS5.x should accept
+  U+00D7 in template literals; the failure may indicate a
+  toolchain-level Unicode handling bug, a stale tsconfig
+  flag, or a Windows-specific code-page issue at the
+  ts-jest layer. Most informative but least time-bounded.
+
+**Default (proceeding):** **A. Replace `×` with `x`.** Will
+land in a tiny scaffolded follow-on spec (Spec 016 candidate
+slot) — the fix is one line but it should still go through
+the spec-kit-first workflow per AGENTS.md / § 2 rule 2. For
+Spec 015 / T01 (this run), the bench acceptance gate is
+DEFERRED — the regression sweep gate (`71/71 helpers.spec`
+green) is the load-bearing T01 acceptance signal.
 
 **Resolution:** _pending review._
 

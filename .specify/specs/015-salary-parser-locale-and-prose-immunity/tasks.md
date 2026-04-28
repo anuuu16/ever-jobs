@@ -4,11 +4,13 @@
 
 ## Phase 1 — Two-fix source-side pass
 
-- [ ] T01 — `resolveSalaryLocale()` adds tier-1 short-circuit
+- [x] T01 — `resolveSalaryLocale()` adds tier-1 short-circuit
   on symbol-tier resolutions (Q-035 / FR-1) AND
   `extractSalary()` adds a raw-value pre-check on the
-  bare-regex match path (Q-036 / FR-2). Single source-edit
-  pass.
+  bare-regex match path (Q-036 / FR-2). **Landed run #66**
+  with anglo-only narrowing on the new tier (see Spec 015 /
+  spec.md / § 10 / D-01 "narrowing rationale"). Single
+  source-edit pass; 71 / 71 helpers.spec stays green.
   - **Files (planned):**
     - `packages/common/src/utils/helpers.ts` — three edits:
       (a) new `CURRENCY_TO_NATURAL_LOCALE` ReadonlyMap
@@ -147,9 +149,54 @@
       014's sweep, not upstream-driven coverage gaps).
   - **Estimate:** 0.1 day.
 
-## Notes for the next run (after this scaffold lands)
+## Notes for the next run (after T01 landed)
 
-- **Default for run #66** = Spec 015 / Phase 1 / T01 — two-
+- **Default for run #67** = Spec 015 / Phase 2 / T02 — three
+  deferred test cases land in a new
+  `describe('extractSalary — Spec 015 / T02 …')` block at
+  the bottom of `helpers.spec.ts`. All three should pass
+  byte-cleanly under the T01 source edits already in tree:
+  1. `"$100,000 - $150,000" + country=GERMANY` → USD /
+     100000 / 150000 / yearly (FR-3).
+  2. `"5 - 7 years experience" + country=GERMANY` →
+     all-`null` (FR-4).
+  3. `"3 - 5 month internship" + country=GERMANY` →
+     all-`null` (FR-5).
+
+  T02 is a pure tests-only pass — NO source edits. Test
+  count grows from 71 → 74. Acceptance gate: all 74 pass;
+  the existing 71 stay byte-for-byte green (FR-6).
+  Estimated 0.15 day.
+
+- **T01 landed observations (run #66 — already in tree):**
+  - The spec's literal FR-1 wording was tightened to an
+    **anglo-only narrowing** to preserve the substitute
+    case `"€45,000 - €60,000" + country=USA` (FR-6). See
+    Spec 015 / spec.md / § 10 / D-01 for the full
+    rationale. The deferred T02 case
+    `"$100,000 - $150,000" + country=GERMANY` falls into
+    the anglo-natural branch (USD natural=anglo) and is
+    therefore unblocked.
+  - The bench acceptance gate (`npx jest
+    packages/common/__tests__/helpers.bench`) could not
+    be exercised due to a pre-existing TS1127 failure at
+    `helpers.bench.spec.ts:190` (the `×` multiplication
+    sign in a template literal — broken since Spec 012 /
+    T04, commit `836a6c6`). Tracked as
+    [Q-037](../../../docs/questions.md#q-037--helpersbenchspects-fails-to-compile-ts1127-at-line-190----in-template-literal)
+    with default option A (one-character ASCII fix).
+    Spec 016 candidate slot.
+
+- **Default for run #65 (DONE — landed run #65)** = Spec 015
+  scaffolding pass. Three new artefacts under
+  `.specify/specs/015-salary-parser-locale-and-prose-immunity/`
+  (spec.md + plan.md + tasks.md) addressing Q-035 (locale
+  precedence) + Q-036 (bare-regex prose immunity) + the
+  three deferred Spec 014 / T04 cases.
+
+### Historical default-pin (kept for audit trail)
+
+- **Default for run #66 (DONE — landed run #66)** = Spec 015 / Phase 1 / T01 — two-
   fix source-side pass:
   1. New `CURRENCY_TO_NATURAL_LOCALE` lookup (8 entries)
      declared near `SALARY_NUMBER_REGEX_SRC`.

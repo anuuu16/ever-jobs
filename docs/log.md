@@ -5,6 +5,159 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #66 (Spec 015 / Phase 1 / T01 — two-fix source-side pass landed with anglo-only narrowing)
+
+**Scope:** open **Spec 015 / Phase 1 / T01** per the run #65
+scaffolding pin. Two source-side fixes land in
+[`packages/common/src/utils/helpers.ts`](../packages/common/src/utils/helpers.ts):
+the **Q-035 / FR-1 symbol-tier short-circuit** (narrowed to
+anglo-natural currencies — see Decision D-01 below) AND the
+**Q-036 / FR-2 bare-path raw-value pre-check** (3-line guard
+between `parseSalaryNumber` returns and K-suffix
+multiplication, gated on `matchedFromBare && !K-suffix &&
+minSalary < lowerLimit / 12`). All 71 existing helpers.spec
+cases stay byte-for-byte green (FR-6); the substitute case
+`"€45,000 - €60,000" + country=USA` → EUR / 45000 / 60000 /
+yearly stays green via the anglo-only narrowing.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #65's sync). Forty-seventh consecutive
+zero-churn run in `OTHERS/`. (Spec 015 is internal-correctness
+work, not upstream-driven coverage; the streak is logged for
+continuity but isn't load-bearing for the spec.)
+
+**One new question opened this run** — **Q-037**
+(`helpers.bench.spec.ts` fails to compile — pre-existing
+TS1127 at line 190; the `×` U+00D7 multiplication sign in a
+template literal is rejected by the TypeScript parser; the
+file has been broken since Spec 012 / T04 commit `836a6c6`
+but no prior run flagged it because the bench acceptance
+gate has been treated as advisory). Default option A:
+one-character ASCII fix (`×` → `x`) in a tiny follow-on
+spec; Spec 016 candidate slot.
+
+**Two load-bearing implementation decisions** (recorded as
+Spec 015 / spec.md / § 10 D-01 + D-02):
+
+1. **D-01 — Anglo-only narrowing on the new tier.** The
+   literal Spec 015 / FR-1 wording from scaffolding ("when
+   `confidence === 'symbol'` AND the resolved currency has
+   an entry in `CURRENCY_TO_NATURAL_LOCALE`, return that
+   natural locale immediately") would have routed
+   `"€45,000 - €60,000" + country=USA` through continental
+   locale (EUR's natural locale) and mis-parsed `45,000` as
+   `45.0`, breaking FR-6. T01 lands the narrower
+   "if natural-locale === `'anglo'`, return `'anglo'`" form
+   (USD / GBP / CHF only). The asymmetric narrowing reflects
+   the asymmetric regex character classes: anglo accepts
+   `,` / ` ` / `'` thousands; continental treats `,` as the
+   decimal separator. Spec 015 / spec.md / FR-1 was updated
+   to match the implementation; the broader literal stays
+   in § 10 D-01 as the rejected alternative.
+2. **D-02 — Bench acceptance gate deferred.** The T01
+   acceptance text in `tasks.md` named the bench p95 gate
+   as the second of the two T01 acceptance signals.
+   Running it surfaced the pre-existing Q-037 failure;
+   jest reports `Tests: 0 total` instead of producing
+   bench numbers. T01 stands on the regression-sweep gate
+   alone (71 / 71 helpers.spec green); the bench fix is
+   tracked as Q-037 with default option A.
+
+**Changes — source code:**
+
+- [`packages/common/src/utils/helpers.ts`](../packages/common/src/utils/helpers.ts)
+  — three edits: (a) `resolveSalaryLocale()` JSDoc rewritten
+  to name the new tier; (b) `resolveSalaryLocale()` signature
+  gains a `confidence: ParseSalaryCurrencyResult['confidence']`
+  parameter and a 3-line conditional inserted between the
+  `options.locale` tier and the `options.country` tier; (c)
+  `extractSalary()` body's match cascade rewritten to track
+  `matchedFromBare` (replacing the previous `??`-chain) and
+  a 9-line raw-value pre-check inserted between
+  `parseSalaryNumber` returns and the K-suffix multiplication
+  block. Net additions: ~30 LOC including JSDoc + comments.
+- The call site `resolveSalaryLocale(options, detected.code)`
+  becomes `resolveSalaryLocale(options, detected.code,
+  detected.confidence)`.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/015-salary-parser-locale-and-prose-immunity/spec.md`
+  — Status flipped from "draft (scaffolded run #65); T01
+  pending" to "T01 done (run #66); T02 / T03 pending"; FR-1
+  text updated to anglo-only narrowing; § 10 Decisions log
+  populated with D-01 (narrowing rationale) + D-02 (bench
+  gate deferral); footer bumped.
+- `.specify/specs/015-salary-parser-locale-and-prose-immunity/tasks.md`
+  — T01 row flipped from `[ ]` to `[x]` with run-tag and
+  D-01 cross-reference; Notes-for-the-next-run pinning
+  shifted from T01 to T02 (run #67) with the three deferred
+  test cases enumerated; T01 historical pin preserved
+  under "Historical default-pin" subheading for audit
+  trail; T01 landed observations enumerated (anglo-only
+  narrowing + bench gate deferral).
+- `docs/questions.md` — Q-035 + Q-036 resolution text flipped
+  from "_pending review_" to "**partially resolved** in
+  Spec 015 / T01 (run #66) …" with cross-references to
+  Spec 015 / spec.md / § 10 D-01; new Q-037 entry opened
+  for the bench file TS1127 failure with default option A.
+- `docs/index.md` — Spec 015 row updated to "T01 done
+  (run #66) — anglo-only narrowing on the new tier per
+  § 10 / D-01; T02 / T03 pending"; footer bumped to
+  run #66.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #66.
+- **No `competitor-watch.md` entry** — Spec 015 is not
+  linked to a §C / AC-N row.
+
+**Verification (local, against this commit):**
+
+- `npx tsc --noEmit -p packages/common/tsconfig.json` — clean
+  (no errors).
+- `npx jest --testPathPatterns
+  'packages/common/__tests__/helpers.spec'` — **71 passed,
+  71 total** (baseline preserved; plan tracked the
+  scaffolding-time figure 70). Substitute case
+  `"€45,000 - €60,000" + country=USA` → EUR / 45000 /
+  60000 / yearly verified green.
+- `npx jest --testPathPatterns
+  'packages/common/__tests__/helpers.bench'` — **fails**
+  (pre-existing TS1127 at line 190; tracked as Q-037).
+- `npm run lint:docs` — pending (run before commit).
+
+**Notes & follow-ups:**
+
+- **Default for run #67** = Spec 015 / Phase 2 / T02 — three
+  deferred test cases in a new
+  `describe('extractSalary — Spec 015 / T02 …')` block at
+  the bottom of `helpers.spec.ts`. Pure tests-only pass; NO
+  source edits. Test count grows from 71 → 74. Cases:
+  (a) `"$100,000 - $150,000" + country=GERMANY` → USD /
+  100000 / 150000 / yearly (FR-3 — falls into the
+  anglo-natural branch, unblocked by D-01); (b)
+  `"5 - 7 years experience" + country=GERMANY` → all-`null`
+  (FR-4 — unblocked by the bare-path raw-value pre-check);
+  (c) `"3 - 5 month internship" + country=GERMANY` →
+  all-`null` (FR-5 — same mechanism as case b).
+- **Out-of-scope reminders for run #67:** Stay strictly in
+  Phase 2 / T02 scope. NO source edits. NO new questions
+  opened (the three cases are documented and unblocked).
+  Do NOT add a fourth case beyond what tasks.md / T02
+  spells out.
+- **Active backlog after Spec 015 / T02 closes (run #68 or
+  later):** Spec 015 / T03 = doc bump + closeout; Spec 016
+  candidates = AC-8 (seed-companies refresh) OR AC-9
+  (Workable diff) OR Q-037 (bench file fix). Pick at T03
+  closeout based on upstream signal. Spec 017 / 018 stay
+  the loser of the AC-8 / AC-9 pair + the ATS detail-page
+  enrichment carry-over per the Spec 015 / T05 closeout
+  pin.
+- **Lockfile sync:** Spec 015 / T01 added zero deps; no
+  `package-lock.json` regeneration this run.
+
+---
+
 ## 2026-04-28 — Scheduled run #65 (Spec 015 scaffolding pass — three Spec-Kit artefacts; NO source code)
 
 **Scope:** open **Spec 015 — Salary Parser Locale & Prose
