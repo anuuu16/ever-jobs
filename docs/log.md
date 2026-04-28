@@ -5,6 +5,182 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #50 (Spec 013 / Phase 4 / T07 — Tesla service landed)
+
+**Scope:** land Spec 013 / Phase 4 / T07 —
+`TeslaService.scrape(input)` HTTP-only board + detail
+implementation against the live `/cua-api/apps/careers/state`
+board endpoint and `/cua-api/careers/job/{id}` detail endpoint.
+Three new files
+(`packages/plugins/source-tesla/src/tesla.{constants,types,service}.ts`)
+plus barrel re-export refresh and stub-test rewrite (3 → 7
+cases). Real network calls flow through
+`@ever-jobs/common.createHttpClient`; sentinel codes
+`ERR_TESLA_AKAMAI_CHALLENGE` (403/503/non-JSON-shaped body) +
+`ERR_TESLA_FETCH_FAILED` (other HTTP failures) recorded via
+`Logger.warn`. Tesla is **single-tenant** (companyUrl /
+companySlug ignored — service always targets www.tesla.com).
+**HTTP-only by design** — no `playwright` reference anywhere
+in the package; bypass companion is Phase 5 / T09. Estimated
+0.7 day per tasks.md; landed in a single scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #49's sync). Thirty-fourth consecutive
+zero-churn run in `OTHERS/`.
+
+**No new questions opened this run.** Q-028 (Tesla Playwright
+dep strategy = pure-HTTP default + opt-in companion) is now
+exercised by the live default service — its resolution
+graduates from "open / agent default" to
+"implementation-ratified" in the next docs touch (T15
+closeout). Q-031 (Tesla `descriptionDepth` default =
+`'detail-25'` cap of 25) is also implementation-ratified by
+this run's `TESLA_DESCRIPTION_BUDGET` constant. Q-026 / Q-027
+retain their **Spec 014 candidate** label.
+
+**Three load-bearing decisions** were resolved during T07's
+implementation pass (full prose in Spec 013 § 10):
+
+1. **Board envelope path divergence from FR-10.** spec.md /
+   FR-10 documented the path as `data.lookup.listings[]`. The
+   live Tesla API + upstream Python put `listings[]` at the
+   **top level** of the response and `lookup` is a **sibling
+   map** (location-id / department-id dictionaries), not an
+   ancestor. Implemented per the actual envelope shape.
+   Divergence logged in spec.md § 10 + tasks.md / T07
+   acceptance text + `tesla.types.ts` (`TeslaBoardResponse`).
+2. **Two-sentinel error model.** FR-12 named only the Akamai
+   sentinel. Implementation surfaced a second failure mode
+   (non-Akamai HTTP errors, network timeouts) needing
+   separate logging. Adopted the same two-sentinel pattern
+   Oracle (T03) and Mercor (T05) use — bot-challenge mode vs
+   network-layer mode. New `ERR_TESLA_FETCH_FAILED` constant
+   added; spec.md § 7.3 will incorporate it in T15 closeout.
+3. **Akamai detection broadened from 403 / 503 to "any
+   non-JSON-shaped payload".** Tesla's gateway sometimes
+   returns HTTP 200 with an HTML "Pardon Our Interruption"
+   challenge page when the bot manager flags a client
+   mid-stream. A naïve status-code check would let this
+   through and produce a downstream parse error. Service now
+   treats any payload lacking BOTH `listings` AND `lookup`
+   keys as "not the expected JSON envelope" → Akamai
+   sentinel. False positives are cheap (operator sees an
+   empty result, retries next run); false negatives surface
+   as production stack traces.
+
+**Changes — source / test:**
+
+- `packages/plugins/source-tesla/src/tesla.constants.ts` —
+  NEW. ~80 LOC. Exports `TESLA_BASE_URL` (`https://www.tesla.com`),
+  `TESLA_BOARD_PATH` (`/cua-api/apps/careers/state`),
+  `TESLA_DETAIL_PATH_TEMPLATE` (`/cua-api/careers/job/{id}`),
+  `TESLA_PUBLIC_JOB_BASE`, `TESLA_DEFAULT_RESULTS_WANTED`
+  (= 100), `TESLA_DESCRIPTION_BUDGET` (`board:0`,
+  `detail-25:25`, `detail-all:Infinity`),
+  `TESLA_DEFAULT_DESCRIPTION_DEPTH` (`'detail-25'` per Q-031),
+  `TESLA_HEADERS` (browser-shaped UA + Accept + Accept-Language
+  + Origin + Referer), `TESLA_AKAMAI_STATUS_CODES` (`{403, 503}`),
+  and the two sentinel codes.
+- `packages/plugins/source-tesla/src/tesla.types.ts` — NEW.
+  ~50 LOC. Narrow internal types mirroring the board + detail
+  envelopes: `TeslaBoardListing` (id / t / l / d / r / e short
+  keys); `TeslaBoardLookup` (locations / departments / regions
+  dictionaries); `TeslaBoardResponse` (top-level
+  listings[] + lookup); `TeslaJobDetail` (jobDescription /
+  jobResponsibilities / jobRequirements /
+  jobCompensationAndBenefits / department / timeType).
+- `packages/plugins/source-tesla/src/tesla.service.ts` —
+  REWRITTEN from T02 stub. ~230 LOC. Real `scrape(input)`
+  implementation: descriptionDepth resolution (defaults to
+  `'detail-25'`), board fetch with broadened Akamai detection,
+  sequential per-job detail fetch loop budgeted by
+  `descriptionDepth`, swallowed detail failures (description
+  stays null on the affected listing), `JobPostDto` mapping
+  (`tesla-${listing.id}` ID, literal `'Tesla'` companyName,
+  slug-decorative jobUrl construction, location resolved via
+  `lookup.locations[l]`, department resolved via
+  `lookup.departments[d]`, isRemote heuristic, four-section
+  `\n\n`-joined description from detail envelope).
+- `packages/plugins/source-tesla/src/index.ts` — barrel
+  refreshed to re-export the constants and types modules so
+  T08's fixture authors can import the same literals.
+- `packages/plugins/source-tesla/__tests__/tesla.service.spec.ts`
+  — bumped from 3 → 7 cases. Mocks `createHttpClient` at the
+  factory boundary (Avature / Oracle / Mercor pattern). New
+  cases: DI resolution (carry-over), `Site.TESLA` literal pin
+  (carry-over), descriptionDepth budget map pin, board URL +
+  headers wire-format pin, Akamai 403 sentinel returns empty,
+  HTML body returns empty (Akamai challenge surface),
+  non-Akamai HTTP 500 returns empty. Behavioural sweep
+  (≥ 6 cases — happy path with detail fetches asserting first
+  3 have description / empty listings[] / HTTP 500 / Akamai 403
+  / Akamai 503 / resultsWanted cap pre-detail-fetch) lands in
+  T08 alongside `__tests__/fixtures/tesla-board.json` +
+  `tesla-job-{id}.json` corpus.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  T07 row flipped from `[ ]` to `[x]` with "Landed run #50"
+  annotation; acceptance text updated to mention the
+  envelope-path divergence and the new
+  `ERR_TESLA_FETCH_FAILED` sentinel; Notes-for-the-next-run
+  pinned default updated to **Spec 013 / Phase 4 / T08**
+  (≥ 6-case behavioural sweep + `tesla-board.json` +
+  `tesla-job-{id}.json` fixtures).
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  Status flipped to "T07 landed run #50; T08..T15 pending";
+  Last-updated bumped to run #50; new entry appended to § 10
+  Decisions covering the three load-bearing choices above
+  plus six shape notes carried forward to T08.
+- `docs/index.md` — Spec 013 row status updated; footer
+  bumped to run #50.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #50.
+- `/competitor-watch.md` — run #50 sync line appended at top
+  of Sync Log; AC-6 row prefix updated to "Spec 013 / Phase
+  4 / T07 landed run #50; T08..T15 pending"; AC-4 / AC-5
+  unchanged.
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean.
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` —
+  clean (CI's typecheck path).
+- `npx jest --testPathPatterns 'packages/plugins/source-tesla'`
+  — 10 tests pass across 2 suites (7 in `source-tesla` +
+  3 in `source-tesla-playwright` stub spec).
+
+**Notes & follow-ups:**
+
+- **Default for run #51** = Spec 013 / Phase 4 / T08 — extend
+  `__tests__/tesla.service.spec.ts` to ≥ 6 behavioural cases
+  (happy path with detail fetches, empty listings[], HTTP
+  500, Akamai 403, Akamai 503, resultsWanted cap
+  pre-detail-fetch). Add `__tests__/fixtures/tesla-board.json`
+  (≥ 50 listings spanning ≥ 5 distinct
+  `lookup.locations` keys plus ≥ 3 `lookup.departments` keys)
+  and a small `tesla-job-{id}.json` corpus exercising the
+  four-field detail envelope plus a "missing all four"
+  branch to verify the `description: null` fallback. Mirror
+  the Oracle T04 / Mercor T06 pattern. Estimated 0.5 day.
+- **Out-of-scope reminders for run #51:** Stay strictly
+  inside `packages/plugins/source-tesla/__tests__/`. Do NOT
+  touch the service, constants, or types — those settled in
+  this run. Do NOT add Playwright tests — the optional
+  companion plugin lands at T09 with its own behavioural
+  sweep at T10.
+- **Active backlog after Spec 013 closes:** Spec 014
+  candidates = Q-026/Q-027 salary residuals OR AC-8
+  (seed-companies refresh) OR AC-9 (Workable diff). Pick at
+  Spec 013 / T15 closeout.
+- Specs **004 / 005 / 006 / 012** stay complete; **001 / 003**
+  retain their statuses unchanged. Spec **013** advances from
+  "Phase 3 done" to "T07 landed; T08..T15 pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #49 (Spec 013 / Phase 3 / T06 — Mercor behavioural test sweep landed)
 
 **Scope:** land Spec 013 / Phase 3 / T06 —

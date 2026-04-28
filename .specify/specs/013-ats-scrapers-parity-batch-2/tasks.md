@@ -146,22 +146,30 @@
 
 ## Phase 4 — Tesla (default, pure-HTTP)
 
-- [ ] T07 — `TeslaService.scrape(input)` board + detail path.
+- [x] T07 — `TeslaService.scrape(input)` board + detail path.
+  **Landed run #50.**
   - **Files (planned):** `packages/plugins/source-tesla/src/tesla.service.ts`,
     `…/tesla.types.ts`, `…/tesla.constants.ts`.
   - **Acceptance (FR-9 / FR-10 / FR-11 / FR-12):**
     - Board GET: `https://www.tesla.com/cua-api/apps/careers/state` with
       rotated UA + `Accept: application/json`.
-    - Map `data.lookup.listings[]` → `JobPostDto[]` with
-      `id` / `title` / `location` / `department` / `time_type`.
+    - Map `listings[]` → `JobPostDto[]` with `id` / `title` /
+      `location` / `department` (location resolved via
+      `lookup.locations[l]`, department via `lookup.departments[d]` —
+      spec.md / FR-10's "data.lookup.listings[]" path was wrong;
+      upstream Python and the live API put `listings[]` at the top
+      level of the response and `lookup` is a sibling map. See § 10
+      Decisions log).
     - Detail fetches: for the first
       `min(resultsWanted, descriptionDepth-budget)` jobs, GET
       `https://www.tesla.com/cua-api/careers/job/{id}`; populate
       `description`. `descriptionDepth` budget map:
       `'board'` → 0, `'detail-25'` (default) → 25, `'detail-all'` → ∞.
     - Akamai sentinel: when board GET returns 403 / 503 / HTML body
-      (Content-Type `text/html`), return empty `JobResponseDto` with
-      sentinel `ERR_TESLA_AKAMAI_CHALLENGE`.
+      (or any non-`{listings,lookup}`-shaped payload), return empty
+      `JobResponseDto` with sentinel `ERR_TESLA_AKAMAI_CHALLENGE`.
+      Other HTTP failures use `ERR_TESLA_FETCH_FAILED` (added during
+      implementation — symmetric with Oracle / Mercor patterns).
     - HTTP via `@ever-jobs/common.createHttpClient`.
   - **Estimate:** 0.7 day.
 
@@ -302,18 +310,27 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #50** = Spec 013 / Phase 4 / T07 —
-  `TeslaService.scrape(input)` HTTP-only board + detail path.
-  Real `tesla.service.ts` + `tesla.types.ts` + `tesla.constants.ts`
-  shipping the board GET to
-  `https://www.tesla.com/cua-api/apps/careers/state` + per-job
-  detail GETs to `https://www.tesla.com/cua-api/careers/job/{id}`
-  (budget governed by `descriptionDepth`: `'board'` → 0, `'detail-25'`
-  default → 25, `'detail-all'` → ∞). Akamai sentinel
-  `ERR_TESLA_AKAMAI_CHALLENGE` recorded when the board GET returns
-  403 / 503 / HTML body. HTTP via `@ever-jobs/common.createHttpClient`;
-  no `playwright` import in this package — the bypass companion is
-  Phase 5 (T09). Estimated 0.7 day.
+- **Default for run #51** = Spec 013 / Phase 4 / T08 — Tesla
+  behavioural unit-test sweep. Extend
+  `__tests__/tesla.service.spec.ts` to ≥ 6 cases (happy path with
+  detail fetches asserting first 3 have `description !== null`
+  and remainder `description === null`; empty `listings[]`; HTTP
+  500; Akamai 403 sentinel; Akamai 503 sentinel; `resultsWanted`
+  cap pre-detail-fetch). Add `__tests__/fixtures/tesla-board.json`
+  (≥ 50 listings spanning ≥ 5 distinct `lookup.locations` keys
+  plus ≥ 3 `lookup.departments` keys) and a small
+  `tesla-job-{id}.json` corpus exercising the four-field detail
+  envelope (jobDescription / jobResponsibilities / jobRequirements
+  / jobCompensationAndBenefits) plus a "missing all four" branch
+  to verify the `description: null` fallback. Mirror the Oracle
+  T04 / Mercor T06 pattern. Estimated 0.5 day.
+- **Default for run #50 (DONE — landed run #50)** = Spec 013 /
+  Phase 4 / T07 — `TeslaService.scrape(input)` HTTP-only board +
+  detail path. Real `tesla.service.ts` + `tesla.types.ts` +
+  `tesla.constants.ts` shipped; sentinel codes
+  `ERR_TESLA_AKAMAI_CHALLENGE` (403 / 503 / non-JSON body) +
+  `ERR_TESLA_FETCH_FAILED` (other HTTP failures) recorded via
+  `Logger.warn`. Detail-fetch budget honoured per Q-031 / FR-11.
 - **Default for run #49 (DONE — landed run #49)** = Spec 013 /
   Phase 3 / T06 — Mercor behavioural unit-test sweep. Spec file
   grew from 5 → 11 cases; `__tests__/fixtures/mercor-explore.json`

@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | T06 landed run #49; T07..T15 pending                 |
+| Status         | T07 landed run #50; T08..T15 pending                 |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-28 (run #49)                                 |
+| Last updated   | 2026-04-28 (run #50)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -332,6 +332,76 @@ records.)
   'detail-all'` with `'detail-25'` the default).
 
 ## 10. Decisions
+
+- **2026-04-28 (run #50 / T07)** — `TeslaService.scrape(input)`
+  shipped against the live `/cua-api/apps/careers/state` board
+  endpoint with optional per-job detail fan-out. Three load-bearing
+  decisions resolved during implementation:
+
+  (1) **Board envelope path divergence from FR-10.** spec.md /
+  FR-10 documented the path as `data.lookup.listings[]`. The live
+  Tesla API and upstream Python (`OTHERS/Ats-scrapers/tesla/main.py`
+  line 181-182) put `listings[]` at the **top level** of the
+  response and `lookup` is a **sibling map** (location-id /
+  department-id dictionaries), not an ancestor of the listings.
+  Decision: implement per upstream's actual envelope shape —
+  `response.listings[]` for the listings array, `response.lookup.locations[l]`
+  / `response.lookup.departments[d]` for short-key resolution.
+  FR-10's path string is now authoritative in `tesla.types.ts`
+  (`TeslaBoardResponse`). The text in spec.md FR-10 stays as-is
+  for high-level intent ("map board listings to JobPostDto[]");
+  the actual JSON shape is documented here + in the type
+  declaration + in tasks.md / T07 acceptance text.
+
+  (2) **Two-sentinel error model (`ERR_TESLA_AKAMAI_CHALLENGE` +
+  `ERR_TESLA_FETCH_FAILED`).** FR-12 named only the Akamai
+  sentinel. Implementation surfaced a second failure mode that
+  needed separate logging: HTTP errors that are NOT Akamai-shaped
+  (network errors, 5xx server errors, etc.). We adopt the same
+  two-sentinel pattern Oracle (T03) and Mercor (T05) use — bot-
+  challenge mode vs network-layer mode — so operators reading
+  logs can tell the difference without parsing exception
+  messages. `ERR_TESLA_FETCH_FAILED` is appended to the constants
+  block; spec.md § 7.3 will incorporate it in the T15 closeout.
+
+  (3) **Akamai detection broadened from 403 / 503 to "any
+  non-JSON-shaped payload".** Tesla's gateway sometimes returns
+  HTTP 200 with an HTML body (the "Pardon Our Interruption"
+  challenge page) when its bot manager flags a client mid-stream.
+  A naïve status-code check would let this through and produce
+  a parse error downstream. We treat any payload that lacks
+  BOTH `listings` AND `lookup` keys as "not the expected JSON
+  envelope" → `ERR_TESLA_AKAMAI_CHALLENGE`. False positives are
+  cheap (operator sees an empty `JobResponseDto` in a single
+  scheduled run, retries on the next); false negatives surface
+  as cryptic stack traces in production.
+
+  Additional shape notes carried forward to T08's fixture
+  authoring:
+  - Board listings use SHORT keys (`id`, `t`, `l`, `d`, `r`)
+    rather than full names — `t` is title, `l` is location-id,
+    `d` is department-id. Resolution happens via the
+    `lookup.locations` / `lookup.departments` maps.
+  - Detail-fetch concatenation matches upstream Python's
+    `\n\n`.join of four sections: `Description:` /
+    `Responsibilities:` / `Requirements:` /
+    `Compensation & Benefits:`. Section labels are part of the
+    composed string by design — downstream consumers (LLM
+    summarisers, full-text indexers) benefit from the explicit
+    section markers.
+  - Detail-fetch failures are SILENTLY swallowed
+    (`Logger.debug`). Description stays null on the affected
+    listing, but the listing still emits as a `JobPostDto`.
+    Rationale: a single bad detail page should not poison the
+    whole catalogue (mirrors the dedup-engine's per-row
+    isolation principle).
+  - `JobPostDto.id = 'tesla-' + listing.id` for stable
+    `(site, externalId)` tuples per FR-20.
+  - `JobPostDto.jobUrl = 'https://www.tesla.com/careers/search/job/' +
+    slug(title) + '-' + listing.id` — slug is decorative
+    (`listing.id` is the stable identifier upstream).
+  - `JobPostDto.companyName` is the literal `'Tesla'` per FR-9
+    (single-tenant scraper; no per-company variation).
 
 - **2026-04-28 (run #49 / T06)** — Mercor behavioural unit-test
   sweep landed alongside the 50-listing × 12-company fixture.
