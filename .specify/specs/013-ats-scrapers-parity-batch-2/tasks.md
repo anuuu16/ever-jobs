@@ -305,8 +305,24 @@
 
 ## Phase 6 — Integration & docs
 
-- [ ] T11 — Three-plugin integration spec.
+- [x] T11 — Three-plugin integration spec.
+  **Landed run #54.**
   - **Files (planned):** `apps/api/__tests__/integration/source-ats-batch-2.integration.spec.ts`.
+  - **Files (actual):** matched plan exactly. New 12-case suite
+    structured into four `describe` blocks: four-place
+    registration (`Site.ORACLE` / `Site.MERCOR` / `Site.TESLA`
+    present + `Site.TESLA_PLAYWRIGHT` absent + ATS-flag check),
+    fan-out across the three plugins (≥ 1 row from Oracle &
+    Tesla on `eeho-us2` slug + dedicated Mercor `stripe` post-
+    filter case + Tesla `resultsWanted` cap pre-detail-fetch),
+    `JobsAggregator` Spec-003 dedup zero-collision pin + opt-out
+    case, and per-plugin wire-format pins (Oracle finder string
+    contains `siteNumber=CX_45001` + 8-facet list; Mercor single
+    GET to `/work/listings-explore-page` + literal
+    `Authorization: Bearer` header set; Tesla board GET +
+    per-job detail GETs). Reuses fixtures from each plugin's
+    `__tests__/fixtures/` directory rather than duplicating
+    them — keeps the corpus single-sourced.
   - **Acceptance:**
     - Wires Oracle + Mercor + Tesla through live `JobsService`
       fan-out via stubbed-`createHttpClient` fixture.
@@ -314,8 +330,11 @@
     - Asserts `JobsAggregator` dedup with zero collisions on the
       synthetic fixture (Spec 003 / FR-1).
     - Tesla-Playwright NOT in this suite (default
-      `ALL_SOURCE_MODULES` excludes it).
-  - **Estimate:** 0.4 day.
+      `ALL_SOURCE_MODULES` excludes it). Additional regression
+      guard: `Site.TESLA_PLAYWRIGHT` is asserted ABSENT from
+      `PluginRegistry.listSiteKeys()`.
+  - **Estimate:** 0.4 day. **Actual:** ~0.3 day (matches Spec
+    006 / T09 actual at run #34).
 
 - [ ] T12 — Three-plugin e2e spec.
   - **Files (planned):** `apps/api/__tests__/e2e/source-ats-batch-2.e2e-spec.ts`.
@@ -393,16 +412,24 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #54** = Spec 013 / Phase 6 / T11 — three-
-  plugin integration spec under
+- **Default for run #55** = Spec 013 / Phase 6 / T12 — three-
+  plugin e2e spec under
+  `apps/api/__tests__/e2e/source-ats-batch-2.e2e-spec.ts`. Boots
+  the Nest HTTP layer (`createTestApp()` + `request(app.getHttpServer())`)
+  and issues real HTTP requests against
+  `GET /api/jobs?site=oracle&companyUrl=https%3A%2F%2Feeho.fa.us2.oraclecloud.com`,
+  `GET /api/jobs?site=mercor&companySlug=stripe`, and
+  `GET /api/jobs?site=tesla` — asserts `200 OK` + non-empty
+  `JobPostDto[]` against the same fixture-router that T11 uses
+  (single-sourced `createHttpClient` mock). Mirror the Spec 006
+  / T12 (run #35) e2e pattern. Estimated 0.4 day.
+- **Default for run #54 (DONE — landed run #54)** = Spec 013 /
+  Phase 6 / T11 — three-plugin integration spec under
   `apps/api/__tests__/integration/source-ats-batch-2.integration.spec.ts`.
-  Wires Oracle + Mercor + Tesla through the live `JobsService`
-  fan-out via stubbed-`createHttpClient` fixtures; asserts each
-  plugin contributes ≥ 1 row and that `JobsAggregator` dedup
-  reports zero collisions on the synthetic fixture (Spec 003 /
-  FR-1). Tesla-Playwright is excluded from this suite (default
-  `ALL_SOURCE_MODULES` does not include it). Mirror the Spec 006
-  / T11 (run #38) integration-test pattern. Estimated 0.4 day.
+  12 cases: four-place registration (incl. `Site.TESLA_PLAYWRIGHT`
+  absence guard) + cross-plugin fan-out + dedup zero-collision +
+  per-plugin wire-format pins. Reuses each plugin's fixtures
+  rather than duplicating them.
 - **Default for run #53 (DONE — landed run #53)** = Spec 013 /
   Phase 5 / T10 — Tesla-Playwright behavioural unit-test sweep.
   Spec file grew from 5 → 10 cases (5 carry-over + 5

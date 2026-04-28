@@ -4,10 +4,10 @@
 | -------------- | ---------------------------------------------------- |
 | Spec ID        | 013                                                  |
 | Slug           | ats-scrapers-parity-batch-2                          |
-| Status         | T10 landed run #53; T11..T15 pending                 |
+| Status         | T11 landed run #54; T12..T15 pending                 |
 | Owner          | scheduled-task agent (`ever-jobs`)                   |
 | Created        | 2026-04-27 (run #43)                                 |
-| Last updated   | 2026-04-28 (run #53)                                 |
+| Last updated   | 2026-04-28 (run #54)                                 |
 | Supersedes     | (none)                                               |
 | Related specs  | 001 (Plugin Architecture Foundation), 003 (Dedup Engine), 005 (Circuit Breaker), 006 (ATS-Scrapers Parity, Batch 1) |
 
@@ -332,6 +332,62 @@ records.)
   'detail-all'` with `'detail-25'` the default).
 
 ## 10. Decisions
+
+- **2026-04-28 (run #54 / T11)** — Three-plugin integration spec
+  landed at
+  `apps/api/__tests__/integration/source-ats-batch-2.integration.spec.ts`.
+  Three load-bearing test-shape decisions resolved during
+  authoring:
+
+  (1) **Fixture single-sourcing — read each plugin's existing
+  `__tests__/fixtures/*.json` directly rather than duplicating
+  the corpus into `apps/api/__tests__/fixtures/`.** The Spec 006
+  / T09 (batch-1) integration spec set this precedent — load
+  fixtures via `path.join(__dirname, '../../../../packages/plugins/source-<id>/__tests__/fixtures/<file>')`.
+  Pros: single source of truth for envelope shapes; a future
+  fixture refactor for unit-test purposes automatically updates
+  the integration coverage; zero duplication. Cons: four levels
+  of `..` is ugly. Verdict: ugly path, ergonomic outcome.
+
+  (2) **`companySlug='eeho-us2'` for the cross-plugin fan-out
+  test, with Mercor expected to emit ZERO rows under that slug
+  (no `companyName` contains `eeho-us2`).** This deliberately
+  exercises the plugin-shape divergence: Oracle treats slug as
+  `<subdomain>-<region>` (composing the live URL); Mercor
+  treats it as a `companyName` substring filter (zero match
+  against any of the 12 fixture companies); Tesla ignores
+  slug entirely (single-tenant). The cross-plugin assertion
+  pins TWO plugins (Oracle + Tesla) emitting rows AND Mercor
+  emitting zero rows — each is a load-bearing observation.
+  A separate dedicated test then exercises Mercor's happy
+  path with `companySlug='stripe'`. Alternative considered:
+  pick a slug that matches all three (impossible — Tesla
+  ignores it). Alternative considered: pick a slug that
+  matches Mercor + composes a valid Oracle URL (e.g.
+  `stripe-us2` — but no such Oracle tenant exists in
+  `oracle-page-1.json`). Adopting the explicit zero-emit
+  assertion keeps the test honest about the plugin-shape
+  divergence rather than papering over it.
+
+  (3) **`descriptionDepth='board'` on the cross-plugin and
+  aggregator tests so Tesla skips per-job detail GETs.** The
+  default `'detail-25'` would issue 25 follow-up GETs per
+  Tesla scrape; against the in-memory fixture mock this is
+  fast (~ms each), but each call is logged in `httpCallLog`
+  and bloats the log. `'board'` keeps the log compact and
+  the assertion focus narrow (we're testing fan-out + dedup,
+  not Tesla's detail loop — that's covered exhaustively in
+  T08's source-tesla unit suite). The dedicated wire-format
+  test then opts back into `'detail-25'` to exercise the
+  detail-fetch wire pattern explicitly.
+
+  Bonus: the `Site.TESLA_PLAYWRIGHT` absence guard (the
+  registry MUST NOT have it after `AppModule` boots) is a
+  regression guard against accidental inclusion in
+  `ALL_SOURCE_MODULES`. The guard fires loudly in CI if a
+  future contributor casually appends `TeslaPlaywrightModule`
+  to the barrel — exactly the failure mode FR-13 is trying
+  to prevent.
 
 - **2026-04-28 (run #53 / T10)** — Tesla-Playwright behavioural
   unit-test sweep landed alongside the 10-listing board fixture +

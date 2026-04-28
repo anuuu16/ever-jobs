@@ -5,6 +5,143 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #54 (Spec 013 / Phase 6 / T11 — Three-plugin integration spec landed)
+
+**Scope:** land Spec 013 / Phase 6 / T11 — three-plugin
+integration spec under
+`apps/api/__tests__/integration/source-ats-batch-2.integration.spec.ts`.
+12 cases structured into four `describe` blocks: four-place
+registration, cross-plugin fan-out, `JobsAggregator` dedup, and
+per-plugin wire-format pins. Mirrors the Spec 006 / T09 (batch-1)
+integration-test pattern. Estimated 0.4 day per tasks.md;
+landed in a single scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #53's sync). Thirty-eighth consecutive
+zero-churn run in `OTHERS/`.
+
+**No new questions opened this run.** All open questions
+(Q-026 / Q-027 — Spec 014 candidate; Q-028..Q-032 —
+implementation-ratified through T07..T10) retain their
+existing dispositions.
+
+**Three load-bearing test-shape decisions** were resolved
+during T11's authoring pass (full prose in Spec 013 § 10):
+
+1. **Fixture single-sourcing — read each plugin's existing
+   `__tests__/fixtures/*.json` directly rather than
+   duplicating the corpus into `apps/api/__tests__/fixtures/`.**
+   Continues the Spec 006 / T09 precedent. Single source of
+   truth; future fixture refactors auto-propagate to
+   integration coverage.
+2. **`companySlug='eeho-us2'` for the cross-plugin fan-out
+   test, with Mercor expected to emit ZERO rows.** Deliberately
+   exercises plugin-shape divergence: Oracle composes URL,
+   Tesla ignores slug, Mercor's `companyName` filter doesn't
+   match `eeho-us2`. The cross-plugin assertion pins TWO
+   plugins emitting + Mercor emitting zero — each is a
+   load-bearing observation. Mercor's happy path is then
+   covered by a dedicated `companySlug='stripe'` case.
+3. **`descriptionDepth='board'` on cross-plugin tests.**
+   Default `'detail-25'` would issue 25 follow-up GETs per
+   Tesla scrape and bloat `httpCallLog`. `'board'` keeps the
+   log compact and the assertion focus narrow (we're testing
+   fan-out + dedup, not the detail loop). The dedicated
+   wire-format test then opts back into `'detail-25'` to
+   exercise the detail-fetch wire pattern explicitly.
+
+Bonus: `Site.TESLA_PLAYWRIGHT` absence guard fires loudly
+in CI if a future contributor casually appends
+`TeslaPlaywrightModule` to `ALL_SOURCE_MODULES` — exactly
+the failure mode FR-13 is trying to prevent.
+
+**Changes — source / test:**
+
+- `apps/api/__tests__/integration/source-ats-batch-2.integration.spec.ts`
+  — NEW. ~370 LOC. Boots the real `AppModule` via
+  `createTestApp()` with `@ever-jobs/common.createHttpClient`
+  mocked at the module boundary (same pattern as Spec 006 /
+  T09). URL-keyed fixture router dispatches to the appropriate
+  plugin's existing fixture (oracle-page-1.json /
+  mercor-explore.json / tesla-board.json + tesla-job-{id}.json
+  for IDs 200001..200003; "missing all four" envelope for the
+  remaining detail GETs). 12 cases:
+  * Four-place registration (3 cases): `Site.ORACLE` /
+    `Site.MERCOR` / `Site.TESLA` present in
+    `PluginRegistry.listSiteKeys()`; `Site.TESLA_PLAYWRIGHT`
+    ABSENT; ATS-flag check (Oracle + Mercor are ATS, Tesla
+    is not per its `category: 'company'`); each has a real
+    `IScraper` bound via `getScraper()`.
+  * Fan-out (3 cases): cross-plugin slug `eeho-us2` emits
+    Oracle + Tesla rows + zero Mercor rows; Mercor `stripe`
+    happy path emits ≥ 1 row whose `companyName` contains
+    `stripe`; Tesla `resultsWanted: 5` cap pre-detail-fetch.
+  * Dedup (2 cases): `JobsAggregator.aggregate()` reports
+    zero collisions on synthetic fixtures; `dedup: false`
+    opt-out preserves raw fan-out.
+  * Wire-format pins (3 cases): Oracle finder string
+    contains `siteNumber=CX_45001` + 8-facet list (FR-2 /
+    Q-030); Mercor single GET to `/work/listings-explore-page`
+    + literal `Authorization: Bearer` header set (FR-8);
+    Tesla board GET to `/cua-api/apps/careers/state` +
+    per-job detail GETs to `/cua-api/careers/job/{id}`.
+
+**Changes — docs / specs:**
+
+- `.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md` —
+  T11 row flipped from `[ ]` to `[x]` with "Landed run #54"
+  annotation; "Files (actual)" subsection added with the
+  12-case structure summary; Notes-for-the-next-run pinned
+  default updated to **Spec 013 / Phase 6 / T12** (three-
+  plugin e2e spec).
+- `.specify/specs/013-ats-scrapers-parity-batch-2/spec.md` —
+  Status flipped to "T11 landed run #54; T12..T15 pending";
+  Last-updated bumped to run #54; new entry appended to
+  § 10 Decisions covering the three load-bearing test-shape
+  choices above.
+- `docs/index.md` — Spec 013 row status updated; footer
+  bumped to run #54.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #54.
+- `/competitor-watch.md` — run #54 sync line appended at
+  top of Sync Log; AC-4 / AC-5 / AC-6 row prefixes updated
+  to "Spec 013 / Phase 6 / T11 landed run #54; T12..T15
+  pending".
+
+**Verification (local, against this commit):**
+
+- `npm run lint:docs` — clean.
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` —
+  clean (CI's typecheck path).
+- `npx jest --testPathPatterns 'source-ats-batch-2.integration'`
+  — 12 cases pass, 0 failures (suite ~68s due to full
+  AppModule boot, comparable to batch-1's analogous suite).
+
+**Notes & follow-ups:**
+
+- **Default for run #55** = Spec 013 / Phase 6 / T12 — three-
+  plugin e2e spec under
+  `apps/api/__tests__/e2e/source-ats-batch-2.e2e-spec.ts`.
+  Boot the Nest HTTP layer + supertest issues real HTTP GETs
+  against `/api/jobs?site=oracle&companyUrl=...`,
+  `&site=mercor&companySlug=stripe`, `&site=tesla` with the
+  same fixture-router pattern. Mirror Spec 006 / T12. ~0.4 day.
+- **Out-of-scope reminders for run #55:** Stay strictly
+  inside `apps/api/__tests__/e2e/`. Do NOT touch the
+  integration spec — that settled here. Do NOT add
+  Tesla-Playwright to the e2e suite (same FR-13 reasoning).
+- **Active backlog after Spec 013 closes:** Spec 014
+  candidates = Q-026/Q-027 salary residuals OR AC-8
+  (seed-companies refresh) OR AC-9 (Workable diff). Pick at
+  Spec 013 / T15 closeout.
+- Specs **004 / 005 / 006 / 012** stay complete; **001 /
+  003** retain their statuses unchanged. Spec **013**
+  advances from "Phase 5 done" to "T11 landed; T12..T15
+  pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #53 (Spec 013 / Phase 5 / T10 — Tesla-Playwright behavioural unit-test sweep landed)
 
 **Scope:** land Spec 013 / Phase 5 / T10 — extend
