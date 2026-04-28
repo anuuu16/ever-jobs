@@ -10,6 +10,149 @@
 
 ---
 
+## Q-038 — Sampling methodology for the Spec 017 seed-companies refresh (Batch 1)
+
+**Context:** Spec 017 (`seed-companies-refresh-batch-1`)
+appends fresh slug rows to the four high-volume Western-tier
+ATS sections of `docs/COMPANY_SLUG_DIRECTORY.md` (Greenhouse /
+Lever / Workable / SmartRecruiters). Source corpora are the
+upstream CSVs in `OTHERS/Ats-scrapers/<vendor>/<vendor>_companies.csv`,
+totalling ~9 500 rows. The four sections currently carry
+28 + 5 + 2 + 4 = 39 rows total — a fraction of a percent of
+each corpus. The spec needs ~25 sampled rows per vendor; how
+to pick them?
+
+**Options:**
+
+- **A. Random sample (uniform).** `Math.random()`-based pick of
+  25 row indices per vendor. Bias-free across the alphabetical
+  ordering. Caveat: **not reproducible** — a future spec
+  author re-running the methodology would land on a different
+  25 rows. FR-6 ("deterministic + reproducible") is violated.
+- **B. Alphabetical first 25.** Take the first 25 rows after
+  the CSV header. Trivially deterministic. Caveat: heavily
+  biased toward `1`-prefixed and `A`-prefixed names. The
+  Greenhouse corpus opens with `103644278` (a numeric tenant
+  ID), `10Alabs`, `1up Health`, etc. — not representative of
+  the corpus and rich in tenants that look like noise to a
+  human directory reader.
+- **C. "Verified-active" pre-screen.** HEAD each upstream URL,
+  drop rows that 4xx/5xx, take 25 from the surviving rows.
+  Most-honest about active-tenant signal but **out of scope**
+  for the scheduled-task agent — no `node_modules`, no
+  network budget, non-interactive run.
+- **D. Deterministic-indexed sample (evenly spaced).** Drop
+  rows whose `name` is empty / whitespace / pure-numeric,
+  drop rows whose `name` already appears in the existing
+  directory section (case-insensitive), then take indices
+  `[0, ⌊L/25⌋, 2·⌊L/25⌋, …, 24·⌊L/25⌋]` from the post-filter
+  list of length `L`. Reproducible (a future author re-runs
+  the rule and gets the same 25). Spans the whole alphabetical
+  range so the sample is representative.
+
+**Default (proceeding):** **D. Deterministic-indexed sample.**
+Reproducibility (FR-6) is a hard constraint; option A fails
+it outright. Option B's alphabetical-first bias is a
+representativeness loss. Option C requires capabilities the
+agent doesn't have. Option D delivers determinism + spread; it
+costs a few lines of methodology in spec § 7.1 but no
+runtime infrastructure.
+
+**Resolution:** _pending review._ The Spec 017 phases T01..T04
+will land 100 rows total under this default; if the human
+owner prefers a different methodology, those rows can be
+re-sampled in a follow-on spec without affecting the existing
+preserved rows (FR-5).
+
+---
+
+## Q-039 — Sample size per vendor for the Spec 017 seed-companies refresh (Batch 1)
+
+**Context:** the four sections need ~N sampled rows each, but
+"N" is a free parameter. The Spec 006 (Avature / Gem /
+Join.com) and Spec 013 (Oracle / Mercor / Tesla) precedents
+landed ~15 sampled slugs per plugin. Should Spec 017 match
+that count or pick a different N?
+
+**Options:**
+
+- **A. N = 15.** Match the Spec 006 / Spec 013 precedent
+  exactly. Smallest delta to the directory file.
+- **B. N = 25.** Slight expansion for the bigger CSV corpora.
+  Greenhouse / Workable / SmartRecruiters carry 800..4 000
+  upstream rows — 15 feels under-represented vs. those volumes,
+  but 25 still keeps the markdown table scannable in a
+  single screen.
+- **C. N = 50.** Larger sample, doubles directory file size
+  delta. Borderline pagination for some markdown renderers but
+  still scannable.
+- **D. N = 100.** Quadruple of N=25. The directory file grows
+  by ~50 KB total, more than doubling its current ~22 KB.
+  Slow-rendering on some markdown viewers; users would
+  scroll past most of it.
+
+**Default (proceeding):** **B. N = 25.** Reasons:
+
+- N = 15 is too small relative to the Batch 1 vendors' corpus
+  size (Greenhouse 2 805 vs. Avature ~250 / Gem ~700).
+- N = 25 still fits comfortably under the NFR-4 ceiling
+  (≤ +12 KB total directory delta).
+- N = 50 / N = 100 trade off scanability for completeness in
+  a way that doesn't pay off; the upstream CSVs remain
+  authoritative for full-corpus discovery, and the directory's
+  job is fast-path lookup not exhaustive listing.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-040 — `Industry` column population for the Spec 017 new rows
+
+**Context:** the existing 39 rows in the four sections all
+carry meaningful `Industry` strings (`Streaming`, `Fintech`,
+`AI`, etc.). The four upstream CSVs have schema `name,url`
+only — no industry column (verified at run #70 via header
+inspection). New rows need an `Industry` value or some
+explicit "unclassified" marker.
+
+**Options:**
+
+- **A. Best-effort inference from name.** Map keywords like
+  `AI`, `Health`, `Bank` in the name to industry strings.
+  Fast for obvious cases (`OpenAI` → `AI`) but introduces
+  hallucinated-industry risk for ambiguous brand names
+  (`Notion` → `Productivity`? `SaaS`? `Note-taking`?). The
+  agent has no ground-truth industry source.
+- **B. Em-dash placeholder (`—`).** Each new row's `Industry`
+  cell is literal `—`. Renders cleanly in markdown tables;
+  explicitly marks "unclassified" for the reader; invites a
+  future-spec enrichment pass.
+- **C. Blank cell.** Leave the cell empty. Some markdown
+  renderers handle empty table cells fine; others render
+  `||` as malformed.
+- **D. CSV-derived (currently impossible).** If the upstream
+  CSVs grew an industry column, use it. Not available today;
+  the four CSVs only carry `name,url`.
+
+**Default (proceeding):** **B. Em-dash placeholder.** Reasons:
+
+- Option A's hallucination risk dilutes the directory's
+  trustworthiness — a user looking up `Notion` and seeing
+  `Productivity` (agent-inferred) when the existing 39 rows
+  carry human-curated industry strings would propagate that
+  inference as ground-truth in downstream tools.
+- Option C breaks the four-column shape on some renderers.
+- Option D isn't currently available.
+
+A future-spec enrichment pass (sourcing industry from
+Crunchbase / LinkedIn dataset / a structured open-source
+mapping) is the right path for replacing the placeholders;
+that's out of scope for Spec 017.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-036 — Bare-regex over-matches plain prose under country hint (Spec 014 / T04 discovery)
 
 **Context:** Spec 014 / T04 acceptance asserts that

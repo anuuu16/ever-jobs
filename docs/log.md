@@ -5,6 +5,201 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #70 (Spec 017 / Phase 0 — scaffolding pass for `seed-companies-refresh-batch-1` (AC-8); Q-038 / Q-039 / Q-040 opened with defaults; no row-append yet)
+
+**Scope:** open **Spec 017** — the long-pending `AC-8`
+backlog item from `competitor-watch.md` §C: refresh the
+high-volume Western-tier ATS slug-directory sections
+(Greenhouse / Lever / Workable / SmartRecruiters) in
+`docs/COMPANY_SLUG_DIRECTORY.md` from upstream CSV corpora in
+`OTHERS/Ats-scrapers/<vendor>/`. Run #70 lands the
+scaffolding pass only — `spec.md` / `plan.md` / `tasks.md`
++ Q-038 / Q-039 / Q-040 in the questions ledger + index /
+log / run-tag bumps. The first vendor refresh (T01 —
+Greenhouse) is deferred to run #71. The lifecycle is sized
+at 6 runs total (Phase 0 scaffolding + 4 vendor phases +
+closeout) — comparable to Spec 014's 5-run cadence and
+shorter than Spec 013's 15-run multi-plugin cadence. The
+choice of AC-8 over AC-9 (Workable behavioural diff —
+heavier scaffolding) honors the Spec 016 / tasks.md / run #69
+default-pin: "**Recommended pick: AC-8** as the smaller of
+the two multi-run efforts; AC-9 as the slot after AC-8
+closes."
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from run #69's sync). **49th consecutive
+zero-churn run** in `OTHERS/`.
+
+**Three new questions opened this run** — Q-038 (sampling
+methodology — random / alphabetical / verified-active /
+deterministic-indexed; default D), Q-039 (sample size per
+vendor — 15 / 25 / 50 / 100; default 25), Q-040 (Industry
+column population — best-effort inference / em-dash placeholder
+/ blank cell / CSV-derived; default em-dash placeholder). All
+three carry `(default — proceeding)` markers; resolutions are
+deferred to the human owner's review window. The Spec 017
+phases T01..T05 will land 100 row appends + the closeout under
+these defaults.
+
+**Sample-corpus volumetrics (Spec 017 / spec.md / § 1):** the
+four upstream CSVs hold the following row counts (verified at
+run #70 via `wc -l` after subtracting the header row):
+
+| Vendor          | Existing directory rows | Upstream CSV rows | Coverage ratio | Post-Spec-017 directory rows | Post-Spec-017 ratio |
+| --------------- | ----------------------- | ----------------- | -------------- | ---------------------------- | ------------------- |
+| Greenhouse      | 28                      | 2 805             | ~1.0 %         | 53                           | ~1.9 %              |
+| Lever           |  5                      | 1 912             | ~0.3 %         | 30                           | ~1.6 %              |
+| Workable        |  2                      | 4 028             | ~0.05 %        | 27                           | ~0.7 %              |
+| SmartRecruiters |  4                      |   812             | ~0.5 %         | 29                           | ~3.6 %              |
+| **Totals**      | **39**                  | **9 557**         | ~0.4 %         | **139**                      | ~1.5 %              |
+
+The post-Spec-017 ratios are still under 4 % per vendor — the
+directory remains a fast-path sample, not an exhaustive
+mirror. The upstream CSVs stay authoritative for full-corpus
+discovery; the directory's job is fast-path lookup ergonomics
+for the operator-facing `companySlug` parameter.
+
+**Sampling methodology fixed (Spec 017 / spec.md / § 7.1):**
+the per-vendor 25-row pick uses a **deterministic-indexed
+sample**: drop empty / whitespace / pure-numeric `name`
+rows + drop case-insensitive duplicates against the existing
+section, then take indices `[0, ⌊L/25⌋, …, 24·⌊L/25⌋]` from
+the post-filter list of length `L`. Reproducible (FR-6); a
+future spec author re-runs the rule and gets the same 25.
+
+**One implementation observation** (recorded as Spec 017 /
+spec.md / § 10 / D-04): Phase 0 lands scaffolding only, no
+row-append. Mixing scaffolding with the first vendor refresh
+(T01 — Greenhouse) would produce a fat commit that fights
+human review and contaminate the lint:docs gate's signal.
+Spec 014 / 015 / 016 all followed scaffolding-first cadence;
+Spec 017 keeps that precedent.
+
+**Bench p95 baseline (Spec 016 / D-01):** Spec 017 is
+docs-only — the dispatcher hot path stays untouched, so the
+0.0174 ms p95 baseline from Spec 016 carries over without
+re-measurement. Recorded here for cross-spec coupling
+verification (NFR-5): **Spec 017 has zero source-side impact
+on the bench.**
+
+**Changes — source code:** none. Spec 017 / Phase 0 is
+docs-only (NFR-2 / Non-Goal "no source-code edits"). No `.ts`
+file modified.
+
+**Changes — docs / specs (8 files):**
+
+- `.specify/specs/017-seed-companies-refresh-batch-1/spec.md`
+  — NEW. ~280 LOC. 11 sections per `spec.template.md`;
+  11 functional requirements (FR-1..FR-11 — must / should
+  split); 5 non-functional requirements (NFR-1..NFR-5);
+  3 caller stories (plugin operator + AI agent +
+  future spec author); test plan with 10 rows
+  (lint:docs per phase + per-vendor row-count + cross-cutting
+  regression sweep); § 7 Contracts enumerates per-vendor URL
+  → slug derivation (modern + legacy URL forms for
+  Greenhouse; case preservation rules for Lever and
+  SmartRecruiters; literal leading-dash preservation for
+  Workable); § 10 Decisions log pre-populated with D-01..D-04
+  (multi-phase shape rationale / pure-numeric `name` filter /
+  em-dash `Industry` placeholder rationale / Phase 0 =
+  scaffolding-only rationale).
+- `.specify/specs/017-seed-companies-refresh-batch-1/plan.md`
+  — NEW. ~210 LOC. 6-phase shape (Phase 0 scaffolding +
+  Phase 1..4 per-vendor refresh + Phase 5 closeout);
+  per-phase deliverables and acceptance gates; 6-row risk
+  matrix; out-of-scope reminders (no `.ts` edits, no row
+  deletions, no live HTTP, no manifest regen, no bench, no
+  lockfile, no commit-splitting per phase, no industry
+  inference).
+- `.specify/specs/017-seed-companies-refresh-batch-1/tasks.md`
+  — NEW. T00 (scaffolding, landed run #70) + T01..T05
+  (pending; per-task acceptance + ≤ 0.20 day estimates);
+  Notes-for-the-next-run pinned to T01 (Greenhouse) for
+  run #71; per-vendor watch-out items (Greenhouse modern
+  vs. legacy URL forms; Workable leading-dash slug shape;
+  SmartRecruiters case preservation); 11-row out-of-scope
+  reminder list.
+- `docs/questions.md` — Q-038 / Q-039 / Q-040 NEW
+  (sampling methodology / sample size / industry column
+  population). All three carry `(default — proceeding)`
+  markers per the AGENTS.md §9 questions loop. ~140 LOC
+  added.
+- `docs/index.md` — § 7 Specs table grows by one row for
+  Spec 017 (status "draft (scaffolded run #70); Phase 0
+  only — Phase 1..5 pending"); footer "Last revised"
+  bumped from "(run #69)" to "(run #70)".
+- `docs/log.md` — THIS entry prepended at the top
+  (newest-first per the lint:docs ordering check).
+- `CLAUDE.md` — run-tag bumped from "(scheduled run #69)"
+  → "(scheduled run #70)".
+- `competitor-watch.md` — Sync Log entry for run #70
+  prepended at the top (49th consecutive zero-churn run
+  across the three watched corpora).
+
+**Files NOT touched this run** (verification — guards FR-5 +
+the spec's docs-only Non-Goal):
+
+- `docs/COMPANY_SLUG_DIRECTORY.md` — the data-bearing
+  directory file is **not edited** in Phase 0. T01..T04 in
+  runs #71..#74 will append rows; Phase 0 is pure
+  scaffolding.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — `(seed lists)` row is
+  edited in T05 closeout (run #75), not Phase 0.
+- All `.ts` files — verified by `git status -uall` before
+  commit.
+- `package.json` / `package-lock.json` / `tsconfig.base.json` /
+  `jest.config.js` / `nx.json` — all untouched.
+
+**Acceptance status (Phase 0 / T00):**
+
+- `npm run lint:docs` — clean ✅ (FR-1 indirect; the four
+  built-in lint:docs checks — internal-link resolution,
+  doc reachability from index, log entry uniqueness, log
+  entry ordering — pass.)
+- `docs/index.md` § 7 row for Spec 017 — added ✅.
+- `docs/log.md` newest entry references run #70 — yes ✅.
+- `docs/questions.md` Q-038 / Q-039 / Q-040 — present ✅
+  with `(default — proceeding)` markers.
+- Spec 017 spec.md `Status` reads "draft (scaffolded run
+  #70); Phase 0 only — Phase 1..5 pending" — yes ✅.
+- No `.ts` file modified — yes ✅.
+
+**Default for run #71** = Spec 017 / Phase 1 / T01 — append
+25 deterministic-indexed Greenhouse slug rows to the
+Greenhouse table in `docs/COMPANY_SLUG_DIRECTORY.md`. Sample
+from `OTHERS/Ats-scrapers/greenhouse/greenhouse_companies.csv`
+(2 805 post-header rows). Apply spec § 7.1's
+deterministic-indexed sampling rule + the duplicate-and-numeric
+filter (D-02). Land ~25 row appends with §10 D-05 recording
+the selection verbatim. Estimated 0.15 day. Watch-out:
+upstream CSV mixes modern (`job-boards.greenhouse.io/<slug>`)
+and legacy (`boards.greenhouse.io/<slug>`) URL shapes — slug
+extraction is "last path segment" in either case.
+
+**Outlook (post-Spec-017):**
+
+- **Spec 018 candidate (queued):** AC-9 — Workable scraper
+  behavioural diff (commit `312c7b6` in upstream Workable
+  source, per `competitor-watch.md` §C / AC-9). New ATS
+  scraper plugin scaffold (or behavioural absorption into
+  the existing `source-ats-workable` plugin — a question
+  for the Spec 018 scaffolding pass). Estimated 1.5..2 days
+  (multi-run, code-bearing).
+- **Spec 019 candidate (further queued):** Batch 2 of the
+  seed-companies refresh — the remaining
+  `docs/COMPANY_SLUG_DIRECTORY.md` sections (Workday,
+  iCIMS, Taleo, SuccessFactors, BambooHR, Recruitee,
+  Manatal, Phenom). Same methodology as Spec 017; 8 vendors
+  × 25 rows = ~200 row appends; estimated 8..9 runs.
+- **Spec 020+ candidate (low priority):** Q-037 / option C
+  — root-cause investigation of why TS5.x rejects U+00D7 in
+  template literals on this toolchain (Windows + ts-jest +
+  TS 5.x). Non-urgent now that the bench gate is restored
+  (Spec 016 / T01 / run #69).
+
+---
+
 ## 2026-04-28 — Scheduled run #69 (Spec 016 / Phase 1 / T01 — `helpers.bench.spec.ts` TS1127 fix; Q-037 resolved; bench p95 baseline = 0.0174 ms recorded)
 
 **Scope:** open + close **Spec 016** in a single run per the
