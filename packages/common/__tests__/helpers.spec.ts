@@ -862,3 +862,70 @@ describe('extractSalary — Spec 014 / T04 ($-symbol end-to-end via K-suffix)', 
     expect(result.interval).toBe('yearly');
   });
 });
+
+/**
+ * Spec 015 / T02 — three deferred Spec 014 / T04 cases now unblocked
+ * by the T01 source-side fixes (Q-035 anglo-only locale short-circuit
+ * + Q-036 bare-path raw-value pre-check).
+ *
+ * Case 1 (FR-3 — restored Spec 012 / § 8 case 14):
+ *   `"$100,000 - $150,000" + country=GERMANY`. Pre-T01: dispatcher
+ *   resolved currency=USD via `parseSalaryCurrency` (Spec 014 / T01)
+ *   but `resolveSalaryLocale` cascaded through `options.country=GERMANY`
+ *   → 'continental', mis-parsing `100,000` as decimal `100`. T01 /
+ *   D-01's anglo-only short-circuit now routes USD/GBP/CHF symbol-
+ *   tier resolutions to the natural-anglo locale ahead of the
+ *   country tier. Expected envelope: USD / 100000 / 150000 / yearly.
+ *
+ * Cases 2 + 3 (FR-4 / FR-5 — bare-regex prose immunity):
+ *   `"5 - 7 years experience" + country=GERMANY` and
+ *   `"3 - 5 month internship" + country=GERMANY`. Pre-T01: bare
+ *   regex captured the digit pair, hourly classification annualised
+ *   `5 * 2080 = 10400 ≥ lowerLimit = 1000`, emitting a synthetic
+ *   JobPostDto. T01 / FR-2's raw-value pre-check rejects when the
+ *   match came from `barePattern` (NOT prefix or suffix) AND no
+ *   K-suffix AND `minSalary < lowerLimit / 12 ≈ 83`. Both shapes
+ *   trip the guard (5 < 83, 3 < 83); both emit all-`null`.
+ *
+ * Originating questions: Q-035 (locale precedence end-to-end) and
+ * Q-036 (bare-regex prose immunity). Both flip from "_pending
+ * review_" to "**resolved** in Spec 015" at T03 closeout.
+ */
+describe('extractSalary — Spec 015 / T02 (deferred Spec 014 / T04 cases)', () => {
+  it('Spec 015 / T02 — Case 1 (FR-3): literal Spec 012 § 8 case 14 — `$100,000 - $150,000` + country=GERMANY → USD via tier-1 short-circuit', () => {
+    const result = extractSalary('$100,000 - $150,000', {
+      country: Country.GERMANY,
+    });
+    expect(result.currency).toBe('USD');
+    expect(result.minAmount).toBe(100000);
+    expect(result.maxAmount).toBe(150000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  it('Spec 015 / T02 — Case 2 (FR-4): bare-regex prose immunity — `5 - 7 years experience` + country=GERMANY → all-null', () => {
+    // Pre-T01 emitted: { interval: 'hourly', minAmount: 5, maxAmount:
+    // 7, currency: 'EUR' } — the country-tier guard alone admitted
+    // the row because `5 * 2080 = 10400 ≥ lowerLimit = 1000`. The
+    // T01 raw-value pre-check rejects on `5 < lowerLimit / 12 ≈ 83`.
+    const result = extractSalary('5 - 7 years experience', {
+      country: Country.GERMANY,
+    });
+    expect(result.currency).toBeNull();
+    expect(result.minAmount).toBeNull();
+    expect(result.maxAmount).toBeNull();
+    expect(result.interval).toBeNull();
+  });
+
+  it('Spec 015 / T02 — Case 3 (FR-5): bare-regex prose immunity — `3 - 5 month internship` + country=GERMANY → all-null', () => {
+    // Same mechanism as Case 2. Without the T01 guard, `3 * 2080 =
+    // 6240 ≥ lowerLimit = 1000` would pass the bounds check. With
+    // the guard: `3 < lowerLimit / 12 ≈ 83` rejects.
+    const result = extractSalary('3 - 5 month internship', {
+      country: Country.GERMANY,
+    });
+    expect(result.currency).toBeNull();
+    expect(result.minAmount).toBeNull();
+    expect(result.maxAmount).toBeNull();
+    expect(result.interval).toBeNull();
+  });
+});

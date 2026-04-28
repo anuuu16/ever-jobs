@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 015                                                                         |
 | Slug           | salary-parser-locale-and-prose-immunity                                     |
-| Status         | T01 done (run #66); T02 / T03 pending                                       |
+| Status         | T01..T02 done (runs #65..#67); T03 pending                                  |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #65)                                                        |
-| Last updated   | 2026-04-28 (run #66)                                                        |
+| Last updated   | 2026-04-28 (run #67)                                                        |
 | Supersedes     | (none — extends Spec 014's `extractSalary()` surface in `@ever-jobs/common`) |
 | Related specs  | 003 (Job Deduplication Engine), 012 (European Salary Parser), 014 (Salary Parser Residuals) |
 
@@ -386,6 +386,52 @@ follow-on tiny spec).
 **Implementation:** no source-code change in T01;
 `docs/questions.md` adds Q-037 with the resolution-pending
 context.
+
+### Decision D-02 (run #67, T02) — three deferred Spec 014 / T04 cases land cleanly under T01's source edits
+
+**Context:** Spec 015 / T02's pure tests-only pass added the
+three cases that Spec 014 / T04 deferred (literal § 8 case 14
++ two FR-7 false-positive immunity cases). The acceptance gate
+was "all three pass byte-cleanly under the T01 source edits;
+the existing 71 cases stay byte-for-byte green (FR-6)".
+
+Both halves of the gate held without intervention:
+
+- **Case 1 (FR-3 — `"$100,000 - $150,000" + country=GERMANY`)**
+  routes through T01 / D-01's anglo-only short-circuit
+  (USD's natural locale = anglo) and emits the canonical
+  envelope `{ currency: 'USD', minAmount: 100000, maxAmount:
+  150000, interval: 'yearly' }`. Pre-T01 this case emitted
+  `{ minAmount: 100, maxAmount: 150 }` because the country
+  tier routed continental locale and mis-parsed `100,000` as
+  decimal `100`. The fix is precedence-only — the regex
+  shape and arithmetic are unchanged.
+- **Cases 2 + 3 (FR-4 / FR-5 — bare-regex prose immunity)**
+  trip the T01 / FR-2 raw-value pre-check
+  (`minSalary < lowerLimit / 12 ≈ 83`): `5 < 83` and
+  `3 < 83` both reject before the K-suffix multiplication
+  branch. Both cases emit all-`null`. Pre-T01 they emitted
+  synthetic JobPostDtos via the hourly-classification
+  annualisation (`5 × 2080 = 10400 ≥ lowerLimit = 1000`).
+
+**Implementation observation:** the test JSDoc explicitly
+walks the pre- vs post-T01 mechanics for each case so a
+future contributor reading the suite cold can convince
+themselves the cases are pinning real-world dispatcher
+asymmetries — not synthetic shapes invented to exercise
+the code paths. The `5 - 7 / 3 - 5` cases mirror real
+Stepstone-DE description prose patterns; the `$100,000 -
+$150,000 + country=GERMANY` case mirrors a remote-from-
+Germany US-pay role (a real combination seen in the
+JobSpy fixture corpus).
+
+Test count grew from 71 → 74. All 74 pass; no regression
+in the existing 71 (FR-6 honoured).
+
+**Implementation:** pure tests-only pass — no `helpers.ts`
+edits. The describe block is appended at the bottom of
+`helpers.spec.ts` after the existing Spec 014 / T03 +
+T04 partial blocks.
 
 ## 11. References
 

@@ -64,10 +64,11 @@
 
 ## Phase 2 — Three deferred Spec 014 / T04 cases land
 
-- [ ] T02 — Add 3 new cases in a new
+- [x] T02 — Add 3 new cases in a new
   `describe('extractSalary — Spec 015 / T02 …')` block at the
   bottom of `helpers.spec.ts`. All three should pass
   byte-cleanly under the T01 source edits.
+  **Landed run #67.**
   - **Files (planned):**
     - `packages/common/__tests__/helpers.spec.ts` (3 new
       cases — no source-code edits).
@@ -149,24 +150,44 @@
       014's sweep, not upstream-driven coverage gaps).
   - **Estimate:** 0.1 day.
 
-## Notes for the next run (after T01 landed)
+## Notes for the next run (after T02 landed)
 
-- **Default for run #67** = Spec 015 / Phase 2 / T02 — three
-  deferred test cases land in a new
-  `describe('extractSalary — Spec 015 / T02 …')` block at
-  the bottom of `helpers.spec.ts`. All three should pass
-  byte-cleanly under the T01 source edits already in tree:
+- **Default for run #68** = Spec 015 / Phase 3 / T03 —
+  documentation + closeout pass. Add a paragraph to
+  `docs/PERFORMANCE_TUNING.md` naming the two new
+  behaviours (Q-035 anglo-only locale short-circuit +
+  Q-036 bare-path raw-value pre-check) with one example
+  apiece + the FR-8 documented limitation
+  (`"100 - 150" + country=GERMANY` still emits because
+  `100 ≥ lowerLimit / 12 ≈ 83`). Flip Q-035 + Q-036
+  resolution text in `docs/questions.md` from "_pending
+  review_" to "**resolved** in Spec 015 (runs
+  #65..#68)". Flip Spec 015 spec.md Status to "All
+  phases done (T01..T03 runs #65..#68); spec complete";
+  flip Spec 014 / T04 row from `[~]` partial to `[x]`
+  closed with cross-spec annotation. Update
+  `docs/index.md` Spec 015 row + footer; bump CLAUDE.md
+  run-tag → #68; add docs/log.md run #68 closeout
+  entry. **No `competitor-watch.md` entry.** Estimated
+  0.1 day.
+
+- **Default for run #67 (DONE — landed run #67)** = Spec
+  015 / Phase 2 / T02 — three deferred test cases landed
+  in a new `describe('extractSalary — Spec 015 / T02 …')`
+  block at the bottom of `helpers.spec.ts`. All three
+  pass byte-cleanly under the T01 source edits:
   1. `"$100,000 - $150,000" + country=GERMANY` → USD /
-     100000 / 150000 / yearly (FR-3).
+     100000 / 150000 / yearly (FR-3) — exercises the
+     T01 / D-01 anglo-only short-circuit.
   2. `"5 - 7 years experience" + country=GERMANY` →
-     all-`null` (FR-4).
+     all-`null` (FR-4) — exercises the T01 / FR-2
+     raw-value pre-check.
   3. `"3 - 5 month internship" + country=GERMANY` →
-     all-`null` (FR-5).
+     all-`null` (FR-5) — same mechanism as Case 2.
 
-  T02 is a pure tests-only pass — NO source edits. Test
-  count grows from 71 → 74. Acceptance gate: all 74 pass;
-  the existing 71 stay byte-for-byte green (FR-6).
-  Estimated 0.15 day.
+  Pure tests-only pass; NO source edits. Test count grew
+  from 71 → 74; all 74 pass; the existing 71 stay
+  byte-for-byte green (FR-6).
 
 - **T01 landed observations (run #66 — already in tree):**
   - The spec's literal FR-1 wording was tightened to an

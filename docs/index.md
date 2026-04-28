@@ -79,7 +79,7 @@
 | 012 | [European-style Salary Parser](../.specify/specs/012-european-salary-parser/spec.md) — [plan](../.specify/specs/012-european-salary-parser/plan.md) — [tasks](../.specify/specs/012-european-salary-parser/tasks.md) | All phases done (T01..T05 runs #38..#42); spec complete |
 | 013 | [ATS-Scrapers Parity, Batch 2 (Oracle HCM Cloud / Mercor / Tesla)](../.specify/specs/013-ats-scrapers-parity-batch-2/spec.md) — [plan](../.specify/specs/013-ats-scrapers-parity-batch-2/plan.md) — [tasks](../.specify/specs/013-ats-scrapers-parity-batch-2/tasks.md) | All phases done (T01..T15 runs #44..#58); spec complete |
 | 014 | [Salary Parser Residuals (`$` symbol / Swiss apostrophe / bare-number country fallback)](../.specify/specs/014-salary-parser-residuals/spec.md) — [plan](../.specify/specs/014-salary-parser-residuals/plan.md) — [tasks](../.specify/specs/014-salary-parser-residuals/tasks.md) | T01..T03 + T05 done (runs #60..#64); T04 partial run #63 (Q-035 + Q-036 blocked literal cases — deferred to Spec 015) |
-| 015 | [Salary Parser Locale & Prose Immunity (`resolveSalaryLocale` symbol-tier short-circuit / bare-path raw-value pre-check)](../.specify/specs/015-salary-parser-locale-and-prose-immunity/spec.md) — [plan](../.specify/specs/015-salary-parser-locale-and-prose-immunity/plan.md) — [tasks](../.specify/specs/015-salary-parser-locale-and-prose-immunity/tasks.md) | T01 done (run #66) — anglo-only narrowing on the new tier per § 10 / D-01; T02 / T03 pending |
+| 015 | [Salary Parser Locale & Prose Immunity (`resolveSalaryLocale` symbol-tier short-circuit / bare-path raw-value pre-check)](../.specify/specs/015-salary-parser-locale-and-prose-immunity/spec.md) — [plan](../.specify/specs/015-salary-parser-locale-and-prose-immunity/plan.md) — [tasks](../.specify/specs/015-salary-parser-locale-and-prose-immunity/tasks.md) | T01..T02 done (runs #65..#67); T03 pending |
 
 ## 8. Templates
 
@@ -91,4 +91,4 @@
 
 ---
 
-_Last revised: 2026-04-28 (run #66)._
+_Last revised: 2026-04-28 (run #67)._

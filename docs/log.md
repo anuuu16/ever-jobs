@@ -5,6 +5,100 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #67 (Spec 015 / Phase 2 / T02 — three deferred Spec 014 / T04 cases landed)
+
+**Scope:** land Spec 015 / Phase 2 / T02 — pure tests-only
+pass adding the three deferred Spec 014 / T04 cases that
+T01's source-side fixes (Q-035 anglo-only locale short-circuit
++ Q-036 bare-path raw-value pre-check) unblocked. One file
+edit (`packages/common/__tests__/helpers.spec.ts`): new
+`describe('extractSalary — Spec 015 / T02 …')` block appended
+at the bottom containing three cases:
+
+1. **Case 1 (FR-3):** `"$100,000 - $150,000" + country=GERMANY`
+   → USD / 100000 / 150000 / yearly. Restored Spec 012 / § 8
+   case 14; routes through T01 / D-01's anglo-only short-
+   circuit (USD's natural locale = anglo).
+2. **Case 2 (FR-4):** `"5 - 7 years experience" + country=GERMANY`
+   → all-`null`. Trips T01 / FR-2's raw-value pre-check
+   (`5 < lowerLimit / 12 ≈ 83`).
+3. **Case 3 (FR-5):** `"3 - 5 month internship" + country=GERMANY`
+   → all-`null`. Same mechanism as Case 2 (`3 < 83`).
+
+Estimated 0.15 day per tasks.md; landed in a single
+scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — forty-eighth
+consecutive zero-churn run in `OTHERS/`. Spec 015 is
+internal-correctness work; the streak is logged for continuity.
+
+**No new questions opened this run.** Q-035 + Q-036 stay open
+with their pinned defaults pending T03 closeout's resolution
+flip.
+
+**One implementation observation** (full prose in spec.md §
+10 / D-02): the test JSDoc explicitly walks the pre- vs
+post-T01 mechanics for each case so a future contributor can
+convince themselves the cases pin real dispatcher asymmetries
+rather than synthetic shapes. The `5 - 7 / 3 - 5` cases
+mirror real Stepstone-DE description prose; the
+`$100,000 - $150,000 + country=GERMANY` case mirrors a
+remote-from-Germany US-pay role.
+
+**Changes — source / test:**
+
+- `packages/common/__tests__/helpers.spec.ts` — three new
+  cases in a new describe block at the bottom of the file
+  (~75 LOC including JSDoc). Test count grew from 71 → 74;
+  all 74 pass byte-cleanly under HEAD's T01 source edits.
+  The existing 71 cases stay byte-for-byte green (FR-6).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/015-salary-parser-locale-and-prose-immunity/tasks.md`
+  — T02 row flipped from `[ ]` to `[x]` with "Landed run
+  #67" annotation; Notes-for-the-next-run pinned default
+  updated to **Spec 015 / Phase 3 / T03**.
+- `.specify/specs/015-salary-parser-locale-and-prose-immunity/spec.md`
+  — Status flipped to "T01..T02 done (runs #65..#67); T03
+  pending"; Last-updated bumped to run #67; § 10 Decisions
+  log appended with D-02.
+- `docs/index.md` — Spec 015 row updated; footer bumped to
+  run #67.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #67.
+- **No `competitor-watch.md` entry.**
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns 'packages/common/__tests__/helpers.spec'`
+  — 74 cases pass, 0 failures.
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` —
+  pending (run before commit).
+- `npm run lint:docs` — pending (run before commit).
+
+**Notes & follow-ups:**
+
+- **Default for run #68** = Spec 015 / Phase 3 / T03 —
+  documentation + closeout pass. Add a paragraph to
+  `docs/PERFORMANCE_TUNING.md`; flip Q-035 + Q-036
+  resolution text; flip Spec 015 spec.md Status to "All
+  phases done"; flip Spec 014 / T04 row from `[~]` to
+  `[x]`; update docs/index.md + CLAUDE.md + add
+  docs/log.md run #68 entry. Estimated 0.1 day.
+- **Out-of-scope reminders for run #68:** Stay strictly
+  inside docs files; do NOT touch helpers.ts or
+  helpers.spec.ts.
+- **Active backlog after Spec 015 closes:** Spec 016
+  candidates = Q-037 (`helpers.bench.spec.ts` TS1127 fix)
+  OR AC-8 (seed-companies refresh) OR AC-9 (Workable
+  diff).
+- Specs **004 / 005 / 006 / 012 / 013 / 014** stay
+  complete-or-partial; **001 / 003** unchanged. Spec
+  **015** advances to "T01..T02 done; T03 pending".
+
+---
+
 ## 2026-04-28 — Scheduled run #66 (Spec 015 / Phase 1 / T01 — two-fix source-side pass landed with anglo-only narrowing)
 
 **Scope:** open **Spec 015 / Phase 1 / T01** per the run #65
