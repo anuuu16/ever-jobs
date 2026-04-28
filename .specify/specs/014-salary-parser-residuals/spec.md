@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 014                                                                         |
 | Slug           | salary-parser-residuals                                                     |
-| Status         | T01 landed run #60; T02..T05 pending                                        |
+| Status         | T01..T02 landed runs #60..#61; T03..T05 pending                             |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #59)                                                        |
-| Last updated   | 2026-04-28 (run #60)                                                        |
+| Last updated   | 2026-04-28 (run #61)                                                        |
 | Supersedes     | (none — extends Spec 012's salary-parser surface in `@ever-jobs/common`)    |
 | Related specs  | 003 (Job Deduplication Engine), 012 (European Salary Parser)                |
 
@@ -375,7 +375,49 @@ Populated as T01..T05 land.)
   future-spec candidate; the in-spec line at § 8 logs it as
   Q-033 if a fixture demands it.
 
-_T02..T05 land in subsequent runs (#61..#64 if Spec 012's
+- **2026-04-28 (run #61 / T02)** — `SALARY_NUMBER_REGEX_SRC.
+  anglo` extended from `'\\d+(?:[,\\u00A0]\\d{3})*(?:\\.\\d+)?'`
+  to `"\\d+(?:[,\\u00A0']\\d{3})*(?:\\.\\d+)?"`: the apostrophe
+  joins the thousands-separator character class as a union
+  member. The continental regex source is intentionally NOT
+  extended — a continental dual-decimal shape like
+  `"45'000,50"` would otherwise mis-classify the `'` as a
+  thousands separator and lose the trailing decimal. The
+  apostrophe-strip in {@link parseSalaryNumber} (line ~381)
+  stays as a defence-in-depth path; both layers now tolerate
+  `'` (the regex spans `'`-grouped digits in the FIRST place;
+  the post-capture strip survives the per-locale separator
+  collapse).
+
+  Two implementation observations resolved during the edit
+  pass:
+
+  (1) **String literal switched from single-quoted to
+  double-quoted to host the literal `'`.** TypeScript single-
+  quoted strings cannot contain a literal `'` without
+  escaping (`'\\''` is uglier than `"'"`). The continental
+  source line stays single-quoted (no `'` to host); only
+  the anglo source line flipped. `npm run lint` clean — the
+  project's Prettier config tolerates the mixed-quote style
+  on adjacent lines.
+
+  (2) **Two test cases shipped, not one.** The acceptance
+  text required ≥ 1 case (the literal Swiss
+  `"CHF 90'000 – CHF 120'000"`). We added the required case
+  PLUS a "comma-thousands substitute stays green alongside"
+  pin so a future contributor can convince themselves the
+  apostrophe was added as a UNION member, not a replacement.
+  The substitute case (Spec 012 / T04 case 5) keeps its
+  original wording and assertions byte-identical — the new
+  Spec 014 / T02 describe block is purely additive.
+
+  Out-of-scope reminders honoured: no `'swiss'` locale enum,
+  no continental regex extension, no plugin source-code
+  changes. The doc-comment over `SALARY_NUMBER_REGEX_SRC`
+  was rewritten to reflect both layers (regex tolerance +
+  post-capture strip); this is the only collateral edit.
+
+_T03..T05 land in subsequent runs (#62..#64 if Spec 012's
 lean one-task-per-run cadence holds)._
 
 ## 11. References

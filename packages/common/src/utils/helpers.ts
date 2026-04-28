@@ -517,13 +517,23 @@ const SALARY_SYMBOL_ALTERNATIONS: ReadonlyMap<string, string> = new Map([
 /**
  * Per-locale regex source for a salary number. The continental and
  * anglo shapes flip thousands / decimal separators; both tolerate
- * U+00A0 thousands. The Swiss apostrophe is stripped up-front by
- * {@link parseSalaryNumber} (FR-12) so it doesn't need its own slot
- * in the regex.
+ * U+00A0 thousands.
+ *
+ * Spec 014 / T02 (Q-027 part 2) — the `anglo` shape now also tolerates
+ * the Swiss apostrophe (`'`) as a thousands separator, so literal Swiss
+ * inputs like `"CHF 90'000"` match the regex directly. The continental
+ * shape is intentionally unchanged: a continental dual-decimal like
+ * `"45'000,50"` would otherwise mis-classify the `'` as a thousands
+ * separator and lose the trailing decimal. Both locales additionally
+ * strip `'` up-front in {@link parseSalaryNumber} (FR-9 / FR-12) as a
+ * defence-in-depth path — the regex tolerance and the post-capture
+ * strip are both load-bearing: the regex tolerance lets the dispatcher
+ * span apostrophe-grouped digits in the FIRST place; the post-capture
+ * strip survives the per-locale separator collapse.
  */
 const SALARY_NUMBER_REGEX_SRC: Readonly<Record<SalaryLocale, string>> = {
   continental: '\\d+(?:[.\\u00A0]\\d{3})*(?:,\\d+)?',
-  anglo: '\\d+(?:[,\\u00A0]\\d{3})*(?:\\.\\d+)?',
+  anglo: "\\d+(?:[,\\u00A0']\\d{3})*(?:\\.\\d+)?",
 };
 
 /**
@@ -627,6 +637,42 @@ function buildSalaryRegexSuffix(
 }
 
 /**
+ * Build the bare-numeric-range salary regex: NEITHER number requires
+ * a currency symbol or ISO code. Captures the same four groups as
+ * the prefix / suffix variants (`[1] = min`, `[2] = min K-suffix`,
+ * `[3] = max`, `[4] = max K-suffix`) so the existing K-suffix
+ * arithmetic at {@link extractSalary} doesn't need a branch to
+ * handle the bare match. Form:
+ *
+ *   <num>K?\s*<dash>\s*<num>K?
+ *
+ * Spec 014 / T03 (Q-026) — this third variant lands ONLY when
+ * `parseSalaryCurrency()` resolved the currency via the country
+ * tier (`detected.confidence === 'country'`), so it never fires for
+ * no-currency-signal inputs. The country-tier guard is the
+ * load-bearing safety: a bare regex without it would over-match
+ * plain-prose number ranges like `"5 - 7 years experience"` for
+ * any caller that didn't pass a country hint. The two-line guard
+ * lives at {@link extractSalary} (after the prefix/suffix cascade);
+ * this builder is currency-agnostic.
+ *
+ * Matches Continental EU bare-number ranges like `"100.000 -
+ * 150.000"` (`country=GERMANY` → EUR via the country tier; the
+ * regex captures `100.000` / `150.000` against the continental
+ * `numSrc`). Also matches anglo bare-number ranges like
+ * `"100,000 - 150,000"` when the caller supplies a non-USA anglo
+ * country (`country=UK` → GBP; `country=AUSTRALIA` would too if
+ * `Country.AUSTRALIA` ever lands in `SALARY_COUNTRY_TO_CURRENCY`).
+ */
+function buildSalaryRegexBare(numSrc: string): RegExp {
+  // Same `[kK]?\b` discipline as the other two variants — pins the
+  // K-suffix to a word boundary so `100K -` parses cleanly.
+  return new RegExp(
+    `(${numSrc})\\s*([kK]?\\b)\\s*[-–—]\\s*(${numSrc})\\s*([kK]?\\b)`,
+  );
+}
+
+/**
  * Extract salary information from a free-form description string.
  *
  * Spec 012 / T03 — multi-currency, locale-aware dispatcher. Resolves
@@ -681,7 +727,25 @@ export function extractSalary(
   // the regex compile cost on the hot path.
   const prefixPattern = buildSalaryRegexPrefix(symbolAlt, numSrc);
   const suffixPattern = buildSalaryRegexSuffix(symbolAlt, numSrc);
-  const match = salaryStr.match(prefixPattern) ?? salaryStr.match(suffixPattern);
+  // Spec 014 / T03 (Q-026) — when both anchored variants miss AND
+  // the currency was resolved via the country tier (no symbol / ISO
+  // in the input but a `country` hint was supplied), try the bare
+  // numeric-range variant. The literal `=== 'country'` guard is
+  // load-bearing: a `!== 'default'` shape would wrongly include the
+  // `'symbol'` and `'iso'` paths that already passed the first two
+  // patterns and missed for some other reason. The `lowerLimit`
+  // clamp at line ~709 (`minSalary < lowerLimit` rejection) is the
+  // second line of defence against bare-regex over-matching plain
+  // prose numbers like `"5 - 7 years experience"` (FR-7 false-
+  // positive immunity).
+  const barePattern =
+    detected.confidence === 'country'
+      ? buildSalaryRegexBare(numSrc)
+      : null;
+  const match =
+    salaryStr.match(prefixPattern) ??
+    salaryStr.match(suffixPattern) ??
+    (barePattern ? salaryStr.match(barePattern) : null);
   if (!match) return result;
 
   let minSalary = parseSalaryNumber(match[1], locale);

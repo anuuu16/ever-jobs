@@ -666,3 +666,56 @@ describe('extractSalary — Spec 012 / T04 multi-currency sweep', () => {
     expect(result.interval).toBe('yearly');
   });
 });
+
+/**
+ * Spec 014 / T02 — apostrophe-in-regex extension (Q-027 part 2 / FR-2 /
+ * FR-6 / FR-9).
+ *
+ * Lands the literal Spec 012 / § 8 case 5 (`"CHF 90'000 – CHF 120'000"`)
+ * that T04 had to substitute with a comma-thousands variant because the
+ * `anglo` regex source did not include `'` in its thousands character
+ * class. The substitute case (case 5 in the T04 sweep) stays alongside
+ * — additive, no removal — so both Swiss apostrophe-thousands AND
+ * comma-thousands shapes are pinned in the suite.
+ *
+ * The defence-in-depth FR-9 case
+ * (`parseSalaryNumber("90'000", 'anglo') → 90000`) is already pinned
+ * in the `parseSalaryNumber` block above; the apostrophe-strip in
+ * {@link parseSalaryNumber} stays as a second layer (the regex now
+ * spans `'`-grouped digits in the FIRST place, then the per-locale
+ * collapse removes `'` along with `,` / U+00A0 before numeric
+ * validation).
+ *
+ * The continental regex source is intentionally NOT extended — a
+ * dual-decimal Continental shape like `"45'000,50"` would otherwise
+ * mis-classify the `'` as a thousands separator. The apostrophe-strip
+ * in {@link parseSalaryNumber} handles `"45'000,50"` correctly because
+ * the strip runs BEFORE the per-locale separator collapse.
+ */
+describe('extractSalary — Spec 014 / T02 (apostrophe-thousands)', () => {
+  it("Spec 014 / T02 — literal Swiss apostrophe-thousands range parses end-to-end (FR-2 / FR-6)", () => {
+    // The literal Spec 012 / § 8 case 5 — restored. Common shape on
+    // Swiss postings (jobs.ch, swissdevjobs.ch). Before T02 this fell
+    // through the `anglo` regex (the `'` broke the `\d{3}` group) and
+    // returned all-`null`; the regex tolerance + the existing
+    // apostrophe-strip in `parseSalaryNumber` now combine to recover
+    // the canonical envelope.
+    const result = extractSalary("CHF 90'000 – CHF 120'000");
+    expect(result.currency).toBe('CHF');
+    expect(result.minAmount).toBe(90000);
+    expect(result.maxAmount).toBe(120000);
+    expect(result.interval).toBe('yearly');
+  });
+
+  it("Spec 014 / T02 — comma-thousands CHF substitute stays green alongside (FR-5; additive)", () => {
+    // The character class in the anglo regex is union (`[, ']`),
+    // not replacement, so `,` thousands keep matching. Pinning the
+    // substitute keeps the assertion explicit: T02 added a tolerance,
+    // it did not swap one separator for another.
+    const result = extractSalary('CHF 90,000 – CHF 120,000');
+    expect(result.currency).toBe('CHF');
+    expect(result.minAmount).toBe(90000);
+    expect(result.maxAmount).toBe(120000);
+    expect(result.interval).toBe('yearly');
+  });
+});

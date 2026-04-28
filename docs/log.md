@@ -5,6 +5,142 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #61 (Spec 014 / Phase 2 / T02 — apostrophe-in-regex extension landed)
+
+**Scope:** land Spec 014 / Phase 2 / T02 — extend
+`SALARY_NUMBER_REGEX_SRC.anglo` so the apostrophe (`'`)
+joins the thousands-separator character class as a union
+member, allowing literal Swiss inputs like
+`"CHF 90'000 – CHF 120'000"` to span the regex match in the
+FIRST place rather than relying solely on the post-capture
+apostrophe-strip in `parseSalaryNumber`. Two file edits:
+
+- `packages/common/src/utils/helpers.ts` — anglo source
+  string flipped from
+  `'\\d+(?:[,\\u00A0]\\d{3})*(?:\\.\\d+)?'` to
+  `"\\d+(?:[,\\u00A0']\\d{3})*(?:\\.\\d+)?"` (single-quoted →
+  double-quoted to host the literal `'`). Continental source
+  intentionally UNCHANGED. Doc-comment over
+  `SALARY_NUMBER_REGEX_SRC` rewritten to name both
+  defence-in-depth layers (regex tolerance + post-capture
+  strip) and the Continental dual-decimal rationale for
+  asymmetry.
+- `packages/common/__tests__/helpers.spec.ts` — new describe
+  block `'extractSalary — Spec 014 / T02 (apostrophe-thousands)'`
+  appended after the Spec 012 / T04 sweep with two cases:
+  the required literal `"CHF 90'000 – CHF 120'000"` (FR-2 /
+  FR-6) PLUS a "comma-thousands substitute stays green
+  alongside" pin (FR-5; additive). Test count grew from
+  65 → 67.
+
+Estimated 0.15 day per tasks.md; landed in a single
+scheduled-run cycle.
+
+**No competitor-watch upstream churn this run** — Ats-scrapers
+@ `3bacd6e`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` (all
+unchanged from runs #59..#60's sync). Forty-fourth
+consecutive zero-churn run in `OTHERS/`. (Spec 014 is
+internal-correctness work, not upstream-driven coverage; the
+streak is logged for continuity.)
+
+**No new questions opened this run.** Spec 014 is the
+resolution path for Q-026 + Q-027 (Spec 012 / T04
+spillover); their `docs/questions.md` resolution text flips
+at T05 closeout per the scaffolding plan, not now.
+
+**Two implementation observations** were resolved during
+T02's edit pass (full prose in Spec 014 § 10):
+
+1. **String literal switched from single-quoted to
+   double-quoted to host the literal `'`.** TypeScript
+   single-quoted strings cannot contain a literal `'`
+   without escaping. The continental source line stays
+   single-quoted (no `'` to host); only the anglo source
+   line flipped. The project's Prettier config tolerates
+   the mixed-quote style on adjacent lines (config check:
+   the existing `SALARY_SYMBOL_ALTERNATIONS` map uses
+   single-quoted strings on every line, the new anglo line
+   sits two functions away).
+2. **Two test cases shipped, not one.** The acceptance
+   text required ≥ 1 case (the literal Swiss
+   `"CHF 90'000 – CHF 120'000"`). We added the required
+   case PLUS a "comma-thousands substitute stays green
+   alongside" pin so a future contributor can convince
+   themselves the apostrophe was added as a UNION member,
+   not a replacement. The existing Spec 012 / T04 case 5
+   substitute stays alongside byte-identically — the new
+   Spec 014 / T02 describe block is purely additive (no
+   removal anywhere).
+
+**Changes — source / test:**
+
+- `packages/common/src/utils/helpers.ts` —
+  `SALARY_NUMBER_REGEX_SRC.anglo` source string grew by
+  one character (`'` added to the thousands character
+  class). Doc-comment grew from 5 lines to 14 lines (both
+  defence-in-depth layers + Continental asymmetry
+  rationale).
+- `packages/common/__tests__/helpers.spec.ts` — new
+  describe block with two cases appended. Test count grew
+  from 65 → 67; all 67 cases pass byte-identically against
+  this commit (verified locally via
+  `npx jest packages/common/__tests__/helpers.spec`).
+
+**Changes — docs / specs:**
+
+- `.specify/specs/014-salary-parser-residuals/tasks.md` —
+  T02 row flipped from `[ ]` to `[x]` with "Landed run
+  #61" annotation; Notes-for-the-next-run pinned default
+  updated to **Spec 014 / Phase 3 / T03** (bare-numeric-
+  range third branch).
+- `.specify/specs/014-salary-parser-residuals/spec.md` —
+  Status flipped from "T01 landed run #60; T02..T05
+  pending" to "T01..T02 landed runs #60..#61; T03..T05
+  pending"; Last-updated bumped to run #61; § 10
+  Decisions log appended with the two implementation
+  observations.
+- `docs/index.md` — Spec 014 row status updated; footer
+  bumped to run #61.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag → #61.
+- **No `competitor-watch.md` entry** — Spec 014 is not
+  linked to a §C / AC-N row (Q-026 / Q-027 are
+  internal-correctness gaps surfaced during Spec 012's
+  sweep, not upstream-driven coverage gaps; tasks.md / T05
+  acceptance pins this).
+
+**Verification (local, against this commit):**
+
+- `npx jest --testPathPatterns 'packages/common/__tests__/helpers.spec'`
+  — 67 cases pass, 0 failures (was 65; T02 added 2).
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` —
+  clean (CI's typecheck path).
+- `npm run lint:docs` — pending (run before commit).
+
+**Notes & follow-ups:**
+
+- **Default for run #62** = Spec 014 / Phase 3 / T03 —
+  bare-numeric-range third branch. Add a private
+  `buildSalaryRegexBare(numSrc: string): RegExp` mirroring
+  the prefix/suffix builders' four-capture shape; wire a
+  third try-branch into `extractSalary()` body, gated on
+  the literal string check `detected.confidence ===
+  'country'` (NOT `!== 'default'`). Add the literal Spec
+  012 § 8 case 12 (`extractSalary("100.000 - 150.000",
+  { country: GERMANY })` → EUR / 100000 / 150000 /
+  yearly) PLUS the FR-7 negative pin (no country hint →
+  all-`null`). Bare regex compiled per-call per FR-10
+  (no module-level cache).
+- **Out-of-scope reminders for run #62:** Stay strictly in
+  Phase 3 / T03 scope. Do NOT extend the bare regex to a
+  fourth try-branch (the chain stops here). Do NOT add a
+  public helper for the bare regex — it's an
+  implementation detail of `extractSalary()` and stays
+  private. Do NOT touch the continental regex source. Do
+  NOT change any plugin source code.
+
+---
+
 ## 2026-04-28 — Scheduled run #60 (Spec 014 / Phase 1 / T01 — `$`-symbol promotion landed)
 
 **Scope:** land Spec 014 / Phase 1 / T01 — promote `$` from

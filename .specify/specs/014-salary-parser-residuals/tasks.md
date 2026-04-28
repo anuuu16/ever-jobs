@@ -41,9 +41,10 @@
 
 ## Phase 2 — Apostrophe-in-regex extension + literal Spec 012 § 8 case 5
 
-- [ ] T02 — `SALARY_NUMBER_REGEX_SRC.anglo` tolerates `'` as
+- [x] T02 — `SALARY_NUMBER_REGEX_SRC.anglo` tolerates `'` as
   a thousands separator; literal Swiss `"CHF 90'000 – CHF
   120'000"` parses end-to-end (FR-2 / FR-6 / FR-9).
+  **Landed run #61.**
   - **Files (planned):**
     - `packages/common/src/utils/helpers.ts` (1-character
       edit to the `anglo` regex source string).
@@ -221,20 +222,29 @@
 
 ## Notes for the next run (after this scaffold lands)
 
-- **Default for run #61** = Spec 014 / Phase 2 / T02 —
-  Apostrophe-in-regex extension. Edit
+- **Default for run #62** = Spec 014 / Phase 3 / T03 —
+  Bare-numeric-range third branch. Add a private
+  `buildSalaryRegexBare(numSrc: string): RegExp` with the
+  same four-capture shape as the prefix/suffix builders
+  (`[1] = min`, `[2] = min K-suffix`, `[3] = max`,
+  `[4] = max K-suffix`). Wire a third try-branch into
+  `extractSalary()` body, gated on the literal string
+  check `detected.confidence === 'country'` (NOT
+  `!== 'default'`). Add the literal Spec 012 § 8 case 12
+  (`extractSalary("100.000 - 150.000", { country: GERMANY })`
+  → EUR / 100000 / 150000 / yearly) PLUS the FR-7 negative
+  pin (`extractSalary("100.000 - 150.000")` with no country
+  → all-`null`). The bare regex must be compiled per-call
+  per FR-10 (no module-level cache). Estimated 0.2 day.
+- **Default for run #61 (DONE — landed run #61)** = Spec 014
+  / Phase 2 / T02 — Apostrophe-in-regex extension. Edited
   `SALARY_NUMBER_REGEX_SRC.anglo` to add `'` to the
   thousands-separator character class (`[,\\u00A0]` →
-  `[,\\u00A0']`); add the literal Spec 012 § 8 case 5
+  `[,\\u00A0']`); added the literal Spec 012 § 8 case 5
   (`extractSalary("CHF 90'000 – CHF 120'000")` → CHF /
-  90000 / 120000 / yearly). One-character source edit + ≥ 1
-  unit case. Continental regex source UNCHANGED (regression
-  guard: `parseSalaryNumber("45'000,50", 'continental')`
-  must keep mis-classifying-by-design path intact via the
-  apostrophe-strip in `parseSalaryNumber`, NOT via the
-  regex itself). All 11 original USD cases must stay byte-
-  identical — character class is union, not replacement.
-  Estimated 0.15 day.
+  90000 / 120000 / yearly) PLUS the comma-thousands
+  substitute regression pin. Continental regex source
+  unchanged. All prior cases stay green byte-identical.
 - **Default for run #60 (DONE — landed run #60)** = Spec 014
   / Phase 1 / T01 — `$` registration in
   `SALARY_UNIQUE_SYMBOLS` + 2 new helper test cases (the
