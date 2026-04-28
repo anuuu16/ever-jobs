@@ -5,6 +5,47 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #91 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0177 ms; lint:docs clean; external-snapshot tag set held identical for the 70th consecutive run)
+
+**Scope:** Run #91 continues the Q-042 default-C maintenance loop. Abbreviated
+health-check evidence form continues per run #85's authorisation.
+
+**Health-check evidence:**
+
+- `helpers.spec` → **77/77 passed in 6.009 s**.
+- `helpers.bench` → **2/2 passed in 6.031 s**; p95 = **0.0177 ms** (delta from run #90 =
+  +0.0047 ms — modest upward correction within sandbox jitter range; delta from Spec 016
+  baseline 0.0174 ms = +0.0003 ms — virtually identical to baseline). Drift well inside
+  the +0.1 ms NFR-1 budget. Per-currency p95: USD 0.0173 ms; EUR 0.0185 ms; GBP 0.0098 ms
+  (median figure as proxy — see `dist/bench/helpers-salary.json`). All under the 0.5 ms
+  NFR-1 target.
+- `lint:docs` exits 0.
+
+**External-snapshot tag set:** all three repos at unchanged SHAs (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`) — **70th consecutive zero-churn run** (since run
+#21). No `AC-NN` opened.
+
+**Files touched:**
+
+- `docs/log.md` — this run #91 entry prepended.
+- `CLAUDE.md` — run-tag bumped → run #91.
+- `competitor-watch.md` (workspace-root) — Sync Log run #91 entry prepended.
+
+**No changes:** zero `.ts` / spec.md / index.md / questions.md / package-lock edits.
+
+**Forward-pointers:**
+
+- **Default for run #92 = maintenance-loop continuation under Q-042 default C.** The
+  re-prompt convention (run #100+ → one-line user-owner reminder via `docs/log.md` if
+  Q-042 still `_pending review_`) is now **9 runs out** — first eligible at run #100.
+- Trigger-detection unchanged; deviate from C if a concrete trigger fires (fresh upstream
+  commit, failing CI gate, customer-reported synthetic row, user-owner directive).
+- Note: this is the 70th consecutive zero-churn upstream snapshot — a meaningful streak
+  worth flagging at the human-owner review point. The Spec 016 baseline drift band
+  (-0.0044 ms to +0.0047 ms across the last 10 runs) confirms the bench is stable.
+
+---
+
 ## 2026-04-28 — Scheduled run #90 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.013 ms; lint:docs clean; external-snapshot tag set held identical for the 69th consecutive run)
 
 **Scope:** Run #90 continues the Q-042 default-C maintenance loop. Abbreviated
