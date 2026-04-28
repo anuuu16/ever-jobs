@@ -83,7 +83,7 @@
 | 016 | [`helpers.bench.spec.ts` TS1127 fix (`×` U+00D7 → ASCII `x` in template literal)](../.specify/specs/016-bench-file-ts1127-fix/spec.md) — [plan](../.specify/specs/016-bench-file-ts1127-fix/plan.md) — [tasks](../.specify/specs/016-bench-file-ts1127-fix/tasks.md) | All phases done (T01 run #69); spec complete — bench p95 baseline = 0.0174 ms |
 | 017 | [Seed-Companies Slug Directory Refresh — Batch 1 (Greenhouse / Lever / Workable / SmartRecruiters)](../.specify/specs/017-seed-companies-refresh-batch-1/spec.md) — [plan](../.specify/specs/017-seed-companies-refresh-batch-1/plan.md) — [tasks](../.specify/specs/017-seed-companies-refresh-batch-1/tasks.md) | All phases done (T01..T05 runs #71..#75); spec complete |
 | 018 | [Workable Upstream Parity (`workable/main.py` @ commit `312c7b6` diff against `source-ats-workable` plugin)](../.specify/specs/018-workable-upstream-parity/spec.md) — [plan](../.specify/specs/018-workable-upstream-parity/plan.md) — [tasks](../.specify/specs/018-workable-upstream-parity/tasks.md) | All phases done (T01 run #77); spec complete |
-| 019 | [Salary Parser Residuals, Batch 2 (bare-path raw-value pre-check threshold bump — closes Spec 015 / FR-8 documented limitation)](../.specify/specs/019-salary-parser-residuals-batch-2/spec.md) — [plan](../.specify/specs/019-salary-parser-residuals-batch-2/plan.md) — [tasks](../.specify/specs/019-salary-parser-residuals-batch-2/tasks.md) | draft (Phase 0 scaffolded run #78); Phase 1..3 pending |
+| 019 | [Salary Parser Residuals, Batch 2 (bare-path raw-value pre-check threshold bump — closes Spec 015 / FR-8 documented limitation)](../.specify/specs/019-salary-parser-residuals-batch-2/spec.md) — [plan](../.specify/specs/019-salary-parser-residuals-batch-2/plan.md) — [tasks](../.specify/specs/019-salary-parser-residuals-batch-2/tasks.md) | All phases done (T01..T03 runs #79..#81); spec complete |
 
 ## 8. Templates
 
@@ -95,4 +95,4 @@
 
 ---
 
-_Last revised: 2026-04-28 (run #78)._
+_Last revised: 2026-04-28 (run #81)._

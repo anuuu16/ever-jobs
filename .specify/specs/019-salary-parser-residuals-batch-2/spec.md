@@ -4,10 +4,10 @@
 | -------------- | --------------------------------------------------------------------------- |
 | Spec ID        | 019                                                                         |
 | Slug           | salary-parser-residuals-batch-2                                             |
-| Status         | T01 + T02 landed (runs #79..#80); T03 pending                               |
+| Status         | All phases done (T03 run #81); spec complete                                |
 | Owner          | scheduled-task agent (`ever-jobs`)                                          |
 | Created        | 2026-04-28 (run #78)                                                        |
-| Last updated   | 2026-04-28 (run #80)                                                        |
+| Last updated   | 2026-04-28 (run #81)                                                        |
 | Supersedes     | Spec 015 / FR-8 (documented limitation re-classified as a closed gap)       |
 | Related specs  | 012 (European-style Salary Parser — established the multi-currency dispatcher); 014 (Salary Parser Residuals — `$` registration + apostrophe-thousands + bare-path Q-026); 015 (Salary Parser Locale & Prose Immunity — added the bare-path raw-value pre-check this spec retunes); 016 (`helpers.bench.spec.ts` TS1127 fix — restored the bench acceptance gate this spec re-runs at T01 / T02) |
 
@@ -361,6 +361,79 @@ bare path with no K-suffix.
 ## 10. Decisions
 
 (Append-only log; entries prepended at run boundaries.)
+
+### D-03 — T03 closeout doc edit landed (run #81, 2026-04-28)
+
+**Outcome:** FR-4 satisfied. The Spec 015 / FR-8 documented
+limitation paragraph in
+[`docs/PERFORMANCE_TUNING.md`](../../../docs/PERFORMANCE_TUNING.md)
+(§ "Spec 015 locale & prose-immunity extensions / (e) Bare-path
+raw-value pre-check") rewritten to reflect Spec 019 closure:
+threshold bumped from `lowerLimit / 12 ≈ 83` to `lowerLimit
+≈ 1000`; the `"100 - 150" + country=GERMANY` shape now
+rejects; prefix-anchored EUR symbol (`"€100 - €150"`) and
+suffix-anchored EUR ISO (`"100 - 150 EUR"`) recommended as
+escape hatches for legitimate Continental EUR low-end shapes.
+Three threshold-reference call-sites updated for consistency:
+the (e) guard description, the K-suffix bypass example (`5K
+≥ lowerLimit / 12 ≈ 83` → `5K ≥ lowerLimit ≈ 1000`), and the
+FR-8 paragraph itself. Four new doc-block code examples added
+illustrating the closure (the `"100 - 150"` rejection, the
+`"1000 - 1500"` boundary admit, and the two prefix / suffix
+escape-hatch forms).
+
+Spec 019 / spec.md Status flipped from `T01 + T02 landed
+(runs #79..#80); T03 pending` to `All phases done (T03 run
+#81); spec complete`. The 3-run implementation budget held
+exactly: T01 (run #79) source-side threshold bump, T02 (run
+#80) test pins, T03 (run #81) doc closeout. NFR-4 implementation
+budget honoured.
+
+**Acceptance evidence:**
+
+- (a) `npm run lint:docs` exits 0.
+- (b) Diff scope: `docs/PERFORMANCE_TUNING.md` is the only
+  doc-content change (T03 is docs-only — FR-9 / Non-Goal); no
+  `.ts` file in the diff.
+- (c) Spec 019 / spec.md Status field updated as planned.
+- (d) `docs/index.md` § 7 Spec 019 row Status updated to match
+  spec.md.
+- (e) `docs/log.md` gains a run #81 closeout entry (newest at
+  top). Out-of-repo upstream-watch ledger Sync Log gains a
+  parallel entry capturing the run #81 closeout + zero-churn
+  upstream sweep.
+- (f) `CLAUDE.md` run-tag bumped from `2026-04-28 (scheduled
+  run #80)` to `2026-04-28 (scheduled run #81)`.
+
+**Forward-pointers:**
+
+- Q-041 Resolution stays `_open — agent default = A` (the
+  human owner reviews; resolution flip is human-driven, not
+  agent-driven). The default A retune is now in effect across
+  the codebase end-to-end (source + tests + docs); reverting
+  would require a Spec 020 / FR-rollback pass.
+- The 73→76 / 74→77 doc-drift reconciliation surfaced at D-01
+  was rolled into the test count delta narrative at D-02; no
+  spec-text refresh needed at T03 because the spec § 7.2
+  literal case bodies stayed byte-exact through the
+  reconciliation (only the totals narrative shifted).
+- Default for run #82 = next backlog candidate. After Spec
+  019 closes, the open agent-relevant residuals are: Q-026 /
+  Q-027 (Spec 014 carry-overs that re-emerged at Spec 015
+  scope; revisit candidate for a future
+  `salary-parser-residuals-batch-3`), Q-035 (anglo-only
+  short-circuit narrowing — closed by Spec 015 / D-01;
+  recheck whether the human owner's review flips Q-035
+  resolution), and any new external-snapshot churn at runs
+  #79..#81. If `OTHERS/` stays at the 56-run zero-churn
+  streak, the natural next pickup is internal-correctness
+  work — but no specific candidate is load-bearing enough at
+  this snapshot to justify a Spec 020 scaffold without a
+  fresh signal. Run #82 should default to a **maintenance
+  sweep**: rerun the helpers regression + bench, refresh
+  `competitor-watch.md` § A from a fresh `git log` of the
+  three watched repos, and pin the next concrete spec only
+  if a new external commit lands.
 
 ### D-02 — T02 test pins landed (run #80, 2026-04-28)
 

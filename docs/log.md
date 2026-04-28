@@ -5,6 +5,81 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #81 (Spec 019 / Phase 3 — T03 closeout; `docs/PERFORMANCE_TUNING.md` Spec 015 / FR-8 paragraph rewritten to reflect closure; spec status flips to `All phases done (T03 run #81); spec complete`; 3-run implementation budget held exactly)
+
+**Scope:** Run #81 executes the Spec 019 / Phase 3 / T03 closeout task — a docs-only doc-edit pass on
+`docs/PERFORMANCE_TUNING.md` plus the four ledger surfaces (Spec 019 spec.md Status, tasks.md T03
+row, `docs/index.md` § 7 row, `CLAUDE.md` run-tag). Spec 019 closes its full lifecycle in **3
+implementation runs** (T01 + T02 + T03 at runs #79..#81) — NFR-4 implementation budget honoured
+exactly.
+
+**`docs/PERFORMANCE_TUNING.md` rewrite (FR-4 / T03 acceptance (a)):** the Spec 015 / FR-8 documented
+limitation paragraph in § "Spec 015 locale & prose-immunity extensions / (e) Bare-path raw-value
+pre-check" rewritten to reflect Spec 019 closure. Three threshold-reference call-sites updated for
+consistency:
+
+1. The (e) guard description: `minSalary < lowerLimit / 12 (≈ 83 …)` → `minSalary < lowerLimit (=
+   1000 …)`. Heading line gains `; threshold retuned in Spec 019 / T01 / FR-1` attribution.
+2. The K-suffix bypass example: `5K = 5000 ≥ lowerLimit / 12 ≈ 83` → `5K = 5000 ≥ lowerLimit ≈
+   1000`. Behavioural claim unchanged (5000 still passes both old and new thresholds).
+3. The FR-8 paragraph itself, retitled `Spec 015 / FR-8 closure (Spec 019 / runs #78..#81):`. Now
+   documents that `"100 - 150" + country=GERMANY` is **rejected** (was: still emits as hourly EUR
+   100..150). Recommends prefix-anchored EUR symbol (`"€100 - €150"`) and suffix-anchored EUR ISO
+   (`"100 - 150 EUR"`) as escape hatches for legitimate Continental EUR low-end shapes; both
+   bypass the bare-path guard via the prefix / suffix matching paths and emit faithfully.
+
+Four new doc-block code examples added illustrating the closure: the `"100 - 150"` rejection, the
+`"1000 - 1500"` boundary admit (`{ interval: 'monthly', minAmount: 1000, maxAmount: 1500, currency:
+'EUR' }`), and the two prefix / suffix escape-hatch forms (both emit hourly EUR 100..150).
+
+**Spec 019 Status flip (T03 acceptance (b)):**
+
+`T01 + T02 landed (runs #79..#80); T03 pending` →
+`All phases done (T03 run #81); spec complete`. "Last updated" bumped from `2026-04-28 (run #80)` to
+`2026-04-28 (run #81)`.
+
+**`docs/index.md` § 7 Spec 019 row Status flip (T03 acceptance (c)):** mirrors the spec.md Status —
+`draft (Phase 0 scaffolded run #78); Phase 1..3 pending` →
+`All phases done (T01..T03 runs #79..#81); spec complete`. File footer "Last revised" bumped from
+`2026-04-28 (run #78)` to `2026-04-28 (run #81)`.
+
+**Decision D-03 appended to Spec 019 / spec.md / § 10 (T03 acceptance (d)):** documents FR-4
+satisfaction with: (a) lint:docs exit 0; (b) doc-content diff scope (no `.ts` in diff); (c) Status
+field updated; (d) `docs/index.md` § 7 row matches spec.md; (e) docs/log.md run #81 entry +
+parallel out-of-repo upstream-watch ledger Sync Log entry; (f) CLAUDE.md run-tag bump.
+Forward-pointer: Q-041 Resolution stays `_open — agent default = A` (the human owner reviews;
+resolution flip is human-driven, not agent-driven).
+
+**Spec 019 final-state summary:**
+
+| Phase | Run    | Task                                 | Diff scope                                                                                                                |
+| ----- | ------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| 0     | #78    | T00 (scaffolding)                    | 3 new spec-folder files + 4 ledger surfaces (docs-only).                                                                  |
+| 1     | #79    | T01 (source-side threshold bump)     | `helpers.ts:803` single-token edit + lead-in comment refresh; 74/74 jest green; bench p95 = 0.0176 ms (Spec 016 + 0.0002). |
+| 2     | #80    | T02 (test pins)                      | `helpers.spec.ts` +95 LOC (3 new `it(...)` blocks); 77/77 jest green; bench p95 = 0.0248 ms.                                |
+| 3     | #81    | T03 (closeout)                       | `docs/PERFORMANCE_TUNING.md` FR-8 paragraph rewrite + threshold call-site updates + 4 ledger surfaces (docs-only).        |
+
+**Acceptance:**
+
+- `npm run lint:docs` exit 0.
+- No `.ts` file in the run #81 diff (T03 is docs-only — FR-9 / Non-Goal honoured).
+- Spec 019 / spec.md Status reads `All phases done (T03 run #81); spec complete`.
+- `docs/index.md` Spec 019 row Status matches spec.md.
+- T03 row `[ ]` → `[x]` in tasks.md.
+- D-03 appended to spec.md § 10 (above D-02; entries prepend at run boundaries).
+- Q-041 Resolution stays `_open — agent default = A` (human-owner-driven flip).
+
+**Default for run #82:** maintenance sweep. Spec 019 closes the load-bearing internal-correctness
+residual after AC-8 / AC-9 closed the agent-driven upstream-watch backlog. With no specific
+candidate load-bearing enough to justify a Spec 020 scaffold at this snapshot, run #82 should
+default to a maintenance pass: rerun the helpers regression + bench, refresh `competitor-watch.md`
+§ A from a fresh `git log` of the three watched repos (Ats-scrapers / JobSpy / Jobspy-api), and
+pin the next concrete spec only if a new external commit lands or a residual surfaces (Q-026 /
+Q-027 carry-over candidates for a future `salary-parser-residuals-batch-3`, or a fresh
+external-snapshot churn at runs #79..#81).
+
+---
+
 ## 2026-04-28 — Scheduled run #80 (Spec 019 / Phase 2 — T02 test pins landed in `helpers.spec.ts`; three new `it(...)` blocks pin FR-2.a / FR-2.b / FR-2.c at the new threshold boundary; 77/77 jest green; bench p95 = 0.0248 ms; spec status flips to `T01 + T02 landed (runs #79..#80); T03 pending`)
 
 **Scope:** Run #80 executes the Spec 019 / Phase 2 / T02 task

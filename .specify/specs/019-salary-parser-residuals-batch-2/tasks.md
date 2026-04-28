@@ -10,7 +10,7 @@
 | Spec           | [`spec.md`](./spec.md)             |
 | Plan           | [`plan.md`](./plan.md)             |
 | Created        | 2026-04-28 (run #78)               |
-| Last updated   | 2026-04-28 (run #80)               |
+| Last updated   | 2026-04-28 (run #81)               |
 
 ---
 
@@ -39,7 +39,7 @@
 
 | ID  | Task                                                                                  | Acceptance                                                                                                                                                          | Status |
 | --- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| T03 | (a) Update [`docs/PERFORMANCE_TUNING.md`](../../../docs/PERFORMANCE_TUNING.md): rewrite the Spec 015 / FR-8 paragraph to reflect Spec 019 closure (the `"100 - 150" + country=GERMANY` shape is now rejected; recommended escape hatches are prefix-anchored EUR symbol or suffix-anchored EUR ISO). (b) Flip Spec 019 / spec.md Status from `draft (Phase 0 scaffolded run #78); Phase 1..3 pending` to `All phases done (T03 run #81); spec complete`. (c) Update `docs/index.md` Spec 019 row Status to match. (d) Append Decision D-03 to Spec 019 / § 10 documenting T03 acceptance + the doc edit summary. (e) Prepend run #81 entry to `docs/log.md` (and a parallel entry to the out-of-repo upstream-watch ledger Sync Log). (f) Bump `CLAUDE.md` run-tag to run #81. | (a) `npm run lint:docs` exits 0. (b) No `.ts` file in the diff (T03 is docs-only — FR-9 / Non-Goal). (c) Spec 019 / spec.md Status reads `All phases done (T03 run #81); spec complete`. (d) Spec 019 closes its full lifecycle in **3 implementation runs** (T01 + T02 + T03 at runs #79..#81). (e) Q-041 Resolution stays `_open — agent default = A` (the user owner reviews; resolution flip is human-driven, not agent-driven). | [ ]    |
+| T03 | (a) Update [`docs/PERFORMANCE_TUNING.md`](../../../docs/PERFORMANCE_TUNING.md): rewrite the Spec 015 / FR-8 paragraph to reflect Spec 019 closure (the `"100 - 150" + country=GERMANY` shape is now rejected; recommended escape hatches are prefix-anchored EUR symbol or suffix-anchored EUR ISO). (b) Flip Spec 019 / spec.md Status from `draft (Phase 0 scaffolded run #78); Phase 1..3 pending` to `All phases done (T03 run #81); spec complete`. (c) Update `docs/index.md` Spec 019 row Status to match. (d) Append Decision D-03 to Spec 019 / § 10 documenting T03 acceptance + the doc edit summary. (e) Prepend run #81 entry to `docs/log.md` (and a parallel entry to the out-of-repo upstream-watch ledger Sync Log). (f) Bump `CLAUDE.md` run-tag to run #81. | (a) `npm run lint:docs` exits 0. (b) No `.ts` file in the diff (T03 is docs-only — FR-9 / Non-Goal). (c) Spec 019 / spec.md Status reads `All phases done (T03 run #81); spec complete`. (d) Spec 019 closes its full lifecycle in **3 implementation runs** (T01 + T02 + T03 at runs #79..#81). (e) Q-041 Resolution stays `_open — agent default = A` (the user owner reviews; resolution flip is human-driven, not agent-driven). | [x]    |
 
 ---
 

@@ -202,12 +202,13 @@ transparently via the existing barrel.
   ```
 
 - **(e) Bare-path raw-value pre-check (Spec 015 / T01 /
-  FR-2).** `extractSalary()` gains a 3-line guard inserted
-  AFTER `parseSalaryNumber` returns and BEFORE the K-suffix
+  FR-2; threshold retuned in Spec 019 / T01 / FR-1).**
+  `extractSalary()` gains a 3-line guard inserted AFTER
+  `parseSalaryNumber` returns and BEFORE the K-suffix
   multiplication: if the match came from the bare regex
   (NOT prefix / suffix), AND neither `match[2]` nor
-  `match[4]` is `'k'`, AND `minSalary < lowerLimit / 12`
-  (≈ 83 with the default `lowerLimit = 1000`), return the
+  `match[4]` is `'k'`, AND `minSalary < lowerLimit`
+  (= 1000 with the default `lowerLimit = 1000`), return the
   all-`null` envelope. Bounds the bare-regex
   over-matching surface introduced in Spec 014 / T03
   without disturbing the prefix / suffix paths (FR-5).
@@ -226,20 +227,51 @@ transparently via the existing barrel.
   The K-suffix bypass is intentional: `extractSalary("$100K -
   $150K", { country: Country.GERMANY })` continues to emit
   USD / 100000 / 150000 / yearly because the K-multiplier
-  renders `5K` = `5000` ≥ `lowerLimit / 12 ≈ 83` regardless
+  renders `5K` = `5000` ≥ `lowerLimit ≈ 1000` regardless
   of the threshold (FR-7).
 
-  **Documented limitation (Spec 015 / FR-8):** the bare-path
-  low-end Continental shape `"100 - 150" + country=GERMANY`
-  still emits because `100 ≥ lowerLimit / 12 ≈ 83`. The
-  raw-value pre-check rejects the prose-shape `"5 - 7"` (and
-  `"3 - 5"`) while admitting `"100"` — chosen over the
-  alternative regex-tightening (Spec 015 / non-goals) because
-  legitimate Continental EUR low-end shapes like `"100 - 150"`
-  are rare-but-real in entry-level postings. Plugin authors
-  who need stricter prose-immunity should pre-sanitise input
-  strings (strip phrases like `"X years experience"` /
-  `"X month internship"`) before passing to `extractSalary()`.
+  **Spec 015 / FR-8 closure (Spec 019 / runs #78..#81):** the
+  bare-path low-end Continental shape `"100 - 150" +
+  country=GERMANY` is now **rejected** because the threshold
+  was bumped from `lowerLimit / 12 ≈ 83` to `lowerLimit ≈
+  1000`. The raw-value pre-check now rejects every bare-path
+  match whose `minSalary < 1000`, eliminating the synthetic
+  `{ interval: 'hourly' }` rows on prose like `"team of 100 -
+  150 employees"`, `"100 - 150 km commute radius"`, or
+  `"benefits include 100 - 150 EUR monthly grocery
+  allowance"`. The dimensional rule (no string-content
+  inspection) preserves all 73 pre-existing `helpers.spec`
+  cases plus the three new T02 pins — `"100 - 150"` rejects,
+  `"1000 - 1500"` admits at the boundary as `monthly EUR
+  1000..1500`. Plugin authors representing legitimate
+  Continental EUR low-end shapes (rare entry-level postings)
+  should use the **prefix-anchored EUR symbol** form (`"€100
+  - €150"`) or the **suffix-anchored EUR ISO** form (`"100 -
+  150 EUR"`); both bypass the bare-path guard via the
+  prefix / suffix matching paths and emit faithfully without
+  triggering the threshold.
+
+  ```ts
+  // Spec 015 / FR-8 documented limitation — closed in Spec 019
+  extractSalary('100 - 150', { country: Country.GERMANY });
+  // → { interval: null, minAmount: null, maxAmount: null, currency: null }
+  // (was: { interval: 'hourly', minAmount: 100, maxAmount: 150, currency: 'EUR' }
+  //  — bare-path threshold now lowerLimit = 1000, not lowerLimit / 12 ≈ 83)
+
+  // Boundary admit at threshold
+  extractSalary('1000 - 1500', { country: Country.GERMANY });
+  // → { interval: 'monthly', minAmount: 1000, maxAmount: 1500, currency: 'EUR' }
+
+  // Plugin-author escape hatch: prefix-anchored EUR symbol
+  extractSalary('€100 - €150', { country: Country.GERMANY });
+  // → { interval: 'hourly', minAmount: 100, maxAmount: 150, currency: 'EUR' }
+  //   (prefix path bypasses the bare-path guard)
+
+  // Plugin-author escape hatch: suffix-anchored EUR ISO
+  extractSalary('100 - 150 EUR', { country: Country.GERMANY });
+  // → { interval: 'hourly', minAmount: 100, maxAmount: 150, currency: 'EUR' }
+  //   (suffix path bypasses the bare-path guard)
+  ```
 
 ### Example call patterns
 
