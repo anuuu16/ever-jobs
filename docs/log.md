@@ -5,6 +5,40 @@
 
 ---
 
+## 2026-04-28 — Scheduled run #93 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0136 ms; lint:docs clean; external-snapshot tag set held identical for the 72nd consecutive run)
+
+**Scope:** Run #93 continues the Q-042 default-C maintenance loop. Abbreviated
+health-check evidence form per run #85's authorisation.
+
+**Health-check evidence:**
+
+- `helpers.spec` → **77/77 passed in 6.145 s**.
+- `helpers.bench` → **2/2 passed in 6.055 s**; p95 = **0.0136 ms** (delta from run #92 =
+  -0.0011 ms; delta from Spec 016 baseline 0.0174 ms = -0.0038 ms — favourable). Drift well
+  inside the +0.1 ms NFR-1 budget.
+- `lint:docs` exits 0.
+
+**External-snapshot tag set:** all three repos at unchanged SHAs (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`) — **72nd consecutive zero-churn run**. No `AC-NN`
+opened.
+
+**Files touched:**
+
+- `docs/log.md` — this run #93 entry prepended.
+- `CLAUDE.md` — run-tag bumped → run #93.
+- `competitor-watch.md` (workspace-root) — Sync Log run #93 entry prepended.
+
+**No changes:** zero `.ts` / spec.md / index.md / questions.md / package-lock edits.
+
+**Forward-pointers:**
+
+- **Default for run #94 = maintenance-loop continuation under Q-042 default C.** Re-prompt
+  convention (run #100+ → one-line user-owner reminder via `docs/log.md` if Q-042 still
+  `_pending review_`) is now 7 runs out.
+- Trigger-detection unchanged.
+
+---
+
 ## 2026-04-28 — Scheduled run #92 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0147 ms; lint:docs clean; external-snapshot tag set held identical for the 71st consecutive run)
 
 **Scope:** Run #92 continues the Q-042 default-C maintenance loop. Abbreviated
