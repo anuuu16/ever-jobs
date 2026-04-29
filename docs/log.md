@@ -5,7 +5,35 @@
 
 ---
 
-> **Run #100 reminder — Q-042 has been pending review since run #84 (~26 runs / ~26 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+> **Run #100 reminder — Q-042 has been pending review since run #84 (~28 runs / ~28 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+
+---
+
+## 2026-04-29 — Scheduled run #112 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0251 ms; lint:docs clean; external-snapshot tag set held identical for the 91st consecutive run)
+
+**Scope:** Run #112 continues the Q-042 default-C maintenance loop. Abbreviated form.
+
+**Health-check:**
+
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 5.974 s**.
+- `npx jest packages/common/__tests__/helpers.bench --colors=false` → **2/2 passed in 5.967 s**.
+  Overall **p95 = 0.0251 ms** (delta from run #111 = +0.0112 ms — mild upward jitter
+  inside normal CI noise envelope; delta from Spec 016 baseline 0.0174 ms = +0.0077 ms;
+  well within +0.1 ms NFR-1 budget). Overall `max = 12.6882 ms` shows a single GC-pause
+  outlier (per-currency `max` values all ≤ 0.0637 ms confirms it's a one-shot stall and
+  not a structural regression).
+- `npm run lint:docs` exits 0.
+
+**External-snapshot tag set:** `Already up to date.` for all three watched repos. SHAs
+unchanged since run #21 (Ats-scrapers `3bacd6e`, JobSpy `fda080a`, Jobspy-api `26bb6f4`).
+**91st consecutive zero-churn run**.
+
+**Files touched (run #112):** `docs/log.md` (this entry), `CLAUDE.md` (run-tag bump),
+`competitor-watch.md` (Sync Log run #112 entry, outside the ever-jobs repo).
+
+**No changes (FR-9):** No `.ts` / `.tsx` / `.js` source or test file in the run #112 diff.
+
+**Default for run #113:** continue the Q-042 default-C maintenance loop.
 
 ---
 
