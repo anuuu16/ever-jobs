@@ -29,7 +29,30 @@ unchanged since run #21. **124th consecutive zero-churn run**.
 
 **No changes (FR-9):** No `.ts` / `.tsx` / `.js` source or test file in the run #145 diff.
 
-**Default for run #146:** continue the Q-042 default-C maintenance loop.
+**Run #144 CI reconciliation (delayed observation):** GitHub Actions workflow
+[`25120073759`](https://github.com/ever-jobs/ever-jobs/actions/runs/25120073759) for the
+run #144 commit `b473687` reported overall **`success`**, but one of its six jobs —
+`Test (Source Scrapers)` (`73618217880`) — reported `failure`. The job carries
+`continue-on-error: true` (see [.github/workflows/ci.yml:120](../.github/workflows/ci.yml))
+so the workflow gate held green, which is why the run #144 push was not retried.
+The failure surfaced after a 23-run streak of `Test (Source Scrapers)` ✓ greens
+(run #143 commit `53d80f6` had all six jobs green). Run #144's diff was docs-only
+(`CLAUDE.md` + `docs/log.md`), so the failure cannot have been introduced by this
+repo's run #144 work — it is most likely a network-touching scraper test flake
+(several `source-ats-*` plugins poll live ATS endpoints in their test paths) or a
+runner-noise hiccup. Job-log download is admin-only via the GitHub API
+(`Must have admin rights to Repository.`), so the precise failing assertion is not
+visible to the unauthenticated scheduled-task agent. **Action this run:** none —
+documenting the flake here (not in `questions.md`, since no decision is required)
+and watching whether run #145's CI re-runs the job back to green. If
+`Test (Source Scrapers)` fails on the run #145 commit too, run #146 will treat it
+as a sustained regression and add a question (Q-N) per the standing
+trigger-detection contract. Continued passing of the local
+`packages/common/__tests__/helpers.{spec,bench}` suites + `lint:docs` is unaffected
+(non-network, non-scraper).
+
+**Default for run #146:** continue the Q-042 default-C maintenance loop. **Open
+watch:** whether `Test (Source Scrapers)` returns to green on the run #145 commit.
 
 ---
 
