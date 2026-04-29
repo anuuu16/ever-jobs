@@ -5,7 +5,40 @@
 
 ---
 
-> **Run #100 reminder — Q-042 has been pending review since run #84 (~59 runs / ~59 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+> **Run #100 reminder — Q-042 has been pending review since run #84 (~60 runs / ~60 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+
+---
+
+## 2026-04-29 — Scheduled run #144 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0142 ms — flat vs. run #143; lint:docs clean; external-snapshot tag set held identical for the 123rd consecutive run)
+
+**Scope:** Run #144 continues the Q-042 default-C maintenance loop. Abbreviated form.
+
+**Health-check evidence:**
+
+- `helpers.spec` → **77/77 passed in 6.1 s**.
+- `helpers.bench` → **2/2 passed in 6.041 s**; p95 = **0.0142 ms** (delta from run #143 =
+  0.0000 ms — flat; delta from Spec 016 baseline 0.0174 ms = -0.0032 ms; favourable).
+  Drift well inside the +0.1 ms NFR-1 budget; far under the 0.5 ms NFR-1 ceiling and
+  the 2.0 ms CI ceiling. Headroom-pct = 99.29 %.
+- `lint:docs` exits 0.
+
+**External-snapshot tag set:** all three repos at unchanged SHAs (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`) — **123rd consecutive zero-churn run**.
+
+**Files touched:**
+
+- `docs/log.md` — this run #144 entry prepended; reminder duration refreshed to
+  `~60 runs / ~60 hours`.
+- `CLAUDE.md` — run-tag bumped → run #144.
+- `competitor-watch.md` (workspace-root) — Sync Log run #144 entry prepended.
+
+**No changes:** zero `.ts` / spec.md / index.md / questions.md / package-lock edits.
+
+**Forward-pointers:**
+
+- **Default for run #145 = maintenance-loop continuation under Q-042 default C.** Next
+  user-owner reminder window opens at run #150 — 6 runs out.
+- Trigger-detection unchanged.
 
 ---
 
