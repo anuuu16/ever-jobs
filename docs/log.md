@@ -9,6 +9,31 @@
 
 ---
 
+## 2026-04-29 — Scheduled run #130 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0171 ms; lint:docs clean; external-snapshot tag set held identical for the 109th consecutive run)
+
+**Scope:** Run #130 continues the Q-042 default-C maintenance loop. Abbreviated form.
+
+**Health-check:**
+
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 6.265 s**.
+- `npx jest packages/common/__tests__/helpers.bench --colors=false` → **2/2 passed in 6.011 s**.
+  Overall **p95 = 0.0171 ms** (delta from run #129 = -0.0120 ms — favourable downward drift;
+  delta from Spec 016 baseline 0.0174 ms = -0.0003 ms; essentially identical to baseline; well
+  within +0.1 ms NFR-1 budget).
+- `npm run lint:docs` exits 0.
+
+**External-snapshot tag set:** `Already up to date.` for all three watched repos. SHAs
+unchanged since run #21. **109th consecutive zero-churn run**.
+
+**Files touched (run #130):** `docs/log.md` (this entry), `CLAUDE.md` (run-tag bump),
+`competitor-watch.md` (Sync Log run #130 entry, outside the ever-jobs repo).
+
+**No changes (FR-9):** No `.ts` / `.tsx` / `.js` source or test file in the run #130 diff.
+
+**Default for run #131:** continue the Q-042 default-C maintenance loop.
+
+---
+
 ## 2026-04-29 — Scheduled run #129 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0291 ms; lint:docs clean; external-snapshot tag set held identical for the 108th consecutive run)
 
 **Scope:** Run #129 continues the Q-042 default-C maintenance loop. Abbreviated form.
