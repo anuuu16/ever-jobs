@@ -9,6 +9,48 @@
 
 ---
 
+## 2026-04-29 — Scheduled run #101 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0201 ms; lint:docs clean; external-snapshot tag set held identical for the 80th consecutive run)
+
+**Scope:** Run #101 continues the Q-042 default-C maintenance loop. Abbreviated
+health-check evidence form. The run #100 user-owner reminder for Q-042 (pending
+review since run #84) stays in place at the top of the log.
+
+**Health-check evidence (abbreviated):**
+
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 5.993 s**.
+- `npx jest packages/common/__tests__/helpers.bench --colors=false` → **2/2 passed in 5.978 s**.
+  `dist/bench/helpers-salary.json` records overall **p95 = 0.0201 ms** (delta from run #100 =
+  +0.0059 ms; delta from Spec 016 baseline 0.0174 ms = +0.0027 ms; well within +0.1 ms NFR-1
+  budget). The 11.3 ms max is a single outlier iteration (sandbox jitter / GC pause); p95
+  / p99 stay well under the 0.5 ms NFR-1 target.
+- `npm run lint:docs` exits 0.
+
+**External-snapshot tag set:** all three watched repos return `Already up to date.` SHAs
+unchanged since run #21: Ats-scrapers `3bacd6e`, JobSpy `fda080a`, Jobspy-api `26bb6f4`.
+**80th consecutive zero-churn run** (since run #21).
+
+**Files touched (run #101):**
+
+- `docs/log.md` — this run #101 entry prepended above the run #100 entry.
+- `CLAUDE.md` — run-tag bumped from `2026-04-29 (scheduled run #100)` to
+  `2026-04-29 (scheduled run #101)`.
+- `competitor-watch.md` (workspace-root, outside the ever-jobs repo) — Sync Log run #101
+  entry prepended.
+
+**No changes (FR-9):** No `.ts` / `.tsx` / `.js` source or test file in the run #101 diff.
+No spec.md / tasks.md flip; no `docs/index.md` § 7 update; no `docs/questions.md` change.
+No `package.json` / `package-lock.json` change.
+
+**Forward-pointers / default for run #102:** continue the Q-042 default-C maintenance loop.
+The run #100 user-owner reminder for Q-042 stays at the top of the log indefinitely until
+the human owner reviews; future runs do not re-emit additional reminder entries (the single
+reminder at run #100 fired per the run #99 forward-pointer convention; one is sufficient).
+
+**Acceptance:** lint:docs exit 0; 77/77 jest; bench p95 = 0.0201 ms (well under NFR-1);
+all three external repos at the same SHAs as run #100; no `.ts` in run #101 diff.
+
+---
+
 ## 2026-04-29 — Scheduled run #100 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0142 ms; lint:docs clean; external-snapshot tag set held identical for the 79th consecutive run; run #100 re-prompt reminder fired per run #99 forward-pointer)
 
 **Scope:** Run #100 continues the Q-042 default-C maintenance loop. **The
