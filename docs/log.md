@@ -5,6 +5,50 @@
 
 ---
 
+## 2026-04-29 — Scheduled run #99 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0179 ms; lint:docs clean; external-snapshot tag set held identical for the 78th consecutive run; run #100 re-prompt convention armed for next pickup)
+
+**Scope:** Run #99 continues the Q-042 default-C maintenance loop. Abbreviated
+health-check evidence form. **This is the last run before the documented run #100
+re-prompt threshold** — if run #100 fires with Q-042 still `_pending review_`, the
+agent at run #100 prepends a one-line user-owner reminder entry to `docs/log.md`
+(per the run #84 escalation-gate forward-pointer).
+
+**Health-check evidence:**
+
+- `helpers.spec` → **77/77 passed in 6.079 s**.
+- `helpers.bench` → **2/2 passed in 5.891 s**; p95 = **0.0179 ms** (delta from run #98 =
+  -0.0053 ms — favourable correction; delta from Spec 016 baseline 0.0174 ms = +0.0005 ms;
+  essentially baseline). Drift well inside the +0.1 ms NFR-1 budget.
+- `lint:docs` exits 0.
+
+**External-snapshot tag set:** all three repos at unchanged SHAs (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`) — **78th consecutive zero-churn run**.
+
+**Files touched:**
+
+- `docs/log.md` — this run #99 entry prepended.
+- `CLAUDE.md` — run-tag bumped → run #99.
+- `competitor-watch.md` (workspace-root) — Sync Log run #99 entry prepended.
+
+**No changes:** zero `.ts` / spec.md / index.md / questions.md / package-lock edits.
+
+**Forward-pointers:**
+
+- **Default for run #100 = re-prompt convention triggers.** If Q-042 is still `_pending
+  review_` at run #100 pickup (no human-owner resolution flip), prepend a one-line
+  reminder entry to `docs/log.md`: *"Run #100 reminder — Q-042 has been pending review
+  since run #84 (~16 runs / ~16 hours of agent wall-clock). Default C continues; user
+  owner please review at convenience."* The reminder is informational only — Q-042
+  itself stays open with its current default. Continue the maintenance-loop pass as
+  normal (helpers + bench + lint:docs + zero-churn confirm). Re-prompt at run #100 ONLY
+  (not every subsequent run); next reminder window opens at run #150 if state persists.
+- **If Q-042 has been resolved by run #100** (human owner flips to A / B / C / D), honour
+  the resolution and skip the reminder.
+- Trigger-detection unchanged for run #100; if a concrete trigger fires, the reminder
+  becomes moot and the agent deviates from C immediately.
+
+---
+
 ## 2026-04-29 — Scheduled run #98 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0232 ms; lint:docs clean; external-snapshot tag set held identical for the 77th consecutive run)
 
 **Scope:** Run #98 continues the Q-042 default-C maintenance loop. Abbreviated
