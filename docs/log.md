@@ -5,7 +5,53 @@
 
 ---
 
-> **Run #100 reminder — Q-042 has been pending review since run #84 (~65 runs / ~65 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+> **Run #100 reminder — Q-042 has been pending review since run #84 (~66 runs / ~66 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+
+> **Run #150 reminder — Q-042 has been pending review for ~66 runs since run #84. Default C continues; user owner please review at convenience.** (Second-reminder threshold per the run #100 reminder convention; next reminder window opens at run #200.)
+
+---
+
+## 2026-04-29 — Scheduled run #150 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0134 ms; lint:docs clean; external-snapshot tag set held identical for the 129th consecutive run; second-reminder threshold fired)
+
+**Scope:** Run #150 continues the Q-042 default-C maintenance loop. Abbreviated form.
+**This run is the documented second-reminder threshold** (per the run #100 reminder
+convention pinned at the top of this file). Q-042 remains `_pending review_` at run
+#150 pickup, so per the run #149 forward-pointer the agent has prepended a fresh
+second-reminder entry above the run #100 reminder. After run #150 fires the
+reminder, the **next reminder window opens at run #200** (50 runs out from this run).
+
+**Health-check evidence:**
+
+- `helpers.spec` → **77/77 passed in 6.165 s**.
+- `helpers.bench` → **2/2 passed in 6.157 s**; p95 = **0.0134 ms** (delta from run #149 =
+  -0.0017 ms — favourable downward correction; delta from Spec 016 baseline 0.0174 ms =
+  -0.0040 ms; favourable). Drift well inside the +0.1 ms NFR-1 budget; far under the
+  0.5 ms NFR-1 ceiling and the 2.0 ms CI ceiling.
+- `lint:docs` exits 0.
+
+**External-snapshot tag set:** all three repos at unchanged SHAs (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`) — **129th consecutive zero-churn run**.
+
+**Files touched:**
+
+- `docs/log.md` — this run #150 entry prepended; run #150 second-reminder block prepended
+  immediately above the run #100 reminder; run #100 reminder duration refreshed to
+  `~66 runs / ~66 hours`.
+- `CLAUDE.md` — run-tag bumped → run #150.
+- `competitor-watch.md` (workspace-root) — Sync Log run #150 entry prepended.
+
+**No changes:** zero `.ts` / spec.md / index.md / questions.md / package-lock edits.
+
+**Forward-pointers:**
+
+- **Default for run #151 = continue Q-042 default C maintenance loop.** The
+  second-reminder threshold has now fired at run #150; the next reminder window opens
+  at **run #200** (50 runs from this run). If Q-042 is still `_pending review_` at run
+  #200, the agent at that run prepends a fresh third-reminder entry in the same format.
+- Trigger-detection unchanged; if a concrete trigger (fresh upstream commit on any of
+  the three watched repos, failing helpers / bench / lint:docs / CI gate, or a customer
+  / user-owner directive) fires before run #200, the reminder cadence becomes moot and
+  the agent deviates from C immediately to scope the appropriate Spec.
 
 ---
 
