@@ -5,6 +5,80 @@
 
 ---
 
+> **Run #100 reminder — Q-042 has been pending review since run #84 (~16 runs / ~16 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+
+---
+
+## 2026-04-29 — Scheduled run #100 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0142 ms; lint:docs clean; external-snapshot tag set held identical for the 79th consecutive run; run #100 re-prompt reminder fired per run #99 forward-pointer)
+
+**Scope:** Run #100 continues the Q-042 default-C maintenance loop. **The
+documented run #100 re-prompt convention fires this run** — Q-042 is still
+`_pending review_` (line 120 of `docs/questions.md` unchanged), so a one-line
+user-owner reminder entry has been prepended above this run's entry per the
+run #84 escalation-gate forward-pointer (echoed in the run #99 forward-pointer
+at log.md:37–48). The reminder is **informational only**; Q-042 itself stays
+open with its current default and the maintenance pass continues as normal.
+Per the run #99 forward-pointer convention, the **next reminder window opens
+at run #150** if Q-042 state persists — re-prompts are not emitted on every
+subsequent run.
+
+**Health-check evidence:**
+
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77
+  passed in 5.882 s**.
+- `npx jest packages/common/__tests__/helpers.bench --colors=false` → **2/2
+  passed in 6.124 s**; `dist/bench/helpers-salary.json` records overall **p95
+  = 0.0142 ms** (delta from run #99 = -0.0037 ms — favourable downward drift;
+  delta from Spec 016 baseline 0.0174 ms = -0.0032 ms — well below baseline;
+  drift well inside the +0.1 ms NFR-1 budget). p99 = 0.042 ms; max = 0.089 ms;
+  all percentiles well under the 0.5 ms NFR-1 target.
+- `npm run lint:docs` exits 0.
+
+**External-snapshot tag set:** all three watched repos return `Already up to
+date.` SHAs unchanged since run #21:
+- Ats-scrapers `3bacd6e` (0 new commits since run #99).
+- JobSpy `fda080a` (0 new commits since run #99).
+- Jobspy-api `26bb6f4` (0 new commits since run #99).
+
+**79th consecutive zero-churn run** in the external-snapshot tag set (since
+run #21).
+
+**Files touched (run #100):**
+
+- `docs/log.md` — this run #100 entry prepended; one-line user-owner reminder
+  prepended above it per the run #99 forward-pointer.
+- `CLAUDE.md` — run-tag bumped from `2026-04-29 (scheduled run #99)` to
+  `2026-04-29 (scheduled run #100)`.
+- `competitor-watch.md` (workspace-root, outside the ever-jobs repo) — Sync
+  Log run #100 entry prepended.
+
+**No changes (FR-9):** No `.ts` / `.tsx` / `.js` source or test file in the
+run #100 diff. No `spec.md` / `tasks.md` flip; no `docs/index.md` § 7 update;
+no `docs/questions.md` change (Q-042 Resolution remains `_pending review._`).
+No `package.json` / `package-lock.json` change.
+
+**Forward-pointers:**
+
+- **Default for run #101 = maintenance-loop continuation under Q-042 default C.**
+  Trigger-detection unchanged: fresh upstream commits on Ats-scrapers / JobSpy /
+  Jobspy-api, failing helpers / bench / lint:docs / CI gate, customer-reported
+  synthetic salary row matching a Q-026 / Q-027 shape, or user-owner directive.
+- **Re-prompt window:** the next reminder window opens at run #150 if Q-042 is
+  still `_pending review_` at that pickup. Re-prompts are not emitted on every
+  intermediate run — the run-#100 reminder above is the only one until run #150.
+- **If Q-042 has been resolved by run #150** (human owner flips to A / B / C / D),
+  honour the resolution and skip the next reminder; the agent at the resolution
+  run picks up the new policy.
+- If a concrete trigger fires before run #150, the reminder threshold becomes
+  moot and the agent deviates from C immediately to score the trigger.
+
+**Acceptance:** lint:docs exit 0; 77/77 jest; bench p95 = 0.0142 ms (well
+under NFR-1); all three external repos at the same SHAs as run #99; no `.ts`
+in run #100 diff; run #100 re-prompt reminder prepended per the run #99
+forward-pointer convention.
+
+---
+
 ## 2026-04-29 — Scheduled run #99 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0179 ms; lint:docs clean; external-snapshot tag set held identical for the 78th consecutive run; run #100 re-prompt convention armed for next pickup)
 
 **Scope:** Run #99 continues the Q-042 default-C maintenance loop. Abbreviated
