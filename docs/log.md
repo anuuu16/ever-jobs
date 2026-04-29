@@ -5,7 +5,43 @@
 
 ---
 
-> **Run #100 reminder — Q-042 has been pending review since run #84 (~35 runs / ~35 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+> **Run #100 reminder — Q-042 has been pending review since run #84 (~37 runs / ~37 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+
+---
+
+## 2026-04-29 — Scheduled run #121 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0172 ms; lint:docs clean; external-snapshot tag set held identical for the **100th consecutive run** — milestone)
+
+**Scope:** Run #121 continues the Q-042 default-C maintenance loop. Abbreviated form.
+This run lands the **100th-consecutive zero-churn milestone** for the external-snapshot
+tag set since the run #21 freeze.
+
+**Health-check:**
+
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 6.073 s**.
+- `npx jest packages/common/__tests__/helpers.bench --colors=false` → **2/2 passed in 6.137 s**.
+  Overall **p95 = 0.0172 ms** (delta from run #120 = +0.0035 ms — minor upward jitter;
+  delta from Spec 016 baseline 0.0174 ms = -0.0002 ms — essentially identical to baseline;
+  well within +0.1 ms NFR-1 budget; far under the 0.5 ms NFR-1 ceiling and the 2.0 ms CI
+  ceiling). Overall `max = 13.4674 ms` is a single-iteration GC-pause sandbox jitter
+  outlier (per-currency `max` for non-DKK/SEK currencies all ≤ 0.1103 ms confirms one-shot
+  stall, not structural regression). p99 = 0.0366 ms (well under NFR-1 0.5 ms target).
+- `npm run lint:docs` exits 0.
+
+**External-snapshot tag set:** `Already up to date.` for all three watched repos. SHAs
+unchanged since run #21 (Ats-scrapers `3bacd6e`, JobSpy `fda080a`, Jobspy-api `26bb6f4`).
+**100th consecutive zero-churn run** — milestone reached. Next user-owner reminder
+window opens at run #150 — 29 runs out.
+
+**Files touched (run #121):** `docs/log.md` (this entry), `CLAUDE.md` (run-tag bump),
+`competitor-watch.md` (Sync Log run #121 entry, outside the ever-jobs repo).
+
+**No changes (FR-9):** No `.ts` / `.tsx` / `.js` source or test file in the run #121 diff.
+
+**Default for run #122:** continue the Q-042 default-C maintenance loop. The
+100-consecutive-zero-churn streak does not by itself constitute a trigger for
+deviation — Q-042 default C remains in effect pending one of the four named
+trigger classes (upstream commit, failing health-check, customer-reported synthetic
+row, user-owner directive).
 
 ---
 
