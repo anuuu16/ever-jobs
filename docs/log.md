@@ -5,7 +5,51 @@
 
 ---
 
-> **Run #100 reminder — Q-042 has been pending review since run #84 (~63 runs / ~63 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+> **Run #100 reminder — Q-042 has been pending review since run #84 (~65 runs / ~65 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+
+---
+
+## 2026-04-29 — Scheduled run #149 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0151 ms; lint:docs clean; external-snapshot tag set held identical for the 128th consecutive run; run #150 second reminder armed for next pickup)
+
+**Scope:** Run #149 continues the Q-042 default-C maintenance loop. Abbreviated form.
+**This is the last run before the documented run #150 second-reminder threshold** (per
+the run #100 reminder convention pinned at the top of this file). If run #150 fires with
+Q-042 still `_pending review_`, the agent at run #150 prepends a fresh second-reminder
+entry: *"Run #150 reminder — Q-042 has been pending review for ~66 runs since run #84.
+Default C continues; user owner please review at convenience."* The next reminder window
+after run #150 opens at run #200.
+
+**Health-check evidence:**
+
+- `helpers.spec` → **77/77 passed in 6.151 s**.
+- `helpers.bench` → **2/2 passed in 6.308 s**; p95 = **0.0151 ms** (delta from run #148 =
+  -0.0026 ms — favourable downward correction; delta from Spec 016 baseline 0.0174 ms =
+  -0.0023 ms; favourable). Drift well inside the +0.1 ms NFR-1 budget.
+- `lint:docs` exits 0.
+
+**External-snapshot tag set:** all three repos at unchanged SHAs (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`) — **128th consecutive zero-churn run**.
+
+**Files touched:**
+
+- `docs/log.md` — this run #149 entry prepended; reminder duration refreshed to
+  `~65 runs / ~65 hours`.
+- `CLAUDE.md` — run-tag bumped → run #149.
+- `competitor-watch.md` (workspace-root) — Sync Log run #149 entry prepended.
+
+**No changes:** zero `.ts` / spec.md / index.md / questions.md / package-lock edits.
+
+**Forward-pointers:**
+
+- **Default for run #150 = second reminder threshold.** If Q-042 is still `_pending
+  review_` at run #150 pickup, prepend a fresh second-reminder entry to `docs/log.md`
+  in the same format as the run #100 reminder. The reminder is informational only;
+  Q-042 stays open with its current default and the maintenance pass continues. After
+  run #150 fires the reminder, the next reminder window opens at run #200 (50 runs
+  out). **If Q-042 has been resolved by run #150**, honour the resolution and skip the
+  reminder.
+- Trigger-detection unchanged; if a concrete trigger fires at run #150, the reminder
+  becomes moot and the agent deviates from C immediately.
 
 ---
 
