@@ -5,7 +5,37 @@
 
 ---
 
-> **Run #100 reminder — Q-042 has been pending review since run #84 (~32 runs / ~32 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+> **Run #100 reminder — Q-042 has been pending review since run #84 (~34 runs / ~34 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+
+---
+
+## 2026-04-29 — Scheduled run #118 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0179 ms; lint:docs clean; external-snapshot tag set held identical for the 97th consecutive run)
+
+**Scope:** Run #118 continues the Q-042 default-C maintenance loop. Abbreviated form.
+
+**Health-check:**
+
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 5.982 s**.
+- `npx jest packages/common/__tests__/helpers.bench --colors=false` → **2/2 passed in 6.001 s**.
+  Overall **p95 = 0.0179 ms** (delta from run #117 = +0.0049 ms — minor upward jitter;
+  delta from Spec 016 baseline 0.0174 ms = +0.0005 ms; essentially identical to baseline;
+  well within +0.1 ms NFR-1 budget). Overall `max = 12.2461 ms` is a single-iteration
+  DKK GC-pause sandbox jitter outlier (per-currency `max` for non-DKK currencies all
+  ≤ 0.1754 ms confirms one-shot stall, not structural regression). p99 = 0.0472 ms
+  (well under NFR-1 0.5 ms target).
+- `npm run lint:docs` exits 0.
+
+**External-snapshot tag set:** `Already up to date.` for all three watched repos. SHAs
+unchanged since run #21 (Ats-scrapers `3bacd6e`, JobSpy `fda080a`, Jobspy-api `26bb6f4`).
+**97th consecutive zero-churn run**.
+
+**Files touched (run #118):** `docs/log.md` (this entry), `CLAUDE.md` (run-tag bump),
+`competitor-watch.md` (Sync Log run #118 entry, outside the ever-jobs repo).
+
+**No changes (FR-9):** No `.ts` / `.tsx` / `.js` source or test file in the run #118 diff.
+
+**Default for run #119:** continue the Q-042 default-C maintenance loop. Next user-owner
+reminder window opens at run #150 — 32 runs out.
 
 ---
 
