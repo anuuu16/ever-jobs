@@ -5,9 +5,45 @@
 
 ---
 
-> **Run #100 reminder — Q-042 has been pending review since run #84 (~75 runs / ~75 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+> **Run #100 reminder — Q-042 has been pending review since run #84 (~77 runs / ~77 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
 
-> **Run #150 reminder — Q-042 has been pending review for ~75 runs since run #84. Default C continues; user owner please review at convenience.** (Second-reminder threshold per the run #100 reminder convention; next reminder window opens at run #200.)
+> **Run #150 reminder — Q-042 has been pending review for ~77 runs since run #84. Default C continues; user owner please review at convenience.** (Second-reminder threshold per the run #100 reminder convention; next reminder window opens at run #200.)
+
+---
+
+## 2026-04-29 — Scheduled run #161 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0322 ms; lint:docs clean; external-snapshot tag set held identical for the 140th consecutive run)
+
+**Scope:** Run #161 continues the Q-042 default-C maintenance loop. Abbreviated form.
+
+**Health-check evidence:**
+
+- `helpers.spec` → **77/77 passed in 6.148 s**.
+- `helpers.bench` → **2/2 passed in 6.077 s**; p95 = **0.0322 ms** (delta from run #160 =
+  +0.0055 ms — slight upward jitter; delta from Spec 016 baseline 0.0174 ms = +0.0148 ms;
+  highest reading observed in the maintenance-loop sequence so far but still well inside
+  the +0.1 ms NFR-1 budget — 0.0148 ms drift vs. 0.1 ms ceiling). Per-currency p95 figures
+  remain under the 0.5 ms NFR-1 target and the 2.0 ms CI ceiling.
+- `lint:docs` exits 0.
+
+**External-snapshot tag set:** all three repos at unchanged SHAs (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`) — **140th consecutive zero-churn run**.
+
+**Files touched:**
+
+- `docs/log.md` — this run #161 entry prepended; reminder durations refreshed to
+  `~77 runs / ~77 hours`.
+- `CLAUDE.md` — run-tag bumped → run #161.
+- `competitor-watch.md` (workspace-root) — Sync Log run #161 entry prepended.
+
+**No changes:** zero `.ts` / spec.md / index.md / questions.md / package-lock edits.
+
+**Forward-pointers:**
+
+- **Default for run #162 = maintenance-loop continuation under Q-042 default C.** Next
+  user-owner reminder window opens at run #200 — 39 runs out.
+- Trigger-detection unchanged. The 0.0322 ms bench reading is comfortably under the NFR-1
+  budget; if a future run exceeds 0.05 ms the agent should investigate whether
+  background-task interference or ts-jest cache pressure is driving the drift.
 
 ---
 
