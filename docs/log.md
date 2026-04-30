@@ -5,9 +5,41 @@
 
 ---
 
-> **Run #100 reminder — Q-042 has been pending review since run #84 (~99 runs / ~99 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+> **Run #100 reminder — Q-042 has been pending review since run #84 (~101 runs / ~101 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
 
-> **Run #150 reminder — Q-042 has been pending review for ~99 runs since run #84. Default C continues; user owner please review at convenience.** (Second-reminder threshold per the run #100 reminder convention; next reminder window opens at run #200.)
+> **Run #150 reminder — Q-042 has been pending review for ~101 runs since run #84. Default C continues; user owner please review at convenience.** (Second-reminder threshold per the run #100 reminder convention; next reminder window opens at run #200.)
+
+---
+
+## 2026-04-30 — Scheduled run #185 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0155 ms; lint:docs clean; external-snapshot tag set held identical for the 164th consecutive run)
+
+**Scope:** Run #185 continues the Q-042 default-C maintenance loop. Abbreviated form.
+
+**Health-check evidence:**
+
+- `helpers.spec` → **77/77 passed in 6.18 s**.
+- `helpers.bench` → **2/2 passed in 6.085 s**; p95 = **0.0155 ms** (delta from run #184 =
+  -0.0037 ms — favourable downward correction; delta from Spec 016 baseline 0.0174 ms =
+  -0.0019 ms; favourable). Drift well inside the +0.1 ms NFR-1 budget.
+- `lint:docs` exits 0.
+
+**External-snapshot tag set:** all three repos at unchanged SHAs (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`) — **164th consecutive zero-churn run**.
+
+**Files touched:**
+
+- `docs/log.md` — this run #185 entry prepended; reminder durations refreshed to
+  `~101 runs / ~101 hours`.
+- `CLAUDE.md` — run-tag bumped → run #185.
+- `competitor-watch.md` (workspace-root) — Sync Log run #185 entry prepended.
+
+**No changes:** zero `.ts` / spec.md / index.md / questions.md / package-lock edits.
+
+**Forward-pointers:**
+
+- **Default for run #186 = maintenance-loop continuation under Q-042 default C.** Next
+  user-owner reminder window opens at run #200 — 15 runs out.
+- Trigger-detection unchanged.
 
 ---
 
