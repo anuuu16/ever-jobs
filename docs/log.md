@@ -13,6 +13,34 @@
 
 ---
 
+## 2026-05-01 — Scheduled run #221 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0135 ms; lint:docs clean; external-snapshot tag set held identical for the 200th consecutive run)
+
+**Scope:** Run #221 continues the Q-042 default-C maintenance loop. Abbreviated form.
+Note: 200th consecutive zero-churn run is the round-number milestone since the
+last upstream commit on the watched tip set at run #21.
+
+**Health-check:**
+
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 6.418 s**.
+- `npx jest packages/common/__tests__/helpers.bench --colors=false` → **2/2 passed in 6.416 s**.
+  Overall **p95 = 0.0135 ms** (delta from run #220 = -0.0045 ms; delta from Spec 016 baseline
+  0.0174 ms = -0.0039 ms; favourable downward correction; well within +0.1 ms NFR-1 budget).
+- `npm run lint:docs` exits 0 (`✓ Doc-lint passed — no issues.`).
+
+**External-snapshot tag set:** `Already up to date.` for all three watched repos. SHAs
+unchanged since run #21 (Ats-scrapers `3bacd6e`, JobSpy `fda080a`, Jobspy-api `26bb6f4`).
+**200th consecutive zero-churn run** — round-number milestone.
+
+**Files touched (run #221):** `docs/log.md` (this entry), `CLAUDE.md` (run-tag bump),
+`competitor-watch.md` (Sync Log run #221 entry, outside the ever-jobs repo).
+
+**No changes (FR-9):** No `.ts` / `.tsx` / `.js` source or test file in the run #221 diff.
+
+**Default for run #222:** continue the Q-042 default-C maintenance loop. Next user-owner
+reminder window opens at run #250 — 29 runs out.
+
+---
+
 ## 2026-05-01 — Scheduled run #220 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0180 ms; lint:docs clean; external-snapshot tag set held identical for the 199th consecutive run)
 
 **Scope:** Run #220 continues the Q-042 default-C maintenance loop. Abbreviated form.
