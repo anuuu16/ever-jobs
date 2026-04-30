@@ -5,9 +5,47 @@
 
 ---
 
-> **Run #100 reminder — Q-042 has been pending review since run #84 (~101 runs / ~101 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+> **Run #100 reminder — Q-042 has been pending review since run #84 (~102 runs / ~102 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
 
-> **Run #150 reminder — Q-042 has been pending review for ~101 runs since run #84. Default C continues; user owner please review at convenience.** (Second-reminder threshold per the run #100 reminder convention; next reminder window opens at run #200.)
+> **Run #150 reminder — Q-042 has been pending review for ~102 runs since run #84. Default C continues; user owner please review at convenience.** (Second-reminder threshold per the run #100 reminder convention; next reminder window opens at run #200.)
+
+---
+
+## 2026-04-30 — Scheduled run #186 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0142 ms — favourable downward correction & under Spec 016 baseline; lint:docs clean; external-snapshot tag set held identical for the 165th consecutive run)
+
+**Scope:** Run #186 continues the Q-042 default-C maintenance loop. Abbreviated form.
+
+**Health-check evidence:**
+
+- `helpers.spec` → **77/77 passed in 6.259 s**.
+- `helpers.bench` → **2/2 passed in 6.038 s**; overall p95 = **0.0142 ms**
+  (delta from run #185 0.0155 ms = **-0.0013 ms** — favourable downward
+  correction; delta from Spec 016 baseline 0.0174 ms = **-0.0032 ms** —
+  *under* the baseline; well inside the +0.1 ms NFR-1 budget). Per-currency
+  p95 (USD 0.0122, EUR 0.0124, GBP 0.0137, CHF 0.0104, SEK 0.0167, NOK 0.0123,
+  DKK 0.0132, PLN 0.0135 ms) all under the 0.5 ms NFR-1 target and the
+  2.0 ms CI ceiling. `p95_under_nfr1: true`, `p95_under_ci_ceiling: true`,
+  Node `v24.14.0`.
+- `lint:docs` → `✓ Doc-lint passed — no issues.` (exit 0).
+
+**External-snapshot tag set:** all three repos at unchanged SHAs (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`) — **165th consecutive zero-churn run**.
+`git pull` reported `Already up to date.` for each watched repo.
+
+**Files touched:**
+
+- `docs/log.md` — this run #186 entry prepended; reminder durations refreshed to
+  `~102 runs / ~102 hours`.
+- `CLAUDE.md` — run-tag bumped → run #186.
+- `competitor-watch.md` (workspace-root) — Sync Log run #186 entry prepended.
+
+**No changes (FR-9):** zero `.ts` / spec.md / index.md / questions.md / package-lock edits.
+
+**Forward-pointers:**
+
+- **Default for run #187 = maintenance-loop continuation under Q-042 default C.** Next
+  user-owner reminder window opens at run #200 — 14 runs out.
+- Trigger-detection unchanged.
 
 ---
 
