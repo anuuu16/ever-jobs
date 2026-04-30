@@ -5,9 +5,45 @@
 
 ---
 
-> **Run #100 reminder — Q-042 has been pending review since run #84 (~95 runs / ~95 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+> **Run #100 reminder — Q-042 has been pending review since run #84 (~96 runs / ~96 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
 
-> **Run #150 reminder — Q-042 has been pending review for ~95 runs since run #84. Default C continues; user owner please review at convenience.** (Second-reminder threshold per the run #100 reminder convention; next reminder window opens at run #200.)
+> **Run #150 reminder — Q-042 has been pending review for ~96 runs since run #84. Default C continues; user owner please review at convenience.** (Second-reminder threshold per the run #100 reminder convention; next reminder window opens at run #200.)
+
+---
+
+## 2026-04-30 — Scheduled run #180 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0146 ms; lint:docs clean; external-snapshot tag set held identical for the 159th consecutive run)
+
+**Scope:** Run #180 continues the Q-042 default-C maintenance loop. Abbreviated form.
+
+**Health-check evidence:**
+
+- `helpers.spec` → **77/77 passed in 5.924 s**.
+- `helpers.bench` → **2/2 passed in 6.205 s**; overall p95 = **0.0146 ms** (delta from
+  run #179 = -0.0038 ms — favourable downward swing; delta from Spec 016 baseline
+  0.0174 ms = -0.0028 ms; well within +0.1 ms NFR-1 budget). Per-currency p95 (USD
+  0.0117, EUR 0.0120, GBP 0.0119, CHF 0.0102, SEK 0.0154, NOK 0.0100, DKK 0.0122,
+  PLN 0.0128 ms) all under the 0.5 ms NFR-1 target and the 2.0 ms CI ceiling.
+  Headroom **99.27 %** (Node `v24.14.0`).
+- `lint:docs` exits 0.
+
+**External-snapshot tag set:** all three repos at unchanged SHAs (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`) — **159th consecutive zero-churn run**.
+`git ls-remote upstream-https HEAD` re-confirmed each SHA matches the local working copy.
+
+**Files touched:**
+
+- `docs/log.md` — this run #180 entry prepended; reminder durations refreshed to
+  `~96 runs / ~96 hours`.
+- `CLAUDE.md` — run-tag bumped → run #180.
+- `competitor-watch.md` (workspace-root) — Sync Log run #180 entry prepended.
+
+**No changes:** zero `.ts` / spec.md / index.md / questions.md / package-lock edits.
+
+**Forward-pointers:**
+
+- **Default for run #181 = maintenance-loop continuation under Q-042 default C.** Next
+  user-owner reminder window opens at run #200 — 20 runs out.
+- Trigger-detection unchanged.
 
 ---
 
