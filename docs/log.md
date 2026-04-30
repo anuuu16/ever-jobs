@@ -5,9 +5,49 @@
 
 ---
 
-> **Run #100 reminder — Q-042 has been pending review since run #84 (~115 runs / ~115 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
+> **Run #100 reminder — Q-042 has been pending review since run #84 (~116 runs / ~116 hours of agent wall-clock). Default C continues; user owner please review at convenience.**
 
-> **Run #150 reminder — Q-042 has been pending review for ~115 runs since run #84. Default C continues; user owner please review at convenience.** (Second-reminder threshold per the run #100 reminder convention; next reminder window opens at run #200.)
+> **Run #150 reminder — Q-042 has been pending review for ~116 runs since run #84. Default C continues; user owner please review at convenience.** (Second-reminder threshold per the run #100 reminder convention; next reminder window opens at run #200.)
+
+> **Run #200 reminder — Q-042 has been pending review for ~116 runs since run #84. Default C continues; user owner please review at convenience.** (Third-reminder threshold per the run #150 forward-pointer convention; next reminder window opens at run #250.)
+
+---
+
+## 2026-04-30 — Scheduled run #200 (maintenance loop continuation under Q-042 default C; helpers 77/77 green; bench p95 = 0.0263 ms; lint:docs clean; external-snapshot tag set held identical for the 179th consecutive run; run #200 third-reminder threshold fired)
+
+**Scope:** Run #200 continues the Q-042 default-C maintenance loop and fires the
+**third-reminder threshold** per the run #150 forward-pointer convention. Q-042
+verified still `_pending review_` at line 120 of `docs/questions.md` — third reminder
+prepended at the top of this file. The next reminder window opens at run #250 (50
+runs out).
+
+**Health-check evidence:**
+
+- `helpers.spec` → **77/77 passed in 6.129 s**.
+- `helpers.bench` → **2/2 passed in 6.106 s**; p95 = **0.0263 ms** (delta from run #199 =
+  +0.0127 ms; delta from Spec 016 baseline 0.0174 ms = +0.0089 ms; well within +0.1 ms
+  NFR-1 budget).
+- `lint:docs` exits 0.
+
+**External-snapshot tag set:** all three repos at unchanged SHAs (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`) — **179th consecutive zero-churn run**.
+
+**Files touched:**
+
+- `docs/log.md` — run #200 entry prepended; **run #200 third-reminder block prepended**
+  above the run #100 + run #150 reminder blocks (newest-first ordering); reminder
+  durations refreshed to `~116 runs / ~116 hours`.
+- `CLAUDE.md` — run-tag bumped → run #200.
+- `competitor-watch.md` (workspace-root) — Sync Log run #200 entry prepended.
+
+**No changes:** zero `.ts` / spec.md / index.md / questions.md / package-lock edits.
+
+**Forward-pointers:**
+
+- **Default for run #201 = maintenance-loop continuation under Q-042 default C.** Next
+  user-owner reminder window opens at run #250 — 50 runs out per the post-run-#150
+  reminder cadence (every 50 runs).
+- Trigger-detection unchanged.
 
 ---
 
