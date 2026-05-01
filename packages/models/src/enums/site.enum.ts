@@ -214,6 +214,8 @@ export enum Site {
   LYFT = 'lyft',
   // Phase 40: Spec 030 — Source Company Plugin: Plaid
   PLAID = 'plaid',
+  // Phase 41: Spec 031 — Source Company Plugin: Asana
+  ASANA = 'asana',
 }
 
 /**

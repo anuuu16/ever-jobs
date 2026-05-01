@@ -70,6 +70,7 @@ import { AirbnbModule } from './source-company-airbnb';
 import { AmazonModule } from './source-company-amazon';
 import { AnthropicModule } from './source-company-anthropic';
 import { AppleModule } from './source-company-apple';
+import { AsanaModule } from './source-company-asana';
 import { BoeingModule } from './source-company-boeing';
 import { CoinbaseModule } from './source-company-coinbase';
 import { CursorModule } from './source-company-cursor';
@@ -248,6 +249,7 @@ export const ALL_SOURCE_MODULES = [
   AmazonModule,
   AnthropicModule,
   AppleModule,
+  AsanaModule,
   BoeingModule,
   CoinbaseModule,
   CursorModule,

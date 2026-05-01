@@ -13,6 +13,112 @@
 
 ---
 
+## 2026-05-01 — Scheduled run #241 (Spec 031 closed end-to-end; new `source-company-asana` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench 2/2 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 20th company-direct plugin in the catalogue)
+
+**Scope:** Run #241 continues the user-owner-directed concrete-action
+deviation that runs #230–#240 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 030's run
+#240 close-out note ("Likely next bite under the same Greenhouse
+company-direct pattern: **Asana** (`source-company-asana` —
+Greenhouse slug `asana`)"), the next ergonomic bite is the
+`source-company-asana` plugin, which this run ships end-to-end.
+
+**Spec 031 — Source Company Plugin: Asana — closed end-to-end:**
+
+- **T01:** Added `Site.ASANA = 'asana'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 41:
+  Spec 031 — Source Company Plugin: Asana` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-asana` with the
+  Plaid-shape (single-file `service.ts`, 3-line `module.ts`, 2-line
+  `index.ts`, 4-line `package.json`, 3-line `tsconfig.json`). The
+  scraper hits
+  `https://api.greenhouse.io/v1/boards/asana/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9.
+  Fallback `jobUrl` (when Greenhouse omits `absolute_url`) points at
+  the public Asana careers detail-page template
+  `https://asana.com/jobs/apply/<id>`. Note: like Plaid (Spec 030
+  § 10 D-05), Lyft (Spec 029 § 10 D-05), Pinterest (Spec 028 § 10
+  D-05), and Reddit (Spec 027 § 10 D-05), Asana's Greenhouse tenant
+  uses the bare `asana` slug — no slug-vs-display-name asymmetry.
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  alphabetical position between `AppleModule` and `BoeingModule`
+  since `Ap` < `As` < `Bo`), `tsconfig.base.json` paths,
+  and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/asana.service.spec.ts` with 8
+  cases covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `asana-`, `site === Site.ASANA`,
+  `companyName === 'Asana'`, location, department, isRemote,
+  HTML stripped from description), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive), `searchTerm`
+  filter on department name (case-insensitive), HTTP 500 → empty
+  response, and empty `data.jobs` → empty response. The happy-path
+  test asserts the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/asana/jobs?content=true`.
+  Fixture `__tests__/fixtures/asana-jobs.json` is committed JSON
+  exercising both an SF-based Engineering Workflow-Automation-Platform
+  role and a Remote Customer-Experience-Strategy role.
+- **T05:** Doc updates — added a `shipped` row for Asana in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the new column width is unchanged at 26-char `Plugin id`),
+  appended Spec 031 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #241.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-asana --colors=false`
+  → **8/8 passed** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+- `npx jest packages/common/__tests__/helpers.bench --colors=false`
+  → **2/2 passed** (Spec 016 perf-gate baseline
+  preserved; the bench suite covers `extractEmails` and
+  `extractSalary` p95 budgets per Spec 016 § 8).
+- `npm run lint:docs` exits 0 (`✓ Doc-lint passed — no issues.`).
+
+**External-snapshot tag set:** `Already up to date.` for all three
+watched repos. SHAs unchanged since run #21 (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`). **220th consecutive
+zero-churn run** for the upstream snapshots — Spec 031 is a
+spec-driven backlog promotion, not an upstream-driven sync.
+
+**Files touched (run #241):**
+
+- `packages/models/src/enums/site.enum.ts` — `ASANA = 'asana'`.
+- `packages/plugins/source-company-asana/` — new package
+  (5 files: `package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/asana.module.ts`, `src/asana.service.ts`,
+  `__tests__/asana.service.spec.ts`,
+  `__tests__/fixtures/asana-jobs.json`).
+- `packages/plugins/index.ts` — import + `ALL_SOURCE_MODULES` entry.
+- `tsconfig.base.json` — path-alias.
+- `jest.config.js` — `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — Asana shipped row.
+- `docs/index.md` — Spec 031 row.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — footer bumped to run #241.
+- `.specify/specs/031-source-company-asana/{spec,plan,tasks}.md` —
+  new spec.
+
+**Next ergonomic bite (under the same Greenhouse company-direct
+pattern):** **Figma** (`source-company-figma` — Greenhouse slug
+`figma`) — same shape as Spec 031, ≤ 1 spec / ≤ 1 PR per the
+user-story budget set in Spec 024 § 4. After Figma the queue
+continues with Gitlab, Twitch, Twilio — all confirmed
+Greenhouse-hosted.
+
+---
+
 ## 2026-05-01 — Scheduled run #240 (Spec 030 closed end-to-end; new `source-company-plaid` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench 2/2 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 19th company-direct plugin in the catalogue)
 
 **Scope:** Run #240 continues the user-owner-directed concrete-action
