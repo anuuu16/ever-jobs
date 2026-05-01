@@ -13,6 +13,106 @@
 
 ---
 
+## 2026-05-01 — Scheduled run #235 (Spec 025 closed end-to-end; new `source-company-airbnb` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench p95 = 0.0293 ms; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 14th company-direct plugin in the catalogue)
+
+**Scope:** Run #235 continues the user-owner-directed concrete-action
+deviation that runs #230–#234 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 024's run
+#234 user-story note ("Robinhood, Airbnb, Reddit, …"), the next
+ergonomic bite is the `source-company-airbnb` plugin, which this run
+ships end-to-end.
+
+**Spec 025 — Source Company Plugin: Airbnb — closed end-to-end:**
+
+- **T01:** Added `Site.AIRBNB = 'airbnb'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 35:
+  Spec 025 — Source Company Plugin: Airbnb` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 phase-ordering
+  convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-airbnb` with the
+  DoorDash-shape (single-file `service.ts`, 3-line `module.ts`,
+  2-line `index.ts`, 4-line `package.json`, 3-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/airbnb/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9.
+  Fallback `jobUrl` (when Greenhouse omits `absolute_url`) points at
+  the public Airbnb careers detail-page template
+  `https://careers.airbnb.com/positions/<id>/`.
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  alphabetical position before `AmazonModule` since `Airbnb` <
+  `Amazon`), `tsconfig.base.json` paths, and `jest.config.js`
+  `moduleNameMapper`.
+- **T04:** Authored `__tests__/airbnb.service.spec.ts` with 8
+  cases covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `airbnb-`, `site === Site.AIRBNB`,
+  `companyName === 'Airbnb'`, location, department, isRemote,
+  HTML stripped from description), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive), `searchTerm`
+  filter on department name (case-insensitive), HTTP 500 → empty
+  response, and empty `data.jobs` → empty response. Fixture
+  `__tests__/fixtures/airbnb-jobs.json` is committed JSON
+  exercising both an SF-based engineering Trust-and-Safety-Platform
+  role and a Remote Lead-Product-Designer role.
+- **T05:** Doc updates — added a `shipped` row for Airbnb in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the new column width is unchanged at 26-char `Plugin id`),
+  appended Spec 025 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #235.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-airbnb --colors=false`
+  → **8/8 passed in 9.135 s** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed in 7.157 s** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+- `npx jest packages/common/__tests__/helpers.bench --colors=false`
+  → **2/2 passed in 7.615 s**. Overall **p95 = 0.0293 ms** (delta
+  from Spec 016 baseline 0.0174 ms = +0.0119 ms; well within the
+  +0.1 ms NFR-1 budget; the upward delta is attributable to runner
+  noise on this run, not Spec 025 — the spec touches no helpers
+  code path).
+- `npm run lint:docs` exits 0 (`✓ Doc-lint passed — no issues.`).
+
+**External-snapshot tag set:** `Already up to date.` for all three
+watched repos. SHAs unchanged since run #21 (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`). **214th consecutive
+zero-churn run** for the upstream snapshots — Spec 025 is a
+spec-driven backlog promotion, not an upstream-driven sync.
+
+**Files touched (run #235):**
+
+- `packages/models/src/enums/site.enum.ts` — `AIRBNB = 'airbnb'`.
+- `packages/plugins/source-company-airbnb/` — new package
+  (5 files: `package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/airbnb.module.ts`, `src/airbnb.service.ts`,
+  `__tests__/airbnb.service.spec.ts`,
+  `__tests__/fixtures/airbnb-jobs.json`).
+- `packages/plugins/index.ts` — import + `ALL_SOURCE_MODULES` entry.
+- `tsconfig.base.json` — path-alias.
+- `jest.config.js` — `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — Airbnb shipped row.
+- `docs/index.md` — Spec 025 row.
+- `docs/log.md` — this entry.
+- `.specify/specs/025-source-company-airbnb/{spec,plan,tasks}.md` —
+  new spec.
+
+**Next ergonomic bite (under the same Greenhouse company-direct
+pattern):** **Robinhood** (`source-company-robinhood` — Greenhouse
+slug `robinhoodjobs`) or **Reddit** (`source-company-reddit` —
+Greenhouse slug `reddit`) — same shape as Spec 025, ≤ 1 spec / ≤ 1
+PR per the user-story budget set in Spec 024 § 4.
+
+---
+
 ## 2026-05-01 — Scheduled run #234 (Spec 024 closed end-to-end; new `source-company-doordash` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench p95 = 0.0159 ms; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 13th company-direct plugin in the catalogue)
 
 **Scope:** Run #234 continues the user-owner-directed concrete-action
