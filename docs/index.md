@@ -85,6 +85,7 @@
 | 018 | [Workable Upstream Parity (`workable/main.py` @ commit `312c7b6` diff against `source-ats-workable` plugin)](../.specify/specs/018-workable-upstream-parity/spec.md) — [plan](../.specify/specs/018-workable-upstream-parity/plan.md) — [tasks](../.specify/specs/018-workable-upstream-parity/tasks.md) | All phases done (T01 run #77); spec complete |
 | 019 | [Salary Parser Residuals, Batch 2 (bare-path raw-value pre-check threshold bump — closes Spec 015 / FR-8 documented limitation)](../.specify/specs/019-salary-parser-residuals-batch-2/spec.md) — [plan](../.specify/specs/019-salary-parser-residuals-batch-2/plan.md) — [tasks](../.specify/specs/019-salary-parser-residuals-batch-2/tasks.md) | All phases done (T01..T03 runs #79..#81); spec complete |
 | 020 | [Source Company Plugin: Anthropic](../.specify/specs/020-source-company-anthropic/spec.md) — [plan](../.specify/specs/020-source-company-anthropic/plan.md) — [tasks](../.specify/specs/020-source-company-anthropic/tasks.md) | All phases done (T01..T05 run #230); spec complete |
+| 021 | [Source Company Plugin: Databricks](../.specify/specs/021-source-company-databricks/spec.md) — [plan](../.specify/specs/021-source-company-databricks/plan.md) — [tasks](../.specify/specs/021-source-company-databricks/tasks.md) | All phases done (T01..T05 run #231); spec complete |
 
 ## 8. Templates
 
@@ -96,4 +97,4 @@
 
 ---
 
-_Last revised: 2026-05-01 (run #230)._
+_Last revised: 2026-05-01 (run #231)._

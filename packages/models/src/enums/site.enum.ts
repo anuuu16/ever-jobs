@@ -194,6 +194,8 @@ export enum Site {
   TESLA_PLAYWRIGHT = 'tesla_playwright',
   // Phase 30: Spec 020 — Source Company Plugin: Anthropic
   ANTHROPIC = 'anthropic',
+  // Phase 31: Spec 021 — Source Company Plugin: Databricks
+  DATABRICKS = 'databricks',
 }
 
 /**

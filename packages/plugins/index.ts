@@ -71,6 +71,7 @@ import { AnthropicModule } from './source-company-anthropic';
 import { AppleModule } from './source-company-apple';
 import { BoeingModule } from './source-company-boeing';
 import { CursorModule } from './source-company-cursor';
+import { DatabricksModule } from './source-company-databricks';
 import { GoogleCareersModule } from './source-company-google';
 import { IbmModule } from './source-company-ibm';
 import { MetaModule } from './source-company-meta';
@@ -239,6 +240,7 @@ export const ALL_SOURCE_MODULES = [
   AppleModule,
   BoeingModule,
   CursorModule,
+  DatabricksModule,
   GoogleCareersModule,
   IbmModule,
   MetaModule,
