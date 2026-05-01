@@ -83,6 +83,7 @@ import { MicrosoftModule } from './source-company-microsoft';
 import { NetflixModule } from './source-company-netflix';
 import { NvidiaModule } from './source-company-nvidia';
 import { OpenAIModule } from './source-company-openai';
+import { PinterestModule } from './source-company-pinterest';
 import { RedditModule } from './source-company-reddit';
 import { RobinhoodModule } from './source-company-robinhood';
 import { StripeModule } from './source-company-stripe';
@@ -258,6 +259,7 @@ export const ALL_SOURCE_MODULES = [
   NetflixModule,
   NvidiaModule,
   OpenAIModule,
+  PinterestModule,
   RedditModule,
   RobinhoodModule,
   StripeModule,

@@ -208,6 +208,8 @@ export enum Site {
   ROBINHOOD = 'robinhood',
   // Phase 37: Spec 027 — Source Company Plugin: Reddit
   REDDIT = 'reddit',
+  // Phase 38: Spec 028 — Source Company Plugin: Pinterest
+  PINTEREST = 'pinterest',
 }
 
 /**

@@ -13,6 +13,113 @@
 
 ---
 
+## 2026-05-01 — Scheduled run #238 (Spec 028 closed end-to-end; new `source-company-pinterest` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench p95 = 0.0276 ms; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 17th company-direct plugin in the catalogue)
+
+**Scope:** Run #238 continues the user-owner-directed concrete-action
+deviation that runs #230–#237 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 027's run
+#237 close-out note ("Likely next bite under the same Greenhouse
+company-direct pattern: **Pinterest** (`source-company-pinterest` —
+Greenhouse slug `pinterest`)"), the next ergonomic bite is the
+`source-company-pinterest` plugin, which this run ships end-to-end.
+
+**Spec 028 — Source Company Plugin: Pinterest — closed end-to-end:**
+
+- **T01:** Added `Site.PINTEREST = 'pinterest'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 38:
+  Spec 028 — Source Company Plugin: Pinterest` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027
+  phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-pinterest` with the
+  Reddit-shape (single-file `service.ts`, 3-line `module.ts`, 2-line
+  `index.ts`, 4-line `package.json`, 3-line `tsconfig.json`). The
+  scraper hits
+  `https://api.greenhouse.io/v1/boards/pinterest/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9.
+  Fallback `jobUrl` (when Greenhouse omits `absolute_url`) points at
+  the public Pinterest careers detail-page template
+  `https://www.pinterestcareers.com/jobs/<id>/`. Note: like Reddit
+  (Spec 027 § 10 D-05), Pinterest's Greenhouse tenant uses the bare
+  `pinterest` slug — no slug-vs-display-name asymmetry.
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  alphabetical position between `OpenAIModule` and `RedditModule`
+  since `Pi` < `Re`), `tsconfig.base.json` paths, and
+  `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/pinterest.service.spec.ts` with 8
+  cases covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `pinterest-`, `site === Site.PINTEREST`,
+  `companyName === 'Pinterest'`, location, department, isRemote,
+  HTML stripped from description), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive), `searchTerm`
+  filter on department name (case-insensitive), HTTP 500 → empty
+  response, and empty `data.jobs` → empty response. The happy-path
+  test asserts the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/pinterest/jobs?content=true`.
+  Fixture `__tests__/fixtures/pinterest-jobs.json` is committed JSON
+  exercising both an SF-based engineering Visual-Discovery ML role
+  and a Remote Creator-Platform Trust-and-Safety role.
+- **T05:** Doc updates — added a `shipped` row for Pinterest in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the new column width is unchanged at 26-char `Plugin id`),
+  appended Spec 028 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #238.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-pinterest --colors=false`
+  → **8/8 passed in 8.94 s** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed in 7.018 s** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+- `npx jest packages/common/__tests__/helpers.bench --colors=false`
+  → **2/2 passed in 6.99 s**. Overall **p95 = 0.0276 ms** (delta
+  from Spec 016 baseline 0.0174 ms = +0.0102 ms; well within the
+  +0.1 ms NFR-1 budget; the upward delta is attributable to runner
+  noise on this run, not Spec 028 — the spec touches no helpers
+  code path).
+- `npm run lint:docs` exits 0 (`✓ Doc-lint passed — no issues.`).
+
+**External-snapshot tag set:** `Already up to date.` for all three
+watched repos. SHAs unchanged since run #21 (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`). **217th consecutive
+zero-churn run** for the upstream snapshots — Spec 028 is a
+spec-driven backlog promotion, not an upstream-driven sync.
+
+**Files touched (run #238):**
+
+- `packages/models/src/enums/site.enum.ts` — `PINTEREST = 'pinterest'`.
+- `packages/plugins/source-company-pinterest/` — new package
+  (5 files: `package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/pinterest.module.ts`, `src/pinterest.service.ts`,
+  `__tests__/pinterest.service.spec.ts`,
+  `__tests__/fixtures/pinterest-jobs.json`).
+- `packages/plugins/index.ts` — import + `ALL_SOURCE_MODULES` entry.
+- `tsconfig.base.json` — path-alias.
+- `jest.config.js` — `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — Pinterest shipped row.
+- `docs/index.md` — Spec 028 row.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — footer bumped to run #238.
+- `.specify/specs/028-source-company-pinterest/{spec,plan,tasks}.md` —
+  new spec.
+
+**Next ergonomic bite (under the same Greenhouse company-direct
+pattern):** **Lyft** (`source-company-lyft` — Greenhouse slug
+`lyft`) — same shape as Spec 028, ≤ 1 spec / ≤ 1 PR per the
+user-story budget set in Spec 024 § 4. After Lyft the queue
+continues with Plaid, Asana, Figma, Gitlab, Twitch — all confirmed
+Greenhouse-hosted.
+
+---
+
 ## 2026-05-01 — Scheduled run #237 (Spec 027 closed end-to-end; new `source-company-reddit` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench p95 = 0.0288 ms; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 16th company-direct plugin in the catalogue)
 
 **Scope:** Run #237 continues the user-owner-directed concrete-action
