@@ -13,6 +13,113 @@
 
 ---
 
+## 2026-05-01 — Scheduled run #233 (Spec 023 closed end-to-end; new `source-company-coinbase` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench p95 = 0.0240 ms; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 12th company-direct plugin in the catalogue)
+
+**Scope:** Run #233 continues the user-owner-directed concrete-action
+deviation that runs #230–#232 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 022's run
+#232 close-out note ("Likely next bite under the same Greenhouse
+company-direct pattern: **Coinbase** (`source-company-coinbase` —
+Greenhouse slug `coinbase`)"), the next ergonomic bite is the
+`source-company-coinbase` plugin, which this run ships end-to-end.
+
+**Spec 023 — Source Company Plugin: Coinbase — closed end-to-end:**
+
+- **T01:** Added `Site.COINBASE = 'coinbase'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 33:
+  Spec 023 — Source Company Plugin: Coinbase` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-coinbase` with the
+  Discord-shape (single-file `service.ts`, 3-line `module.ts`,
+  2-line `index.ts`, 4-line `package.json`, 3-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/coinbase/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9.
+  Fallback `jobUrl` (when Greenhouse omits `absolute_url`) points at
+  the public Coinbase careers detail-page template
+  `https://www.coinbase.com/careers/positions/<id>`.
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  alphabetical between `BoeingModule` and `CursorModule`),
+  `tsconfig.base.json` paths, and `jest.config.js`
+  `moduleNameMapper`.
+- **T04:** Authored `__tests__/coinbase.service.spec.ts` with 8
+  cases covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `coinbase-`, `site === Site.COINBASE`,
+  `companyName === 'Coinbase'`, location, department, isRemote,
+  HTML stripped from description), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive), `searchTerm`
+  filter on department name (case-insensitive), HTTP 500 → empty
+  response, and empty `data.jobs` → empty response. Fixture
+  `__tests__/fixtures/coinbase-jobs.json` is committed JSON
+  exercising both an SF-based engineering Exchange-Infrastructure
+  role and a Remote Compliance-Operations role.
+- **T05:** Doc updates — added a `shipped` row for Coinbase in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the new column width is unchanged at 26-char `Plugin id`),
+  appended Spec 023 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #233.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-coinbase --colors=false`
+  → **8/8 passed in 9.224 s** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed in 7.165 s** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+- `npx jest packages/common/__tests__/helpers.bench --colors=false`
+  → **2/2 passed in 7.372 s**. Overall **p95 = 0.0240 ms** (delta
+  from Spec 016 baseline 0.0174 ms = +0.0066 ms; well within the
+  +0.1 ms NFR-1 budget; the upward correction is attributable to
+  runner noise on this run, not Spec 023 — the spec touches no
+  helpers code path).
+- `npm run lint:docs` exits 0 (`✓ Doc-lint passed — no issues.`).
+
+**External-snapshot tag set:** `Already up to date.` for all three
+watched repos. SHAs unchanged since run #21 (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`). **212th consecutive
+zero-churn run** for the upstream snapshots — Spec 023 is a
+spec-driven backlog promotion, not an upstream-driven sync.
+
+**Files touched (run #233):**
+
+- `packages/models/src/enums/site.enum.ts` — `COINBASE = 'coinbase'`.
+- `packages/plugins/source-company-coinbase/` — new package
+  (5 files: `package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/coinbase.module.ts`, `src/coinbase.service.ts`,
+  `__tests__/coinbase.service.spec.ts`,
+  `__tests__/fixtures/coinbase-jobs.json`).
+- `packages/plugins/index.ts` — import + `ALL_SOURCE_MODULES` entry.
+- `tsconfig.base.json` — path-alias.
+- `jest.config.js` — `moduleNameMapper` entry.
+- `.specify/specs/023-source-company-coinbase/{spec,plan,tasks}.md` —
+  new spec.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — `shipped` row + footer bump.
+- `docs/index.md` — Spec 023 row + footer bump.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — run-tag bump (last-revised footer).
+- `competitor-watch.md` — Sync Log run #233 entry (outside the
+  ever-jobs repo).
+
+**Default for run #234:** continue the user-owner-directed
+concrete-action deviation while a backlog bite remains in reach.
+Likely next bite under the same Greenhouse company-direct pattern:
+**DoorDash** (`source-company-doordash` — Greenhouse slug
+`doordash`), or **Robinhood** / **Airbnb** / **Reddit** under the
+same pattern. If all Greenhouse-hosted bites are exhausted, fall
+back to Q-042 default C (helpers + bench + lint) until a fresh
+observable trigger surfaces. Next user-owner reminder window opens
+at run #250 — 17 runs out.
+
+---
+
 ## 2026-05-01 — Scheduled run #232 (Spec 022 closed end-to-end; new `source-company-discord` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench p95 = 0.0227 ms; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 11th company-direct plugin in the catalogue)
 
 **Scope:** Run #232 continues the user-owner-directed concrete-action

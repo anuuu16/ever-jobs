@@ -91,6 +91,7 @@
       "@ever-jobs/source-company-anthropic": ["packages/plugins/source-company-anthropic/src/index.ts"],
       "@ever-jobs/source-company-databricks": ["packages/plugins/source-company-databricks/src/index.ts"],
       "@ever-jobs/source-company-discord": ["packages/plugins/source-company-discord/src/index.ts"],
+      "@ever-jobs/source-company-coinbase": ["packages/plugins/source-company-coinbase/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],

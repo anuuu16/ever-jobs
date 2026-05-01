@@ -198,6 +198,8 @@ export enum Site {
   DATABRICKS = 'databricks',
   // Phase 32: Spec 022 — Source Company Plugin: Discord
   DISCORD = 'discord',
+  // Phase 33: Spec 023 — Source Company Plugin: Coinbase
+  COINBASE = 'coinbase',
 }
 
 /**

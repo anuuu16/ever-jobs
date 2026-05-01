@@ -70,6 +70,7 @@ import { AmazonModule } from './source-company-amazon';
 import { AnthropicModule } from './source-company-anthropic';
 import { AppleModule } from './source-company-apple';
 import { BoeingModule } from './source-company-boeing';
+import { CoinbaseModule } from './source-company-coinbase';
 import { CursorModule } from './source-company-cursor';
 import { DatabricksModule } from './source-company-databricks';
 import { DiscordModule } from './source-company-discord';
@@ -240,6 +241,7 @@ export const ALL_SOURCE_MODULES = [
   AnthropicModule,
   AppleModule,
   BoeingModule,
+  CoinbaseModule,
   CursorModule,
   DatabricksModule,
   DiscordModule,
