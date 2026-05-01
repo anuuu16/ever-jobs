@@ -204,6 +204,8 @@ export enum Site {
   DOORDASH = 'doordash',
   // Phase 35: Spec 025 — Source Company Plugin: Airbnb
   AIRBNB = 'airbnb',
+  // Phase 36: Spec 026 — Source Company Plugin: Robinhood
+  ROBINHOOD = 'robinhood',
 }
 
 /**

@@ -94,6 +94,7 @@
       "@ever-jobs/source-company-coinbase": ["packages/plugins/source-company-coinbase/src/index.ts"],
       "@ever-jobs/source-company-doordash": ["packages/plugins/source-company-doordash/src/index.ts"],
       "@ever-jobs/source-company-airbnb": ["packages/plugins/source-company-airbnb/src/index.ts"],
+      "@ever-jobs/source-company-robinhood": ["packages/plugins/source-company-robinhood/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],

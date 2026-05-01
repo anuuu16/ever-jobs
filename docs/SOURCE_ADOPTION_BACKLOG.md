@@ -34,6 +34,7 @@
 | shipped    | `source-company-coinbase`  | `company`  | **Coinbase** (`coinbase.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/coinbase/jobs`). | Spec 023, run #233. Thin wrapper following the `source-company-discord` pattern. |
 | shipped    | `source-company-doordash`  | `company`  | **DoorDash** (`doordash.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/doordash/jobs`). | Spec 024, run #234. Thin wrapper following the `source-company-coinbase` pattern. |
 | shipped    | `source-company-airbnb`    | `company`  | **Airbnb** (`airbnb.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/airbnb/jobs`). | Spec 025, run #235. Thin wrapper following the `source-company-doordash` pattern. |
+| shipped    | `source-company-robinhood` | `company`  | **Robinhood** (`robinhood.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/robinhoodjobs/jobs` — note: tenant slug is `robinhoodjobs`, not the bare `robinhood`). | Spec 026, run #236. Thin wrapper following the `source-company-airbnb` pattern. |
 
 ## Logic-improvement candidates (existing plugins)
 
@@ -56,4 +57,4 @@
 
 ---
 
-_Last revised: 2026-05-01 (run #235)._
+_Last revised: 2026-05-01 (run #236)._
