@@ -96,6 +96,7 @@
 | 029 | [Source Company Plugin: Lyft](../.specify/specs/029-source-company-lyft/spec.md) — [plan](../.specify/specs/029-source-company-lyft/plan.md) — [tasks](../.specify/specs/029-source-company-lyft/tasks.md) | All phases done (T01..T05 run #239); spec complete |
 | 030 | [Source Company Plugin: Plaid](../.specify/specs/030-source-company-plaid/spec.md) — [plan](../.specify/specs/030-source-company-plaid/plan.md) — [tasks](../.specify/specs/030-source-company-plaid/tasks.md) | All phases done (T01..T05 run #240); spec complete |
 | 031 | [Source Company Plugin: Asana](../.specify/specs/031-source-company-asana/spec.md) — [plan](../.specify/specs/031-source-company-asana/plan.md) — [tasks](../.specify/specs/031-source-company-asana/tasks.md) | All phases done (T01..T05 run #241); spec complete |
+| 032 | [Source Company Plugin: Figma](../.specify/specs/032-source-company-figma/spec.md) — [plan](../.specify/specs/032-source-company-figma/plan.md) — [tasks](../.specify/specs/032-source-company-figma/tasks.md) | All phases done (T01..T05 run #242); spec complete |
 
 ## 8. Templates
 
@@ -107,4 +108,4 @@
 
 ---
 
-_Last revised: 2026-05-01 (run #241)._
+_Last revised: 2026-05-01 (run #242)._

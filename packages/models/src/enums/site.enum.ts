@@ -216,6 +216,8 @@ export enum Site {
   PLAID = 'plaid',
   // Phase 41: Spec 031 — Source Company Plugin: Asana
   ASANA = 'asana',
+  // Phase 42: Spec 032 — Source Company Plugin: Figma
+  FIGMA = 'figma',
 }
 
 /**

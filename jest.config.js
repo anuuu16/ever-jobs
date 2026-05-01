@@ -85,6 +85,7 @@ module.exports = {
     '^@ever-jobs/source-company-lyft$': '<rootDir>/packages/plugins/source-company-lyft/src/index.ts',
     '^@ever-jobs/source-company-plaid$': '<rootDir>/packages/plugins/source-company-plaid/src/index.ts',
     '^@ever-jobs/source-company-asana$': '<rootDir>/packages/plugins/source-company-asana/src/index.ts',
+    '^@ever-jobs/source-company-figma$': '<rootDir>/packages/plugins/source-company-figma/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',

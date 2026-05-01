@@ -13,6 +13,114 @@
 
 ---
 
+## 2026-05-01 — Scheduled run #242 (Spec 032 closed end-to-end; new `source-company-figma` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench 2/2 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 21st company-direct plugin in the catalogue)
+
+**Scope:** Run #242 continues the user-owner-directed concrete-action
+deviation that runs #230–#241 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 031's run
+#241 close-out note ("Likely next bite under the same Greenhouse
+company-direct pattern: **Figma** (`source-company-figma` —
+Greenhouse slug `figma`)"), the next ergonomic bite is the
+`source-company-figma` plugin, which this run ships end-to-end.
+
+**Spec 032 — Source Company Plugin: Figma — closed end-to-end:**
+
+- **T01:** Added `Site.FIGMA = 'figma'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 42:
+  Spec 032 — Source Company Plugin: Figma` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-figma` with the
+  Asana-shape (single-file `service.ts`, 3-line `module.ts`, 2-line
+  `index.ts`, 4-line `package.json`, 3-line `tsconfig.json`). The
+  scraper hits
+  `https://api.greenhouse.io/v1/boards/figma/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9.
+  Fallback `jobUrl` (when Greenhouse omits `absolute_url`) points at
+  the public Figma careers detail-page template
+  `https://www.figma.com/careers/job/<id>`. Note: like Asana (Spec 031
+  § 10 D-05), Plaid (Spec 030 § 10 D-05), Lyft (Spec 029 § 10 D-05),
+  Pinterest (Spec 028 § 10 D-05), and Reddit (Spec 027 § 10 D-05),
+  Figma's Greenhouse tenant uses the bare `figma` slug — no
+  slug-vs-display-name asymmetry.
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  alphabetical position between `DoorDashModule` and
+  `GoogleCareersModule` since `Do` < `Fi` < `Go`),
+  `tsconfig.base.json` paths, and `jest.config.js`
+  `moduleNameMapper`.
+- **T04:** Authored `__tests__/figma.service.spec.ts` with 8
+  cases covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `figma-`, `site === Site.FIGMA`,
+  `companyName === 'Figma'`, location, department, isRemote,
+  HTML stripped from description), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive), `searchTerm`
+  filter on department name (case-insensitive), HTTP 500 → empty
+  response, and empty `data.jobs` → empty response. The happy-path
+  test asserts the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/figma/jobs?content=true`.
+  Fixture `__tests__/fixtures/figma-jobs.json` is committed JSON
+  exercising both an SF-based Engineering Design-Tooling-Platform
+  role and a Remote Design-Advocacy Strategy role.
+- **T05:** Doc updates — added a `shipped` row for Figma in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the new column width is unchanged at 26-char `Plugin id`),
+  appended Spec 032 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #242.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-figma --colors=false`
+  → **8/8 passed in 14.778 s** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed in 10.636 s** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+- `npx jest packages/common/__tests__/helpers.bench --colors=false`
+  → **2/2 passed in 11.562 s** (Spec 016 perf-gate baseline
+  preserved; the bench suite covers `extractEmails` and
+  `extractSalary` p95 budgets per Spec 016 § 8).
+- `npm run lint:docs` exits 0 (`✓ Doc-lint passed — no issues.`).
+
+**External-snapshot tag set:** `Already up to date.` for all three
+watched repos. SHAs unchanged since run #21 (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`). **221st consecutive
+zero-churn run** for the upstream snapshots — Spec 032 is a
+spec-driven backlog promotion, not an upstream-driven sync.
+
+**Files touched (run #242):**
+
+- `packages/models/src/enums/site.enum.ts` — `FIGMA = 'figma'`.
+- `packages/plugins/source-company-figma/` — new package
+  (5 files: `package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/figma.module.ts`, `src/figma.service.ts`,
+  `__tests__/figma.service.spec.ts`,
+  `__tests__/fixtures/figma-jobs.json`).
+- `packages/plugins/index.ts` — import + `ALL_SOURCE_MODULES` entry.
+- `tsconfig.base.json` — path-alias.
+- `jest.config.js` — `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — Figma shipped row.
+- `docs/index.md` — Spec 032 row.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — footer bumped to run #242.
+- `.specify/specs/032-source-company-figma/{spec,plan,tasks}.md` —
+  new spec.
+
+**Next ergonomic bite (under the same Greenhouse company-direct
+pattern):** **Gitlab** (`source-company-gitlab` — Greenhouse slug
+`gitlab`) — same shape as Spec 032, ≤ 1 spec / ≤ 1 PR per the
+user-story budget set in Spec 024 § 4. After Gitlab the queue
+continues with Twitch, Twilio, Zendesk — all confirmed
+Greenhouse-hosted.
+
+---
+
 ## 2026-05-01 — Scheduled run #241 (Spec 031 closed end-to-end; new `source-company-asana` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench 2/2 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 20th company-direct plugin in the catalogue)
 
 **Scope:** Run #241 continues the user-owner-directed concrete-action
