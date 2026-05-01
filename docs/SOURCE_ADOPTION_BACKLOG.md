@@ -20,14 +20,15 @@
 
 ## Backlog
 
-| Status     | Plugin id (planned)     | Category   | Platform / source                                   | Notes |
-| ---------- | ----------------------- | ---------- | --------------------------------------------------- | ----- |
-| proposed   | `source-ats-avature`    | `ats`      | **Avature** career-site platform.                   | Used by Bloomberg, IBM, and other large enterprises. URL pattern varies per tenant. |
-| proposed   | `source-ats-gem`        | `ats`      | **Gem** ATS / recruiting CRM (`gem.com`).           | URL: `gem.com/<company-slug>/jobs`. |
-| proposed   | `source-ats-joincom`    | `ats`      | **Join.com** ATS (`join.com/companies/<slug>/jobs`).| Public REST API. |
-| proposed   | `source-ats-oracle`     | `ats`      | **Oracle HCM Cloud** Recruiting (`*.fa.<region>.oraclecloud.com`). | Distinct from `source-ats-taleo` (legacy Oracle). Some tenants need a `--site-number` param (`CX_45001`). |
-| proposed   | `source-mercor`         | `niche`    | **Mercor** talent marketplace (`mercor.com`).       | Single-tenant — categorise as `niche` or `freelance`. |
-| proposed   | `source-company-tesla`  | `company`  | **Tesla** careers site (reverse-engineered API).    | Single company-direct plugin. |
+| Status     | Plugin id (planned)        | Category   | Platform / source                                   | Notes |
+| ---------- | -------------------------- | ---------- | --------------------------------------------------- | ----- |
+| proposed   | `source-ats-avature`       | `ats`      | **Avature** career-site platform.                   | Used by Bloomberg, IBM, and other large enterprises. URL pattern varies per tenant. |
+| proposed   | `source-ats-gem`           | `ats`      | **Gem** ATS / recruiting CRM (`gem.com`).           | URL: `gem.com/<company-slug>/jobs`. |
+| proposed   | `source-ats-joincom`       | `ats`      | **Join.com** ATS (`join.com/companies/<slug>/jobs`).| Public REST API. |
+| proposed   | `source-ats-oracle`        | `ats`      | **Oracle HCM Cloud** Recruiting (`*.fa.<region>.oraclecloud.com`). | Distinct from `source-ats-taleo` (legacy Oracle). Some tenants need a `--site-number` param (`CX_45001`). |
+| proposed   | `source-mercor`            | `niche`    | **Mercor** talent marketplace (`mercor.com`).       | Single-tenant — categorise as `niche` or `freelance`. |
+| proposed   | `source-company-tesla`     | `company`  | **Tesla** careers site (reverse-engineered API).    | Single company-direct plugin. |
+| shipped    | `source-company-anthropic` | `company`  | **Anthropic** (`anthropic.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/anthropic/jobs`). | Spec 020, run #230. Thin wrapper following the `source-company-stripe` pattern. |
 
 ## Logic-improvement candidates (existing plugins)
 
@@ -50,4 +51,4 @@
 
 ---
 
-_Last revised: 2026-04-28 (run #75)._
+_Last revised: 2026-05-01 (run #230)._

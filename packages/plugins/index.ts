@@ -67,6 +67,7 @@ import { CareerJetModule } from './source-careerjet';
 import { CareerOneStopModule } from './source-careeronestop';
 import { ClojurejobsModule } from './source-clojurejobs';
 import { AmazonModule } from './source-company-amazon';
+import { AnthropicModule } from './source-company-anthropic';
 import { AppleModule } from './source-company-apple';
 import { BoeingModule } from './source-company-boeing';
 import { CursorModule } from './source-company-cursor';
@@ -234,6 +235,7 @@ export const ALL_SOURCE_MODULES = [
   CareerOneStopModule,
   ClojurejobsModule,
   AmazonModule,
+  AnthropicModule,
   AppleModule,
   BoeingModule,
   CursorModule,

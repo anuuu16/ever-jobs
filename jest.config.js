@@ -73,6 +73,7 @@ module.exports = {
     '^@ever-jobs/source-company-netflix$': '<rootDir>/packages/plugins/source-company-netflix/src/index.ts',
     '^@ever-jobs/source-company-stripe$': '<rootDir>/packages/plugins/source-company-stripe/src/index.ts',
     '^@ever-jobs/source-company-openai$': '<rootDir>/packages/plugins/source-company-openai/src/index.ts',
+    '^@ever-jobs/source-company-anthropic$': '<rootDir>/packages/plugins/source-company-anthropic/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',

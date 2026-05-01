@@ -192,6 +192,8 @@ export enum Site {
   MERCOR = 'mercor',
   TESLA = 'tesla',
   TESLA_PLAYWRIGHT = 'tesla_playwright',
+  // Phase 30: Spec 020 — Source Company Plugin: Anthropic
+  ANTHROPIC = 'anthropic',
 }
 
 /**
