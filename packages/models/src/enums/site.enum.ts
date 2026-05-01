@@ -220,6 +220,8 @@ export enum Site {
   FIGMA = 'figma',
   // Phase 43: Spec 033 — Source Company Plugin: Gitlab
   GITLAB = 'gitlab',
+  // Phase 44: Spec 034 — Source Company Plugin: Twitch
+  TWITCH = 'twitch',
 }
 
 /**

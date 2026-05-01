@@ -13,6 +13,117 @@
 
 ---
 
+## 2026-05-01 — Scheduled run #244 (Spec 034 closed end-to-end; new `source-company-twitch` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench 2/2 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 23rd company-direct plugin in the catalogue)
+
+**Scope:** Run #244 continues the user-owner-directed concrete-action
+deviation that runs #230–#243 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 033's run
+#243 close-out note ("Likely next bite under the same Greenhouse
+company-direct pattern: **Twitch** (`source-company-twitch` —
+Greenhouse slug `twitch`)"), the next ergonomic bite is the
+`source-company-twitch` plugin, which this run ships end-to-end.
+
+**Spec 034 — Source Company Plugin: Twitch — closed end-to-end:**
+
+- **T01:** Added `Site.TWITCH = 'twitch'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 44:
+  Spec 034 — Source Company Plugin: Twitch` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-twitch` with the
+  Gitlab-shape (single-file `service.ts`, 3-line `module.ts`, 2-line
+  `index.ts`, 4-line `package.json`, 3-line `tsconfig.json`). The
+  scraper hits
+  `https://api.greenhouse.io/v1/boards/twitch/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9.
+  Fallback `jobUrl` (when Greenhouse omits `absolute_url`) points at
+  the public Twitch careers detail-page template
+  `https://www.twitch.tv/jobs/en/<id>/`. Note: like Gitlab (Spec 033
+  § 10 D-05), Figma (Spec 032 § 10 D-05), Asana (Spec 031 § 10
+  D-05), Plaid (Spec 030 § 10 D-05), Lyft (Spec 029 § 10 D-05),
+  Pinterest (Spec 028 § 10 D-05), and Reddit (Spec 027 § 10 D-05),
+  Twitch's Greenhouse tenant uses the bare `twitch` slug — no
+  slug-vs-display-name asymmetry. Spec 034 § 10 D-06 also records
+  the deliberate decision to ship Twitch as its own `Site.TWITCH`
+  plugin rather than fold it into `source-company-amazon`, since
+  Twitch staffs and recruits independently of `amazon.jobs`.
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  alphabetical position between `TikTokModule` and `UberModule`
+  since `Ti` < `Tw` < `Ub`), `tsconfig.base.json` paths, and
+  `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/twitch.service.spec.ts` with 8
+  cases covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `twitch-`, `site === Site.TWITCH`,
+  `companyName === 'Twitch'`, location, department, isRemote,
+  HTML stripped from description), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive), `searchTerm`
+  filter on department name (case-insensitive), HTTP 500 → empty
+  response, and empty `data.jobs` → empty response. The happy-path
+  test asserts the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/twitch/jobs?content=true`.
+  Fixture `__tests__/fixtures/twitch-jobs.json` is committed JSON
+  exercising both an SF-based Engineering Live-Video-Ingest role
+  and a Remote Creator-Success Strategy role.
+- **T05:** Doc updates — added a `shipped` row for Twitch in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the new column width is unchanged at 26-char `Plugin id`),
+  appended Spec 034 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #244.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-twitch --colors=false`
+  → **8/8 passed in 8.613 s** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed in 6.747 s** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+- `npx jest packages/common/__tests__/helpers.bench --colors=false`
+  → **2/2 passed in 6.893 s** (Spec 016 perf-gate baseline
+  preserved; the bench suite covers `extractEmails` and
+  `extractSalary` p95 budgets per Spec 016 § 8).
+- `npm run lint:docs` exits 0 (pending verification before commit).
+
+**External-snapshot tag set:** `Already up to date.` for all three
+watched repos. SHAs unchanged since run #21 (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`). **223rd consecutive
+zero-churn run** for the upstream snapshots — Spec 034 is a
+spec-driven backlog promotion, not an upstream-driven sync.
+
+**Files touched (run #244):**
+
+- `packages/models/src/enums/site.enum.ts` — `TWITCH = 'twitch'`.
+- `packages/plugins/source-company-twitch/` — new package
+  (5 files: `package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/twitch.module.ts`, `src/twitch.service.ts`,
+  `__tests__/twitch.service.spec.ts`,
+  `__tests__/fixtures/twitch-jobs.json`).
+- `packages/plugins/index.ts` — import + `ALL_SOURCE_MODULES` entry.
+- `tsconfig.base.json` — path-alias.
+- `jest.config.js` — `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — Twitch shipped row.
+- `docs/index.md` — Spec 034 row.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — footer bumped to run #244.
+- `.specify/specs/034-source-company-twitch/{spec,plan,tasks}.md` —
+  new spec.
+
+**Next ergonomic bite (under the same Greenhouse company-direct
+pattern):** **Twilio** (`source-company-twilio` — Greenhouse slug
+`twilio`) — same shape as Spec 034, ≤ 1 spec / ≤ 1 PR per the
+user-story budget set in Spec 024 § 4. After Twilio the queue
+continues with Zendesk, Snowflake — both confirmed
+Greenhouse-hosted.
+
+---
+
 ## 2026-05-01 — Scheduled run #243 (Spec 033 closed end-to-end; new `source-company-gitlab` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench 2/2 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 22nd company-direct plugin in the catalogue)
 
 **Scope:** Run #243 continues the user-owner-directed concrete-action

@@ -98,6 +98,7 @@
 | 031 | [Source Company Plugin: Asana](../.specify/specs/031-source-company-asana/spec.md) — [plan](../.specify/specs/031-source-company-asana/plan.md) — [tasks](../.specify/specs/031-source-company-asana/tasks.md) | All phases done (T01..T05 run #241); spec complete |
 | 032 | [Source Company Plugin: Figma](../.specify/specs/032-source-company-figma/spec.md) — [plan](../.specify/specs/032-source-company-figma/plan.md) — [tasks](../.specify/specs/032-source-company-figma/tasks.md) | All phases done (T01..T05 run #242); spec complete |
 | 033 | [Source Company Plugin: Gitlab](../.specify/specs/033-source-company-gitlab/spec.md) — [plan](../.specify/specs/033-source-company-gitlab/plan.md) — [tasks](../.specify/specs/033-source-company-gitlab/tasks.md) | All phases done (T01..T05 run #243); spec complete |
+| 034 | [Source Company Plugin: Twitch](../.specify/specs/034-source-company-twitch/spec.md) — [plan](../.specify/specs/034-source-company-twitch/plan.md) — [tasks](../.specify/specs/034-source-company-twitch/tasks.md) | All phases done (T01..T05 run #244); spec complete |
 
 ## 8. Templates
 
@@ -109,4 +110,4 @@
 
 ---
 
-_Last revised: 2026-05-01 (run #243)._
+_Last revised: 2026-05-01 (run #244)._
