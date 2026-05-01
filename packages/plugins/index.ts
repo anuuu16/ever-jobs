@@ -72,6 +72,7 @@ import { AnthropicModule } from './source-company-anthropic';
 import { AppleModule } from './source-company-apple';
 import { AsanaModule } from './source-company-asana';
 import { BoeingModule } from './source-company-boeing';
+import { CloudflareModule } from './source-company-cloudflare';
 import { CoinbaseModule } from './source-company-coinbase';
 import { CursorModule } from './source-company-cursor';
 import { DatabricksModule } from './source-company-databricks';
@@ -255,6 +256,7 @@ export const ALL_SOURCE_MODULES = [
   AppleModule,
   AsanaModule,
   BoeingModule,
+  CloudflareModule,
   CoinbaseModule,
   CursorModule,
   DatabricksModule,

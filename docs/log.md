@@ -13,6 +13,123 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #246 (Spec 036 closed end-to-end; new `source-company-cloudflare` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 25th company-direct plugin in the catalogue)
+
+**Scope:** Run #246 continues the user-owner-directed concrete-action
+deviation that runs #230–#245 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 035's run
+#245 close-out note (which named Snowflake, MongoDB, Datadog, and
+similar Greenhouse-only employers as the next ergonomic bites under
+the same company-direct pattern), this run extends the catalogue with
+the dominant **edge-network / web-performance and security** vendor —
+Cloudflare — whose Greenhouse tenant is published at the bare
+`cloudflare` slug and was confirmed live via run #246's HTTP 200 probe
+of `https://api.greenhouse.io/v1/boards/cloudflare/jobs?content=true`.
+
+**Spec 036 — Source Company Plugin: Cloudflare — closed end-to-end:**
+
+- **T01:** Added `Site.CLOUDFLARE = 'cloudflare'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 46:
+  Spec 036 — Source Company Plugin: Cloudflare` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 phase-ordering
+  convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-cloudflare` with the
+  Twilio-shape (single-file `service.ts`, 3-line `module.ts`, 2-line
+  `index.ts`, 4-line `package.json`, 3-line `tsconfig.json`). The
+  scraper hits
+  `https://api.greenhouse.io/v1/boards/cloudflare/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9.
+  Fallback `jobUrl` (when Greenhouse omits `absolute_url`) points at
+  the public Cloudflare careers detail-page template
+  `https://www.cloudflare.com/careers/jobs/<id>`. Note: like Twilio
+  (Spec 035 § 10 D-05), Twitch (Spec 034 § 10 D-05), Gitlab (Spec 033
+  § 10 D-05), Figma (Spec 032 § 10 D-05), Asana (Spec 031 § 10 D-05),
+  Plaid (Spec 030 § 10 D-05), Lyft (Spec 029 § 10 D-05), Pinterest
+  (Spec 028 § 10 D-05), and Reddit (Spec 027 § 10 D-05), Cloudflare's
+  Greenhouse tenant uses the bare `cloudflare` slug — no
+  slug-vs-display-name asymmetry. Spec 036 § 10 D-06 also records the
+  deliberate decision to ship Cloudflare as a single `Site.CLOUDFLARE`
+  plugin covering the Area 1 Security (acquired 2022), Vectrix
+  (acquired 2022), and Zaraz (acquired 2021) subsidiaries that now
+  post through the same `cloudflare` Greenhouse tenant.
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  alphabetical position between `BoeingModule` and `CoinbaseModule`
+  since `Bo` < `Cl` < `Co`), `tsconfig.base.json` paths, and
+  `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/cloudflare.service.spec.ts` with 8
+  cases covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `cloudflare-`, `site === Site.CLOUDFLARE`,
+  `companyName === 'Cloudflare'`, location, department, isRemote,
+  HTML stripped from description), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive), `searchTerm`
+  filter on department name (case-insensitive), HTTP 500 → empty
+  response, and empty `data.jobs` → empty response. The happy-path
+  test asserts the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/cloudflare/jobs?content=true`.
+  Fixture `__tests__/fixtures/cloudflare-jobs.json` is committed JSON
+  exercising both an SF-based Engineering Workers-Runtime role and a
+  Remote Customer-Success Trust-and-Safety role.
+- **T05:** Doc updates — added a `shipped` row for Cloudflare in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the new column width is unchanged at 26-char `Plugin id`),
+  appended Spec 036 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #246.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-cloudflare --colors=false`
+  → **8/8 passed in 8.726 s** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed in 6.865 s** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+
+**Files changed:**
+
+- `packages/models/src/enums/site.enum.ts` — `+2 lines` (`// Phase 46
+  …` comment + `CLOUDFLARE = 'cloudflare'` enum entry).
+- `packages/plugins/index.ts` — `+2 lines` (import + module-list entry).
+- `tsconfig.base.json` — `+1 line` (path-alias entry).
+- `jest.config.js` — `+1 line` (`moduleNameMapper` entry).
+- `packages/plugins/source-company-cloudflare/` — **new package**
+  (5 source files + 1 fixture + 1 test file = 7 files).
+- `.specify/specs/036-source-company-cloudflare/` — **new spec dir**
+  (`spec.md`, `plan.md`, `tasks.md` = 3 files).
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — `+1 row` (Cloudflare shipped row).
+- `docs/index.md` — `+1 row` (Spec 036 entry).
+- `docs/log.md` — this entry (newest-at-top).
+
+**Notes:**
+
+- Confirmed Cloudflare's Greenhouse slug `cloudflare` via direct
+  HTTP-200 probe of the public board endpoint
+  `https://api.greenhouse.io/v1/boards/cloudflare/jobs?content=true`
+  during run #246 spec drafting; no slug asymmetry as recorded in
+  Spec 036 § 10 D-05.
+- Total company-direct plugin count is now **25** (Airbnb, Amazon,
+  Anthropic, Apple, Asana, Boeing, Cloudflare, Coinbase, Cursor,
+  Databricks, Discord, DoorDash, Figma, Gitlab, Google, IBM, Lyft,
+  Meta, Microsoft, Netflix, Nvidia, OpenAI, Pinterest, Plaid, Reddit,
+  Robinhood, Stripe, TikTok, Twilio, Twitch, Uber, Zoom — actually 32
+  with all the older entries; the 25 figure refers specifically to
+  the Greenhouse-backed thin-wrapper company-direct cohort tracked in
+  `docs/SOURCE_ADOPTION_BACKLOG.md`).
+- Likely next bite under the same Greenhouse company-direct pattern:
+  **Snowflake**, **MongoDB**, **Datadog**, **Instacart**, **Dropbox**,
+  or **Roblox** (one of the next-tier Greenhouse-hosted marquee
+  employers). Run #247's spec-drafting agent should re-confirm the
+  slug via a public-API probe before committing.
+
+---
+
 ## 2026-05-01 — Scheduled run #245 (Spec 035 closed end-to-end; new `source-company-twilio` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench 2/2 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 24th company-direct plugin in the catalogue)
 
 **Scope:** Run #245 continues the user-owner-directed concrete-action

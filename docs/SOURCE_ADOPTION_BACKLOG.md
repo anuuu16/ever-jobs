@@ -44,6 +44,7 @@
 | shipped    | `source-company-gitlab`    | `company`  | **Gitlab** (`about.gitlab.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/gitlab/jobs`). | Spec 033, run #243. Thin wrapper following the `source-company-figma` pattern. |
 | shipped    | `source-company-twitch`    | `company`  | **Twitch** (`twitch.tv`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/twitch/jobs`). | Spec 034, run #244. Thin wrapper following the `source-company-gitlab` pattern. |
 | shipped    | `source-company-twilio`    | `company`  | **Twilio** (`twilio.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/twilio/jobs`). | Spec 035, run #245. Thin wrapper following the `source-company-twitch` pattern. |
+| shipped    | `source-company-cloudflare`| `company`  | **Cloudflare** (`cloudflare.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/cloudflare/jobs`). | Spec 036, run #246. Thin wrapper following the `source-company-twilio` pattern. |
 
 ## Logic-improvement candidates (existing plugins)
 
@@ -66,4 +67,4 @@
 
 ---
 
-_Last revised: 2026-05-01 (run #245)._
+_Last revised: 2026-05-02 (run #246)._

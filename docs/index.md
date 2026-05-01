@@ -100,6 +100,7 @@
 | 033 | [Source Company Plugin: Gitlab](../.specify/specs/033-source-company-gitlab/spec.md) — [plan](../.specify/specs/033-source-company-gitlab/plan.md) — [tasks](../.specify/specs/033-source-company-gitlab/tasks.md) | All phases done (T01..T05 run #243); spec complete |
 | 034 | [Source Company Plugin: Twitch](../.specify/specs/034-source-company-twitch/spec.md) — [plan](../.specify/specs/034-source-company-twitch/plan.md) — [tasks](../.specify/specs/034-source-company-twitch/tasks.md) | All phases done (T01..T05 run #244); spec complete |
 | 035 | [Source Company Plugin: Twilio](../.specify/specs/035-source-company-twilio/spec.md) — [plan](../.specify/specs/035-source-company-twilio/plan.md) — [tasks](../.specify/specs/035-source-company-twilio/tasks.md) | All phases done (T01..T05 run #245); spec complete |
+| 036 | [Source Company Plugin: Cloudflare](../.specify/specs/036-source-company-cloudflare/spec.md) — [plan](../.specify/specs/036-source-company-cloudflare/plan.md) — [tasks](../.specify/specs/036-source-company-cloudflare/tasks.md) | All phases done (T01..T05 run #246); spec complete |
 
 ## 8. Templates
 
@@ -111,4 +112,4 @@
 
 ---
 
-_Last revised: 2026-05-01 (run #245)._
+_Last revised: 2026-05-02 (run #246)._

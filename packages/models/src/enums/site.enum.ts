@@ -224,6 +224,8 @@ export enum Site {
   TWITCH = 'twitch',
   // Phase 45: Spec 035 — Source Company Plugin: Twilio
   TWILIO = 'twilio',
+  // Phase 46: Spec 036 — Source Company Plugin: Cloudflare
+  CLOUDFLARE = 'cloudflare',
 }
 
 /**
