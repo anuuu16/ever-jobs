@@ -78,6 +78,7 @@ import { DiscordModule } from './source-company-discord';
 import { DoorDashModule } from './source-company-doordash';
 import { GoogleCareersModule } from './source-company-google';
 import { IbmModule } from './source-company-ibm';
+import { LyftModule } from './source-company-lyft';
 import { MetaModule } from './source-company-meta';
 import { MicrosoftModule } from './source-company-microsoft';
 import { NetflixModule } from './source-company-netflix';
@@ -254,6 +255,7 @@ export const ALL_SOURCE_MODULES = [
   DoorDashModule,
   GoogleCareersModule,
   IbmModule,
+  LyftModule,
   MetaModule,
   MicrosoftModule,
   NetflixModule,

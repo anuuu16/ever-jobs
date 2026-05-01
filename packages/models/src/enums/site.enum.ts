@@ -210,6 +210,8 @@ export enum Site {
   REDDIT = 'reddit',
   // Phase 38: Spec 028 — Source Company Plugin: Pinterest
   PINTEREST = 'pinterest',
+  // Phase 39: Spec 029 — Source Company Plugin: Lyft
+  LYFT = 'lyft',
 }
 
 /**
