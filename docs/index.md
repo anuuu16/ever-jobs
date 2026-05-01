@@ -86,6 +86,7 @@
 | 019 | [Salary Parser Residuals, Batch 2 (bare-path raw-value pre-check threshold bump — closes Spec 015 / FR-8 documented limitation)](../.specify/specs/019-salary-parser-residuals-batch-2/spec.md) — [plan](../.specify/specs/019-salary-parser-residuals-batch-2/plan.md) — [tasks](../.specify/specs/019-salary-parser-residuals-batch-2/tasks.md) | All phases done (T01..T03 runs #79..#81); spec complete |
 | 020 | [Source Company Plugin: Anthropic](../.specify/specs/020-source-company-anthropic/spec.md) — [plan](../.specify/specs/020-source-company-anthropic/plan.md) — [tasks](../.specify/specs/020-source-company-anthropic/tasks.md) | All phases done (T01..T05 run #230); spec complete |
 | 021 | [Source Company Plugin: Databricks](../.specify/specs/021-source-company-databricks/spec.md) — [plan](../.specify/specs/021-source-company-databricks/plan.md) — [tasks](../.specify/specs/021-source-company-databricks/tasks.md) | All phases done (T01..T05 run #231); spec complete |
+| 022 | [Source Company Plugin: Discord](../.specify/specs/022-source-company-discord/spec.md) — [plan](../.specify/specs/022-source-company-discord/plan.md) — [tasks](../.specify/specs/022-source-company-discord/tasks.md) | All phases done (T01..T05 run #232); spec complete |
 
 ## 8. Templates
 
@@ -97,4 +98,4 @@
 
 ---
 
-_Last revised: 2026-05-01 (run #231)._
+_Last revised: 2026-05-01 (run #232)._

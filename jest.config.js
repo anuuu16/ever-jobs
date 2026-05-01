@@ -75,6 +75,7 @@ module.exports = {
     '^@ever-jobs/source-company-openai$': '<rootDir>/packages/plugins/source-company-openai/src/index.ts',
     '^@ever-jobs/source-company-anthropic$': '<rootDir>/packages/plugins/source-company-anthropic/src/index.ts',
     '^@ever-jobs/source-company-databricks$': '<rootDir>/packages/plugins/source-company-databricks/src/index.ts',
+    '^@ever-jobs/source-company-discord$': '<rootDir>/packages/plugins/source-company-discord/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',

@@ -196,6 +196,8 @@ export enum Site {
   ANTHROPIC = 'anthropic',
   // Phase 31: Spec 021 — Source Company Plugin: Databricks
   DATABRICKS = 'databricks',
+  // Phase 32: Spec 022 — Source Company Plugin: Discord
+  DISCORD = 'discord',
 }
 
 /**

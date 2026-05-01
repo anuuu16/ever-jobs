@@ -30,6 +30,7 @@
 | proposed   | `source-company-tesla`     | `company`  | **Tesla** careers site (reverse-engineered API).    | Single company-direct plugin. |
 | shipped    | `source-company-anthropic` | `company`  | **Anthropic** (`anthropic.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/anthropic/jobs`). | Spec 020, run #230. Thin wrapper following the `source-company-stripe` pattern. |
 | shipped    | `source-company-databricks`| `company`  | **Databricks** (`databricks.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/databricks/jobs`). | Spec 021, run #231. Thin wrapper following the `source-company-anthropic` pattern. |
+| shipped    | `source-company-discord`   | `company`  | **Discord** (`discord.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/discord/jobs`). | Spec 022, run #232. Thin wrapper following the `source-company-databricks` pattern. |
 
 ## Logic-improvement candidates (existing plugins)
 
@@ -52,4 +53,4 @@
 
 ---
 
-_Last revised: 2026-05-01 (run #231)._
+_Last revised: 2026-05-01 (run #232)._
