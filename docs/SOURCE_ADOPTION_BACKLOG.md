@@ -41,6 +41,7 @@
 | shipped    | `source-company-plaid`     | `company`  | **Plaid** (`plaid.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/plaid/jobs`). | Spec 030, run #240. Thin wrapper following the `source-company-lyft` pattern. |
 | shipped    | `source-company-asana`     | `company`  | **Asana** (`asana.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/asana/jobs`). | Spec 031, run #241. Thin wrapper following the `source-company-plaid` pattern. |
 | shipped    | `source-company-figma`     | `company`  | **Figma** (`figma.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/figma/jobs`). | Spec 032, run #242. Thin wrapper following the `source-company-asana` pattern. |
+| shipped    | `source-company-gitlab`    | `company`  | **Gitlab** (`about.gitlab.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/gitlab/jobs`). | Spec 033, run #243. Thin wrapper following the `source-company-figma` pattern. |
 
 ## Logic-improvement candidates (existing plugins)
 
@@ -63,4 +64,4 @@
 
 ---
 
-_Last revised: 2026-05-01 (run #242)._
+_Last revised: 2026-05-01 (run #243)._

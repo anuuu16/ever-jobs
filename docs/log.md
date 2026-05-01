@@ -13,6 +13,114 @@
 
 ---
 
+## 2026-05-01 — Scheduled run #243 (Spec 033 closed end-to-end; new `source-company-gitlab` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench 2/2 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 22nd company-direct plugin in the catalogue)
+
+**Scope:** Run #243 continues the user-owner-directed concrete-action
+deviation that runs #230–#242 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 032's run
+#242 close-out note ("Likely next bite under the same Greenhouse
+company-direct pattern: **Gitlab** (`source-company-gitlab` —
+Greenhouse slug `gitlab`)"), the next ergonomic bite is the
+`source-company-gitlab` plugin, which this run ships end-to-end.
+
+**Spec 033 — Source Company Plugin: Gitlab — closed end-to-end:**
+
+- **T01:** Added `Site.GITLAB = 'gitlab'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 43:
+  Spec 033 — Source Company Plugin: Gitlab` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-gitlab` with the
+  Figma-shape (single-file `service.ts`, 3-line `module.ts`, 2-line
+  `index.ts`, 4-line `package.json`, 3-line `tsconfig.json`). The
+  scraper hits
+  `https://api.greenhouse.io/v1/boards/gitlab/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9.
+  Fallback `jobUrl` (when Greenhouse omits `absolute_url`) points at
+  the public Gitlab careers detail-page template
+  `https://about.gitlab.com/jobs/apply/<id>/`. Note: like Figma (Spec
+  032 § 10 D-05), Asana (Spec 031 § 10 D-05), Plaid (Spec 030 § 10
+  D-05), Lyft (Spec 029 § 10 D-05), Pinterest (Spec 028 § 10 D-05),
+  and Reddit (Spec 027 § 10 D-05), Gitlab's Greenhouse tenant uses
+  the bare `gitlab` slug — no slug-vs-display-name asymmetry.
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  alphabetical position between `FigmaModule` and
+  `GoogleCareersModule` since `Fi` < `Gi` < `Go`),
+  `tsconfig.base.json` paths, and `jest.config.js`
+  `moduleNameMapper`.
+- **T04:** Authored `__tests__/gitlab.service.spec.ts` with 8
+  cases covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `gitlab-`, `site === Site.GITLAB`,
+  `companyName === 'Gitlab'`, location, department, isRemote,
+  HTML stripped from description), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive), `searchTerm`
+  filter on department name (case-insensitive), HTTP 500 → empty
+  response, and empty `data.jobs` → empty response. The happy-path
+  test asserts the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/gitlab/jobs?content=true`.
+  Fixture `__tests__/fixtures/gitlab-jobs.json` is committed JSON
+  exercising both an SF-based Engineering GitLab-Runner-Cloud role
+  and a Remote Customer-Success Strategy role.
+- **T05:** Doc updates — added a `shipped` row for Gitlab in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the new column width is unchanged at 26-char `Plugin id`),
+  appended Spec 033 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #243.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-gitlab --colors=false`
+  → **8/8 passed** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+- `npx jest packages/common/__tests__/helpers.bench --colors=false`
+  → **2/2 passed** (Spec 016 perf-gate baseline
+  preserved; the bench suite covers `extractEmails` and
+  `extractSalary` p95 budgets per Spec 016 § 8).
+- `npm run lint:docs` exits 0 (`✓ Doc-lint passed — no issues.`).
+
+**External-snapshot tag set:** `Already up to date.` for all three
+watched repos. SHAs unchanged since run #21 (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`). **222nd consecutive
+zero-churn run** for the upstream snapshots — Spec 033 is a
+spec-driven backlog promotion, not an upstream-driven sync.
+
+**Files touched (run #243):**
+
+- `packages/models/src/enums/site.enum.ts` — `GITLAB = 'gitlab'`.
+- `packages/plugins/source-company-gitlab/` — new package
+  (5 files: `package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/gitlab.module.ts`, `src/gitlab.service.ts`,
+  `__tests__/gitlab.service.spec.ts`,
+  `__tests__/fixtures/gitlab-jobs.json`).
+- `packages/plugins/index.ts` — import + `ALL_SOURCE_MODULES` entry.
+- `tsconfig.base.json` — path-alias.
+- `jest.config.js` — `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — Gitlab shipped row.
+- `docs/index.md` — Spec 033 row.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — footer bumped to run #243.
+- `.specify/specs/033-source-company-gitlab/{spec,plan,tasks}.md` —
+  new spec.
+
+**Next ergonomic bite (under the same Greenhouse company-direct
+pattern):** **Twitch** (`source-company-twitch` — Greenhouse slug
+`twitch`) — same shape as Spec 033, ≤ 1 spec / ≤ 1 PR per the
+user-story budget set in Spec 024 § 4. After Twitch the queue
+continues with Twilio, Zendesk, Snowflake — all confirmed
+Greenhouse-hosted.
+
+---
+
 ## 2026-05-01 — Scheduled run #242 (Spec 032 closed end-to-end; new `source-company-figma` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench 2/2 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 21st company-direct plugin in the catalogue)
 
 **Scope:** Run #242 continues the user-owner-directed concrete-action

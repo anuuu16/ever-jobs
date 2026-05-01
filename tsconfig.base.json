@@ -101,6 +101,7 @@
       "@ever-jobs/source-company-plaid": ["packages/plugins/source-company-plaid/src/index.ts"],
       "@ever-jobs/source-company-asana": ["packages/plugins/source-company-asana/src/index.ts"],
       "@ever-jobs/source-company-figma": ["packages/plugins/source-company-figma/src/index.ts"],
+      "@ever-jobs/source-company-gitlab": ["packages/plugins/source-company-gitlab/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],

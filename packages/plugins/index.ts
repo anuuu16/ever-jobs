@@ -78,6 +78,7 @@ import { DatabricksModule } from './source-company-databricks';
 import { DiscordModule } from './source-company-discord';
 import { DoorDashModule } from './source-company-doordash';
 import { FigmaModule } from './source-company-figma';
+import { GitlabModule } from './source-company-gitlab';
 import { GoogleCareersModule } from './source-company-google';
 import { IbmModule } from './source-company-ibm';
 import { LyftModule } from './source-company-lyft';
@@ -258,6 +259,7 @@ export const ALL_SOURCE_MODULES = [
   DiscordModule,
   DoorDashModule,
   FigmaModule,
+  GitlabModule,
   GoogleCareersModule,
   IbmModule,
   LyftModule,

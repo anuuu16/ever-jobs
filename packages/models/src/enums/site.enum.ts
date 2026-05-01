@@ -218,6 +218,8 @@ export enum Site {
   ASANA = 'asana',
   // Phase 42: Spec 032 — Source Company Plugin: Figma
   FIGMA = 'figma',
+  // Phase 43: Spec 033 — Source Company Plugin: Gitlab
+  GITLAB = 'gitlab',
 }
 
 /**
