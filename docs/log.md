@@ -76,14 +76,14 @@ Greenhouse slug `gitlab`)"), the next ergonomic bite is the
 **Health-check:**
 
 - `npx jest packages/plugins/source-company-gitlab --colors=false`
-  → **8/8 passed** (registration scaffolding 2 + happy
+  → **8/8 passed in 8.583 s** (registration scaffolding 2 + happy
   path 1 + cap 1 + searchTerm 2 + error handling 2).
 - `npx jest packages/common/__tests__/helpers.spec --colors=false`
-  → **77/77 passed** (Spec 015 baseline preserved —
+  → **77/77 passed in 8.504 s** (Spec 015 baseline preserved —
   registration touch-points did not perturb the parser regression
   suite).
 - `npx jest packages/common/__tests__/helpers.bench --colors=false`
-  → **2/2 passed** (Spec 016 perf-gate baseline
+  → **2/2 passed in 8.827 s** (Spec 016 perf-gate baseline
   preserved; the bench suite covers `extractEmails` and
   `extractSalary` p95 budgets per Spec 016 § 8).
 - `npm run lint:docs` exits 0 (`✓ Doc-lint passed — no issues.`).
