@@ -226,6 +226,8 @@ export enum Site {
   TWILIO = 'twilio',
   // Phase 46: Spec 036 — Source Company Plugin: Cloudflare
   CLOUDFLARE = 'cloudflare',
+  // Phase 47: Spec 037 — Source Company Plugin: MongoDB
+  MONGODB = 'mongodb',
 }
 
 /**

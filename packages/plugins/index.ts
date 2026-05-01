@@ -85,6 +85,7 @@ import { IbmModule } from './source-company-ibm';
 import { LyftModule } from './source-company-lyft';
 import { MetaModule } from './source-company-meta';
 import { MicrosoftModule } from './source-company-microsoft';
+import { MongoDbModule } from './source-company-mongodb';
 import { NetflixModule } from './source-company-netflix';
 import { NvidiaModule } from './source-company-nvidia';
 import { OpenAIModule } from './source-company-openai';
@@ -269,6 +270,7 @@ export const ALL_SOURCE_MODULES = [
   LyftModule,
   MetaModule,
   MicrosoftModule,
+  MongoDbModule,
   NetflixModule,
   NvidiaModule,
   OpenAIModule,

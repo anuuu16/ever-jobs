@@ -90,6 +90,7 @@ module.exports = {
     '^@ever-jobs/source-company-twitch$': '<rootDir>/packages/plugins/source-company-twitch/src/index.ts',
     '^@ever-jobs/source-company-twilio$': '<rootDir>/packages/plugins/source-company-twilio/src/index.ts',
     '^@ever-jobs/source-company-cloudflare$': '<rootDir>/packages/plugins/source-company-cloudflare/src/index.ts',
+    '^@ever-jobs/source-company-mongodb$': '<rootDir>/packages/plugins/source-company-mongodb/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',

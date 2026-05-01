@@ -105,6 +105,7 @@
       "@ever-jobs/source-company-twitch": ["packages/plugins/source-company-twitch/src/index.ts"],
       "@ever-jobs/source-company-twilio": ["packages/plugins/source-company-twilio/src/index.ts"],
       "@ever-jobs/source-company-cloudflare": ["packages/plugins/source-company-cloudflare/src/index.ts"],
+      "@ever-jobs/source-company-mongodb": ["packages/plugins/source-company-mongodb/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],

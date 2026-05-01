@@ -13,6 +13,128 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #247 (Spec 037 closed end-to-end; new `source-company-mongodb` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 26th Greenhouse-backed company-direct plugin in the catalogue)
+
+**Scope:** Run #247 continues the user-owner-directed concrete-action
+deviation that runs #230–#246 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 036's run
+#246 close-out note (which named Snowflake, MongoDB, Datadog, and
+similar Greenhouse-only employers as the next ergonomic bites under
+the same company-direct pattern), this run extends the catalogue with
+the dominant **operational / general-purpose document database**
+vendor — MongoDB — whose Greenhouse tenant is published at the bare
+`mongodb` slug and was confirmed live via run #247's HTTP 200 probe
+of `https://api.greenhouse.io/v1/boards/mongodb/jobs?content=true`.
+Run #247 also probed Snowflake at four candidate slugs (`snowflake`,
+`snowflakecomputing`, `snowflakeinc`, `snowflake1`) — all returned
+HTTP 404, so Snowflake is parked for now (its careers board is on a
+different ATS that will need its own spec and adapter).
+
+**Spec 037 — Source Company Plugin: MongoDB — closed end-to-end:**
+
+- **T01:** Added `Site.MONGODB = 'mongodb'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 47:
+  Spec 037 — Source Company Plugin: MongoDB` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 phase-ordering
+  convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-mongodb` with the
+  Cloudflare-shape (single-file `service.ts`, 3-line `module.ts`,
+  2-line `index.ts`, 4-line `package.json`, 3-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/mongodb/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9.
+  Fallback `jobUrl` (when Greenhouse omits `absolute_url`) points at
+  the public MongoDB careers detail-page template
+  `https://www.mongodb.com/careers/job/<id>`. Note: like Cloudflare
+  (Spec 036 § 10 D-05), Twilio (Spec 035 § 10 D-05), Twitch (Spec
+  034 § 10 D-05), Gitlab (Spec 033 § 10 D-05), Figma (Spec 032 § 10
+  D-05), Asana (Spec 031 § 10 D-05), Plaid (Spec 030 § 10 D-05),
+  Lyft (Spec 029 § 10 D-05), Pinterest (Spec 028 § 10 D-05), and
+  Reddit (Spec 027 § 10 D-05), MongoDB's Greenhouse tenant uses the
+  bare `mongodb` slug — no slug-vs-display-name asymmetry. Spec 037
+  § 10 D-06 also records the deliberate decision to ship MongoDB as
+  a single `Site.MONGODB` plugin covering the Realm (acquired 2019)
+  and Voyage AI (acquired 2025) subsidiaries that now post through
+  the same `mongodb` Greenhouse tenant. Class names are `MongoDbService`
+  / `MongoDbModule` (PascalCase with lowercase `b` for `db`) per the
+  Spec 037 § 10 D-07 decision — the same casing the codebase uses for
+  `JobDataApiModule` / `JobDataApiService` (`Api`, not `API`).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned between `MicrosoftModule` and `NetflixModule` in the
+  alphabetised company-direct cohort import block), `tsconfig.base.json`
+  paths, and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/mongodb.service.spec.ts` with 8
+  cases covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `mongodb-`, `site === Site.MONGODB`,
+  `companyName === 'MongoDB'`, location, department, isRemote,
+  HTML stripped from description), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive), `searchTerm`
+  filter on department name (case-insensitive), HTTP 500 → empty
+  response, and empty `data.jobs` → empty response. The happy-path
+  test asserts the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/mongodb/jobs?content=true`.
+  Fixture `__tests__/fixtures/mongodb-jobs.json` is committed JSON
+  exercising both an NY-based Engineering Atlas-Storage role and a
+  Remote Customer-Success Vector-Search role.
+- **T05:** Doc updates — added a `shipped` row for MongoDB in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the new column width is unchanged at 26-char `Plugin id`),
+  appended Spec 037 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #247.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-mongodb --colors=false`
+  → **8/8 passed in 8.593 s** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed in 7.044 s** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+
+**Files changed:**
+
+- `packages/models/src/enums/site.enum.ts` — `+2 lines` (`// Phase 47
+  …` comment + `MONGODB = 'mongodb'` enum entry).
+- `packages/plugins/index.ts` — `+2 lines` (import + module-list entry).
+- `tsconfig.base.json` — `+1 line` (path-alias entry).
+- `jest.config.js` — `+1 line` (`moduleNameMapper` entry).
+- `packages/plugins/source-company-mongodb/` — **new package**
+  (5 source files + 1 fixture + 1 test file = 7 files).
+- `.specify/specs/037-source-company-mongodb/` — **new spec dir**
+  (`spec.md`, `plan.md`, `tasks.md` = 3 files).
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — `+1 row` (MongoDB shipped row).
+- `docs/index.md` — `+1 row` (Spec 037 entry).
+- `docs/log.md` — this entry (newest-at-top).
+
+**Notes:**
+
+- Confirmed MongoDB's Greenhouse slug `mongodb` via direct
+  HTTP-200 probe of the public board endpoint
+  `https://api.greenhouse.io/v1/boards/mongodb/jobs?content=true`
+  during run #247 spec drafting; no slug asymmetry as recorded in
+  Spec 037 § 10 D-05.
+- Snowflake parked: probed `snowflake`, `snowflakecomputing`,
+  `snowflakeinc`, and `snowflake1` against the Greenhouse public-API
+  endpoint; all returned HTTP 404. Snowflake's careers board is on a
+  non-Greenhouse ATS, so a future spec needs to identify and target
+  the actual ATS before shipping a `source-company-snowflake` plugin.
+- Likely next bite under the same Greenhouse company-direct pattern:
+  **Datadog** (`source-company-datadog` — Greenhouse slug `datadog`,
+  HTTP 200 confirmed in run #247's probe) or **Instacart** /
+  **Dropbox** / **Roblox** (all three confirmed HTTP 200 in run #247's
+  probe). Run #248's spec-drafting agent should pick one and re-confirm
+  the slug via a public-API probe before committing.
+
+---
+
 ## 2026-05-02 — Scheduled run #246 (Spec 036 closed end-to-end; new `source-company-cloudflare` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 25th company-direct plugin in the catalogue)
 
 **Scope:** Run #246 continues the user-owner-directed concrete-action
