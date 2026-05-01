@@ -91,6 +91,7 @@
 | 024 | [Source Company Plugin: DoorDash](../.specify/specs/024-source-company-doordash/spec.md) — [plan](../.specify/specs/024-source-company-doordash/plan.md) — [tasks](../.specify/specs/024-source-company-doordash/tasks.md) | All phases done (T01..T05 run #234); spec complete |
 | 025 | [Source Company Plugin: Airbnb](../.specify/specs/025-source-company-airbnb/spec.md) — [plan](../.specify/specs/025-source-company-airbnb/plan.md) — [tasks](../.specify/specs/025-source-company-airbnb/tasks.md) | All phases done (T01..T05 run #235); spec complete |
 | 026 | [Source Company Plugin: Robinhood](../.specify/specs/026-source-company-robinhood/spec.md) — [plan](../.specify/specs/026-source-company-robinhood/plan.md) — [tasks](../.specify/specs/026-source-company-robinhood/tasks.md) | All phases done (T01..T05 run #236); spec complete |
+| 027 | [Source Company Plugin: Reddit](../.specify/specs/027-source-company-reddit/spec.md) — [plan](../.specify/specs/027-source-company-reddit/plan.md) — [tasks](../.specify/specs/027-source-company-reddit/tasks.md) | All phases done (T01..T05 run #237); spec complete |
 
 ## 8. Templates
 
@@ -102,4 +103,4 @@
 
 ---
 
-_Last revised: 2026-05-01 (run #236)._
+_Last revised: 2026-05-01 (run #237)._

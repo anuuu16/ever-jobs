@@ -206,6 +206,8 @@ export enum Site {
   AIRBNB = 'airbnb',
   // Phase 36: Spec 026 — Source Company Plugin: Robinhood
   ROBINHOOD = 'robinhood',
+  // Phase 37: Spec 027 — Source Company Plugin: Reddit
+  REDDIT = 'reddit',
 }
 
 /**
