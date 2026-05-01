@@ -212,6 +212,8 @@ export enum Site {
   PINTEREST = 'pinterest',
   // Phase 39: Spec 029 — Source Company Plugin: Lyft
   LYFT = 'lyft',
+  // Phase 40: Spec 030 — Source Company Plugin: Plaid
+  PLAID = 'plaid',
 }
 
 /**

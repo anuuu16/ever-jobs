@@ -38,6 +38,7 @@
 | shipped    | `source-company-reddit`    | `company`  | **Reddit** (`reddit.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/reddit/jobs`). | Spec 027, run #237. Thin wrapper following the `source-company-robinhood` pattern. |
 | shipped    | `source-company-pinterest` | `company`  | **Pinterest** (`pinterest.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/pinterest/jobs`). | Spec 028, run #238. Thin wrapper following the `source-company-reddit` pattern. |
 | shipped    | `source-company-lyft`      | `company`  | **Lyft** (`lyft.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/lyft/jobs`). | Spec 029, run #239. Thin wrapper following the `source-company-pinterest` pattern. |
+| shipped    | `source-company-plaid`     | `company`  | **Plaid** (`plaid.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/plaid/jobs`). | Spec 030, run #240. Thin wrapper following the `source-company-lyft` pattern. |
 
 ## Logic-improvement candidates (existing plugins)
 
@@ -60,4 +61,4 @@
 
 ---
 
-_Last revised: 2026-05-01 (run #239)._
+_Last revised: 2026-05-01 (run #240)._
