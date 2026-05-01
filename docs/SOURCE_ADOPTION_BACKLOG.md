@@ -32,6 +32,7 @@
 | shipped    | `source-company-databricks`| `company`  | **Databricks** (`databricks.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/databricks/jobs`). | Spec 021, run #231. Thin wrapper following the `source-company-anthropic` pattern. |
 | shipped    | `source-company-discord`   | `company`  | **Discord** (`discord.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/discord/jobs`). | Spec 022, run #232. Thin wrapper following the `source-company-databricks` pattern. |
 | shipped    | `source-company-coinbase`  | `company`  | **Coinbase** (`coinbase.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/coinbase/jobs`). | Spec 023, run #233. Thin wrapper following the `source-company-discord` pattern. |
+| shipped    | `source-company-doordash`  | `company`  | **DoorDash** (`doordash.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/doordash/jobs`). | Spec 024, run #234. Thin wrapper following the `source-company-coinbase` pattern. |
 
 ## Logic-improvement candidates (existing plugins)
 
@@ -54,4 +55,4 @@
 
 ---
 
-_Last revised: 2026-05-01 (run #233)._
+_Last revised: 2026-05-01 (run #234)._

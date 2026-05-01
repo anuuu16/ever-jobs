@@ -77,6 +77,7 @@ module.exports = {
     '^@ever-jobs/source-company-databricks$': '<rootDir>/packages/plugins/source-company-databricks/src/index.ts',
     '^@ever-jobs/source-company-discord$': '<rootDir>/packages/plugins/source-company-discord/src/index.ts',
     '^@ever-jobs/source-company-coinbase$': '<rootDir>/packages/plugins/source-company-coinbase/src/index.ts',
+    '^@ever-jobs/source-company-doordash$': '<rootDir>/packages/plugins/source-company-doordash/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',

@@ -88,6 +88,7 @@
 | 021 | [Source Company Plugin: Databricks](../.specify/specs/021-source-company-databricks/spec.md) — [plan](../.specify/specs/021-source-company-databricks/plan.md) — [tasks](../.specify/specs/021-source-company-databricks/tasks.md) | All phases done (T01..T05 run #231); spec complete |
 | 022 | [Source Company Plugin: Discord](../.specify/specs/022-source-company-discord/spec.md) — [plan](../.specify/specs/022-source-company-discord/plan.md) — [tasks](../.specify/specs/022-source-company-discord/tasks.md) | All phases done (T01..T05 run #232); spec complete |
 | 023 | [Source Company Plugin: Coinbase](../.specify/specs/023-source-company-coinbase/spec.md) — [plan](../.specify/specs/023-source-company-coinbase/plan.md) — [tasks](../.specify/specs/023-source-company-coinbase/tasks.md) | All phases done (T01..T05 run #233); spec complete |
+| 024 | [Source Company Plugin: DoorDash](../.specify/specs/024-source-company-doordash/spec.md) — [plan](../.specify/specs/024-source-company-doordash/plan.md) — [tasks](../.specify/specs/024-source-company-doordash/tasks.md) | All phases done (T01..T05 run #234); spec complete |
 
 ## 8. Templates
 
@@ -99,4 +100,4 @@
 
 ---
 
-_Last revised: 2026-05-01 (run #233)._
+_Last revised: 2026-05-01 (run #234)._

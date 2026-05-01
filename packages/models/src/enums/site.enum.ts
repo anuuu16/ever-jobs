@@ -200,6 +200,8 @@ export enum Site {
   DISCORD = 'discord',
   // Phase 33: Spec 023 — Source Company Plugin: Coinbase
   COINBASE = 'coinbase',
+  // Phase 34: Spec 024 — Source Company Plugin: DoorDash
+  DOORDASH = 'doordash',
 }
 
 /**

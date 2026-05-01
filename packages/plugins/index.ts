@@ -74,6 +74,7 @@ import { CoinbaseModule } from './source-company-coinbase';
 import { CursorModule } from './source-company-cursor';
 import { DatabricksModule } from './source-company-databricks';
 import { DiscordModule } from './source-company-discord';
+import { DoorDashModule } from './source-company-doordash';
 import { GoogleCareersModule } from './source-company-google';
 import { IbmModule } from './source-company-ibm';
 import { MetaModule } from './source-company-meta';
@@ -245,6 +246,7 @@ export const ALL_SOURCE_MODULES = [
   CursorModule,
   DatabricksModule,
   DiscordModule,
+  DoorDashModule,
   GoogleCareersModule,
   IbmModule,
   MetaModule,
