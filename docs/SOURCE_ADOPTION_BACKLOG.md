@@ -43,6 +43,7 @@
 | shipped    | `source-company-figma`     | `company`  | **Figma** (`figma.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/figma/jobs`). | Spec 032, run #242. Thin wrapper following the `source-company-asana` pattern. |
 | shipped    | `source-company-gitlab`    | `company`  | **Gitlab** (`about.gitlab.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/gitlab/jobs`). | Spec 033, run #243. Thin wrapper following the `source-company-figma` pattern. |
 | shipped    | `source-company-twitch`    | `company`  | **Twitch** (`twitch.tv`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/twitch/jobs`). | Spec 034, run #244. Thin wrapper following the `source-company-gitlab` pattern. |
+| shipped    | `source-company-twilio`    | `company`  | **Twilio** (`twilio.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/twilio/jobs`). | Spec 035, run #245. Thin wrapper following the `source-company-twitch` pattern. |
 
 ## Logic-improvement candidates (existing plugins)
 
@@ -65,4 +66,4 @@
 
 ---
 
-_Last revised: 2026-05-01 (run #244)._
+_Last revised: 2026-05-01 (run #245)._

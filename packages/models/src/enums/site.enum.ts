@@ -222,6 +222,8 @@ export enum Site {
   GITLAB = 'gitlab',
   // Phase 44: Spec 034 — Source Company Plugin: Twitch
   TWITCH = 'twitch',
+  // Phase 45: Spec 035 — Source Company Plugin: Twilio
+  TWILIO = 'twilio',
 }
 
 /**

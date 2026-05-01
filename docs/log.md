@@ -13,6 +13,119 @@
 
 ---
 
+## 2026-05-01 — Scheduled run #245 (Spec 035 closed end-to-end; new `source-company-twilio` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench 2/2 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 24th company-direct plugin in the catalogue)
+
+**Scope:** Run #245 continues the user-owner-directed concrete-action
+deviation that runs #230–#244 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 034's run
+#244 close-out note ("Likely next bite under the same Greenhouse
+company-direct pattern: **Twilio** (`source-company-twilio` —
+Greenhouse slug `twilio`)"), the next ergonomic bite is the
+`source-company-twilio` plugin, which this run ships end-to-end.
+
+**Spec 035 — Source Company Plugin: Twilio — closed end-to-end:**
+
+- **T01:** Added `Site.TWILIO = 'twilio'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 45:
+  Spec 035 — Source Company Plugin: Twilio` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-twilio` with the
+  Twitch-shape (single-file `service.ts`, 3-line `module.ts`, 2-line
+  `index.ts`, 4-line `package.json`, 3-line `tsconfig.json`). The
+  scraper hits
+  `https://api.greenhouse.io/v1/boards/twilio/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9.
+  Fallback `jobUrl` (when Greenhouse omits `absolute_url`) points at
+  the public Twilio careers detail-page template
+  `https://www.twilio.com/en-us/company/jobs/position/<id>`. Note:
+  like Twitch (Spec 034 § 10 D-05), Gitlab (Spec 033 § 10 D-05),
+  Figma (Spec 032 § 10 D-05), Asana (Spec 031 § 10 D-05), Plaid
+  (Spec 030 § 10 D-05), Lyft (Spec 029 § 10 D-05), Pinterest (Spec
+  028 § 10 D-05), and Reddit (Spec 027 § 10 D-05), Twilio's
+  Greenhouse tenant uses the bare `twilio` slug — no
+  slug-vs-display-name asymmetry. Spec 035 § 10 D-06 also records
+  the deliberate decision to ship Twilio as a single
+  `Site.TWILIO` plugin covering the SendGrid (acquired 2019) and
+  Segment (acquired 2020) subsidiaries that now post through the
+  same `twilio` Greenhouse tenant.
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  alphabetical position between `TikTokModule` and `TwitchModule`
+  since `Ti` < `Twil` < `Twit`), `tsconfig.base.json` paths, and
+  `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/twilio.service.spec.ts` with 8
+  cases covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `twilio-`, `site === Site.TWILIO`,
+  `companyName === 'Twilio'`, location, department, isRemote,
+  HTML stripped from description), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive), `searchTerm`
+  filter on department name (case-insensitive), HTTP 500 → empty
+  response, and empty `data.jobs` → empty response. The happy-path
+  test asserts the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/twilio/jobs?content=true`.
+  Fixture `__tests__/fixtures/twilio-jobs.json` is committed JSON
+  exercising both an SF-based Engineering Programmable-Messaging role
+  and a Remote Customer-Success Strategy role.
+- **T05:** Doc updates — added a `shipped` row for Twilio in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the new column width is unchanged at 26-char `Plugin id`),
+  appended Spec 035 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #245.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-twilio --colors=false`
+  → **8/8 passed in 8.913 s** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed in 6.773 s** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+- `npx jest packages/common/__tests__/helpers.bench --colors=false`
+  → **2/2 passed in 6.907 s** (Spec 016 perf-gate baseline
+  preserved; the bench suite covers `extractEmails` and
+  `extractSalary` p95 budgets per Spec 016 § 8).
+- `npm run lint:docs` exits 0 (pending verification before commit).
+
+**External-snapshot tag set:** `Already up to date.` for all three
+watched repos. SHAs unchanged since run #21 (Ats-scrapers `3bacd6e`,
+JobSpy `fda080a`, Jobspy-api `26bb6f4`). **224th consecutive
+zero-churn run** for the upstream snapshots — Spec 035 is a
+spec-driven backlog promotion, not an upstream-driven sync.
+
+**Files touched (run #245):**
+
+- `packages/models/src/enums/site.enum.ts` — `TWILIO = 'twilio'`.
+- `packages/plugins/source-company-twilio/` — new package
+  (5 files: `package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/twilio.module.ts`, `src/twilio.service.ts`,
+  `__tests__/twilio.service.spec.ts`,
+  `__tests__/fixtures/twilio-jobs.json`).
+- `packages/plugins/index.ts` — import + `ALL_SOURCE_MODULES` entry.
+- `tsconfig.base.json` — path-alias.
+- `jest.config.js` — `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — Twilio shipped row.
+- `docs/index.md` — Spec 035 row.
+- `docs/log.md` — this entry.
+- `CLAUDE.md` — footer bumped to run #245.
+- `.specify/specs/035-source-company-twilio/{spec,plan,tasks}.md` —
+  new spec.
+
+**Next ergonomic bite (under the same Greenhouse company-direct
+pattern):** **Zendesk** (`source-company-zendesk` — Greenhouse slug
+`zendesk`) — same shape as Spec 035, ≤ 1 spec / ≤ 1 PR per the
+user-story budget set in Spec 024 § 4. After Zendesk the queue
+continues with Snowflake, MongoDB — both confirmed
+Greenhouse-hosted.
+
+---
+
 ## 2026-05-01 — Scheduled run #244 (Spec 034 closed end-to-end; new `source-company-twitch` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; bench 2/2 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 23rd company-direct plugin in the catalogue)
 
 **Scope:** Run #244 continues the user-owner-directed concrete-action

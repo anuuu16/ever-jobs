@@ -93,6 +93,7 @@ import { RedditModule } from './source-company-reddit';
 import { RobinhoodModule } from './source-company-robinhood';
 import { StripeModule } from './source-company-stripe';
 import { TikTokModule } from './source-company-tiktok';
+import { TwilioModule } from './source-company-twilio';
 import { TwitchModule } from './source-company-twitch';
 import { UberModule } from './source-company-uber';
 import { ZoomModule } from './source-company-zoom';
@@ -275,6 +276,7 @@ export const ALL_SOURCE_MODULES = [
   RobinhoodModule,
   StripeModule,
   TikTokModule,
+  TwilioModule,
   TwitchModule,
   UberModule,
   ZoomModule,
