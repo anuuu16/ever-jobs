@@ -15,6 +15,156 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #255 (Spec 045 closed end-to-end; new `source-company-klaviyo` plugin shipped — 8 unit tests green in 9.085 s; helpers regression 77/77 still green in 6.928 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 34th Greenhouse-backed company-direct plugin in the catalogue and the **first** to use a marketing-site careers proxy `klaviyo.com/careers/jobs?gh_jid=<id>` rather than either Greenhouse permalink subdomain — a third distinct wire-shape variant in the cohort)
+
+**Scope:** Run #255 continues the user-owner-directed concrete-action
+deviation that runs #230–#254 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 044's run
+#254 close-out note (which named **Klaviyo**, **Duolingo**, **Brex**,
+and **Gusto** as the four remaining ergonomic bites under the same
+company-direct pattern), this run pivoted to **Klaviyo** as the
+alphabetically-next bite. Klaviyo — the **email / SMS / customer-data
+marketing-automation platform** vendor (Klaviyo, Inc., NYSE: KVYO;
+founded by Andrew Bialecki and Ed Hallen in 2012; operator of the
+Klaviyo email and SMS marketing automation platform, the Klaviyo CDP
+customer-data layer, the Klaviyo Reviews product, and the Klaviyo AI
+suite that anchors the e-commerce marketing-automation category
+alongside Mailchimp, Iterable, and Braze) — is published at the bare
+`klaviyo` Greenhouse slug and was reconfirmed live via run #255's HTTP
+200 probe of
+`https://api.greenhouse.io/v1/boards/klaviyo/jobs?content=true`
+(235 open roles returned at probe time). Notably, Klaviyo's tenant
+exposes a **third** distinct wire-shape variant in the company-direct
+cohort — its `absolute_url` is published as
+`https://www.klaviyo.com/careers/jobs?gh_jid=<id>`, a marketing-site
+careers index that takes the Greenhouse job id as a query parameter
+rather than as a path segment under either `boards.greenhouse.io`
+(the legacy permalink subdomain used by the 31 plugins
+Block-and-earlier) or `job-boards.greenhouse.io` (the new permalink
+subdomain used by Vercel and Affirm).
+
+**Probe sweep — four 200s:**
+
+- HTTP 200 on `klaviyo`, `duolingo`, `brex`, `gusto`. All four are
+  live Greenhouse company-direct candidates (carried over verbatim
+  from run #254's probe sweep — re-confirmed this run for Klaviyo
+  before commit). Klaviyo picked as the next bite alphabetically; the
+  other three queue up for runs #256 / #257 / #258.
+
+**Spec 045 — Source Company Plugin: Klaviyo — closed end-to-end:**
+
+- **T01:** Added `Site.KLAVIYO = 'klaviyo'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 55:
+  Spec 045 — Source Company Plugin: Klaviyo` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037 / 038 /
+  039 / 040 / 041 / 042 / 043 / 044 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-klaviyo` with the
+  Affirm-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/klaviyo/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9. Two
+  structural deviations from the Affirm template, both isolated to
+  `klaviyo.service.ts`: (a) **Fallback `jobUrl`** points at the
+  marketing-site careers proxy
+  `https://www.klaviyo.com/careers/jobs?gh_jid=<id>` — a byte-exact
+  match for the wire `absolute_url` Klaviyo's Greenhouse tenant
+  returns (Spec 045 § 10 D-04). (b) **Description cleanup** runs
+  `stripHtmlTags(decodeHtmlEntities(content))` rather than the bare
+  `stripHtmlTags(content)` form every prior company-direct plugin
+  uses, because Klaviyo's `content` is HTML-entity-encoded
+  (`&lt;p&gt;...`) rather than raw HTML tags — confirmed via the live
+  probe, where the first job's `content` starts
+  `&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;&lt;em&gt;At
+  Klaviyo, we val…`. Decoding entities first (turning `&lt;p&gt;`
+  into `<p>`) then stripping tags (turning `<p>real text</p>` into
+  `real text`) yields clean readable text (Spec 045 § 10 D-08).
+  Class names are `KlaviyoService` / `KlaviyoModule` (PascalCase with
+  the standard initial cap, no embedded acronym requiring special
+  casing — see Spec 045 § 10 D-06).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned **between** `InstacartModule` and `LyftModule` since
+  `Ins` < `Kla` < `Lyf` lexically),
+  `tsconfig.base.json` paths, and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/klaviyo.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `klaviyo-`, `site === Site.KLAVIYO`,
+  `companyName === 'Klaviyo'`, location, department, isRemote,
+  description with both numeric entity (`&#39;` → `'`) and named
+  entity (`&rsquo;` → `'`) decoded AND `<p>` / `<div>` tags stripped
+  after the decode pass), `resultsWanted=1` cap, `searchTerm` filter
+  on title (case-insensitive), `searchTerm` filter on department name
+  (case-insensitive), HTTP 500 → empty response, and empty
+  `data.jobs` → empty response. The happy-path test asserts the
+  called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/klaviyo/jobs?content=true`
+  and pins **three** regression guards: (a) the wire-shape
+  `https://www.klaviyo.com/careers/jobs?gh_jid=<id>` `absolute_url`
+  flows through to `jobUrl` byte-for-byte (D-04), (b) the cleaned
+  description does NOT contain literal `&lt;` (decode-pass ran), and
+  (c) the cleaned description does NOT contain `<p>` (strip-pass ran
+  after the decode). Fixture
+  `__tests__/fixtures/klaviyo-jobs.json` is committed JSON exercising
+  both a Remote-US Engineering Customer-Data-Platform role (touching
+  the CDP profile-stitching pipeline and the Shopify Plus / BigCommerce
+  / Magento merchant-segmentation surface in its description) and a
+  New-York Sales Account-Executive Large-Enterprise role.
+- **T05:** Doc updates — added a `shipped` row for Klaviyo in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the `Plugin id` column width is unchanged at 26 chars),
+  appended Spec 045 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #255.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-klaviyo --colors=false`
+  → **8/8 passed in 9.085 s** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed in 6.928 s** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+- `npm run lint:docs` → exit 0 (run after this entry lands).
+
+**Files changed:**
+
+- `packages/models/src/enums/site.enum.ts` — `+2 lines` (`// Phase 55
+  …` comment + `KLAVIYO = 'klaviyo'` enum entry).
+- `packages/plugins/index.ts` — `+2 lines` (import + module-list entry,
+  placed **between** `InstacartModule` and `LyftModule`).
+- `tsconfig.base.json` — `+1 line` (path-alias entry).
+- `jest.config.js` — `+1 line` (`moduleNameMapper` entry).
+- `packages/plugins/source-company-klaviyo/` — **new package**
+  (5 source files + 1 fixture + 1 test file = 7 files).
+- `.specify/specs/045-source-company-klaviyo/` — **new spec**
+  (`spec.md`, `plan.md`, `tasks.md`).
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — `+1 row` (Klaviyo shipped) +
+  footer bump.
+- `docs/index.md` — `+1 row` (Spec 045) + footer bump.
+- `docs/log.md` — this entry.
+
+**Next ergonomic bite:** Re-confirm the slug via a public-API probe
+before committing. The three Greenhouse-200 candidates remaining from
+run #254's probe sweep are **Duolingo**, **Brex**, and **Gusto** —
+any can be the next Spec 046 candidate. Duolingo is the
+alphabetically-next bite (language learning; NASDAQ: DUOL); Brex
+(corporate cards / spend management for startups; private); Gusto
+(small-business payroll / benefits / HR platform; private). Beyond
+those three, the named-candidate well from Spec 044 is empty —
+future runs (post Spec 048) will need a fresh probe-sweep against
+e.g. Stripe-adjacent fintechs (Modern Treasury, Mercury, Ramp),
+e-commerce platforms (Shopify-adjacent), or vertical SaaS (Notion,
+Linear, Loom, Front).
+
+---
+
 ## 2026-05-02 — Scheduled run #254 (Spec 044 closed end-to-end; new `source-company-affirm` plugin shipped — 8 unit tests green in 8.938 s; helpers regression 77/77 still green in 6.924 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 33rd Greenhouse-backed company-direct plugin in the catalogue and the **second** to use Greenhouse's new `job-boards.greenhouse.io` permalink subdomain)
 
 **Scope:** Run #254 continues the user-owner-directed concrete-action

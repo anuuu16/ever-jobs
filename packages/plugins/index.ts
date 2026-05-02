@@ -87,6 +87,7 @@ import { GitlabModule } from './source-company-gitlab';
 import { GoogleCareersModule } from './source-company-google';
 import { IbmModule } from './source-company-ibm';
 import { InstacartModule } from './source-company-instacart';
+import { KlaviyoModule } from './source-company-klaviyo';
 import { LyftModule } from './source-company-lyft';
 import { MetaModule } from './source-company-meta';
 import { MicrosoftModule } from './source-company-microsoft';
@@ -279,6 +280,7 @@ export const ALL_SOURCE_MODULES = [
   GoogleCareersModule,
   IbmModule,
   InstacartModule,
+  KlaviyoModule,
   LyftModule,
   MetaModule,
   MicrosoftModule,

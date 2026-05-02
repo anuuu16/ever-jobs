@@ -242,6 +242,8 @@ export enum Site {
   VERCEL = 'vercel',
   // Phase 54: Spec 044 — Source Company Plugin: Affirm
   AFFIRM = 'affirm',
+  // Phase 55: Spec 045 — Source Company Plugin: Klaviyo
+  KLAVIYO = 'klaviyo',
 }
 
 /**

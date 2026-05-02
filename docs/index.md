@@ -109,6 +109,7 @@
 | 042 | [Source Company Plugin: Block](../.specify/specs/042-source-company-block/spec.md) — [plan](../.specify/specs/042-source-company-block/plan.md) — [tasks](../.specify/specs/042-source-company-block/tasks.md) | All phases done (T01..T05 run #252); spec complete |
 | 043 | [Source Company Plugin: Vercel](../.specify/specs/043-source-company-vercel/spec.md) — [plan](../.specify/specs/043-source-company-vercel/plan.md) — [tasks](../.specify/specs/043-source-company-vercel/tasks.md) | All phases done (T01..T05 run #253); spec complete |
 | 044 | [Source Company Plugin: Affirm](../.specify/specs/044-source-company-affirm/spec.md) — [plan](../.specify/specs/044-source-company-affirm/plan.md) — [tasks](../.specify/specs/044-source-company-affirm/tasks.md) | All phases done (T01..T05 run #254); spec complete |
+| 045 | [Source Company Plugin: Klaviyo](../.specify/specs/045-source-company-klaviyo/spec.md) — [plan](../.specify/specs/045-source-company-klaviyo/plan.md) — [tasks](../.specify/specs/045-source-company-klaviyo/tasks.md) | All phases done (T01..T05 run #255); spec complete |
 
 ## 8. Templates
 
@@ -120,4 +121,4 @@
 
 ---
 
-_Last revised: 2026-05-02 (run #254)._
+_Last revised: 2026-05-02 (run #255)._
