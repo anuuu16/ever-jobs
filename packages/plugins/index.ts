@@ -103,6 +103,7 @@ import { TikTokModule } from './source-company-tiktok';
 import { TwilioModule } from './source-company-twilio';
 import { TwitchModule } from './source-company-twitch';
 import { UberModule } from './source-company-uber';
+import { VercelModule } from './source-company-vercel';
 import { ZoomModule } from './source-company-zoom';
 import { ConservationJobsModule } from './source-conservationjobs';
 import { CoroflotModule } from './source-coroflot';
@@ -293,6 +294,7 @@ export const ALL_SOURCE_MODULES = [
   TwilioModule,
   TwitchModule,
   UberModule,
+  VercelModule,
   ZoomModule,
   ConservationJobsModule,
   CoroflotModule,

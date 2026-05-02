@@ -15,6 +15,126 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #253 (Spec 043 closed end-to-end; new `source-company-vercel` plugin shipped — 8 unit tests green in 8.61 s; helpers regression 77/77 still green in 6.859 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 32nd Greenhouse-backed company-direct plugin in the catalogue and the **first** to use Greenhouse's new `job-boards.greenhouse.io` permalink subdomain)
+
+**Scope:** Run #253 continues the user-owner-directed concrete-action
+deviation that runs #230–#252 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 042's run
+#252 close-out note, this run pivoted to **Vercel** as the next
+ergonomic bite under the same company-direct pattern, with
+"re-confirm the slug via a public-API probe before committing"
+honoured by run #253's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/vercel/jobs?content=true`
+(11 open roles returned at probe time). Vercel — the **frontend
+cloud / Next.js framework / edge-network developer-platform** vendor
+(Vercel Inc., privately held; creators of Next.js; operator of the
+Vercel deployment cloud, the Vercel edge network, the v0 AI-assisted-
+development surface, and the Vercel Marketplace integrations layer) —
+is published at the bare `vercel` Greenhouse slug. Notably, Vercel's
+tenant uses the **new** `job-boards.greenhouse.io/vercel/jobs/<id>`
+permalink-subdomain wire shape (Greenhouse migrated newer / re-
+onboarded tenants to this host in 2024 — the legacy
+`boards.greenhouse.io/vercel/jobs/<id>` form issues a 301 to the new
+host); this is the **first** company-direct plugin in the cohort
+whose fallback URL uses the new permalink subdomain rather than the
+legacy `boards.greenhouse.io` form.
+
+**Spec 043 — Source Company Plugin: Vercel — closed end-to-end:**
+
+- **T01:** Added `Site.VERCEL = 'vercel'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 53:
+  Spec 043 — Source Company Plugin: Vercel` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037 / 038 /
+  039 / 040 / 041 / 042 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-vercel` with the
+  Block-shape (single-file `service.ts`, 3-line `module.ts`, 2-line
+  `index.ts`, 4-line `package.json`, 3-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/vercel/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9.
+  Fallback `jobUrl` (when Greenhouse omits `absolute_url`) points at
+  the new Greenhouse permalink template
+  `https://job-boards.greenhouse.io/vercel/jobs/<id>` — a byte-exact
+  match for the wire `absolute_url` Greenhouse returns for this
+  tenant. Spec 043 § 10 D-04 records the deliberate use of the new
+  permalink subdomain. Class names are `VercelService` /
+  `VercelModule` (PascalCase with the standard initial cap, no
+  embedded acronym requiring special casing — see Spec 043 § 10 D-06).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned between `UberModule` and `ZoomModule` since
+  `Ube` < `Ver` < `Zoo` lexically), `tsconfig.base.json` paths,
+  and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/vercel.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `vercel-`, `site === Site.VERCEL`,
+  `companyName === 'Vercel'`, location, department, isRemote, HTML
+  stripped from description), `resultsWanted=1` cap, `searchTerm`
+  filter on title (case-insensitive), `searchTerm` filter on
+  department name (case-insensitive), HTTP 500 → empty response, and
+  empty `data.jobs` → empty response. The happy-path test asserts
+  the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/vercel/jobs?content=true`
+  and pins the wire-shape `https://job-boards.greenhouse.io/...`
+  `absolute_url` so a future host-normalisation refactor would
+  surface as a test diff (not a silent regression). Fixture
+  `__tests__/fixtures/vercel-jobs.json` is committed JSON exercising
+  both a Hybrid-multi-city Engineering Edge-Network role and a
+  Remote-North-America Developer-Relations Next.js-Frontend-Cloud
+  role (the latter touching the v0 AI-assisted-development surface
+  in its description).
+- **T05:** Doc updates — added a `shipped` row for Vercel in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the `Plugin id` column width is unchanged at 26 chars),
+  appended Spec 043 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #253.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-vercel --colors=false`
+  → **8/8 passed in 8.61 s** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed in 6.859 s** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+
+**Files changed:**
+
+- `packages/models/src/enums/site.enum.ts` — `+2 lines` (`// Phase 53
+  …` comment + `VERCEL = 'vercel'` enum entry).
+- `packages/plugins/index.ts` — `+2 lines` (import + module-list entry).
+- `tsconfig.base.json` — `+1 line` (path-alias entry).
+- `jest.config.js` — `+1 line` (`moduleNameMapper` entry).
+- `packages/plugins/source-company-vercel/` — **new package**
+  (5 source files + 1 fixture + 1 test file = 7 files).
+- `.specify/specs/043-source-company-vercel/` — **new spec**
+  (`spec.md`, `plan.md`, `tasks.md`).
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — `+1 row` (Vercel shipped) +
+  footer bump.
+- `docs/index.md` — `+1 row` (Spec 043) + footer bump.
+- `docs/log.md` — this entry.
+
+**Next ergonomic bite:** Re-confirm the slug via a public-API probe
+before committing. Candidates to probe in the next run (all
+plausible Greenhouse tenants based on web presence): **Klaviyo**,
+**Affirm**, **Niantic**, **Snap** (Snapchat), **Duolingo**,
+**Brex**, **Gusto**. Any that return HTTP 200 on
+`https://api.greenhouse.io/v1/boards/<slug>/jobs` with a non-empty
+`jobs` array can be the next Spec 044 candidate; any that 404 gets
+recorded in the log along with what platform they actually use
+(Workday / Lever / Ashby / SmartRecruiters / etc.) so the next
+agent doesn't repeat the failed probe — same convention Spec 042 §
+10 D-05 used to record the Snowflake-not-on-Greenhouse finding.
+
+---
+
 ## 2026-05-02 — Scheduled run #252 (Spec 042 closed end-to-end; new `source-company-block` plugin shipped — 8 unit tests green in 8.84 s; helpers regression 77/77 still green in 6.877 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 31st Greenhouse-backed company-direct plugin in the catalogue)
 
 **Scope:** Run #252 continues the user-owner-directed concrete-action

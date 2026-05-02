@@ -107,6 +107,7 @@
 | 040 | [Source Company Plugin: Dropbox](../.specify/specs/040-source-company-dropbox/spec.md) — [plan](../.specify/specs/040-source-company-dropbox/plan.md) — [tasks](../.specify/specs/040-source-company-dropbox/tasks.md) | All phases done (T01..T05 run #250); spec complete |
 | 041 | [Source Company Plugin: Roblox](../.specify/specs/041-source-company-roblox/spec.md) — [plan](../.specify/specs/041-source-company-roblox/plan.md) — [tasks](../.specify/specs/041-source-company-roblox/tasks.md) | All phases done (T01..T05 run #251); spec complete |
 | 042 | [Source Company Plugin: Block](../.specify/specs/042-source-company-block/spec.md) — [plan](../.specify/specs/042-source-company-block/plan.md) — [tasks](../.specify/specs/042-source-company-block/tasks.md) | All phases done (T01..T05 run #252); spec complete |
+| 043 | [Source Company Plugin: Vercel](../.specify/specs/043-source-company-vercel/spec.md) — [plan](../.specify/specs/043-source-company-vercel/plan.md) — [tasks](../.specify/specs/043-source-company-vercel/tasks.md) | All phases done (T01..T05 run #253); spec complete |
 
 ## 8. Templates
 
@@ -118,4 +119,4 @@
 
 ---
 
-_Last revised: 2026-05-02 (run #252)._
+_Last revised: 2026-05-02 (run #253)._

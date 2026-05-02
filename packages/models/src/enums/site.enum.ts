@@ -238,6 +238,8 @@ export enum Site {
   ROBLOX = 'roblox',
   // Phase 52: Spec 042 — Source Company Plugin: Block
   BLOCK = 'block',
+  // Phase 53: Spec 043 — Source Company Plugin: Vercel
+  VERCEL = 'vercel',
 }
 
 /**
