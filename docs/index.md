@@ -121,6 +121,7 @@
 | 054 | [Source Company Plugin: Postman](../.specify/specs/054-source-company-postman/spec.md) — [plan](../.specify/specs/054-source-company-postman/plan.md) — [tasks](../.specify/specs/054-source-company-postman/tasks.md) | All phases done (T01..T05 run #264); spec complete |
 | 055 | [Source Company Plugin: Toast](../.specify/specs/055-source-company-toast/spec.md) — [plan](../.specify/specs/055-source-company-toast/plan.md) — [tasks](../.specify/specs/055-source-company-toast/tasks.md) | All phases done (T01..T05 run #265); spec complete |
 | 056 | [Source Company Plugin: Webflow](../.specify/specs/056-source-company-webflow/spec.md) — [plan](../.specify/specs/056-source-company-webflow/plan.md) — [tasks](../.specify/specs/056-source-company-webflow/tasks.md) | All phases done (T01..T05 run #266); spec complete |
+| 057 | [Source Company Plugin: ZoomInfo](../.specify/specs/057-source-company-zoominfo/spec.md) — [plan](../.specify/specs/057-source-company-zoominfo/plan.md) — [tasks](../.specify/specs/057-source-company-zoominfo/tasks.md) | All phases done (T01..T05 run #267); spec complete |
 
 ## 8. Templates
 

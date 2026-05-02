@@ -118,6 +118,7 @@ import { UberModule } from './source-company-uber';
 import { VercelModule } from './source-company-vercel';
 import { WebflowModule } from './source-company-webflow';
 import { ZoomModule } from './source-company-zoom';
+import { ZoomInfoModule } from './source-company-zoominfo';
 import { ConservationJobsModule } from './source-conservationjobs';
 import { CoroflotModule } from './source-coroflot';
 import { CrunchboardModule } from './source-crunchboard';
@@ -322,6 +323,7 @@ export const ALL_SOURCE_MODULES = [
   VercelModule,
   WebflowModule,
   ZoomModule,
+  ZoomInfoModule,
   ConservationJobsModule,
   CoroflotModule,
   CrunchboardModule,

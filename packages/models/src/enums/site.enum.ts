@@ -266,6 +266,8 @@ export enum Site {
   TOAST = 'toast',
   // Phase 66: Spec 056 — Source Company Plugin: Webflow
   WEBFLOW = 'webflow',
+  // Phase 67: Spec 057 — Source Company Plugin: ZoomInfo
+  ZOOMINFO = 'zoominfo',
 }
 
 /**

@@ -15,6 +15,166 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #267 (Spec 057 closed end-to-end; new `source-company-zoominfo` plugin shipped — 8 unit tests green in 35.646 s; helpers regression 77/77 still green in 24.31 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 46th Greenhouse-backed company-direct plugin in the catalogue and the **first** to use wire-shape variant 9 — the apex-www brand-domain marketing-site shape `https://www.zoominfo.com/careers?gh_jid=<id>`; the **thirteenth** to use the entity-decode-then-tag-strip description pipeline; the **third** cohort plugin to apply a brand-name trim (after Affirm and Gusto) and the **first to clean a space-separated legal-entity suffix** — wire `'ZoomInfo Technologies LLC'` → emitted `'ZoomInfo'`; the **third** cohort plugin to apply a wire-title `.trim()` deviation (after Brex and Buildkite); and the **first plugin in the cohort to ship a fixture with numeric-code-prefixed department names with hyphen-separated organisational hierarchy** — e.g. `'801 Client Services - Support'`, `'898 Corporate Engineering - G&A - Enterprise Technologies'`, `'820 R&G - Account Managers'` — that the department pass-through preserves byte-for-byte through to the emitted `JobPostDto.department` field. With this close-out, the Spec 050 carry-over named-candidate pool is fully exhausted: ZoomInfo was the last remaining live bite, HubSpot continues to be deferred with `meta.total === 0` for the sixth consecutive run #262–#267. Runs #268+ will pivot to a fresh probe sweep of the next batch of large-employer candidates.)
+
+**Scope:** Run #267 continues the user-owner-directed concrete-action
+deviation that runs #230–#266 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 056's run
+#266 close-out note (which queued **ZoomInfo** as the alphabetically-
+next remaining live bite from the carry-over named-candidate pool,
+plus a HubSpot re-probe), this run takes ZoomInfo directly: the
+Greenhouse public API was probed at run-267 start; ZoomInfo returned
+HTTP 200 with **82 open roles** and was selected. The HubSpot re-probe
+returned HTTP 200 with `meta.total === 0` (sixth consecutive empty
+re-probe), so HubSpot remains deferred.
+
+ZoomInfo Technologies LLC — the **dominant B2B go-to-market
+intelligence / sales-and-marketing data platform** vendor (founded as
+DiscoverOrg by Henry Schuck and Kirk Brown in 2007 in Vancouver,
+Washington; rebranded to ZoomInfo after the 2019 DiscoverOrg /
+ZoomInfo merger; listed on NASDAQ under `ZI` since the 2020 IPO; now
+operating with offices in Vancouver (Washington), Waltham
+(Massachusetts), Bethesda (Maryland), London, Chennai, and remote
+across the United States; operator of ZoomInfo Sales (the prospecting-
+data flagship), ZoomInfo Marketing (the demand-generation product),
+ZoomInfo Talent (the recruiter-intelligence product), ZoomInfo
+Operations (the data-orchestration product), ZoomInfo Engage (the
+sales-automation product), ZoomInfo Chat (the website-conversation
+product), ZoomInfo Chorus (the conversation-intelligence product),
+and ZoomInfo Copilot (the AI-driven workflow product) lines that
+anchor the GTM-intelligence category alongside Apollo, Cognism,
+Clearbit, Lusha, RocketReach, LinkedIn Sales Navigator, and 6sense)
+— is published at the bare `zoominfo` Greenhouse slug (the lowercase
+brand name with the suffix-letter-mash) and was confirmed live via
+run #267's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/zoominfo/jobs?content=true` (82
+open roles returned at probe time). Notably, ZoomInfo's tenant
+publishes its `absolute_url` on **variant 9** (the apex-www brand-
+domain marketing-site shape `https://www.zoominfo.com/careers?gh_jid=
+<id>`), making this the **first plugin in the cohort to use this
+shape**. Like every plugin from Klaviyo onwards, ZoomInfo's `content`
+is HTML-entity-encoded (`&lt;div class=&quot;content-intro&quot;
+&gt;&lt;p&gt;ZoomInfo is where careers accelerate...`) and uses the
+entity-decode-then-tag-strip pipeline (Spec 057 § 10 D-08) — making
+this the **thirteenth** plugin to use that pipeline. Unlike every
+prior cohort plugin except Affirm and Gusto, ZoomInfo's wire
+`company_name` carries a legal-entity suffix (`'ZoomInfo Technologies
+LLC'`) that the plugin trims to the brand `'ZoomInfo'` via string-
+literal pin (D-09); ZoomInfo is the **first plugin in the cohort to
+clean a space-separated suffix** rather than a comma-separated one.
+Like Brex and Buildkite, a subset of ZoomInfo wire titles carry
+trailing ASCII-space padding (5 of 82 titles in the run-267 probe —
+e.g. `'Account Manager, Enterprise Growth '`) that the plugin trims
+via `.trim()` before downstream filters and emit (D-10). Class names
+are `ZoomInfoService` / `ZoomInfoModule` (PascalCase splitting on the
+camelCase brand name with capital `I`; D-06).
+
+**Spec 057 — Source Company Plugin: ZoomInfo — closed end-to-end:**
+
+- **T01:** Added `Site.ZOOMINFO = 'zoominfo'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 67:
+  Spec 057 — Source Company Plugin: ZoomInfo` header (preserves the
+  Spec 006 / 013 / 020..056 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-zoominfo` with the
+  Toast-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/zoominfo/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively (post-trim per D-10), and swallows transport
+  errors per FR-9. **Three structural deviations from the Toast
+  template** — D-04 variant 9 fallback URL, D-09 brand-name trim
+  string-literal pin, D-10 wire-title `.trim()`. The fallback `jobUrl`
+  shape mirrors the wire `absolute_url` byte-for-byte —
+  `https://www.zoominfo.com/careers?gh_jid=${listing.id}` with the
+  apex-www brand-domain `www.zoominfo.com` (Spec 057 § 10 D-04). The
+  description-cleanup pipeline
+  `stripHtmlTags(decodeHtmlEntities(content))` is identical to
+  Toast's because ZoomInfo's `content` is also HTML-entity-encoded
+  (Spec 057 § 10 D-08). The brand-name pin `'ZoomInfo'` clean-trims
+  the wire `company_name` `'ZoomInfo Technologies LLC'` legal-entity
+  suffix via string-literal pin (Spec 057 § 10 D-09) — first
+  space-separated suffix clean in the cohort (Affirm and Gusto both
+  cleaned comma-separated `, Inc.` suffixes).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned **after** `ZoomModule` since `Zoom` < `ZoomInfo`
+  lexically — the shorter prefix sorts first), `tsconfig.base.json`
+  paths, and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/zoominfo.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `zoominfo-`, `site === Site.ZOOMINFO`, `companyName ===
+  'ZoomInfo'` byte-for-byte AND NOT matching the wire
+  `company_name` `'ZoomInfo Technologies LLC'` (D-09 brand-name trim
+  guard), location, department `'801 Client Services - Support'`
+  byte-for-byte (D-11 numeric-code-prefix pass-through guard),
+  `isRemote`, description with named entity (`&quot;`) decoded to
+  `"`, named entity (`&rsquo;`) decoded to right single quotation
+  mark U+2019, numeric entity (`&#39;`) decoded to apostrophe, and
+  `<p>`/`<div>`/`<strong>`/`<em>` tags stripped after the decode
+  pass), the second listing's wire title `'Account Manager,
+  Enterprise Growth '` (with trailing ASCII space) is observably
+  trimmed to `'Account Manager, Enterprise Growth'` AND the trim
+  observably fired (`emitted !== fixture` — D-10 lock),
+  `resultsWanted=1` cap, `searchTerm` filter on title post-trim
+  (case-insensitive `'GROWTH'` matches `'Growth'`), `searchTerm`
+  filter on department name (case-insensitive `'support'` matches
+  the leaf segment of the hyphen-separated path in
+  `'801 Client Services - Support'`), HTTP 500 → empty response, and
+  empty `data.jobs` → empty response. **All 8 tests pass in 35.646
+  s**; total Jest run time stays well under the 60 s NFR-1 envelope
+  the cohort tests share. **Helpers regression suite re-run after
+  the registration edits remains 77/77 green in 24.31 s** —
+  confirming the new wiring did not perturb any prior parser state.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added
+  `source-company-zoominfo` shipped row), `docs/index.md` (Spec 057
+  table row), and `docs/log.md` (this entry — newest-at-top order
+  preserved).
+
+**Cohort-first observation locked as a regression guard:** ZoomInfo
+is the **first plugin in the cohort to ship a fixture with numeric-
+code-prefixed department names with hyphen-separated organisational
+hierarchy** (e.g. `'801 Client Services - Support'`, `'898 Corporate
+Engineering - G&A - Enterprise Technologies'`, `'820 R&G - Account
+Managers'`). The plugin emits the wire string byte-for-byte (no code
+stripping, no hierarchy normalisation); consumers wanting the
+cleaned name can split on the first space themselves. The unit-test
+happy path pins the literal numeric-code-prefixed string for the
+first fixture listing AND asserts the case-insensitive `searchTerm`
+match on the literal `'support'` substring resolves the first
+listing through the leaf segment of the hyphen-separated path —
+locking both the pass-through and the search-leaf-resolution
+properties against future refactors.
+
+**Carry-over pool exhausted:** With ZoomInfo shipped, the Spec 050
+carry-over named-candidate pool from the original nine-200 probe
+sweep is now fully exhausted. The shipping order was: `circleci`
+(run #261), `rampnetwork` (run #262), `netlify` (run #263), `postman`
+(run #264), `toast` (run #265), `webflow` (run #266), `zoominfo`
+(run #267). HubSpot was deferred across runs #261–#267 with
+`meta.total === 0` on every re-probe (six consecutive empty
+re-probes). Runs #268+ will pivot to a **fresh probe sweep** of the
+next batch of large-employer candidates per the user-owner
+"continuously add more sources" directive in the scheduled-task
+brief.
+
+**Next-run queued bite:** Per the user-owner directive *"add more
+sources for jobs, e.g. search some more ATS to support or just
+search for some more large companies jobs feeds parsers etc"*, run
+#268 will probe a fresh batch of large-employer Greenhouse
+candidates: candidates to consider include `samsara`, `clari`,
+`outreach`, `gong`, `airtable`, `notion`, `canva`, `miro`, `figma2`
+(if separate from `figma`), `loom`, `1password`, `grafana`, plus a
+HubSpot re-probe (seventh consecutive). Picking the alphabetically-
+first live HTTP-200 candidate as the run #268 bite is the default
+per the established convention.
+
+---
+
 ## 2026-05-02 — Scheduled run #266 (Spec 056 closed end-to-end; new `source-company-webflow` plugin shipped — 8 unit tests green in 15.792 s; helpers regression 77/77 still green in 12.52 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 45th Greenhouse-backed company-direct plugin in the catalogue and the **eighth** to use wire-shape variant 2 — the US-region permalink subdomain shape `https://job-boards.greenhouse.io/<slug>/jobs/<id>` — after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, and Postman; the **twelfth** to use the entity-decode-then-tag-strip description pipeline; and the **first plugin in the cohort to ship a fixture with semicolon-separated multi-region location names with parenthesised province/state restrictions** — `'CA Remote (BC & ON only); U.K. / Ireland Remote; U.S. Remote'` — that the location pass-through preserves byte-for-byte through to the emitted `JobPostDto.location.city` field)
 
 **Scope:** Run #266 continues the user-owner-directed concrete-action
