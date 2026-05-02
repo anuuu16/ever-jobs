@@ -100,6 +100,7 @@ module.exports = {
     '^@ever-jobs/source-company-affirm$': '<rootDir>/packages/plugins/source-company-affirm/src/index.ts',
     '^@ever-jobs/source-company-klaviyo$': '<rootDir>/packages/plugins/source-company-klaviyo/src/index.ts',
     '^@ever-jobs/source-company-duolingo$': '<rootDir>/packages/plugins/source-company-duolingo/src/index.ts',
+    '^@ever-jobs/source-company-brex$': '<rootDir>/packages/plugins/source-company-brex/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',

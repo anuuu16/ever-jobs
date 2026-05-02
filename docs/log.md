@@ -15,6 +15,169 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #257 (Spec 047 closed end-to-end; new `source-company-brex` plugin shipped — 8 unit tests green in 9.037 s; helpers regression 77/77 still green in 7.019 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 36th Greenhouse-backed company-direct plugin in the catalogue and the **third** to use a marketing-site careers proxy — `www.brex.com/careers/<id>?gh_jid=<id>` — a **fifth** distinct wire-shape variant in the cohort, and the **first** company-direct plugin to apply a wire-title trim)
+
+**Scope:** Run #257 continues the user-owner-directed concrete-action
+deviation that runs #230–#256 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 046's run
+#256 close-out note (which carried over **Brex** and **Gusto** as the
+two remaining ergonomic bites under the same company-direct pattern
+after Duolingo shipped), this run pivoted to **Brex** as the
+alphabetically-next bite. Brex — the **fintech corporate-card /
+spend-management / business-banking** vendor (Brex Inc.; founded by
+Henrique Dubugras and Pedro Franceschi in 2017 as a YC-backed Stanford-
+spinout corporate-card play targeting startups with no FICO; operator
+of the Brex corporate card, Brex Cash business-banking, Brex Travel,
+Brex Empower expense / spend-management, and Brex Embedded embedded-
+finance product lines that anchor the technology-spend-management
+category alongside Ramp, Mercury, Airbase, Divvy, and Bill.com) — is
+published at the bare `brex` Greenhouse slug and was reconfirmed live
+via run #257's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/brex/jobs?content=true` (12 open
+roles returned at probe time). Notably, Brex's tenant exposes a
+**fifth** distinct wire-shape variant in the company-direct cohort —
+its `absolute_url` is published as
+`https://www.brex.com/careers/<id>?gh_jid=<id>`, an apex-www
+marketing-site careers proxy that takes the Greenhouse job id BOTH as
+a path segment AND as a `gh_jid` query parameter, distinct from
+Duolingo's careers-subdomain shape `https://careers.duolingo.com/
+jobs/<id>?gh_jid=<id>` (Spec 046, careers subdomain) and from
+Klaviyo's apex-domain query-param-only shape
+`https://www.klaviyo.com/careers/jobs?gh_jid=<id>` (Spec 045, apex
+query-param-only) and from both Greenhouse permalink subdomains
+(`boards.greenhouse.io` legacy and `job-boards.greenhouse.io` new).
+Additionally, Brex's tenant pads some titles with surrounding ASCII
+spaces (` Account Executive, E-Commerce ` was the wire shape on the
+first listing observed during the run #257 probe), making this the
+**first** company-direct plugin in the cohort to apply a `String.
+prototype.trim()` pass on the wire `title` before mapping to
+`JobPostDto`.
+
+**Probe sweep — two 200s carried over:**
+
+- HTTP 200 on `brex`, `gusto`. Both are live Greenhouse company-direct
+  candidates (carried over verbatim from run #256's probe sweep — re-
+  confirmed this run for Brex before commit). Brex picked as the next
+  bite alphabetically; the remaining one (Gusto) queues up for run
+  #258.
+
+**Spec 047 — Source Company Plugin: Brex — closed end-to-end:**
+
+- **T01:** Added `Site.BREX = 'brex'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 57:
+  Spec 047 — Source Company Plugin: Brex` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037 / 038 /
+  039 / 040 / 041 / 042 / 043 / 044 / 045 / 046 phase-ordering
+  convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-brex` with the
+  Duolingo-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/brex/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9. Two
+  structural deviations from the Duolingo template, both isolated to
+  `brex.service.ts`: **(1) Fallback `jobUrl`** points at the
+  apex-www marketing-site shape
+  `https://www.brex.com/careers/<id>?gh_jid=<id>` — a byte-exact
+  match for the wire `absolute_url` Brex's Greenhouse tenant returns
+  (Spec 047 § 10 D-04). **(2) Wire `title` trim** —
+  `(listing.title ?? '').trim()` strips Brex's surrounding-spaces
+  padding before mapping to `JobPostDto` (Spec 047 § 10 D-09). The
+  description-cleanup pipeline `stripHtmlTags(decodeHtmlEntities(content))`
+  is identical to Duolingo's because Brex's `content` is also HTML-
+  entity-encoded (`&lt;p&gt;...`) — confirmed via the live probe,
+  where the first job's `content` starts `&lt;div class=&quot;
+  content-intro&quot;&gt;&lt;p&gt;&lt;strong&gt;Why join us…`
+  (Spec 047 § 10 D-08). Class names are `BrexService` / `BrexModule`
+  (PascalCase with the standard initial cap, no embedded acronym
+  requiring special casing — see Spec 047 § 10 D-06).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned **between** `BoeingModule` and `CloudflareModule` since
+  `Bo` < `Br` < `Cl` lexically),
+  `tsconfig.base.json` paths, and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/brex.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `brex-`, `site === Site.BREX`, `companyName === 'Brex'`,
+  location, department, isRemote, description with both numeric entity
+  (`&#39;` → `'`) and named entity (`&rsquo;` → `'`) decoded AND `<p>`
+  tags stripped after the decode pass), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive), `searchTerm` filter
+  on department name (case-insensitive), HTTP 500 → empty response,
+  and empty `data.jobs` → empty response. The happy-path test asserts
+  the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/brex/jobs?content=true` and
+  pins **four** regression guards: (a) the wire-shape
+  `https://www.brex.com/careers/<id>?gh_jid=<id>` `absolute_url` flows
+  through to `jobUrl` byte-for-byte (D-04), (b) the cleaned description
+  does NOT contain literal `&lt;` (decode-pass ran), (c) the cleaned
+  description does NOT contain `<p>` (strip-pass ran after the decode),
+  and (d) the wire-padded title (` Account Executive, E-Commerce `) is
+  emitted as the trimmed value `Account Executive, E-Commerce` and
+  is NOT equal to the padded wire string (D-09). Fixture
+  `__tests__/fixtures/brex-jobs.json` is committed JSON exercising
+  both a Vancouver Sales E-Commerce Account-Executive role (with the
+  wire-padded title that triggers the D-09 trim guard, touching Brex
+  Card, Brex Cash, Brex Empower, and Brex Travel in its description)
+  and a Remote-US Engineering Empower-Platform Senior-SWE role
+  (touching the Empower spend-management policies, approvals, virtual
+  cards, and audit-trail engine in its description).
+- **T05:** Doc updates — added a `shipped` row for Brex in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  Brex pattern: deletion of the proposed row is N/A since Brex was
+  not previously listed as a `proposed` candidate — the backlog used
+  Spec 045's run #255 close-out note as the discovery channel,
+  surfaced via Spec 046's § 10 D-07 probe sweep). Index Spec 047 row
+  added under Spec 046; this `docs/log.md` entry appended at top.
+
+**Test verification:**
+
+- `npx jest packages/plugins/source-company-brex --colors=false` → **8/8 passed in 9.037 s**.
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 7.019 s** (helpers regression intact).
+
+**Catalogue head-count after run #257:**
+
+- 36 Greenhouse-backed company-direct plugins (Anthropic, Databricks,
+  Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit, Pinterest,
+  Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio, Cloudflare,
+  MongoDB, Datadog, Instacart, Dropbox, Roblox, Block, Vercel,
+  Affirm, Klaviyo, Duolingo, Brex + Stripe + Cursor + Amazon + Apple
+  + Google + IBM + Meta + OpenAI). 5 distinct wire-shape variants in
+  the cohort: legacy `boards.greenhouse.io/<slug>/jobs/<id>` (31
+  plugins, Block-and-earlier), new `job-boards.greenhouse.io/<slug>
+  /jobs/<id>` (Vercel + Affirm), apex marketing-site query-param-only
+  `www.<company>.com/careers/jobs?gh_jid=<id>` (Klaviyo), careers-
+  subdomain marketing-site path-AND-query
+  `careers.<company>.com/jobs/<id>?gh_jid=<id>` (Duolingo), apex-www
+  marketing-site path-AND-query
+  `www.<company>.com/careers/<id>?gh_jid=<id>` (Brex). 3 plugins use
+  the entity-decode-then-tag-strip description pipeline (Klaviyo,
+  Duolingo, Brex). 1 plugin applies a wire-title trim (Brex, first
+  cohort member).
+
+**Notes:**
+
+- Tests authored AND executed live in this scheduled run — both
+  `npx jest packages/plugins/source-company-brex` (8/8 passed in
+  9.037 s) and `npx jest packages/common/__tests__/helpers.spec`
+  (77/77 passed in 7.019 s) ran clean against the existing `node_modules`.
+- Q-042 still pending review (Default C continues; next reminder
+  window opens at run #300 per the run #250 forward-pointer
+  convention).
+- Brex's `https://www.brex.com/careers/<id>?gh_jid=<id>` apex-www
+  shape is the third distinct marketing-site-proxy variant in the
+  cohort. The next ergonomic bite (Gusto) is queued for run #258 —
+  the run #256 / Spec 046 § 10 D-07 probe sweep already confirmed
+  HTTP 200 on the `gusto` Greenhouse slug.
+
+---
+
 ## 2026-05-02 — Scheduled run #256 (Spec 046 closed end-to-end; new `source-company-duolingo` plugin shipped — 8 unit tests green in 8.667 s; helpers regression 77/77 still green in 6.92 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 35th Greenhouse-backed company-direct plugin in the catalogue and the **second** to use a marketing-site careers proxy — `careers.duolingo.com/jobs/<id>?gh_jid=<id>` — a **fourth** distinct wire-shape variant in the cohort)
 
 **Scope:** Run #256 continues the user-owner-directed concrete-action

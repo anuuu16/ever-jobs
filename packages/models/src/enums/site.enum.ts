@@ -246,6 +246,8 @@ export enum Site {
   KLAVIYO = 'klaviyo',
   // Phase 56: Spec 046 — Source Company Plugin: Duolingo
   DUOLINGO = 'duolingo',
+  // Phase 57: Spec 047 — Source Company Plugin: Brex
+  BREX = 'brex',
 }
 
 /**

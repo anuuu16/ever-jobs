@@ -111,6 +111,7 @@
 | 044 | [Source Company Plugin: Affirm](../.specify/specs/044-source-company-affirm/spec.md) — [plan](../.specify/specs/044-source-company-affirm/plan.md) — [tasks](../.specify/specs/044-source-company-affirm/tasks.md) | All phases done (T01..T05 run #254); spec complete |
 | 045 | [Source Company Plugin: Klaviyo](../.specify/specs/045-source-company-klaviyo/spec.md) — [plan](../.specify/specs/045-source-company-klaviyo/plan.md) — [tasks](../.specify/specs/045-source-company-klaviyo/tasks.md) | All phases done (T01..T05 run #255); spec complete |
 | 046 | [Source Company Plugin: Duolingo](../.specify/specs/046-source-company-duolingo/spec.md) — [plan](../.specify/specs/046-source-company-duolingo/plan.md) — [tasks](../.specify/specs/046-source-company-duolingo/tasks.md) | All phases done (T01..T05 run #256); spec complete |
+| 047 | [Source Company Plugin: Brex](../.specify/specs/047-source-company-brex/spec.md) — [plan](../.specify/specs/047-source-company-brex/plan.md) — [tasks](../.specify/specs/047-source-company-brex/tasks.md) | All phases done (T01..T05 run #257); spec complete |
 
 ## 8. Templates
 
