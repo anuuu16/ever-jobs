@@ -232,6 +232,8 @@ export enum Site {
   DATADOG = 'datadog',
   // Phase 49: Spec 039 — Source Company Plugin: Instacart
   INSTACART = 'instacart',
+  // Phase 50: Spec 040 — Source Company Plugin: Dropbox
+  DROPBOX = 'dropbox',
 }
 
 /**

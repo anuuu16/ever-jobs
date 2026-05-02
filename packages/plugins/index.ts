@@ -79,6 +79,7 @@ import { DatabricksModule } from './source-company-databricks';
 import { DatadogModule } from './source-company-datadog';
 import { DiscordModule } from './source-company-discord';
 import { DoorDashModule } from './source-company-doordash';
+import { DropboxModule } from './source-company-dropbox';
 import { FigmaModule } from './source-company-figma';
 import { GitlabModule } from './source-company-gitlab';
 import { GoogleCareersModule } from './source-company-google';
@@ -266,6 +267,7 @@ export const ALL_SOURCE_MODULES = [
   DatadogModule,
   DiscordModule,
   DoorDashModule,
+  DropboxModule,
   FigmaModule,
   GitlabModule,
   GoogleCareersModule,

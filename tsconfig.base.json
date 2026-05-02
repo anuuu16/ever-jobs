@@ -108,6 +108,7 @@
       "@ever-jobs/source-company-mongodb": ["packages/plugins/source-company-mongodb/src/index.ts"],
       "@ever-jobs/source-company-datadog": ["packages/plugins/source-company-datadog/src/index.ts"],
       "@ever-jobs/source-company-instacart": ["packages/plugins/source-company-instacart/src/index.ts"],
+      "@ever-jobs/source-company-dropbox": ["packages/plugins/source-company-dropbox/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],
