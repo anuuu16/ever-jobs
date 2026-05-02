@@ -234,6 +234,8 @@ export enum Site {
   INSTACART = 'instacart',
   // Phase 50: Spec 040 — Source Company Plugin: Dropbox
   DROPBOX = 'dropbox',
+  // Phase 51: Spec 041 — Source Company Plugin: Roblox
+  ROBLOX = 'roblox',
 }
 
 /**

@@ -96,6 +96,7 @@ import { PinterestModule } from './source-company-pinterest';
 import { PlaidModule } from './source-company-plaid';
 import { RedditModule } from './source-company-reddit';
 import { RobinhoodModule } from './source-company-robinhood';
+import { RobloxModule } from './source-company-roblox';
 import { StripeModule } from './source-company-stripe';
 import { TikTokModule } from './source-company-tiktok';
 import { TwilioModule } from './source-company-twilio';
@@ -284,6 +285,7 @@ export const ALL_SOURCE_MODULES = [
   PlaidModule,
   RedditModule,
   RobinhoodModule,
+  RobloxModule,
   StripeModule,
   TikTokModule,
   TwilioModule,
