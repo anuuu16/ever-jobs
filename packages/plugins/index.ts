@@ -83,6 +83,7 @@ import { FigmaModule } from './source-company-figma';
 import { GitlabModule } from './source-company-gitlab';
 import { GoogleCareersModule } from './source-company-google';
 import { IbmModule } from './source-company-ibm';
+import { InstacartModule } from './source-company-instacart';
 import { LyftModule } from './source-company-lyft';
 import { MetaModule } from './source-company-meta';
 import { MicrosoftModule } from './source-company-microsoft';
@@ -269,6 +270,7 @@ export const ALL_SOURCE_MODULES = [
   GitlabModule,
   GoogleCareersModule,
   IbmModule,
+  InstacartModule,
   LyftModule,
   MetaModule,
   MicrosoftModule,

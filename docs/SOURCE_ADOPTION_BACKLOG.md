@@ -47,6 +47,7 @@
 | shipped    | `source-company-cloudflare`| `company`  | **Cloudflare** (`cloudflare.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/cloudflare/jobs`). | Spec 036, run #246. Thin wrapper following the `source-company-twilio` pattern. |
 | shipped    | `source-company-mongodb`   | `company`  | **MongoDB** (`mongodb.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/mongodb/jobs`). | Spec 037, run #247. Thin wrapper following the `source-company-cloudflare` pattern. |
 | shipped    | `source-company-datadog`   | `company`  | **Datadog** (`datadoghq.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/datadog/jobs`). | Spec 038, run #248. Thin wrapper following the `source-company-mongodb` pattern. |
+| shipped    | `source-company-instacart` | `company`  | **Instacart** (`instacart.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/instacart/jobs`). | Spec 039, run #249. Thin wrapper following the `source-company-datadog` pattern. |
 
 ## Logic-improvement candidates (existing plugins)
 
@@ -69,4 +70,4 @@
 
 ---
 
-_Last revised: 2026-05-02 (run #248)._
+_Last revised: 2026-05-02 (run #249)._

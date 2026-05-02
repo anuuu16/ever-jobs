@@ -230,6 +230,8 @@ export enum Site {
   MONGODB = 'mongodb',
   // Phase 48: Spec 038 — Source Company Plugin: Datadog
   DATADOG = 'datadog',
+  // Phase 49: Spec 039 — Source Company Plugin: Instacart
+  INSTACART = 'instacart',
 }
 
 /**
