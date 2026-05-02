@@ -15,6 +15,155 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #256 (Spec 046 closed end-to-end; new `source-company-duolingo` plugin shipped — 8 unit tests green in 8.667 s; helpers regression 77/77 still green in 6.92 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 35th Greenhouse-backed company-direct plugin in the catalogue and the **second** to use a marketing-site careers proxy — `careers.duolingo.com/jobs/<id>?gh_jid=<id>` — a **fourth** distinct wire-shape variant in the cohort)
+
+**Scope:** Run #256 continues the user-owner-directed concrete-action
+deviation that runs #230–#255 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 045's run
+#255 close-out note (which named **Duolingo**, **Brex**, and **Gusto**
+as the three remaining ergonomic bites under the same company-direct
+pattern), this run pivoted to **Duolingo** as the alphabetically-next
+bite. Duolingo — the **mobile-first language-learning education-
+technology** vendor (Duolingo, Inc., NASDAQ: DUOL; founded by Luis von
+Ahn and Severin Hacker in 2011 as a spin-out from Carnegie Mellon's
+reCAPTCHA project; operator of the Duolingo language-learning consumer
+app, the Duolingo English Test high-stakes language-proficiency exam,
+the Duolingo for Schools education product, and the Duolingo Math /
+Music vertical-expansion suites that anchor the consumer-mobile
+language-learning category alongside Babbel, Rosetta Stone, Busuu,
+Memrise, and Pimsleur) — is published at the bare `duolingo`
+Greenhouse slug and was reconfirmed live via run #256's HTTP 200 probe
+of `https://api.greenhouse.io/v1/boards/duolingo/jobs?content=true`
+(84 open roles returned at probe time). Notably, Duolingo's tenant
+exposes a **fourth** distinct wire-shape variant in the company-direct
+cohort — its `absolute_url` is published as
+`https://careers.duolingo.com/jobs/<id>?gh_jid=<id>`, a marketing-site
+careers-subdomain proxy that takes the Greenhouse job id BOTH as a
+path segment AND as a `gh_jid` query parameter, distinct from
+Klaviyo's apex-domain query-param-only shape
+`https://www.klaviyo.com/careers/jobs?gh_jid=<id>` (Spec 045) and from
+both Greenhouse permalink subdomains (`boards.greenhouse.io` legacy
+and `job-boards.greenhouse.io` new).
+
+**Probe sweep — three 200s carried over:**
+
+- HTTP 200 on `duolingo`, `brex`, `gusto`. All three are live
+  Greenhouse company-direct candidates (carried over verbatim from run
+  #255's probe sweep — re-confirmed this run for Duolingo before
+  commit). Duolingo picked as the next bite alphabetically; the other
+  two queue up for runs #257 / #258.
+
+**Spec 046 — Source Company Plugin: Duolingo — closed end-to-end:**
+
+- **T01:** Added `Site.DUOLINGO = 'duolingo'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 56:
+  Spec 046 — Source Company Plugin: Duolingo` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037 / 038 /
+  039 / 040 / 041 / 042 / 043 / 044 / 045 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-duolingo` with the
+  Klaviyo-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/duolingo/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9. One
+  structural deviation from the Klaviyo template, isolated to
+  `duolingo.service.ts`: **Fallback `jobUrl`** points at the
+  marketing-site careers-subdomain proxy
+  `https://careers.duolingo.com/jobs/<id>?gh_jid=<id>` — a byte-exact
+  match for the wire `absolute_url` Duolingo's Greenhouse tenant
+  returns (Spec 046 § 10 D-04). The description-cleanup pipeline
+  `stripHtmlTags(decodeHtmlEntities(content))` is identical to
+  Klaviyo's because Duolingo's `content` is also HTML-entity-encoded
+  (`&lt;p&gt;...`) — confirmed via the live probe, where the first
+  job's `content` starts `&lt;p&gt;Our mission at Duolingo is to
+  develop the best education in the world…` (Spec 046 § 10 D-08).
+  Class names are `DuolingoService` / `DuolingoModule` (PascalCase
+  with the standard initial cap, no embedded acronym requiring
+  special casing — see Spec 046 § 10 D-06).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned **between** `DropboxModule` and `FigmaModule` since
+  `Drop` < `Duo` < `Fig` lexically),
+  `tsconfig.base.json` paths, and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/duolingo.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `duolingo-`, `site === Site.DUOLINGO`,
+  `companyName === 'Duolingo'`, location, department, isRemote,
+  description with both numeric entity (`&#39;` → `'`) and named
+  entity (`&rsquo;` → `'`) decoded AND `<p>` tags stripped after the
+  decode pass), `resultsWanted=1` cap, `searchTerm` filter on title
+  (case-insensitive), `searchTerm` filter on department name
+  (case-insensitive), HTTP 500 → empty response, and empty
+  `data.jobs` → empty response. The happy-path test asserts the
+  called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/duolingo/jobs?content=true`
+  and pins **three** regression guards: (a) the wire-shape
+  `https://careers.duolingo.com/jobs/<id>?gh_jid=<id>` `absolute_url`
+  flows through to `jobUrl` byte-for-byte (D-04), (b) the cleaned
+  description does NOT contain literal `&lt;` (decode-pass ran), and
+  (c) the cleaned description does NOT contain `<p>` (strip-pass ran
+  after the decode). Fixture
+  `__tests__/fixtures/duolingo-jobs.json` is committed JSON exercising
+  both a Remote-Pittsburgh Engineering Learning-Platform role
+  (touching the spaced-repetition exercise pipeline, the Duolingo
+  English Test, and the gamified streaks engine in its description)
+  and a São-Paulo Business-Development LATAM-Partnerships role
+  (touching Duolingo for Schools and the Duolingo English Test
+  institutional channels in its description).
+- **T05:** Doc updates — added a `shipped` row for Duolingo in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the `Plugin id` column width is unchanged at 26 chars),
+  appended Spec 046 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #256.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-duolingo --colors=false`
+  → **8/8 passed in 8.667 s** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed in 6.92 s** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+- `npm run lint:docs` → exit 0 (run after this entry lands).
+
+**Files changed:**
+
+- `packages/models/src/enums/site.enum.ts` — `+2 lines` (`// Phase 56
+  …` comment + `DUOLINGO = 'duolingo'` enum entry).
+- `packages/plugins/index.ts` — `+2 lines` (import + module-list entry,
+  placed **between** `DropboxModule` and `FigmaModule`).
+- `tsconfig.base.json` — `+1 line` (path-alias entry).
+- `jest.config.js` — `+1 line` (`moduleNameMapper` entry).
+- `packages/plugins/source-company-duolingo/` — **new package**
+  (5 source files + 1 fixture + 1 test file = 7 files).
+- `.specify/specs/046-source-company-duolingo/` — **new spec**
+  (`spec.md`, `plan.md`, `tasks.md`).
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — `+1 row` (Duolingo shipped) +
+  footer bump.
+- `docs/index.md` — `+1 row` (Spec 046) + footer bump.
+- `docs/log.md` — this entry.
+
+**Next ergonomic bite:** Re-confirm the slug via a public-API probe
+before committing. The two Greenhouse-200 candidates remaining from
+run #255's probe sweep are **Brex** and **Gusto** — either can be the
+next Spec 047 candidate. Brex is the alphabetically-next bite
+(corporate cards / spend management for startups; private). Gusto
+(small-business payroll / benefits / HR platform; private) follows.
+Beyond those two, the named-candidate well from Spec 044 will be
+empty after run #258 — future runs (post Spec 048) will need a fresh
+probe-sweep against e.g. Stripe-adjacent fintechs (Modern Treasury,
+Mercury, Ramp), e-commerce platforms (Shopify-adjacent), or vertical
+SaaS (Notion, Linear, Loom, Front).
+
+---
+
 ## 2026-05-02 — Scheduled run #255 (Spec 045 closed end-to-end; new `source-company-klaviyo` plugin shipped — 8 unit tests green in 9.085 s; helpers regression 77/77 still green in 6.928 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 34th Greenhouse-backed company-direct plugin in the catalogue and the **first** to use a marketing-site careers proxy `klaviyo.com/careers/jobs?gh_jid=<id>` rather than either Greenhouse permalink subdomain — a third distinct wire-shape variant in the cohort)
 
 **Scope:** Run #255 continues the user-owner-directed concrete-action

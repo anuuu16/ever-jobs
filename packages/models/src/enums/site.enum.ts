@@ -244,6 +244,8 @@ export enum Site {
   AFFIRM = 'affirm',
   // Phase 55: Spec 045 — Source Company Plugin: Klaviyo
   KLAVIYO = 'klaviyo',
+  // Phase 56: Spec 046 — Source Company Plugin: Duolingo
+  DUOLINGO = 'duolingo',
 }
 
 /**
