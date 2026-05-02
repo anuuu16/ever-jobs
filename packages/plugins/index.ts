@@ -103,6 +103,7 @@ import { NvidiaModule } from './source-company-nvidia';
 import { OpenAIModule } from './source-company-openai';
 import { PinterestModule } from './source-company-pinterest';
 import { PlaidModule } from './source-company-plaid';
+import { RampNetworkModule } from './source-company-rampnetwork';
 import { RedditModule } from './source-company-reddit';
 import { RobinhoodModule } from './source-company-robinhood';
 import { RobloxModule } from './source-company-roblox';
@@ -302,6 +303,7 @@ export const ALL_SOURCE_MODULES = [
   OpenAIModule,
   PinterestModule,
   PlaidModule,
+  RampNetworkModule,
   RedditModule,
   RobinhoodModule,
   RobloxModule,

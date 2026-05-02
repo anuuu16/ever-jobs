@@ -120,6 +120,7 @@
       "@ever-jobs/source-company-mercury": ["packages/plugins/source-company-mercury/src/index.ts"],
       "@ever-jobs/source-company-buildkite": ["packages/plugins/source-company-buildkite/src/index.ts"],
       "@ever-jobs/source-company-circleci": ["packages/plugins/source-company-circleci/src/index.ts"],
+      "@ever-jobs/source-company-rampnetwork": ["packages/plugins/source-company-rampnetwork/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],

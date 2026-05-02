@@ -116,6 +116,7 @@
 | 049 | [Source Company Plugin: Mercury](../.specify/specs/049-source-company-mercury/spec.md) — [plan](../.specify/specs/049-source-company-mercury/plan.md) — [tasks](../.specify/specs/049-source-company-mercury/tasks.md) | All phases done (T01..T05 run #259); spec complete |
 | 050 | [Source Company Plugin: Buildkite](../.specify/specs/050-source-company-buildkite/spec.md) — [plan](../.specify/specs/050-source-company-buildkite/plan.md) — [tasks](../.specify/specs/050-source-company-buildkite/tasks.md) | All phases done (T01..T05 run #260); spec complete |
 | 051 | [Source Company Plugin: CircleCI](../.specify/specs/051-source-company-circleci/spec.md) — [plan](../.specify/specs/051-source-company-circleci/plan.md) — [tasks](../.specify/specs/051-source-company-circleci/tasks.md) | All phases done (T01..T05 run #261); spec complete |
+| 052 | [Source Company Plugin: Ramp Network](../.specify/specs/052-source-company-rampnetwork/spec.md) — [plan](../.specify/specs/052-source-company-rampnetwork/plan.md) — [tasks](../.specify/specs/052-source-company-rampnetwork/tasks.md) | All phases done (T01..T05 run #262); spec complete |
 
 ## 8. Templates
 

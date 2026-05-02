@@ -15,6 +15,231 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #262 (Spec 052 closed end-to-end; new `source-company-rampnetwork` plugin shipped — 8 unit tests green in 10.432 s; helpers regression 77/77 still green in 8.034 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 41st Greenhouse-backed company-direct plugin in the catalogue and the **first** to introduce wire-shape **variant 6** — the EU-region permalink subdomain shape `https://job-boards.eu.greenhouse.io/<slug>/jobs/<id>` — and the **eighth** to use the entity-decode-then-tag-strip description pipeline; Ramp Network is also the **first** plugin in the catalogue to pin a multi-word brand-name string literal containing an inter-word ASCII space (`'Ramp Network'`))
+
+**Scope:** Run #262 continues the user-owner-directed concrete-action
+deviation that runs #230–#261 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 051's run
+#261 close-out note (which queued **HubSpot** as the alphabetically-next
+remaining bite, plus **Netlify**, **Postman**, **Ramp Network** (sixth-
+variant EU-region carry-over from Spec 049), **Toast**, **Webflow**, and
+**ZoomInfo** as six pre-probed HTTP-200 candidates from the
+developer-tools / SaaS probe sweep), this run started by re-probing
+**HubSpot** at run-262 start. HubSpot returned HTTP 200 with an empty
+`jobs[]` array (`{"jobs":[],"meta":{"total":0}}`) — the tenant has no
+open roles in the audit window, making it not viable for a useful
+happy-path unit test against a real-world fixture today. HubSpot is
+therefore deferred to a future run when its board has open roles
+again, and **Ramp Network** is selected as the variant-6 EU-region
+pivot specifically queued for a future run in run #259's Spec 049
+close-out (and reiterated in run #260's Spec 050 close-out and run
+#261's Spec 051 close-out).
+
+Ramp Network — the **Web3 fiat-to-crypto onramp toolkit** vendor (Ramp
+Swaps Ltd; founded by Szymon Sypniewicz and Przemek Kowalczyk in 2017
+in London / Warsaw as a unified fiat-to-crypto checkout layer for Web3
+wallets, exchanges, and dApps; operator of the Ramp Network on-ramp
+(the fiat-to-crypto purchase widget integrated by hundreds of crypto
+wallets and dApps), the Ramp Network off-ramp (the crypto-to-fiat sell
+widget), the Ramp Network B2B SDK (the embeddable SDK distributed to
+wallet partners), the Ramp Pay-Outs API (the bank-rail payouts product
+for crypto businesses), and the Ramp Network Compliance & KYC stack
+(the AML / KYC / fraud-prevention layer that wraps every transaction)
+lines that anchor the EU-and-UK-regulated Web3 onramp category
+alongside MoonPay, Transak, Mercuryo, Onramper, and Wyre) — is
+published at the bare `rampnetwork` Greenhouse slug (the lowercase
+whitespace-collapsed brand name) and was confirmed live via run
+#262's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/rampnetwork/jobs?content=true`
+(1 open role returned at probe time). Notably, Ramp Network's tenant
+publishes its `absolute_url` on a **brand-new, sixth distinct
+wire-shape variant** in the cohort: the **EU-region permalink subdomain
+shape `https://job-boards.eu.greenhouse.io/<slug>/jobs/<id>`**, structurally
+identical to variant 2 (the US-region `job-boards.greenhouse.io` shape
+Buildkite / Mercury / Gusto / Affirm / Vercel use) except for the `.eu`
+region prefix on the subdomain. Like Buildkite, Mercury, Gusto, Brex,
+Duolingo, Klaviyo, and CircleCI, Ramp Network's `content` is
+HTML-entity-encoded (`&lt;div class=&quot;content-intro&quot;&gt;
+&lt;h2&gt;&lt;strong&gt;Join the Web3 revolution at Ramp Network!
+&lt;/strong&gt;&lt;/h2&gt;`) and uses the entity-decode-then-tag-strip
+pipeline (Spec 052 § 10 D-08). Unlike every prior cohort plugin,
+Ramp Network's wire `company_name` is the **multi-word** brand name
+`'Ramp Network'` (with an inter-word ASCII space) — matching the wire
+byte-for-byte (no legal-entity suffix to clean), making this the
+**first** plugin in the cohort to pin a multi-word brand-name string
+literal containing an inter-word ASCII space (D-09; every prior cohort
+plugin pins a single-word brand like `'Buildkite'` / `'CircleCI'` /
+`'Mercury'` / `'Brex'`, or a brand without inter-word space like
+`'OpenAI'` / `'DoorDash'`). Class names are `RampNetworkService` /
+`RampNetworkModule` (PascalCase splitting on the multi-word brand
+name; D-06).
+
+**Spec 052 — Source Company Plugin: Ramp Network — closed end-to-end:**
+
+- **T01:** Added `Site.RAMPNETWORK = 'rampnetwork'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 62:
+  Spec 052 — Source Company Plugin: Ramp Network` header (preserves
+  the Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037 / 038 /
+  039 / 040 / 041 / 042 / 043 / 044 / 045 / 046 / 047 / 048 / 049 /
+  050 / 051 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-rampnetwork` with the
+  Buildkite-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/rampnetwork/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9. One
+  structural deviation from the Buildkite template, isolated to
+  `rampnetwork.service.ts`: the fallback `jobUrl` shape mirrors the
+  wire `absolute_url` byte-for-byte —
+  `https://job-boards.eu.greenhouse.io/rampnetwork/${listing.id}`
+  with the EU-region subdomain `job-boards.eu.greenhouse.io` rather
+  than the US-region `job-boards.greenhouse.io` (Spec 052 § 10 D-04).
+  The description-cleanup pipeline `stripHtmlTags(decodeHtmlEntities(content))`
+  is identical to Buildkite's because Ramp Network's `content` is also
+  HTML-entity-encoded (Spec 052 § 10 D-08). The brand-name pin
+  `'Ramp Network'` matches the wire `company_name` byte-for-byte —
+  same as Buildkite / Mercury / CircleCI; first plugin to pin a
+  multi-word brand-name string literal (Spec 052 § 10 D-09). Class
+  names are `RampNetworkService` / `RampNetworkModule` (PascalCase
+  splitting on the multi-word brand name; D-06).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned **between** `PlaidModule` and `RedditModule` since
+  `Pla` < `Ram` < `Red` lexically), `tsconfig.base.json` paths,
+  and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/rampnetwork.service.spec.ts` with 8
+  cases covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `rampnetwork-`, `site === Site.RAMPNETWORK`,
+  `companyName === 'Ramp Network'`, location, department, isRemote,
+  description with both numeric entity (`&amp;#39;` → `&#39;` → `'`)
+  and named entity (`&amp;rsquo;` → `&rsquo;` → `'` U+2019) decoded
+  AND `<h2>`/`<p>` tags stripped after the decode pass),
+  `resultsWanted=1` cap, `searchTerm` filter on title (case-
+  insensitive), `searchTerm` filter on department name (case-
+  insensitive), HTTP 500 → empty response, and empty `data.jobs` →
+  empty response. The happy-path test asserts the called URL string
+  is exactly
+  `https://api.greenhouse.io/v1/boards/rampnetwork/jobs?content=true`
+  and pins **five** regression guards: (a) the variant-6 wire-shape
+  `https://job-boards.eu.greenhouse.io/rampnetwork/jobs/<id>`
+  `absolute_url` flows through to `jobUrl` byte-for-byte (D-04), (b)
+  the emitted `jobUrl` contains the literal `job-boards.eu.greenhouse.io`
+  substring (EU-region-subdomain lock — D-04), (c) the cleaned
+  description does NOT contain literal `&lt;` (decode-pass ran),
+  `&quot;` (named-entity decode ran), or `<p>`/`<h2>` (strip-pass ran
+  after the decode), (d) the emitted `companyName` is the brand name
+  `'Ramp Network'` AND matches the wire `company_name` byte-for-byte
+  (D-09), AND the emitted `companyName` contains an inter-word ASCII
+  space (multi-word-brand-pin lock — D-09 first-instance guard).
+  Fixture `__tests__/fixtures/rampnetwork-jobs.json` is committed
+  JSON exercising both a Poland-Remote Senior-Management-Accountant
+  role (touching the Ramp Network on-ramp / off-ramp products,
+  Pay-Outs API platform, Compliance & KYC stack, and B2B SDK billing
+  reconciliation flow in its description, with both named-entity
+  (`&amp;rsquo;`) and numeric-entity (`&amp;#39;`) and complex
+  `&lt;div class=&quot;content-intro&quot;&gt;` heading exercising
+  named-entity (`&quot;`) decoding plus tag-stripping after
+  entity-decode) and a London Staff-Engineer-Compliance-Platform
+  role (touching the Ramp Network Compliance & KYC platform, the AML /
+  KYC / fraud-prevention layer, and the four product lines — on-ramp
+  widget, off-ramp widget, Pay-Outs API, B2B SDK).
+- **T05:** Doc updates — added a `shipped` row for Ramp Network in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog. Index Spec 052 row
+  added under Spec 051; this `docs/log.md` entry appended at top.
+
+**Test verification:**
+
+- `npx jest packages/plugins/source-company-rampnetwork --colors=false` → **8/8 passed in 10.432 s**.
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 8.034 s** (helpers regression intact).
+
+**Catalogue head-count after run #262:**
+
+- 41 Greenhouse-backed company-direct plugins (Anthropic, Databricks,
+  Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit, Pinterest,
+  Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio, Cloudflare,
+  MongoDB, Datadog, Instacart, Dropbox, Roblox, Block, Vercel, Affirm,
+  Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite, CircleCI,
+  **Ramp Network** + Stripe + Cursor + Amazon + Apple + Google + IBM +
+  Meta + OpenAI). 7 distinct wire-shape variants in the cohort: legacy
+  `boards.greenhouse.io/<slug>/jobs/<id>` (31 plugins,
+  Block-and-earlier), new
+  `job-boards.greenhouse.io/<slug>/jobs/<id>` (Vercel + Affirm + Gusto
+  + Mercury + Buildkite — variant 2; 5 plugins), apex marketing-site
+  query-param-only `www.<company>.com/careers/jobs?gh_jid=<id>`
+  (Klaviyo — variant 3), careers-subdomain marketing-site path-AND-
+  query `careers.<company>.com/jobs/<id>?gh_jid=<id>` (Duolingo —
+  variant 4), apex-www marketing-site path-AND-query
+  `www.<company>.com/careers/<id>?gh_jid=<id>` (Brex — variant 5),
+  **EU-region permalink subdomain `job-boards.eu.greenhouse.io/<slug>/jobs/<id>`
+  (Ramp Network — variant 6; FIRST IN COHORT)**, and
+  apex-www marketing-site, HTTP-scheme, path-with-`jobs`-segment-and-
+  trailing-slash-and-query
+  `http://www.<company>.com/careers/jobs/<id>/?gh_jid=<id>` (CircleCI
+  — variant 7). 8 plugins use the entity-decode-then-tag-strip
+  description pipeline (Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, CircleCI, **Ramp Network**). 2 plugins apply a
+  wire-title trim (Brex, Buildkite — Ramp Network does **not**). 2
+  plugins apply a brand-name pin cleaning a wire `company_name`
+  legal-entity suffix (Affirm: `'Affirm Holdings, Inc.'` →
+  `'Affirm'`; Gusto: `'Gusto, Inc.'` → `'Gusto'`); Mercury, Buildkite,
+  CircleCI, and Ramp Network's brand-name pins match the wire
+  byte-for-byte (no legal-entity suffix to clean). 2 plugins use
+  embedded-acronym PascalCase preserving trademark casing in class
+  names (`OpenAIService`, `CircleCIService`); other initialism brands
+  like IBM use sentence-case (`IbmService` / `IbmModule`). **1 plugin
+  pins a multi-word brand-name string literal containing an inter-word
+  ASCII space — Ramp Network**, the brand-new first-instance.
+
+**Notes:**
+
+- Tests authored AND executed live in this scheduled run — both
+  `npx jest packages/plugins/source-company-rampnetwork` (8/8 passed
+  in 10.432 s) and `npx jest packages/common/__tests__/helpers.spec`
+  (77/77 passed in 8.034 s) ran clean against the existing
+  `node_modules`.
+- Q-042 still pending review (Default C continues; next reminder
+  window opens at run #300 per the run #250 forward-pointer
+  convention).
+- Ramp Network is the **first** plugin in the catalogue to publish
+  its `absolute_url` on the **EU-region permalink subdomain**
+  `job-boards.eu.greenhouse.io` — every prior plugin (40
+  Greenhouse-backed company-direct plugins) uses the US-region
+  subdomain or one of the marketing-site variants. The unit test
+  pins the EU-region subdomain literal as a regression guard against
+  future refactors that might naively normalise to the US-region
+  `job-boards.greenhouse.io` subdomain.
+- Ramp Network is also the **first** plugin in the cohort to pin a
+  multi-word brand-name string literal containing an inter-word ASCII
+  space — `'Ramp Network'` (with an inter-word space). The unit test
+  pins both the brand-name literal byte-for-byte AND a
+  `.toContain(' ')` regression guard against future refactors that
+  might naively whitespace-collapse the brand name.
+- HubSpot's empty-board state is a good reminder that Greenhouse
+  tenant boards can transition to empty between probe sweeps; the
+  plugin pattern's circuit-breaker plumbing (Spec 005) handles this
+  case gracefully (an empty `jobs[]` array yields `{ jobs: [] }`
+  per FR-9, and the breaker doesn't trip on a successful empty
+  response). HubSpot can be re-probed in a future run.
+- The named-candidate well from Spec 051's run #261 has six
+  remaining pre-probed candidates queued: HubSpot (re-probe),
+  Netlify, Postman, Toast (variant 8 — careers-subdomain on a
+  sub-brand `toasttab.com`), Webflow, ZoomInfo (variant 3 family,
+  with a wire `company_name` `'ZoomInfo Technologies LLC'`
+  legal-entity suffix to clean — first since Affirm / Gusto). Future
+  runs can pick the next bite alphabetically (Netlify is alphabetically
+  next at `net` among the remaining live candidates) or pivot to one
+  of the other shape variants for structural novelty (e.g. Toast for
+  variant 8 — careers-subdomain on a sub-brand domain, or ZoomInfo
+  for the legal-entity-suffix-trim — first since Affirm / Gusto).
+
+---
+
 ## 2026-05-02 — Scheduled run #261 (Spec 051 closed end-to-end; new `source-company-circleci` plugin shipped — 8 unit tests green in 10.432 s; helpers regression 77/77 still green in 8.073 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 40th Greenhouse-backed company-direct plugin in the catalogue and the **first** to introduce wire-shape **variant 7** — the apex-www marketing-site, **HTTP-scheme**, path-with-trailing-slash-and-`jobs`-segment shape `http://www.circleci.com/careers/jobs/<id>/?gh_jid=<id>` — and the **seventh** to use the entity-decode-then-tag-strip description pipeline; CircleCI is also the **first** plugin in the catalogue to publish its `absolute_url` on the HTTP scheme rather than HTTPS)
 
 **Scope:** Run #261 continues the user-owner-directed concrete-action

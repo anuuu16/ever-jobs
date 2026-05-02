@@ -256,6 +256,8 @@ export enum Site {
   BUILDKITE = 'buildkite',
   // Phase 61: Spec 051 — Source Company Plugin: CircleCI
   CIRCLECI = 'circleci',
+  // Phase 62: Spec 052 — Source Company Plugin: Ramp Network
+  RAMPNETWORK = 'rampnetwork',
 }
 
 /**
