@@ -50,6 +50,7 @@
 | shipped    | `source-company-instacart` | `company`  | **Instacart** (`instacart.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/instacart/jobs`). | Spec 039, run #249. Thin wrapper following the `source-company-datadog` pattern. |
 | shipped    | `source-company-dropbox`   | `company`  | **Dropbox** (`dropbox.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/dropbox/jobs`). | Spec 040, run #250. Thin wrapper following the `source-company-instacart` pattern. |
 | shipped    | `source-company-roblox`    | `company`  | **Roblox** (`roblox.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/roblox/jobs`). | Spec 041, run #251. Thin wrapper following the `source-company-dropbox` pattern. |
+| shipped    | `source-company-block`     | `company`  | **Block** (`block.xyz`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/block/jobs`). | Spec 042, run #252. Thin wrapper following the `source-company-roblox` pattern. |
 
 ## Logic-improvement candidates (existing plugins)
 
@@ -72,4 +73,4 @@
 
 ---
 
-_Last revised: 2026-05-02 (run #251)._
+_Last revised: 2026-05-02 (run #252)._

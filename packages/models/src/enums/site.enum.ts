@@ -236,6 +236,8 @@ export enum Site {
   DROPBOX = 'dropbox',
   // Phase 51: Spec 041 — Source Company Plugin: Roblox
   ROBLOX = 'roblox',
+  // Phase 52: Spec 042 — Source Company Plugin: Block
+  BLOCK = 'block',
 }
 
 /**

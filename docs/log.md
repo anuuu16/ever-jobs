@@ -15,6 +15,177 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #252 (Spec 042 closed end-to-end; new `source-company-block` plugin shipped — 8 unit tests green in 8.84 s; helpers regression 77/77 still green in 6.877 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 31st Greenhouse-backed company-direct plugin in the catalogue)
+
+**Scope:** Run #252 continues the user-owner-directed concrete-action
+deviation that runs #230–#251 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 041's run
+#251 close-out note (which named **Snowflake** or **Block** as the
+next ergonomic bites under the same company-direct pattern, with
+"re-confirm the slug via a public-API probe before committing" called
+out explicitly), this run pivoted to **Block** after run #252's
+spec-drafting probe. Block — the **multi-brand fintech / consumer-
+payments / merchant-commerce / Bitcoin-infrastructure parent** (Block,
+Inc., NYSE: SQ; rebranded from Square Inc. in December 2021; parent
+of the Square merchant-commerce / point-of-sale stack, the Cash App
+consumer payments surface, the Tidal music streaming subsidiary, the
+Spiral Bitcoin open-source-engineering arm, the TBD decentralized-
+financial-services arm, and the AfterPay / Clearpay BNPL subsidiary
+acquired in 2022) — is published at the bare `block` Greenhouse slug
+and was reconfirmed live via run #252's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/block/jobs?content=true`
+(170 open roles returned at probe time).
+
+**Snowflake re-probed and dropped from the candidate set:** Run #252
+also probed the named Snowflake candidate and four likely slug
+variants (`snowflake`, `snowflakeinc`, `snowflakedb`, `snowflakeio`) —
+all four returned HTTP 404. Snowflake's careers board is hosted on
+Workday (their public listings live at `careers.snowflake.com`,
+proxied to a Workday tenant), not Greenhouse, so it cannot be added
+under the company-direct Greenhouse-backed pattern. A Workday-hosted
+adopter would need a different parent pattern (the existing
+`source-ats-workday` plugin already covers the Workday wire shape,
+but a `source-company-snowflake` thin wrapper around it would still
+need its own spec and its own `Site.SNOWFLAKE` enum value). Spec 042
+§ 10 D-05 records the Snowflake-not-on-Greenhouse finding for the
+benefit of future runs, so the next agent doesn't repeat the failed
+probe.
+
+**Spec 042 — Source Company Plugin: Block — closed end-to-end:**
+
+- **T01:** Added `Site.BLOCK = 'block'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 52:
+  Spec 042 — Source Company Plugin: Block` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037 / 038 /
+  039 / 040 / 041 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-block` with the
+  Roblox-shape (single-file `service.ts`, 3-line `module.ts`,
+  2-line `index.ts`, 4-line `package.json`, 3-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/block/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9.
+  Fallback `jobUrl` (when Greenhouse omits `absolute_url`) points at
+  the public Block careers permalink template
+  `https://block.xyz/careers/jobs/<id>?gh_jid=<id>` — note the
+  scheme: this is the **first** spec in the company-direct cohort
+  where the fallback is *not* a byte-exact match for the wire
+  `absolute_url` Greenhouse returns. Greenhouse stores Block's
+  pre-HSTS canonical URL as `http://block.xyz/...` (verified live in
+  run #252); `block.xyz` enforces HTTPS via HSTS-style upgrade and
+  the `http://` form is followed by an immediate 301/308 redirect
+  to the `https://` form, so functional impact is zero — and the
+  fallback path is defence-in-depth Greenhouse has not actually
+  exercised against any tenant in the audit window. Spec 042 § 10
+  D-04 records the deliberate scheme choice. Note: like Roblox (Spec
+  041 § 10 D-05), Dropbox (Spec 040 § 10 D-05), Instacart (Spec 039
+  § 10 D-05), Datadog (Spec 038 § 10 D-05), MongoDB (Spec 037 § 10
+  D-05), Cloudflare (Spec 036 § 10 D-05), Twilio (Spec 035 § 10
+  D-05), Twitch (Spec 034 § 10 D-05), Gitlab (Spec 033 § 10 D-05),
+  Figma (Spec 032 § 10 D-05), Asana (Spec 031 § 10 D-05), Plaid
+  (Spec 030 § 10 D-05), Lyft (Spec 029 § 10 D-05), Pinterest (Spec
+  028 § 10 D-05), and Reddit (Spec 027 § 10 D-05), Block's
+  Greenhouse tenant uses the bare `block` slug — no
+  slug-vs-display-name asymmetry. Spec 042 § 10 D-06 also records
+  the deliberate decision to ship Block as a single `Site.BLOCK`
+  plugin covering all corporate Block, Inc. roles — including the
+  Square / Cash App / Tidal / Spiral / TBD / AfterPay subsidiary
+  roles consolidated under the corporate `block` Greenhouse tenant
+  after the December 2021 rebrand and the 2022 AfterPay acquisition.
+  Class names are `BlockService` / `BlockModule` (PascalCase with
+  the standard initial cap, no embedded acronym requiring special
+  casing — see Spec 042 § 10 D-07).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned between `AsanaModule` and `BoeingModule` since
+  `Asa` < `Blo` < `Boe` lexically), `tsconfig.base.json` paths,
+  and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/block.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `block-`, `site === Site.BLOCK`, `companyName === 'Block'`,
+  location, department, isRemote, HTML stripped from description),
+  `resultsWanted=1` cap, `searchTerm` filter on title (case-
+  insensitive), `searchTerm` filter on department name (case-
+  insensitive), HTTP 500 → empty response, and empty `data.jobs`
+  → empty response. The happy-path test asserts the called URL
+  string is exactly
+  `https://api.greenhouse.io/v1/boards/block/jobs?content=true`
+  and pins the wire-shape `http://` `absolute_url` so a future
+  scheme-normalisation refactor would surface as a test diff (not a
+  silent regression). Fixture `__tests__/fixtures/block-jobs.json`
+  is committed JSON exercising both an SF-based Engineering Cash-App-
+  Pay-Risk-Platform role and a Remote Trust-&-Safety Square-Seller-
+  Marketplace-Integrity role (the latter touching the 2022 AfterPay
+  BNPL surface in its description to exercise the post-acquisition
+  consolidation path).
+- **T05:** Doc updates — added a `shipped` row for Block in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the new column width is unchanged at 26-char `Plugin id`),
+  appended Spec 042 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #252.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-block --colors=false`
+  → **8/8 passed in 8.84 s** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed in 6.877 s** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+
+**Files changed:**
+
+- `packages/models/src/enums/site.enum.ts` — `+2 lines` (`// Phase 52
+  …` comment + `BLOCK = 'block'` enum entry).
+- `packages/plugins/index.ts` — `+2 lines` (import + module-list entry).
+- `tsconfig.base.json` — `+1 line` (path-alias entry).
+- `jest.config.js` — `+1 line` (`moduleNameMapper` entry).
+- `packages/plugins/source-company-block/` — **new package**
+  (5 source files + 1 fixture + 1 test file = 7 files).
+- `.specify/specs/042-source-company-block/` — **new spec dir**
+  (`spec.md`, `plan.md`, `tasks.md` = 3 files).
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — `+1 row` (Block shipped row).
+- `docs/index.md` — `+1 row` (Spec 042 entry).
+- `docs/log.md` — this entry (newest-at-top).
+
+**Notes:**
+
+- Confirmed Block's Greenhouse slug `block` via direct HTTP-200
+  probe of the public board endpoint
+  `https://api.greenhouse.io/v1/boards/block/jobs?content=true`
+  during run #252 spec drafting; no slug asymmetry as recorded in
+  Spec 042 § 10 D-05. The probe also verified that the live
+  `absolute_url` Greenhouse returns for this tenant uses the
+  `http://block.xyz/careers/jobs/<id>?gh_jid=<id>` permalink
+  template (HTTP, not HTTPS — the only company-direct cohort tenant
+  to date with this scheme quirk; the plugin's fallback `jobUrl`
+  upgrades to `https://` per Spec 042 § 10 D-04, accepting the
+  trivial scheme deviation because Greenhouse populates
+  `absolute_url` on every observed listing in practice).
+- Snowflake probed and dropped: `snowflake` / `snowflakeinc` /
+  `snowflakedb` / `snowflakeio` all returned HTTP 404. Snowflake's
+  careers board is on Workday (`careers.snowflake.com` proxies to a
+  Workday tenant), not Greenhouse — out of scope for the
+  company-direct Greenhouse-backed cohort. Future spec could wrap
+  it under the existing `source-ats-workday` plugin if the
+  user-owner wants Snowflake company-direct visibility.
+- Likely next bite under the same Greenhouse company-direct pattern:
+  **Klaviyo** or **Affirm** (both commonly reported as Greenhouse-
+  hosted). Run #253's spec-drafting agent should pick one and
+  re-confirm the slug via a public-API probe before committing.
+- Competitor watch: `OTHERS/Ats-scrapers @ 3bacd6e`, `OTHERS/JobSpy
+  @ fda080a`, `OTHERS/Jobspy-api @ 26bb6f4` — 0 new commits since
+  run #251. Tracked in `competitor-watch.md` (parent dir, outside
+  this repo).
+
+---
+
 ## 2026-05-02 — Scheduled run #251 (Spec 041 closed end-to-end; new `source-company-roblox` plugin shipped — 8 unit tests green in 8.634 s; helpers regression 77/77 still green in 6.867 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 30th Greenhouse-backed company-direct plugin in the catalogue)
 
 **Scope:** Run #251 continues the user-owner-directed concrete-action

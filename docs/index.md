@@ -106,6 +106,7 @@
 | 039 | [Source Company Plugin: Instacart](../.specify/specs/039-source-company-instacart/spec.md) — [plan](../.specify/specs/039-source-company-instacart/plan.md) — [tasks](../.specify/specs/039-source-company-instacart/tasks.md) | All phases done (T01..T05 run #249); spec complete |
 | 040 | [Source Company Plugin: Dropbox](../.specify/specs/040-source-company-dropbox/spec.md) — [plan](../.specify/specs/040-source-company-dropbox/plan.md) — [tasks](../.specify/specs/040-source-company-dropbox/tasks.md) | All phases done (T01..T05 run #250); spec complete |
 | 041 | [Source Company Plugin: Roblox](../.specify/specs/041-source-company-roblox/spec.md) — [plan](../.specify/specs/041-source-company-roblox/plan.md) — [tasks](../.specify/specs/041-source-company-roblox/tasks.md) | All phases done (T01..T05 run #251); spec complete |
+| 042 | [Source Company Plugin: Block](../.specify/specs/042-source-company-block/spec.md) — [plan](../.specify/specs/042-source-company-block/plan.md) — [tasks](../.specify/specs/042-source-company-block/tasks.md) | All phases done (T01..T05 run #252); spec complete |
 
 ## 8. Templates
 
@@ -117,4 +118,4 @@
 
 ---
 
-_Last revised: 2026-05-02 (run #251)._
+_Last revised: 2026-05-02 (run #252)._
