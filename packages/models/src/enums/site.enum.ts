@@ -252,6 +252,8 @@ export enum Site {
   GUSTO = 'gusto',
   // Phase 59: Spec 049 — Source Company Plugin: Mercury
   MERCURY = 'mercury',
+  // Phase 60: Spec 050 — Source Company Plugin: Buildkite
+  BUILDKITE = 'buildkite',
 }
 
 /**

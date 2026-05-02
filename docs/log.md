@@ -15,6 +15,209 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #260 (Spec 050 closed end-to-end; new `source-company-buildkite` plugin shipped — 8 unit tests green in 8.946 s; helpers regression 77/77 still green in 7.1 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 39th Greenhouse-backed company-direct plugin in the catalogue and the **fifth** to use the new `job-boards.greenhouse.io/<slug>/jobs/<id>` permalink subdomain — wire-shape variant 2 — the **third** to combine that variant with the entity-decode-then-tag-strip description pipeline after Gusto and Mercury, and the **second** in the cohort to apply a wire-title `.trim()` after Brex)
+
+**Scope:** Run #260 continues the user-owner-directed concrete-action
+deviation that runs #230–#259 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 049's run
+#259 close-out note (which queued **rampnetwork** with a sixth
+wire-shape variant — `job-boards.eu.greenhouse.io` EU-region permalink
+subdomain — for a future run, and called out a fresh probe sweep
+against developer-tools / SaaS candidates as another direction), this
+run executed a fresh probe sweep against the developer-tools / SaaS
+cohort and pivoted to **Buildkite** as the alphabetically-first
+HTTP-200 result. Buildkite — the **CI/CD pipeline + test-execution +
+distributed-build-orchestration** vendor (Buildkite Pty Ltd; founded by
+Keith Pitt and Tim Lucas in 2014 in Melbourne, Australia, as a hybrid
+SaaS / on-prem agent-runner CI platform targeting the segment
+underserved by Travis CI's hosted-only model and Jenkins's
+bring-your-own-plumbing legacy; operator of Buildkite Pipelines (the
+core CI/CD orchestrator that runs on customer-controlled agents),
+Buildkite Test Engine (the test analytics + flaky-test detection
+product), Buildkite Package Registries (the artifact-repository
+product), Buildkite Mobile Delivery Cloud (the iOS/Android device-farm
+pipeline product), and Buildkite Compute & Agents (the managed-agent-
+fleet product) lines that anchor the developer-controlled CI/CD
+category alongside CircleCI, GitHub Actions, GitLab CI, Jenkins, Travis
+CI, TeamCity, Bamboo, AWS CodeBuild, and Azure Pipelines) — is
+published at the bare `buildkite` Greenhouse slug and was confirmed live
+via run #260's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/buildkite/jobs?content=true` (16
+open roles returned at probe time). Notably, Buildkite's tenant
+publishes its `absolute_url` on the new `job-boards.greenhouse.io`
+permalink subdomain — wire-shape **variant 2**, the same one Vercel
+(Spec 043), Affirm (Spec 044), Gusto (Spec 048), and Mercury (Spec 049)
+use, making Buildkite the **fifth** plugin in this variant — AND emits
+HTML-entity-encoded `content` (`&lt;p&gt;...`), making this the
+**third** plugin in the cohort to combine variant 2 with the
+entity-decode-then-tag-strip description pipeline (after Gusto and
+Mercury). Like Mercury, Buildkite's wire `company_name` is the bare
+brand name `'Buildkite'` — no legal-entity suffix to clean — so the
+brand-name pin in the `JobPostDto` mapping matches the wire
+byte-for-byte (Spec 050 § 10 D-09). One additional structural
+deviation from the Mercury template: a subset of Buildkite's tenant
+publishes role titles padded with trailing ASCII spaces (e.g. `'Staff
+Engineer - Compute & Agents '`, `'Staff GTM Engineer '`, `'Technical
+Account Manager '`), so the plugin applies `.trim()` to the wire
+`title` before mapping — same approach Brex (Spec 047) introduced for
+its tenant. This is the **second** plugin in the cohort to apply a
+wire-title trim (after Brex).
+
+**Probe sweep — fresh well opened with nine 200s:**
+
+- HTTP 200 on `buildkite` (Buildkite). Selected as the
+  alphabetically-first bite for run #260.
+- HTTP 200 on `circleci` (CircleCI — competing CI/CD vendor; 2-Sigma /
+  IVP / Owl Rock-backed). Queued for a future run.
+- HTTP 200 on `hubspot` (HubSpot — inbound marketing / CRM platform).
+  Queued for a future run.
+- HTTP 200 on `netlify` (Netlify — Jamstack hosting / edge-functions
+  platform). Queued for a future run.
+- HTTP 200 on `postman` (Postman — API development / testing platform).
+  Queued for a future run.
+- HTTP 200 on `rampnetwork` (Ramp Network — Web3 fiat-to-crypto onramp;
+  carry-over from Spec 049 / run #259). Notably, `rampnetwork`'s wire
+  `absolute_url` is on a **sixth** wire-shape variant — the EU-region
+  permalink subdomain `job-boards.eu.greenhouse.io/<slug>/jobs/<id>`,
+  distinct from the US region's `job-boards.greenhouse.io`. Still
+  queued for a future run.
+- HTTP 200 on `toast` (Toast — restaurant POS / payments). Queued for
+  a future run.
+- HTTP 200 on `webflow` (Webflow — visual web development / hosting
+  platform). Queued for a future run.
+- HTTP 200 on `zoominfo` (ZoomInfo — B2B contact-data / sales-intel
+  platform). Queued for a future run.
+- HTTP 404 on `hashicorp`, `1password`, `miro`, `segment`, `retool`,
+  `postmates`, `supabase`. These companies are either on different ATS
+  platforms (Lever / Ashby / Workday / bespoke) or use non-trivial
+  Greenhouse tenant slugs that future probe sweeps can attempt.
+
+**Spec 050 — Source Company Plugin: Buildkite — closed end-to-end:**
+
+- **T01:** Added `Site.BUILDKITE = 'buildkite'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 60:
+  Spec 050 — Source Company Plugin: Buildkite` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037 / 038 /
+  039 / 040 / 041 / 042 / 043 / 044 / 045 / 046 / 047 / 048 / 049
+  phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-buildkite` with the
+  Mercury-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/buildkite/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9. One
+  structural deviation from the Mercury template, isolated to
+  `buildkite.service.ts`: the wire `title` is `.trim()`ed before
+  mapping to handle the trailing-space padding observed on a subset of
+  Buildkite roles (Spec 050 § 10 D-10). The fallback `jobUrl` shape
+  `https://job-boards.greenhouse.io/buildkite/jobs/<id>` matches the
+  wire `absolute_url` byte-for-byte — same as Vercel / Affirm / Gusto /
+  Mercury (Spec 050 § 10 D-04). The description-cleanup pipeline
+  `stripHtmlTags(decodeHtmlEntities(content))` is identical to
+  Mercury's because Buildkite's `content` is also HTML-entity-encoded —
+  confirmed via the live probe, where the first job's `content` starts
+  with `&lt;p&gt;At Buildkite, our mission is to unblock every developer
+  on the planet…` (Spec 050 § 10 D-08). Class names are
+  `BuildkiteService` / `BuildkiteModule` (PascalCase with the standard
+  initial cap, no embedded acronym requiring special casing — see
+  Spec 050 § 10 D-06).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned **between** `BrexModule` and `CloudflareModule` since
+  `Bre` < `Bui` < `Clo` lexically),
+  `tsconfig.base.json` paths, and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/buildkite.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `buildkite-`, `site === Site.BUILDKITE`,
+  `companyName === 'Buildkite'`, location, department, isRemote,
+  description with both numeric entity (`&#39;` → `'`) and named entity
+  (`&rsquo;` → `'`) decoded AND `<p>` tags stripped after the decode
+  pass), `resultsWanted=1` cap, `searchTerm` filter on title
+  (case-insensitive), `searchTerm` filter on department name
+  (case-insensitive), HTTP 500 → empty response, and empty `data.jobs`
+  → empty response. The happy-path test asserts the called URL string
+  is exactly
+  `https://api.greenhouse.io/v1/boards/buildkite/jobs?content=true` and
+  pins **five** regression guards: (a) the wire-shape
+  `https://job-boards.greenhouse.io/buildkite/jobs/<id>` `absolute_url`
+  flows through to `jobUrl` byte-for-byte (D-04), (b) the cleaned
+  description does NOT contain literal `&lt;` (decode-pass ran), (c)
+  the cleaned description does NOT contain `<p>` (strip-pass ran after
+  the decode), (d) the emitted `companyName` is `'Buildkite'` AND
+  matches the wire `company_name` byte-for-byte (D-09), and (e) the
+  trailing-space wire `title`
+  `'Staff Engineer - Compute & Agents '` is trimmed in the emitted
+  `title` (D-10). Fixture `__tests__/fixtures/buildkite-jobs.json` is
+  committed JSON exercising both a US Sales Account-Executive role
+  (touching Buildkite Pipelines and Buildkite Test Engine in its
+  description) and an ANZ-Region Engineering Compute-&-Agents
+  Staff-Engineer role with a trailing-space title and a description
+  touching the agent-orchestration runtime, the autoscaling group
+  integrator, and the spot-instance reclamation pipeline.
+- **T05:** Doc updates — added a `shipped` row for Buildkite in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog. Index Spec 050 row added
+  under Spec 049; this `docs/log.md` entry appended at top.
+
+**Test verification:**
+
+- `npx jest packages/plugins/source-company-buildkite --colors=false` → **8/8 passed in 8.946 s**.
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 7.1 s** (helpers regression intact).
+
+**Catalogue head-count after run #260:**
+
+- 39 Greenhouse-backed company-direct plugins (Anthropic, Databricks,
+  Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit, Pinterest,
+  Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio, Cloudflare,
+  MongoDB, Datadog, Instacart, Dropbox, Roblox, Block, Vercel,
+  Affirm, Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite + Stripe
+  + Cursor + Amazon + Apple + Google + IBM + Meta + OpenAI). 5 distinct
+  wire-shape variants in the cohort: legacy
+  `boards.greenhouse.io/<slug>/jobs/<id>` (31 plugins,
+  Block-and-earlier), new
+  `job-boards.greenhouse.io/<slug>/jobs/<id>` (Vercel + Affirm + Gusto
+  + Mercury + **Buildkite**), apex marketing-site query-param-only
+  `www.<company>.com/careers/jobs?gh_jid=<id>` (Klaviyo),
+  careers-subdomain marketing-site path-AND-query
+  `careers.<company>.com/jobs/<id>?gh_jid=<id>` (Duolingo), apex-www
+  marketing-site path-AND-query
+  `www.<company>.com/careers/<id>?gh_jid=<id>` (Brex). 6 plugins use
+  the entity-decode-then-tag-strip description pipeline (Klaviyo,
+  Duolingo, Brex, Gusto, Mercury, **Buildkite**). 2 plugins apply a
+  wire-title trim (Brex, **Buildkite**). 2 plugins apply a brand-name
+  pin cleaning a wire `company_name` legal-entity suffix (Affirm:
+  `'Affirm Holdings, Inc.'` → `'Affirm'`; Gusto: `'Gusto, Inc.'` →
+  `'Gusto'`); Mercury and Buildkite's brand-name pins match the wire
+  byte-for-byte (no legal-entity suffix to clean).
+
+**Notes:**
+
+- Tests authored AND executed live in this scheduled run — both
+  `npx jest packages/plugins/source-company-buildkite` (8/8 passed in
+  8.946 s) and `npx jest packages/common/__tests__/helpers.spec`
+  (77/77 passed in 7.1 s) ran clean against the existing `node_modules`.
+- Q-042 still pending review (Default C continues; next reminder
+  window opens at run #300 per the run #250 forward-pointer
+  convention).
+- Buildkite is the **third** plugin in the cohort to combine the new
+  `job-boards.greenhouse.io` permalink subdomain (variant 2) with the
+  entity-decode-then-tag-strip description pipeline (after Gusto and
+  Mercury), and the **second** plugin to apply a wire-title `.trim()`
+  (after Brex). The fresh probe sweep this run opened a deep well:
+  eight additional candidates queue up for runs #261+ — `circleci`,
+  `hubspot`, `netlify`, `postman`, `rampnetwork` (still carry-over from
+  Spec 049, with the EU-region wire-shape variant 6),
+  `toast`, `webflow`, and `zoominfo`. Future runs can pick the next
+  bite alphabetically (CircleCI is next at `cir`) or pivot to the
+  rampnetwork EU-region variant for the structural novelty.
+
+---
+
 ## 2026-05-02 — Scheduled run #259 (Spec 049 closed end-to-end; new `source-company-mercury` plugin shipped — 8 unit tests green in 9.057 s; helpers regression 77/77 still green in 7.099 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 38th Greenhouse-backed company-direct plugin in the catalogue and the **fourth** to use the new `job-boards.greenhouse.io/<slug>/jobs/<id>` permalink subdomain — wire-shape variant 2 — and the **second** to combine that variant with the entity-decode-then-tag-strip description pipeline after Gusto)
 
 **Scope:** Run #259 continues the user-owner-directed concrete-action
