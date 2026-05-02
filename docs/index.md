@@ -112,6 +112,7 @@
 | 045 | [Source Company Plugin: Klaviyo](../.specify/specs/045-source-company-klaviyo/spec.md) — [plan](../.specify/specs/045-source-company-klaviyo/plan.md) — [tasks](../.specify/specs/045-source-company-klaviyo/tasks.md) | All phases done (T01..T05 run #255); spec complete |
 | 046 | [Source Company Plugin: Duolingo](../.specify/specs/046-source-company-duolingo/spec.md) — [plan](../.specify/specs/046-source-company-duolingo/plan.md) — [tasks](../.specify/specs/046-source-company-duolingo/tasks.md) | All phases done (T01..T05 run #256); spec complete |
 | 047 | [Source Company Plugin: Brex](../.specify/specs/047-source-company-brex/spec.md) — [plan](../.specify/specs/047-source-company-brex/plan.md) — [tasks](../.specify/specs/047-source-company-brex/tasks.md) | All phases done (T01..T05 run #257); spec complete |
+| 048 | [Source Company Plugin: Gusto](../.specify/specs/048-source-company-gusto/spec.md) — [plan](../.specify/specs/048-source-company-gusto/plan.md) — [tasks](../.specify/specs/048-source-company-gusto/tasks.md) | All phases done (T01..T05 run #258); spec complete |
 
 ## 8. Templates
 
@@ -123,4 +124,4 @@
 
 ---
 
-_Last revised: 2026-05-02 (run #256)._
+_Last revised: 2026-05-02 (run #258)._

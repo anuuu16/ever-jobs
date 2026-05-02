@@ -15,6 +15,170 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #258 (Spec 048 closed end-to-end; new `source-company-gusto` plugin shipped — 8 unit tests green in 8.922 s; helpers regression 77/77 still green in 7.083 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 37th Greenhouse-backed company-direct plugin in the catalogue and the **third** to use the new `job-boards.greenhouse.io/<slug>/jobs/<id>` permalink subdomain — wire-shape variant 2 — but the **first** to combine that variant with the entity-decode-then-tag-strip description pipeline)
+
+**Scope:** Run #258 continues the user-owner-directed concrete-action
+deviation that runs #230–#257 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 047's run
+#257 close-out note (which carried over **Gusto** as the last remaining
+ergonomic bite under the same company-direct pattern after Brex
+shipped), this run pivoted to **Gusto** as the alphabetically-only
+remaining bite from the named-candidate well that Spec 044's run #254
+seeded with Klaviyo / Duolingo / Brex / Gusto. Gusto — the
+**small-business payroll / benefits / HR-platform** vendor (Gusto, Inc.;
+founded by Joshua Reeves, Edward Kim, and Tomer London in 2011 as
+ZenPayroll; rebranded to Gusto in 2015; operator of the Gusto
+full-service payroll, Gusto Benefits health-insurance and 401(k)
+administration, Gusto Time Tools, Gusto Hiring & Onboarding ATS, Gusto
+Pay-as-you-go workers' comp, and Gusto Embedded embedded-payroll product
+lines that anchor the SMB-payroll-and-HR category alongside ADP RUN,
+Paychex Flex, QuickBooks Payroll, Rippling, Justworks, Paylocity, Bamboo
+HR, and TriNet) — is published at the bare `gusto` Greenhouse slug and
+was reconfirmed live via run #258's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/gusto/jobs?content=true` (79 open
+roles returned at probe time). Notably, Gusto's tenant publishes its
+`absolute_url` on the new `job-boards.greenhouse.io` permalink subdomain
+— wire-shape **variant 2**, the same one Vercel (Spec 043) and Affirm
+(Spec 044) use, making Gusto the **third** plugin in this variant — but
+emits HTML-entity-encoded `content` (`&lt;p&gt;...`), making this the
+**first** plugin in the cohort to combine variant 2 with the
+entity-decode-then-tag-strip description pipeline that Klaviyo
+(Spec 045), Duolingo (Spec 046), and Brex (Spec 047) introduced for
+their respective marketing-site shape variants 3 / 4 / 5.
+
+**Probe sweep — one 200 carried over (the last from the Spec 044 well):**
+
+- HTTP 200 on `gusto`. Sole remaining live Greenhouse company-direct
+  candidate from the Spec 044 / run #254 named-candidate well (carried
+  over verbatim from run #257's probe sweep — re-confirmed this run for
+  Gusto before commit). With Gusto shipped, the named-candidate well is
+  empty; future runs (post Spec 048) will need a fresh probe-sweep
+  against e.g. Stripe-adjacent fintechs (Modern Treasury, Mercury,
+  Ramp), e-commerce platforms (Shopify-adjacent), or vertical SaaS
+  (Notion, Linear, Loom, Front).
+
+**Spec 048 — Source Company Plugin: Gusto — closed end-to-end:**
+
+- **T01:** Added `Site.GUSTO = 'gusto'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 58:
+  Spec 048 — Source Company Plugin: Gusto` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037 / 038 /
+  039 / 040 / 041 / 042 / 043 / 044 / 045 / 046 / 047 phase-ordering
+  convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-gusto` with the
+  Affirm-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/gusto/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9. Two
+  structural deviations from the Affirm template, both isolated to
+  `gusto.service.ts`: **(1) Description cleanup** runs
+  `stripHtmlTags(decodeHtmlEntities(content))` rather than the bare
+  `stripHtmlTags(content)` form Affirm uses, because Gusto's `content`
+  is HTML-entity-encoded — confirmed via the live probe, where the
+  first job's `content` starts with `&lt;div class=&quot;
+  content-intro&quot;&gt;…` (Spec 048 § 10 D-08). **(2) Brand-name
+  pin** — emit `companyName === 'Gusto'` (string literal) rather than
+  the wire `company_name` value `'Gusto, Inc.'`; same approach Affirm
+  uses for its `'Affirm Holdings, Inc.'` wire `company_name` (Spec 048
+  § 10 D-09). The fallback `jobUrl` shape
+  `https://job-boards.greenhouse.io/gusto/jobs/<id>` matches the wire
+  `absolute_url` byte-for-byte — same as Vercel / Affirm (Spec 048 §
+  10 D-04). Class names are `GustoService` / `GustoModule` (PascalCase
+  with the standard initial cap, no embedded acronym requiring special
+  casing — see Spec 048 § 10 D-06).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned **between** `GoogleCareersModule` and `IbmModule` since
+  `Goo` < `Gus` < `Ibm` lexically),
+  `tsconfig.base.json` paths, and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/gusto.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `gusto-`, `site === Site.GUSTO`, `companyName === 'Gusto'`,
+  location, department, isRemote, description with both numeric entity
+  (`&#39;` → `'`) and named entity (`&rsquo;` → `'`) decoded AND `<p>`
+  tags stripped after the decode pass), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive), `searchTerm` filter
+  on department name (case-insensitive), HTTP 500 → empty response,
+  and empty `data.jobs` → empty response. The happy-path test asserts
+  the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/gusto/jobs?content=true` and
+  pins **four** regression guards: (a) the wire-shape
+  `https://job-boards.greenhouse.io/gusto/jobs/<id>` `absolute_url`
+  flows through to `jobUrl` byte-for-byte (D-04), (b) the cleaned
+  description does NOT contain literal `&lt;` (decode-pass ran), (c)
+  the cleaned description does NOT contain `<p>` (strip-pass ran after
+  the decode), and (d) the emitted `companyName` is the cleaned brand
+  name `'Gusto'` AND is NOT equal to the wire `company_name` value
+  `'Gusto, Inc.'` (D-09). Fixture
+  `__tests__/fixtures/gusto-jobs.json` is committed JSON exercising
+  both a Denver/SF Legal-and-Compliance AI-Compliance-Systems Manager
+  role (touching the Corporate Compliance team) and a Remote-US
+  Engineering Embedded-Payroll Senior-SWE role (touching the W-2 / W-4
+  / 1099-NEC engine, the 401(k) deduction pipeline, and the
+  audit-trail generator in its description).
+- **T05:** Doc updates — added a `shipped` row for Gusto in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  Gusto pattern: deletion of the proposed row is N/A since Gusto was
+  not previously listed as a `proposed` candidate — the backlog used
+  Spec 044's run #254 close-out note as the discovery channel,
+  surfaced via Spec 047's § 10 D-07 probe sweep). Index Spec 048 row
+  added under Spec 047; this `docs/log.md` entry appended at top.
+
+**Test verification:**
+
+- `npx jest packages/plugins/source-company-gusto --colors=false` → **8/8 passed in 8.922 s**.
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 7.083 s** (helpers regression intact).
+
+**Catalogue head-count after run #258:**
+
+- 37 Greenhouse-backed company-direct plugins (Anthropic, Databricks,
+  Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit, Pinterest,
+  Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio, Cloudflare,
+  MongoDB, Datadog, Instacart, Dropbox, Roblox, Block, Vercel,
+  Affirm, Klaviyo, Duolingo, Brex, Gusto + Stripe + Cursor + Amazon +
+  Apple + Google + IBM + Meta + OpenAI). 5 distinct wire-shape variants
+  in the cohort: legacy `boards.greenhouse.io/<slug>/jobs/<id>` (31
+  plugins, Block-and-earlier), new `job-boards.greenhouse.io/<slug>
+  /jobs/<id>` (Vercel + Affirm + **Gusto**), apex marketing-site
+  query-param-only `www.<company>.com/careers/jobs?gh_jid=<id>`
+  (Klaviyo), careers-subdomain marketing-site path-AND-query
+  `careers.<company>.com/jobs/<id>?gh_jid=<id>` (Duolingo), apex-www
+  marketing-site path-AND-query `www.<company>.com/careers/<id>?
+  gh_jid=<id>` (Brex). 4 plugins use the entity-decode-then-tag-strip
+  description pipeline (Klaviyo, Duolingo, Brex, **Gusto**). 1 plugin
+  applies a wire-title trim (Brex). 2 plugins apply a brand-name pin
+  cleaning a wire `company_name` legal-entity suffix (Affirm:
+  `'Affirm Holdings, Inc.'` → `'Affirm'`; **Gusto**: `'Gusto, Inc.'`
+  → `'Gusto'`).
+
+**Notes:**
+
+- Tests authored AND executed live in this scheduled run — both
+  `npx jest packages/plugins/source-company-gusto` (8/8 passed in
+  8.922 s) and `npx jest packages/common/__tests__/helpers.spec`
+  (77/77 passed in 7.083 s) ran clean against the existing
+  `node_modules`.
+- Q-042 still pending review (Default C continues; next reminder
+  window opens at run #300 per the run #250 forward-pointer
+  convention).
+- Gusto is the **first** plugin in the cohort to combine the new
+  `job-boards.greenhouse.io` permalink subdomain (variant 2) with
+  the entity-decode-then-tag-strip description pipeline. The
+  named-candidate well from Spec 044's run #254 is now empty; future
+  runs (post Spec 048) will need a fresh probe-sweep against e.g.
+  Stripe-adjacent fintechs (Modern Treasury, Mercury, Ramp),
+  e-commerce platforms (Shopify-adjacent), or vertical SaaS (Notion,
+  Linear, Loom, Front).
+
+---
+
 ## 2026-05-02 — Scheduled run #257 (Spec 047 closed end-to-end; new `source-company-brex` plugin shipped — 8 unit tests green in 9.037 s; helpers regression 77/77 still green in 7.019 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 36th Greenhouse-backed company-direct plugin in the catalogue and the **third** to use a marketing-site careers proxy — `www.brex.com/careers/<id>?gh_jid=<id>` — a **fifth** distinct wire-shape variant in the cohort, and the **first** company-direct plugin to apply a wire-title trim)
 
 **Scope:** Run #257 continues the user-owner-directed concrete-action

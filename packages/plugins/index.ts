@@ -87,6 +87,7 @@ import { DuolingoModule } from './source-company-duolingo';
 import { FigmaModule } from './source-company-figma';
 import { GitlabModule } from './source-company-gitlab';
 import { GoogleCareersModule } from './source-company-google';
+import { GustoModule } from './source-company-gusto';
 import { IbmModule } from './source-company-ibm';
 import { InstacartModule } from './source-company-instacart';
 import { KlaviyoModule } from './source-company-klaviyo';
@@ -282,6 +283,7 @@ export const ALL_SOURCE_MODULES = [
   FigmaModule,
   GitlabModule,
   GoogleCareersModule,
+  GustoModule,
   IbmModule,
   InstacartModule,
   KlaviyoModule,

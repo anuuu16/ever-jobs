@@ -248,6 +248,8 @@ export enum Site {
   DUOLINGO = 'duolingo',
   // Phase 57: Spec 047 — Source Company Plugin: Brex
   BREX = 'brex',
+  // Phase 58: Spec 048 — Source Company Plugin: Gusto
+  GUSTO = 'gusto',
 }
 
 /**
