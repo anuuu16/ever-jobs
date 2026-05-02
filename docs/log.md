@@ -15,6 +15,215 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #261 (Spec 051 closed end-to-end; new `source-company-circleci` plugin shipped — 8 unit tests green in 10.432 s; helpers regression 77/77 still green in 8.073 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 40th Greenhouse-backed company-direct plugin in the catalogue and the **first** to introduce wire-shape **variant 7** — the apex-www marketing-site, **HTTP-scheme**, path-with-trailing-slash-and-`jobs`-segment shape `http://www.circleci.com/careers/jobs/<id>/?gh_jid=<id>` — and the **seventh** to use the entity-decode-then-tag-strip description pipeline; CircleCI is also the **first** plugin in the catalogue to publish its `absolute_url` on the HTTP scheme rather than HTTPS)
+
+**Scope:** Run #261 continues the user-owner-directed concrete-action
+deviation that runs #230–#260 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 050's run
+#260 close-out note (which queued **circleci**, **hubspot**, **netlify**,
+**postman**, **rampnetwork** (sixth-variant EU-region carry-over from
+Spec 049), **toast**, **webflow**, and **zoominfo** as eight pre-probed
+HTTP-200 candidates from the developer-tools / SaaS probe sweep, and
+called out the alphabetically-first bite as the natural next move),
+this run pivoted to **CircleCI** as the alphabetically-first remaining
+bite (`cir` < `hub` < `net` < `pos` < `ram` < `toa` < `web` < `zoo`)
+and as a natural developer-tools-cohort sibling to Buildkite (both are
+CI/CD vendors). CircleCI — the **continuous-integration-as-a-service /
+hosted-Docker-CI** vendor (Circle Internet Services, Inc.; founded by
+Paul Biggar and Allen Rose in 2011 in San Francisco as the hosted-CI
+competitor to Travis CI; operator of CircleCI Cloud (the hosted SaaS
+pipeline runner across Linux / macOS / Windows / Arm64 executors),
+CircleCI Server (the on-prem deployment for regulated customers),
+CircleCI Insights (the pipeline analytics + flaky-test detection
+product), CircleCI Runner (the self-hosted agent for hybrid
+deployments), and the CircleCI Orbs registry (the reusable pipeline-step
+marketplace) lines that anchor the developer-controlled CI/CD category
+alongside Buildkite, GitHub Actions, GitLab CI, Jenkins, Travis CI,
+TeamCity, Bamboo, AWS CodeBuild, and Azure Pipelines) — is published
+at the bare `circleci` Greenhouse slug and was confirmed live via run
+#261's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/circleci/jobs?content=true` (13
+open roles returned at probe time). Notably, CircleCI's tenant
+publishes its `absolute_url` on a **brand-new, seventh distinct
+wire-shape variant** in the cohort: the apex-www marketing-site shape
+`http://www.circleci.com/careers/jobs/<id>/?gh_jid=<id>` is structurally
+similar to Brex's variant-5 `https://www.brex.com/careers/<id>?gh_jid=<id>`
+but distinguished by THREE structural deviations: (a) the **HTTP scheme**
+(not HTTPS — first plugin in the catalogue to publish on the HTTP
+scheme; every prior plugin uses HTTPS unconditionally), (b) the
+**trailing slash before the query** (`/<id>/?gh_jid=`), and (c) the
+**path-with-`jobs`-segment** (`/careers/jobs/<id>/` rather than Brex's
+`/careers/<id>`). Like Buildkite, Mercury, Gusto, Brex, Duolingo, and
+Klaviyo, CircleCI's `content` is HTML-entity-encoded (`&lt;h3
+data-start=&quot;545&quot;...`) and uses the entity-decode-then-tag-strip
+pipeline (Spec 051 § 10 D-08). Like Buildkite and Mercury, CircleCI's
+wire `company_name` is the bare brand name `'CircleCI'` (no legal-entity
+suffix to clean — the brand-name pin in the `JobPostDto` mapping matches
+the wire byte-for-byte; D-09). Class names use the `OpenAIService`
+precedent for embedded-acronym brand casing — `CircleCIService` /
+`CircleCIModule` rather than `CirclecIService` / `CircleciModule`
+Pascal-case-style — preserving the trademark `CI` initialism (D-06).
+
+**Spec 051 — Source Company Plugin: CircleCI — closed end-to-end:**
+
+- **T01:** Added `Site.CIRCLECI = 'circleci'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 61:
+  Spec 051 — Source Company Plugin: CircleCI` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037 / 038 /
+  039 / 040 / 041 / 042 / 043 / 044 / 045 / 046 / 047 / 048 / 049 /
+  050 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-circleci` with the
+  Brex-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/circleci/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9. One
+  structural deviation from the Brex template, isolated to
+  `circleci.service.ts`: the fallback `jobUrl` shape mirrors the wire
+  `absolute_url` byte-for-byte —
+  `http://www.circleci.com/careers/jobs/${listing.id}/?gh_jid=${listing.id}`
+  with the HTTP scheme, the trailing slash before the query, and the
+  `jobs/` segment in the path (Spec 051 § 10 D-04). The
+  description-cleanup pipeline `stripHtmlTags(decodeHtmlEntities(content))`
+  is identical to Buildkite's because CircleCI's `content` is also
+  HTML-entity-encoded — confirmed via the live probe, where the first
+  job's `content` starts with `&lt;h3 data-start=&quot;545&quot;
+  data-end=&quot;563&quot;&gt;About the Role&lt;/h3&gt;` (Spec 051 §
+  10 D-08). The brand-name pin `'CircleCI'` matches the wire
+  `company_name` byte-for-byte — same as Buildkite and Mercury (Spec
+  051 § 10 D-09). Class names are `CircleCIService` / `CircleCIModule`
+  (PascalCase preserving the embedded-acronym trademark casing — same
+  approach `OpenAIService` / `OpenAIModule` uses for the OpenAI brand;
+  see Spec 051 § 10 D-06). No wire-title `.trim()` deviation —
+  CircleCI's tenant emits clean trimmed titles in every observed
+  listing (Spec 051 § 10 D-10).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned **between** `BuildkiteModule` and `CloudflareModule`
+  since `Bui` < `Cir` < `Clo` lexically), `tsconfig.base.json` paths,
+  and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/circleci.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `circleci-`, `site === Site.CIRCLECI`,
+  `companyName === 'CircleCI'`, location, department, isRemote,
+  description with both numeric entity (`&amp;#39;` → `&#39;` → `'`)
+  and named entity (`&amp;rsquo;` → `&rsquo;` → `'` U+2019) decoded
+  AND `<h3>`/`<p>` tags stripped after the decode pass),
+  `resultsWanted=1` cap, `searchTerm` filter on title (case-
+  insensitive), `searchTerm` filter on department name (case-
+  insensitive), HTTP 500 → empty response, and empty `data.jobs` →
+  empty response. The happy-path test asserts the called URL string
+  is exactly
+  `https://api.greenhouse.io/v1/boards/circleci/jobs?content=true` and
+  pins **five** regression guards: (a) the variant-7 wire-shape
+  `http://www.circleci.com/careers/jobs/<id>/?gh_jid=<id>`
+  `absolute_url` flows through to `jobUrl` byte-for-byte (D-04), (b)
+  the emitted `jobUrl` starts with `http://` AND not `https://`
+  (HTTP-scheme lock — D-04), (c) the trailing slash before the query
+  is preserved (D-04), (d) the cleaned description does NOT contain
+  literal `&lt;` (decode-pass ran), `&quot;` (named-entity decode
+  ran), or `<p>`/`<h3>` (strip-pass ran after the decode), (e) the
+  emitted `companyName` is `'CircleCI'` AND matches the wire
+  `company_name` byte-for-byte (D-09). Fixture
+  `__tests__/fixtures/circleci-jobs.json` is committed JSON exercising
+  both a US AI-Community-Engineer role (touching CircleCI Cloud and
+  CircleCI Insights products in its description, with a complex
+  `&lt;h3 data-start=&quot;...&quot;&gt;` heading exercising both
+  named-entity (`&quot;`) and tag-stripping after entity-decode) and
+  a Canada Senior-Software-Engineer role with a remote location
+  (`'Toronto, Ontario, Remote'`, isRemote=true) and a description
+  touching the CircleCI Server platform, the on-prem orchestrator,
+  the autoscaling executor pool, and the Orbs registry indexer.
+- **T05:** Doc updates — added a `shipped` row for CircleCI in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog. Index Spec 051 row
+  added under Spec 050; this `docs/log.md` entry appended at top.
+
+**Test verification:**
+
+- `npx jest packages/plugins/source-company-circleci --colors=false` → **8/8 passed in 10.432 s**.
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 8.073 s** (helpers regression intact).
+
+**Catalogue head-count after run #261:**
+
+- 40 Greenhouse-backed company-direct plugins (Anthropic, Databricks,
+  Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit, Pinterest,
+  Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio, Cloudflare,
+  MongoDB, Datadog, Instacart, Dropbox, Roblox, Block, Vercel,
+  Affirm, Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite,
+  CircleCI + Stripe + Cursor + Amazon + Apple + Google + IBM + Meta +
+  OpenAI). 7 distinct wire-shape variants in the cohort: legacy
+  `boards.greenhouse.io/<slug>/jobs/<id>` (31 plugins,
+  Block-and-earlier), new
+  `job-boards.greenhouse.io/<slug>/jobs/<id>` (Vercel + Affirm + Gusto
+  + Mercury + Buildkite — variant 2; 5 plugins), apex marketing-site
+  query-param-only `www.<company>.com/careers/jobs?gh_jid=<id>`
+  (Klaviyo — variant 3), careers-subdomain marketing-site path-AND-
+  query `careers.<company>.com/jobs/<id>?gh_jid=<id>` (Duolingo —
+  variant 4), apex-www marketing-site path-AND-query
+  `www.<company>.com/careers/<id>?gh_jid=<id>` (Brex — variant 5),
+  EU-region permalink subdomain
+  `job-boards.eu.greenhouse.io/<slug>/jobs/<id>` (rampnetwork
+  pre-probed, not yet shipped — variant 6), and the **brand-new**
+  apex-www marketing-site, HTTP-scheme, path-with-`jobs`-segment-and-
+  trailing-slash-and-query
+  `http://www.<company>.com/careers/jobs/<id>/?gh_jid=<id>` (CircleCI
+  — variant 7). 7 plugins use the entity-decode-then-tag-strip
+  description pipeline (Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, **CircleCI**). 2 plugins apply a wire-title trim (Brex,
+  Buildkite — CircleCI does **not**). 2 plugins apply a brand-name
+  pin cleaning a wire `company_name` legal-entity suffix (Affirm:
+  `'Affirm Holdings, Inc.'` → `'Affirm'`; Gusto: `'Gusto, Inc.'` →
+  `'Gusto'`); Mercury, Buildkite, and CircleCI's brand-name pins
+  match the wire byte-for-byte (no legal-entity suffix to clean).
+  2 plugins use embedded-acronym PascalCase preserving trademark
+  casing in class names (`OpenAIService` and the brand-new
+  `CircleCIService`); other initialism brands like IBM use
+  sentence-case (`IbmService` / `IbmModule`).
+
+**Notes:**
+
+- Tests authored AND executed live in this scheduled run — both
+  `npx jest packages/plugins/source-company-circleci` (8/8 passed in
+  10.432 s) and `npx jest packages/common/__tests__/helpers.spec`
+  (77/77 passed in 8.073 s) ran clean against the existing
+  `node_modules`.
+- Q-042 still pending review (Default C continues; next reminder
+  window opens at run #300 per the run #250 forward-pointer
+  convention).
+- CircleCI is the **first** plugin in the catalogue to publish its
+  `absolute_url` on the **HTTP scheme** (not HTTPS) — every prior
+  plugin (39 Greenhouse-backed company-direct plugins) uses HTTPS
+  unconditionally. The unit test pins the HTTP scheme as a
+  regression guard against future refactors that might naively
+  HTTPS-upgrade the wire URL. The plan/spec note that this is
+  acceptable because the wire `absolute_url` is preferred over the
+  fallback in practice; if CircleCI HTTPS-upgrades the wire URL in
+  a future deployment, the plugin will return that automatically
+  without code change.
+- CircleCI is the **third** plugin in the cohort to apply
+  embedded-acronym PascalCase preserving trademark casing in class
+  names — `CircleCIService` / `CircleCIModule` matches the
+  `OpenAIService` / `OpenAIModule` precedent.
+- The named-candidate well from Spec 050's run #260 still has seven
+  pre-probed candidates queued: HubSpot (alphabetically-next at
+  `hub`), Netlify, Postman, Ramp Network (variant-6 EU-region
+  subdomain — first plugin in that variant when shipped), Toast,
+  Webflow, ZoomInfo. Future runs can pick the next bite
+  alphabetically (HubSpot is next at `hub`) or pivot to one of the
+  other shape variants for structural novelty (e.g. Ramp Network
+  for the EU-region subdomain variant 6, or pivot to a fresh probe
+  sweep of new categories — fintech / e-commerce / crypto /
+  productivity SaaS / industry-specific verticals — to expand the
+  named-candidate well further).
+
+---
+
 ## 2026-05-02 — Scheduled run #260 (Spec 050 closed end-to-end; new `source-company-buildkite` plugin shipped — 8 unit tests green in 8.946 s; helpers regression 77/77 still green in 7.1 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 39th Greenhouse-backed company-direct plugin in the catalogue and the **fifth** to use the new `job-boards.greenhouse.io/<slug>/jobs/<id>` permalink subdomain — wire-shape variant 2 — the **third** to combine that variant with the entity-decode-then-tag-strip description pipeline after Gusto and Mercury, and the **second** in the cohort to apply a wire-title `.trim()` after Brex)
 
 **Scope:** Run #260 continues the user-owner-directed concrete-action

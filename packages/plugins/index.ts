@@ -76,6 +76,7 @@ import { BlockModule } from './source-company-block';
 import { BoeingModule } from './source-company-boeing';
 import { BrexModule } from './source-company-brex';
 import { BuildkiteModule } from './source-company-buildkite';
+import { CircleCIModule } from './source-company-circleci';
 import { CloudflareModule } from './source-company-cloudflare';
 import { CoinbaseModule } from './source-company-coinbase';
 import { CursorModule } from './source-company-cursor';
@@ -274,6 +275,7 @@ export const ALL_SOURCE_MODULES = [
   BoeingModule,
   BrexModule,
   BuildkiteModule,
+  CircleCIModule,
   CloudflareModule,
   CoinbaseModule,
   CursorModule,

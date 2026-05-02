@@ -254,6 +254,8 @@ export enum Site {
   MERCURY = 'mercury',
   // Phase 60: Spec 050 — Source Company Plugin: Buildkite
   BUILDKITE = 'buildkite',
+  // Phase 61: Spec 051 — Source Company Plugin: CircleCI
+  CIRCLECI = 'circleci',
 }
 
 /**
