@@ -76,6 +76,7 @@ import { CloudflareModule } from './source-company-cloudflare';
 import { CoinbaseModule } from './source-company-coinbase';
 import { CursorModule } from './source-company-cursor';
 import { DatabricksModule } from './source-company-databricks';
+import { DatadogModule } from './source-company-datadog';
 import { DiscordModule } from './source-company-discord';
 import { DoorDashModule } from './source-company-doordash';
 import { FigmaModule } from './source-company-figma';
@@ -261,6 +262,7 @@ export const ALL_SOURCE_MODULES = [
   CoinbaseModule,
   CursorModule,
   DatabricksModule,
+  DatadogModule,
   DiscordModule,
   DoorDashModule,
   FigmaModule,

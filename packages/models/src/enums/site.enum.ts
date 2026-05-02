@@ -228,6 +228,8 @@ export enum Site {
   CLOUDFLARE = 'cloudflare',
   // Phase 47: Spec 037 — Source Company Plugin: MongoDB
   MONGODB = 'mongodb',
+  // Phase 48: Spec 038 — Source Company Plugin: Datadog
+  DATADOG = 'datadog',
 }
 
 /**

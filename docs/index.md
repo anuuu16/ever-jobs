@@ -102,6 +102,7 @@
 | 035 | [Source Company Plugin: Twilio](../.specify/specs/035-source-company-twilio/spec.md) — [plan](../.specify/specs/035-source-company-twilio/plan.md) — [tasks](../.specify/specs/035-source-company-twilio/tasks.md) | All phases done (T01..T05 run #245); spec complete |
 | 036 | [Source Company Plugin: Cloudflare](../.specify/specs/036-source-company-cloudflare/spec.md) — [plan](../.specify/specs/036-source-company-cloudflare/plan.md) — [tasks](../.specify/specs/036-source-company-cloudflare/tasks.md) | All phases done (T01..T05 run #246); spec complete |
 | 037 | [Source Company Plugin: MongoDB](../.specify/specs/037-source-company-mongodb/spec.md) — [plan](../.specify/specs/037-source-company-mongodb/plan.md) — [tasks](../.specify/specs/037-source-company-mongodb/tasks.md) | All phases done (T01..T05 run #247); spec complete |
+| 038 | [Source Company Plugin: Datadog](../.specify/specs/038-source-company-datadog/spec.md) — [plan](../.specify/specs/038-source-company-datadog/plan.md) — [tasks](../.specify/specs/038-source-company-datadog/tasks.md) | All phases done (T01..T05 run #248); spec complete |
 
 ## 8. Templates
 
@@ -113,4 +114,4 @@
 
 ---
 
-_Last revised: 2026-05-02 (run #247)._
+_Last revised: 2026-05-02 (run #248)._

@@ -13,6 +13,127 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #248 (Spec 038 closed end-to-end; new `source-company-datadog` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 27th Greenhouse-backed company-direct plugin in the catalogue)
+
+**Scope:** Run #248 continues the user-owner-directed concrete-action
+deviation that runs #230–#247 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 037's run
+#247 close-out note (which named Datadog, Instacart, Dropbox, and
+Roblox as the next ergonomic bites under the same company-direct
+pattern, all four confirmed HTTP 200 in run #247's probe), this run
+extends the catalogue with the dominant **observability /
+cloud-monitoring SaaS** vendor — Datadog — whose Greenhouse tenant is
+published at the bare `datadog` slug and was reconfirmed live via run
+#248's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/datadog/jobs?content=true`.
+Run #248 also reconfirmed Instacart, Dropbox, and Roblox (HTTP 200 each)
+as next-bite candidates that future runs can pick up under the same
+pattern.
+
+**Spec 038 — Source Company Plugin: Datadog — closed end-to-end:**
+
+- **T01:** Added `Site.DATADOG = 'datadog'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 48:
+  Spec 038 — Source Company Plugin: Datadog` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037
+  phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-datadog` with the
+  MongoDB-shape (single-file `service.ts`, 3-line `module.ts`,
+  2-line `index.ts`, 4-line `package.json`, 3-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/datadog/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9.
+  Fallback `jobUrl` (when Greenhouse omits `absolute_url`) points at
+  the public Datadog careers detail-page template
+  `https://careers.datadoghq.com/detail/<id>`. Note: like MongoDB
+  (Spec 037 § 10 D-05), Cloudflare (Spec 036 § 10 D-05), Twilio
+  (Spec 035 § 10 D-05), Twitch (Spec 034 § 10 D-05), Gitlab (Spec
+  033 § 10 D-05), Figma (Spec 032 § 10 D-05), Asana (Spec 031 § 10
+  D-05), Plaid (Spec 030 § 10 D-05), Lyft (Spec 029 § 10 D-05),
+  Pinterest (Spec 028 § 10 D-05), and Reddit (Spec 027 § 10 D-05),
+  Datadog's Greenhouse tenant uses the bare `datadog` slug — no
+  slug-vs-display-name asymmetry. Spec 038 § 10 D-06 also records
+  the deliberate decision to ship Datadog as a single `Site.DATADOG`
+  plugin covering the Sqreen (acquired 2021), CoScreen (2021),
+  Cloudcraft (2022), Codiga (2022), Hdiv (2022), Seekret (2022), and
+  Eppo (2025) subsidiaries that now post through the same `datadog`
+  Greenhouse tenant. Class names are `DatadogService` /
+  `DatadogModule` (PascalCase with the standard initial cap, no
+  embedded acronym requiring special casing — see Spec 038 § 10 D-07).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned between `DatabricksModule` and `DiscordModule` since
+  `Datab` < `Datad` < `Disc` lexically), `tsconfig.base.json`
+  paths, and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/datadog.service.spec.ts` with 8
+  cases covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `datadog-`, `site === Site.DATADOG`,
+  `companyName === 'Datadog'`, location, department, isRemote,
+  HTML stripped from description), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive), `searchTerm`
+  filter on department name (case-insensitive), HTTP 500 → empty
+  response, and empty `data.jobs` → empty response. The happy-path
+  test asserts the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/datadog/jobs?content=true`.
+  Fixture `__tests__/fixtures/datadog-jobs.json` is committed JSON
+  exercising both an NY-based Engineering APM-Trace-Pipeline role
+  and a Remote Customer-Success Cloud-SIEM role.
+- **T05:** Doc updates — added a `shipped` row for Datadog in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the new column width is unchanged at 26-char `Plugin id`),
+  appended Spec 038 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #248.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-datadog --colors=false`
+  → **8/8 passed in 8.588 s** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed in 6.861 s** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+
+**Files changed:**
+
+- `packages/models/src/enums/site.enum.ts` — `+2 lines` (`// Phase 48
+  …` comment + `DATADOG = 'datadog'` enum entry).
+- `packages/plugins/index.ts` — `+2 lines` (import + module-list entry).
+- `tsconfig.base.json` — `+1 line` (path-alias entry).
+- `jest.config.js` — `+1 line` (`moduleNameMapper` entry).
+- `packages/plugins/source-company-datadog/` — **new package**
+  (5 source files + 1 fixture + 1 test file = 7 files).
+- `.specify/specs/038-source-company-datadog/` — **new spec dir**
+  (`spec.md`, `plan.md`, `tasks.md` = 3 files).
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — `+1 row` (Datadog shipped row).
+- `docs/index.md` — `+1 row` (Spec 038 entry).
+- `docs/log.md` — this entry (newest-at-top).
+
+**Notes:**
+
+- Confirmed Datadog's Greenhouse slug `datadog` via direct
+  HTTP-200 probe of the public board endpoint
+  `https://api.greenhouse.io/v1/boards/datadog/jobs?content=true`
+  during run #248 spec drafting; no slug asymmetry as recorded in
+  Spec 038 § 10 D-05.
+- Reconfirmed Instacart (`instacart`), Dropbox (`dropbox`), and
+  Roblox (`roblox`) all return HTTP 200 against the Greenhouse public
+  API during run #248's probe. Run #249's spec-drafting agent should
+  pick one and re-confirm the slug via a public-API probe before
+  committing.
+- Likely next bite under the same Greenhouse company-direct pattern:
+  **Instacart**, **Dropbox**, or **Roblox**. All three are confirmed
+  Greenhouse-hosted and remain on the proposed-row backlog as the
+  ergonomic next steps.
+
+---
+
 ## 2026-05-02 — Scheduled run #247 (Spec 037 closed end-to-end; new `source-company-mongodb` plugin shipped — 8 unit tests green; helpers regression 77/77 still green; lint:docs clean; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 26th Greenhouse-backed company-direct plugin in the catalogue)
 
 **Scope:** Run #247 continues the user-owner-directed concrete-action
