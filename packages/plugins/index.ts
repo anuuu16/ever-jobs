@@ -95,6 +95,7 @@ import { GoogleCareersModule } from './source-company-google';
 import { GustoModule } from './source-company-gusto';
 import { IbmModule } from './source-company-ibm';
 import { InstacartModule } from './source-company-instacart';
+import { IntercomModule } from './source-company-intercom';
 import { KlaviyoModule } from './source-company-klaviyo';
 import { LyftModule } from './source-company-lyft';
 import { MercuryModule } from './source-company-mercury';
@@ -303,6 +304,7 @@ export const ALL_SOURCE_MODULES = [
   GustoModule,
   IbmModule,
   InstacartModule,
+  IntercomModule,
   KlaviyoModule,
   LyftModule,
   MercuryModule,

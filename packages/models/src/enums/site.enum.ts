@@ -274,6 +274,8 @@ export enum Site {
   CHIME = 'chime',
   // Phase 70: Spec 060 — Source Company Plugin: Elastic
   ELASTIC = 'elastic',
+  // Phase 71: Spec 061 — Source Company Plugin: Intercom
+  INTERCOM = 'intercom',
 }
 
 /**

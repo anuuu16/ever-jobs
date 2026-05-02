@@ -15,6 +15,194 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #271 (Spec 061 closed end-to-end; new `source-company-intercom` plugin shipped — 9 unit tests green in 9.513 s; helpers regression 77/77 still green in 7.343 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **50th Greenhouse-backed company-direct plugin** in the catalogue (a round-number milestone) and the **tenth** to use wire-shape variant 2 (`https://job-boards.greenhouse.io/intercom/jobs/<id>` — the US-region permalink subdomain shape; same as Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, and Attentive); the **seventeenth** to use the entity-decode-then-tag-strip description pipeline; the **sixth** cohort plugin to apply D-10 wire-title `.trim()` (after Brex, Buildkite, ZoomInfo, Attentive, and Elastic) — 25 of 174 wire titles in the run-271 probe (14.4 %) carry trailing ASCII-space padding (e.g. `'Account Executive, Commercial '`, `'Account Executive, Commercial - French Speaking '`, `'Account Executive (Existing Business), Commercial '`, `'Business Development Representative, Emerging AI Products '`, `'Director, Sales Strategy & Planning '`) — **the highest pad-rate of any cohort plugin to date**, beating Elastic's 8.3 %, Attentive's 6.8 %, ZoomInfo's 6.1 %, Buildkite's 7.4 %; **D-09 omitted** (wire `company_name === 'Intercom'` byte-for-byte; no legal-entity suffix on the wire). **Zero structural deviations** from the Attentive (Spec 058) template — Intercom is a near-pure Attentive twin (same variant 2, same D-08, same D-09 omission, same D-10 application). Selected from the **run-268 fresh-sweep live-board pool** as the alphabetically-next bite after Elastic — `int` < `mix`. The one remaining live candidate (Mixpanel) plus a HubSpot re-probe pivot queues up for runs #272+. The HubSpot re-probe at run-271 start returned HTTP 200 with `meta.total === 0` — **ninth-consecutive empty re-probe** across runs #262–#271.)
+
+**Scope:** Run #271 continues the user-owner-directed concrete-action
+deviation that runs #230–#270 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 060's run
+#270 close-out note (which queued **Intercom** as the alphabetically-
+next bite from the run-268 fresh-sweep live-board pool), this run takes
+Intercom directly: the Greenhouse public API was probed at run-271 start
+returning HTTP 200 with **174 open roles** for the bare `intercom` slug.
+
+Intercom Inc. — the **dominant AI-native customer-service / customer-
+messaging platform** vendor (founded by Eoghan McCabe, Des Traynor,
+David Barrett, and Ciaran Lee in 2011 in San Francisco; currently a
+private unicorn after Series D rounds led by Kleiner Perkins, Index
+Ventures, ICONIQ Capital, and Bessemer Venture Partners; now operating
+with its San Francisco headquarters plus offices in Dublin (the
+engineering EMEA hub), London, Sydney, and a remote-first posture
+across the United States, the United Kingdom, the Republic of Ireland,
+France, and Australia; operator of Fin (the AI customer-service agent
+flagship released in 2023 alongside the OpenAI GPT-4 launch), Intercom
+Inbox (the agent-side conversation routing surface), Intercom Messenger
+(the embeddable chat-widget product), Intercom Help Center (the
+self-serve knowledge-base product), Intercom Outbound (the proactive-
+messaging campaign product), Workflows (the no-code automation
+builder), and the Intercom Customer Data Platform lines that anchor
+the AI-customer-service category alongside Zendesk, Salesforce Service
+Cloud, Freshdesk, HubSpot Service Hub, Help Scout, Kustomer, and the
+new wave of AI-native challengers — Decagon, Sierra, Crescendo,
+Forethought, Kapture.cx) — is published at the bare `intercom`
+Greenhouse slug (the lowercase brand name) and was confirmed live via
+run #271's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/intercom/jobs?content=true` (174
+open roles returned at probe time). Notably, Intercom's tenant
+publishes its `absolute_url` on **variant 2** (the US-region permalink
+subdomain `https://job-boards.greenhouse.io/intercom/jobs/<id>` shape
+— the same shape as Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify,
+Postman, Webflow, and Attentive), making this the **tenth plugin in
+the cohort to use variant 2**. Like every plugin from Klaviyo onwards,
+Intercom's `content` is HTML-entity-encoded (`&lt;div class=
+&quot;content-intro&quot;&gt;&lt;p&gt;Intercom is the AI Customer
+Service company on a mission to help businesses provide incredible
+customer experiences...`) and uses the entity-decode-then-tag-strip
+pipeline (Spec 061 § 10 D-08) — making this the **seventeenth** plugin
+to use that pipeline. Like Brex, Buildkite, ZoomInfo, Attentive, and
+Elastic, a subset of Intercom wire titles carry trailing ASCII-space
+padding (25 of 174 titles in the run-271 probe — `'Account Executive,
+Commercial '`, `'Account Executive, Commercial - French Speaking '`,
+`'Account Executive (Existing Business), Commercial '`, `'Business
+Development Representative, Emerging AI Products '`, `'Director, Sales
+Strategy & Planning '`, etc.) that the plugin trims via `.trim()`
+before downstream filters and emit (D-10). The 14.4 % pad-rate is the
+**highest of any cohort plugin to date** — beating Elastic's 8.3 %,
+Attentive's 6.8 %, Buildkite's 7.4 %, ZoomInfo's 6.1 %. Intercom's
+wire `company_name` is the literal string `'Intercom'` (the bare brand
+name; no legal-entity suffix — distinct from Chime's `'Chime Financial,
+Inc'`, ZoomInfo's `'ZoomInfo Technologies LLC'`, Affirm's `'Affirm,
+Inc.'`, and Gusto's `'Gusto, Inc.'`), so the plugin reads
+`listing.company_name` directly without a string-literal pin (D-09
+omitted). Class names are `IntercomService` / `IntercomModule`
+(PascalCase from the bare-brand single-word name; D-06).
+
+**Spec 061 — Source Company Plugin: Intercom — closed end-to-end:**
+
+- **T01:** Added `Site.INTERCOM = 'intercom'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 71:
+  Spec 061 — Source Company Plugin: Intercom` header (preserves the
+  Spec 006 / 013 / 020..060 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-intercom` with the
+  Attentive-shape (single-file `service.ts`, 4-line `module.ts`,
+  2-line `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/intercom/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively (post-trim per D-10), and swallows transport
+  errors per FR-9. **Zero structural deviations** from the Attentive
+  template — Intercom is a near-pure Attentive twin: D-04 variant 2
+  fallback URL `https://job-boards.greenhouse.io/intercom/jobs/<id>`
+  (Spec 061 § 10 D-04 — same shape as Attentive). The description-
+  cleanup pipeline `stripHtmlTags(decodeHtmlEntities(content))` is
+  identical to Attentive's because Intercom's `content` is also HTML-
+  entity-encoded (Spec 061 § 10 D-08). The `companyName` reads
+  `listing.company_name` directly with `'Intercom'` as a defensive
+  fallback (Spec 061 § 10 D-09 — omitted). Wire `title` IS trimmed
+  via `.trim()` because 25 of 174 wire titles in the run-271 probe
+  (14.4 %) carry trailing ASCII-space padding (Spec 061 § 10 D-10 —
+  sixth cohort plugin to apply D-10). Department pass-through
+  preserves Intercom's flat single-token format byte-for-byte (Spec
+  061 § 10 D-11).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (`IntercomModule` import + append to
+  `ALL_SOURCE_MODULES` between `InstacartModule` and `KlaviyoModule`
+  per the alphabetical ordering — `Inst` < `Inte` < `Klav`),
+  `tsconfig.base.json` (path-alias entry), `jest.config.js`
+  (`moduleNameMapper` entry).
+- **T04:** Wrote `__tests__/intercom.service.spec.ts` with 9 cases and
+  a 2-listing fixture exercising (a) the bare `intercom` slug, (b) the
+  entity-decode-then-tag-strip pipeline (D-08 — assertions on `&lt;`,
+  `&quot;`, `&#39;`, `<p>`, `<div>`, `<strong>`, `<em>`), (c) the
+  variant-2 `job-boards.greenhouse.io/intercom/jobs/<id>`
+  `absolute_url` byte-for-byte flow-through (D-04 — locks the
+  variant-2 shape against future refactors via assertions that `jobUrl`
+  contains `job-boards.greenhouse.io` AND `/intercom/jobs/` AND must
+  NOT contain `?gh_jid=`), (d) the wire-passthrough `companyName ===
+  'Intercom'` byte-for-byte AND `companyName === fixture.jobs[0].
+  company_name` (locking the D-09 omission observability), (e) the
+  D-10 wire-title `.trim()` regression — wire title `'Account
+  Executive, Commercial '` carries trailing pad bytes pre-emit AND
+  emitted `title === 'Account Executive, Commercial'` (pad-free) AND
+  emitted `title !== fixture.jobs[0].title`, (f) the case-insensitive
+  `'COMMERCIAL'` `searchTerm` substring matches the trimmed `'Account
+  Executive, Commercial'` first listing (D-10 trim-then-match guard),
+  (g) the case-insensitive `'engineering'` `searchTerm` substring
+  matches the second listing's `'Engineering'` flat single-token
+  department (D-11 flat-form search guard), and (h) the case-
+  insensitive `'sales'` `searchTerm` substring matches the first
+  listing's `'Sales'` flat single-token department (D-11 flat-form
+  search guard, second instance). All 9 cases green in **9.513 s**
+  (`npx jest packages/plugins/source-company-intercom --colors=false`).
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (Intercom shipped
+  row appended under Elastic), `docs/index.md` (Spec 061 row appended
+  under Spec 060), and `docs/log.md` (this entry).
+
+**Helpers regression:** `npx jest packages/common/__tests__/
+helpers.spec --colors=false` → **77 / 77** green in **7.343 s** —
+the parser regression suite is unaffected by the Site enum / plugins
+barrel / tsconfig path-alias / jest moduleNameMapper edits.
+
+**Cohort statistics after Spec 061:**
+
+- **50** Greenhouse-backed company-direct plugins shipped (Anthropic,
+  Databricks, Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit,
+  Pinterest, Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio,
+  Cloudflare, MongoDB, Datadog, Instacart, Dropbox, Roblox, Block,
+  Vercel, Affirm, Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite,
+  CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow, ZoomInfo,
+  Attentive, Chime, Elastic, **Intercom** — plus the seven legacy
+  company-direct plugins from before Spec 020). **Round-number
+  milestone reached at 50 Greenhouse-backed company-direct plugins.**
+- **10** plugins on wire-shape variant 2 (US-region
+  `job-boards.greenhouse.io` permalink subdomain): Vercel, Affirm,
+  Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive,
+  **Intercom**.
+- **1** plugin on wire-shape variant 10 (legacy hosted-board apex
+  `boards.greenhouse.io/<slug>/jobs/<id>?gh_jid=<id>`): Chime.
+- **1** plugin on wire-shape variant 11 (vanity-domain
+  `jobs.<brand>.<tld>/jobs?gh_jid=<id>&gh_jid=<id>` with duplicate
+  query parameter): Elastic.
+- **17** plugins on the entity-decode-then-tag-strip description
+  pipeline (Klaviyo onwards): Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow,
+  ZoomInfo, Attentive, Chime, Elastic, **Intercom**.
+- **6** plugins applying a wire-title `.trim()` (D-10): Brex,
+  Buildkite, ZoomInfo, Attentive, Elastic, **Intercom** — Intercom's
+  14.4 % of 174 (25 padded titles) is the **highest pad-rate of any
+  cohort plugin to date** (Buildkite was 7.4 %, ZoomInfo 6.1 %,
+  Attentive 6.8 %, Elastic 8.3 %).
+- **4** plugins applying a brand-name trim (D-09 string-literal pin
+  over a wire-suffixed `company_name`): Affirm, Gusto, ZoomInfo,
+  Chime — Intercom does NOT contribute (wire `company_name ===
+  'Intercom'` byte-for-byte; no legal-entity suffix; eleventh cohort
+  plugin to omit D-09 against a single-word bare-brand wire
+  `company_name`).
+
+**Q-042 reminder:** unchanged — pending review since run #84 (~187
+runs / ~187 hours of agent wall-clock); fourth-reminder window opened
+at run #250 per the run #200 forward-pointer convention; next reminder
+window opens at run #300; Default C continues.
+
+**Run-271 next steps queue (runs #272+):**
+
+1. Pick the **alphabetically-next** bite from the run-268 fresh-sweep
+   live-board set: `mixpanel` — 51 open roles, Mixpanel Inc. — product
+   analytics platform. Plugin id `source-company-mixpanel`. Spec ID
+   062. Phase 72.
+2. Re-probe `hubspot` at the start of run #272 to check if the empty-
+   board status has flipped (tenth consecutive re-probe).
+3. Once the run-268 fresh-sweep pool is exhausted (after Mixpanel in
+   run #272), pivot to a **third** fresh probe sweep targeting the
+   next batch of large-employer candidates (e.g. Notion, Linear, Loom,
+   Front, Modern Treasury, Shopify, Square, Adobe, Salesforce,
+   Atlassian, Slack, Zoom Video Communications, ServiceNow, Workday,
+   Veeva, Toast Tab, Faire, Whatnot, Anduril, Scale AI, Glean,
+   Perplexity, Mistral, Cohere, Together AI, Pika, Runway, Synthesia,
+   Eleven Labs, Photoroom, Adept).
+
 ## 2026-05-02 — Scheduled run #270 (Spec 060 closed end-to-end; new `source-company-elastic` plugin shipped — 8 unit tests green in 9.518 s; helpers regression 77/77 still green in 7.554 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 49th Greenhouse-backed company-direct plugin in the catalogue and the **first** to use wire-shape variant 11 — the **vanity-domain** shape `https://jobs.elastic.co/jobs?gh_jid=<id>&gh_jid=<id>` (the custom `jobs.elastic.co` host hosting the rendered Greenhouse iframe, plus a duplicate `gh_jid=<id>&gh_jid=<id>` query parameter the second of which reflects the same listing id as the first, repeated literally on the wire — first plugin in the cohort with a vanity-domain wire shape and first plugin in the cohort with a duplicate query parameter); the **sixteenth** to use the entity-decode-then-tag-strip description pipeline; the **fifth** cohort plugin to apply D-10 wire-title `.trim()` (after Brex, Buildkite, ZoomInfo, and Attentive) — 16 of 193 wire titles in the run-270 probe (8.3 %) carry trailing ASCII-space padding (e.g. `'Account Executive '`, `'Consulting Architect, Public Sector - Netherlands '`, `'Customer Architect - EMEA Central '`, `'Enterprise Account Executive '`); **D-09 omitted** (wire `company_name === 'Elastic'` byte-for-byte; no legal-entity suffix on the wire). Selected from the **run-268 fresh-sweep live-board pool** as the alphabetically-next bite after Chime — `ela` < `int` < `mix`. The two remaining live candidates (Intercom, Mixpanel) plus a HubSpot re-probe pivot queue up for runs #271+. The HubSpot re-probe at run-270 start returned HTTP 200 with `meta.total === 0` — eighth-consecutive empty re-probe across runs #262–#270.)
 
 **Scope:** Run #270 continues the user-owner-directed concrete-action
