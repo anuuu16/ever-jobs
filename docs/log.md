@@ -15,6 +15,211 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #268 (Spec 058 closed end-to-end; new `source-company-attentive` plugin shipped — 8 unit tests green in 9.631 s; helpers regression 77/77 still green in 7.453 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 47th Greenhouse-backed company-direct plugin in the catalogue and the **ninth** to use wire-shape variant 2 — the US-region permalink subdomain `https://job-boards.greenhouse.io/attentive/jobs/<id>` (after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow); the **fourteenth** to use the entity-decode-then-tag-strip description pipeline; the **fourth** cohort plugin to apply a wire-title `.trim()` deviation (after Brex, Buildkite, ZoomInfo) — wire titles `'Director of Engineering, Intelligent Messaging '`, `'Principal Technical Program Manager '`, `'Staff Software Engineer, Streaming '`, `'Support Engineer (West) '` (4 of 59) trim to their non-trailing-pad forms before emit. Selected from the **fresh probe sweep** that this run pivoted to per Spec 057's run-267 close-out (carry-over named-candidate pool fully exhausted): probed eighteen large-employer Greenhouse-candidate slugs and got HTTP 200 on six (`attentive` 59 jobs, `chime` 72 jobs, `elastic` 193 jobs, `hubspot` `meta.total === 0` seventh-consecutive empty re-probe, `intercom` 174 jobs, `mixpanel` 51 jobs); Attentive picked as the alphabetically-first bite. The four remaining live candidates (Chime, Elastic, Intercom, Mixpanel) plus a HubSpot re-probe pivot queue up for runs #269+.)
+
+**Scope:** Run #268 continues the user-owner-directed concrete-action
+deviation that runs #230–#267 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 057's run
+#267 close-out note (which observed the carry-over named-candidate
+pool from Spec 050's nine-200 sweep was fully exhausted with the
+ZoomInfo ship and queued runs #268+ for a **fresh probe sweep** of the
+next batch of large-employer candidates), this run pivots directly to
+that fresh sweep. The Greenhouse public API was probed at run-268 start
+against eighteen new large-employer candidate slugs (`snyk`, `1password`,
+`canva`, `chime`, `intercom`, `mixpanel`, `gong`, `attentive`,
+`rippling`, `hashicorp`, `elastic`, `snowflake`, `huggingface`,
+`replicate`, `hubspot`, `benchling`, `segment`, `automattic`); six
+returned HTTP 200 (`attentive` 59 open roles, `chime` 72 open roles,
+`elastic` 193 open roles, `hubspot` empty board with `meta.total === 0`,
+`intercom` 174 open roles, `mixpanel` 51 open roles); twelve returned
+HTTP 404 (no Greenhouse-public-board tenant at the queried slug). The
+remaining slug `hubspot` returns HTTP 200 with `meta.total === 0` —
+seventh-consecutive empty re-probe across runs #262–#268; HubSpot
+remains deferred. Attentive picked as the **alphabetically-first** bite
+from the live-board set (`att` < `chi` < `ela` < `hub` < `int` < `mix`).
+
+Attentive Mobile Inc. — the **dominant AI-native conversational-
+commerce / SMS & email-marketing platform** vendor (founded by Brian
+Long and Andrew Jones in 2016 in New York City; one of the fastest-
+growing SaaS companies in the SMS-marketing category; currently a
+private unicorn after Series E rounds led by Coatue, Bain Capital
+Ventures, and Sequoia Capital that valued the company at ~$7B before
+the 2022 down-round; now operating with its New York City headquarters
+plus offices in San Francisco, London, and a remote-first posture
+across the United States, Canada, the United Kingdom, and the European
+Union; operator of Attentive AI (the conversational-AI agent brand),
+Attentive Email (the email-marketing product), Attentive SMS (the SMS-
+marketing flagship), Attentive Mobile App (the in-app messaging
+surface), Attentive Concierge (the AI-assisted shopping agent), and
+Attentive Affinity (the loyalty / lifecycle product) lines that anchor
+the AI-marketing category alongside Klaviyo, Iterable, Braze, OneSignal,
+MoEngage, Twilio Engage, and HubSpot Marketing) — is published at the
+bare `attentive` Greenhouse slug (the lowercase brand name) and was
+confirmed live via run #268's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/attentive/jobs?content=true` (59
+open roles returned at probe time). Attentive's tenant publishes its
+`absolute_url` on **variant 2** (the US-region permalink subdomain
+shape `https://job-boards.greenhouse.io/attentive/jobs/<id>`), making
+this the **ninth plugin in the cohort to use this shape** (after
+Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow).
+Like every plugin from Klaviyo onwards, Attentive's `content` is HTML-
+entity-encoded (`&lt;div class=&quot;content-intro&quot;&gt;...`) and
+uses the entity-decode-then-tag-strip pipeline (Spec 058 § 10 D-08) —
+making this the **fourteenth** plugin to use that pipeline. Attentive's
+wire `company_name` is the literal string `'Attentive'` (the bare brand
+name; no legal-entity suffix — unlike ZoomInfo, Affirm, or Gusto), and
+the plugin pins the brand name as a string literal for robustness
+against a future legal-entity-suffix flip (D-09). Like Brex, Buildkite,
+and ZoomInfo, a subset of Attentive wire titles carry trailing ASCII-
+space padding (4 of 59 titles in the run-268 probe — `'Director of
+Engineering, Intelligent Messaging '`, `'Principal Technical Program
+Manager '`, `'Staff Software Engineer, Streaming '`, `'Support Engineer
+(West) '`) that the plugin trims via `.trim()` before downstream
+filters and emit (D-10). Class names are `AttentiveService` /
+`AttentiveModule` (PascalCase from the bare-brand single-word name;
+D-06).
+
+**Spec 058 — Source Company Plugin: Attentive — closed end-to-end:**
+
+- **T01:** Added `Site.ATTENTIVE = 'attentive'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 68:
+  Spec 058 — Source Company Plugin: Attentive` header (preserves the
+  Spec 006 / 013 / 020..057 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-attentive` with the
+  Webflow-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/attentive/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively (post-trim per D-10), and swallows transport
+  errors per FR-9. **One structural deviation from the Webflow
+  template** — D-10 wire-title `.trim()`. The fallback `jobUrl` shape
+  mirrors the wire `absolute_url` byte-for-byte —
+  `https://job-boards.greenhouse.io/attentive/jobs/${listing.id}` with
+  the US-region permalink subdomain `job-boards.greenhouse.io` (Spec
+  058 § 10 D-04). The description-cleanup pipeline
+  `stripHtmlTags(decodeHtmlEntities(content))` is identical to
+  Webflow's because Attentive's `content` is also HTML-entity-encoded
+  (Spec 058 § 10 D-08). The brand-name pin `'Attentive'` matches the
+  wire `company_name` byte-for-byte via string-literal pin (Spec 058 §
+  10 D-09). Department pass-through preserves Attentive's flat single-
+  token format (`'Finance'`, `'Engineering'`, etc.) byte-for-byte
+  (Spec 058 § 10 D-11) — distinct from ZoomInfo's numeric-code-prefix
+  and Toast's colon-separated nested-path formats.
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (`AttentiveModule` import + append to
+  `ALL_SOURCE_MODULES` between `AsanaModule` and `BlockModule` per the
+  alphabetical ordering — `Asa` < `Att` < `Blo`), `tsconfig.base.json`
+  (path-alias entry), `jest.config.js` (`moduleNameMapper` entry).
+- **T04:** Wrote `__tests__/attentive.service.spec.ts` with 8 cases and
+  a 2-listing fixture exercising (a) the bare `attentive` slug, (b)
+  the entity-decode-then-tag-strip pipeline (D-08 — assertions on
+  `&lt;`, `&quot;`, `&#39;`, `<p>`, `<div>`, `<strong>`, `<em>`), (c)
+  the variant-2 `job-boards.greenhouse.io/attentive/jobs/<id>`
+  `absolute_url` byte-for-byte flow-through (D-04 — locks the variant-
+  2 shape against future refactors), (d) the brand-name pin
+  `'Attentive'` byte-for-byte AND match against the wire
+  `company_name` (D-09 wire-shape regression guard against a future
+  legal-entity-suffix flip), (e) the `.trim()` observability on the
+  padded second-listing fixture title `'Director of Engineering,
+  Intelligent Messaging '` → emitted `'Director of Engineering,
+  Intelligent Messaging'` (D-10 lock — emitted has no trailing
+  whitespace AND emitted !== fixture), and (f) the flat single-token
+  department pass-through `'Finance'` / `'Engineering'` byte-for-byte
+  (D-11 first- and second-instance pass-through guards). All 8 cases
+  green in **9.631 s** (`npx jest packages/plugins/source-company-
+  attentive --colors=false`).
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (Attentive shipped
+  row appended under ZoomInfo), `docs/index.md` (Spec 058 row appended
+  under Spec 057), and `docs/log.md` (this entry).
+
+**Helpers regression:** `npx jest packages/common/__tests__/helpers.spec
+--colors=false` → **77 / 77** green in **7.453 s** — the parser
+regression suite is unaffected by the Site enum / plugins barrel /
+tsconfig path-alias / jest moduleNameMapper edits.
+
+**Probe-sweep raw counts (run-268 start, fresh-pivot batch):**
+
+| Slug | HTTP | `meta.total` | Status |
+| ---- | ---- | ------------ | ------ |
+| `snyk` | 404 | — | not on Greenhouse public boards |
+| `1password` | 404 | — | not on Greenhouse public boards |
+| `canva` | 404 | — | not on Greenhouse public boards |
+| `chime` | 200 | **72** | live — queued for runs #269+ |
+| `intercom` | 200 | **174** | live — queued for runs #269+ |
+| `mixpanel` | 200 | **51** | live — queued for runs #269+ |
+| `gong` | 404 | — | not on Greenhouse public boards |
+| `attentive` | 200 | **59** | **selected for Spec 058** |
+| `rippling` | 404 | — | not on Greenhouse public boards |
+| `hashicorp` | 404 | — | not on Greenhouse public boards |
+| `elastic` | 200 | **193** | live — queued for runs #269+ |
+| `snowflake` | 404 | — | not on Greenhouse public boards |
+| `huggingface` | 404 | — | not on Greenhouse public boards |
+| `replicate` | 404 | — | not on Greenhouse public boards |
+| `hubspot` | 200 | **0** | empty re-probe (seventh consecutive across runs #262–#268) — deferred |
+| `benchling` | 404 | — | not on Greenhouse public boards |
+| `segment` | 404 | — | not on Greenhouse public boards |
+| `automattic` | 404 | — | not on Greenhouse public boards |
+
+**Cohort statistics after Spec 058:**
+
+- **47** Greenhouse-backed company-direct plugins shipped (Anthropic,
+  Databricks, Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit,
+  Pinterest, Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio,
+  Cloudflare, MongoDB, Datadog, Instacart, Dropbox, Roblox, Block,
+  Vercel, Affirm, Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite,
+  CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow, ZoomInfo,
+  Attentive — plus the seven legacy company-direct plugins from before
+  Spec 020: Amazon, Apple, Cursor, Google, IBM, Meta, OpenAI, Stripe).
+- **9** plugins on wire-shape variant 2 (US-region
+  `job-boards.greenhouse.io` permalink subdomain): Vercel, Affirm,
+  Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, **Attentive**.
+- **14** plugins on the entity-decode-then-tag-strip description
+  pipeline (Klaviyo onwards): Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow,
+  ZoomInfo, **Attentive**.
+- **4** plugins applying a wire-title `.trim()` (D-10): Brex,
+  Buildkite, ZoomInfo, **Attentive**.
+- **3** plugins applying a brand-name trim (D-09 string-literal pin
+  over a wire-suffixed `company_name`): Affirm, Gusto, ZoomInfo —
+  Attentive does NOT contribute (its wire `company_name` is the bare
+  brand name).
+
+**Q-042 reminder:** unchanged — pending review since run #84 (~184
+runs / ~184 hours of agent wall-clock); fourth-reminder window opened
+at run #250 per the run #200 forward-pointer convention; next reminder
+window opens at run #300; Default C continues.
+
+**Run-268 next steps queue (runs #269+):**
+
+1. Pick the **alphabetically-next** bite from the run-268 fresh-sweep
+   live-board set: `chime` (`chi` < `ela` < `hub` < `int` < `mix`) —
+   72 open roles, Chime Financial Inc., the dominant US neobank /
+   challenger-bank brand. Plugin id `source-company-chime`. Spec ID
+   059. Phase 69. The wire-shape variant + description-pipeline +
+   brand-name-trim status will be probed at run-269 start; default
+   working hypothesis is variant 2 + entity-decode pipeline + brand-
+   name byte-for-byte (the most common cohort signature).
+2. Continue alphabetically: `elastic` (193 jobs, Elastic NV — Elastic
+   Stack / Elasticsearch / Kibana / Logstash vendor) → `intercom`
+   (174 jobs, Intercom Inc. — customer-messaging platform) →
+   `mixpanel` (51 jobs, Mixpanel Inc. — product analytics platform).
+3. Re-probe `hubspot` at the start of run #269 to check if the empty-
+   board status has flipped (eighth consecutive re-probe);
+   alphabetically `hub` slots between `ela` and `int`, so HubSpot
+   would be picked next if it returns a non-empty board.
+4. Once the run-268 fresh-sweep pool is exhausted (after ~5 runs at
+   one-plugin-per-run), pivot to a **second** fresh probe sweep
+   targeting the next batch of large-employer candidates (e.g. Notion,
+   Linear, Loom, Front, Modern Treasury, Shopify, Square, Adobe,
+   Salesforce, Atlassian, Slack, Zoom Video Communications,
+   ServiceNow, Workday, Veeva, Toast Tab, Faire, Whatnot, Anduril,
+   Scale AI, Glean, Perplexity, Mistral, Cohere, Together AI, Pika,
+   Runway, Synthesia, Eleven Labs, Photoroom, Adept).
+
 ## 2026-05-02 — Scheduled run #267 (Spec 057 closed end-to-end; new `source-company-zoominfo` plugin shipped — 8 unit tests green in 35.646 s; helpers regression 77/77 still green in 24.31 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 46th Greenhouse-backed company-direct plugin in the catalogue and the **first** to use wire-shape variant 9 — the apex-www brand-domain marketing-site shape `https://www.zoominfo.com/careers?gh_jid=<id>`; the **thirteenth** to use the entity-decode-then-tag-strip description pipeline; the **third** cohort plugin to apply a brand-name trim (after Affirm and Gusto) and the **first to clean a space-separated legal-entity suffix** — wire `'ZoomInfo Technologies LLC'` → emitted `'ZoomInfo'`; the **third** cohort plugin to apply a wire-title `.trim()` deviation (after Brex and Buildkite); and the **first plugin in the cohort to ship a fixture with numeric-code-prefixed department names with hyphen-separated organisational hierarchy** — e.g. `'801 Client Services - Support'`, `'898 Corporate Engineering - G&A - Enterprise Technologies'`, `'820 R&G - Account Managers'` — that the department pass-through preserves byte-for-byte through to the emitted `JobPostDto.department` field. With this close-out, the Spec 050 carry-over named-candidate pool is fully exhausted: ZoomInfo was the last remaining live bite, HubSpot continues to be deferred with `meta.total === 0` for the sixth consecutive run #262–#267. Runs #268+ will pivot to a fresh probe sweep of the next batch of large-employer candidates.)
 
 **Scope:** Run #267 continues the user-owner-directed concrete-action

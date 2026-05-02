@@ -72,6 +72,7 @@ import { AmazonModule } from './source-company-amazon';
 import { AnthropicModule } from './source-company-anthropic';
 import { AppleModule } from './source-company-apple';
 import { AsanaModule } from './source-company-asana';
+import { AttentiveModule } from './source-company-attentive';
 import { BlockModule } from './source-company-block';
 import { BoeingModule } from './source-company-boeing';
 import { BrexModule } from './source-company-brex';
@@ -277,6 +278,7 @@ export const ALL_SOURCE_MODULES = [
   AnthropicModule,
   AppleModule,
   AsanaModule,
+  AttentiveModule,
   BlockModule,
   BoeingModule,
   BrexModule,

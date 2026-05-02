@@ -268,6 +268,8 @@ export enum Site {
   WEBFLOW = 'webflow',
   // Phase 67: Spec 057 — Source Company Plugin: ZoomInfo
   ZOOMINFO = 'zoominfo',
+  // Phase 68: Spec 058 — Source Company Plugin: Attentive
+  ATTENTIVE = 'attentive',
 }
 
 /**
