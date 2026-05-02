@@ -126,6 +126,7 @@
 | 059 | [Source Company Plugin: Chime](../.specify/specs/059-source-company-chime/spec.md) — [plan](../.specify/specs/059-source-company-chime/plan.md) — [tasks](../.specify/specs/059-source-company-chime/tasks.md) | All phases done (T01..T05 run #269); spec complete |
 | 060 | [Source Company Plugin: Elastic](../.specify/specs/060-source-company-elastic/spec.md) — [plan](../.specify/specs/060-source-company-elastic/plan.md) — [tasks](../.specify/specs/060-source-company-elastic/tasks.md) | All phases done (T01..T05 run #270); spec complete |
 | 061 | [Source Company Plugin: Intercom](../.specify/specs/061-source-company-intercom/spec.md) — [plan](../.specify/specs/061-source-company-intercom/plan.md) — [tasks](../.specify/specs/061-source-company-intercom/tasks.md) | All phases done (T01..T05 run #271); spec complete |
+| 062 | [Source Company Plugin: Mixpanel](../.specify/specs/062-source-company-mixpanel/spec.md) — [plan](../.specify/specs/062-source-company-mixpanel/plan.md) — [tasks](../.specify/specs/062-source-company-mixpanel/tasks.md) | All phases done (T01..T05 run #272); spec complete |
 
 ## 8. Templates
 

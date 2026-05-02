@@ -101,6 +101,7 @@ import { LyftModule } from './source-company-lyft';
 import { MercuryModule } from './source-company-mercury';
 import { MetaModule } from './source-company-meta';
 import { MicrosoftModule } from './source-company-microsoft';
+import { MixpanelModule } from './source-company-mixpanel';
 import { MongoDbModule } from './source-company-mongodb';
 import { NetflixModule } from './source-company-netflix';
 import { NetlifyModule } from './source-company-netlify';
@@ -310,6 +311,7 @@ export const ALL_SOURCE_MODULES = [
   MercuryModule,
   MetaModule,
   MicrosoftModule,
+  MixpanelModule,
   MongoDbModule,
   NetflixModule,
   NetlifyModule,

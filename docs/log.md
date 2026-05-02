@@ -15,6 +15,186 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #272 (Spec 062 closed end-to-end; new `source-company-mixpanel` plugin shipped — 9 unit tests green in 9.456 s; helpers regression 77/77 still green in 7.292 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **51st Greenhouse-backed company-direct plugin** in the catalogue and the **eleventh** to use wire-shape variant 2 (`https://job-boards.greenhouse.io/mixpanel/jobs/<id>` — the US-region permalink subdomain shape; same as Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, and Intercom); the **eighteenth** to use the entity-decode-then-tag-strip description pipeline; the **seventh** cohort plugin to apply D-10 wire-title `.trim()` (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, and Intercom) — 1 of 9 wire titles in the run-272 probe (~11.1 %) carries trailing ASCII-space padding (`'Account Manager '`); **D-09 omitted** (wire `company_name === 'Mixpanel'` byte-for-byte; no legal-entity suffix on the wire). **Zero structural deviations** from the Intercom (Spec 061) template — Mixpanel is a near-pure Intercom twin (same variant 2, same D-08, same D-09 omission, same D-10 application). Selected from the **run-268 fresh-sweep live-board pool** as the alphabetically-final bite after Intercom — `mix` is the last live member. **The run-268 fresh-sweep live-board pool is now fully exhausted**; runs #273+ will pivot to a third fresh probe sweep targeting the next batch of large-employer candidates (Notion, Linear, Loom, Front, Modern Treasury, Shopify, Square, Adobe, Salesforce, Atlassian, Slack, Zoom, ServiceNow, Workday, Veeva, Faire, Whatnot, Anduril, Scale AI, Glean, Perplexity, Mistral, Cohere, Together AI, Pika, Runway, Synthesia, Eleven Labs, Photoroom, Adept). The HubSpot re-probe at run-272 start returned HTTP 200 with `meta.total === 0` — **tenth-consecutive empty re-probe** across runs #262–#272.)
+
+**Scope:** Run #272 continues the user-owner-directed concrete-action
+deviation that runs #230–#271 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 061's run
+#271 close-out note (which queued **Mixpanel** as the alphabetically-
+final bite from the run-268 fresh-sweep live-board pool), this run
+takes Mixpanel directly: the Greenhouse public API was probed at
+run-272 start returning HTTP 200 with **9 open roles** for the bare
+`mixpanel` slug.
+
+Mixpanel Inc. — the **dominant product-analytics platform** vendor
+(founded by Suhail Doshi and Tim Trefren in 2009 in San Francisco;
+currently a private company after Series C rounds led by Andreessen
+Horowitz, Sequoia Capital, Tribe Capital, and others; now operating
+from its San Francisco headquarters plus offices in New York, Seattle,
+London, Singapore, Bangalore, and a remote-first posture across the
+United States, the United Kingdom, India, and Singapore; operator of
+Mixpanel Analytics (the event-tracking and funnels flagship), Mixpanel
+Cohorts (the segment-management surface), Mixpanel Insights (the
+exploratory analysis dashboard), Mixpanel Boards (the shared dashboard
+surface), Mixpanel Signal (the experiment-analysis surface), Mixpanel
+Data Pipelines (the warehouse-export connectors), and Mixpanel Lexicon
+(the metadata-governance product) lines that anchor the
+product-analytics category alongside Amplitude, Heap, PostHog, June,
+Pendo, FullStory, Hotjar, Adobe Analytics, Google Analytics 4, and the
+new wave of warehouse-native analytics challengers — Snowplow, Mitzu,
+Kubit, Indicative) — is published at the bare `mixpanel` Greenhouse
+slug (the lowercase brand name) and was confirmed live via run #272's
+HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/mixpanel/jobs?content=true` (9
+open roles returned at probe time). Notably, Mixpanel's tenant
+publishes its `absolute_url` on **variant 2** (the US-region permalink
+subdomain `https://job-boards.greenhouse.io/mixpanel/jobs/<id>` shape
+— the same shape as Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify,
+Postman, Webflow, Attentive, and Intercom), making this the **eleventh
+plugin in the cohort to use variant 2**. Like every plugin from
+Klaviyo onwards, Mixpanel's `content` is HTML-entity-encoded
+(`&lt;p&gt;Mixpanel is the leading event-based product analytics
+platform...`) and uses the entity-decode-then-tag-strip pipeline (Spec
+062 § 10 D-08) — making this the **eighteenth** plugin to use that
+pipeline. Like Brex, Buildkite, ZoomInfo, Attentive, Elastic, and
+Intercom, a subset of Mixpanel wire titles carry trailing ASCII-space
+padding (1 of 9 titles in the run-272 probe — `'Account Manager '`)
+that the plugin trims via `.trim()` before downstream filters and
+emit (D-10). Mixpanel's wire `company_name` is the literal string
+`'Mixpanel'` (the bare brand name; no legal-entity suffix — distinct
+from Chime's `'Chime Financial, Inc'`, ZoomInfo's `'ZoomInfo
+Technologies LLC'`, Affirm's `'Affirm, Inc.'`, and Gusto's `'Gusto,
+Inc.'`), so the plugin reads `listing.company_name` directly without
+a string-literal pin (D-09 omitted). Class names are `MixpanelService`
+/ `MixpanelModule` (PascalCase from the bare-brand single-word name;
+D-06).
+
+**Spec 062 — Source Company Plugin: Mixpanel — closed end-to-end:**
+
+- **T01:** Added `Site.MIXPANEL = 'mixpanel'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 72:
+  Spec 062 — Source Company Plugin: Mixpanel` header (preserves the
+  Spec 006 / 013 / 020..061 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-mixpanel` with the
+  Intercom-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`). The
+  scraper hits
+  `https://api.greenhouse.io/v1/boards/mixpanel/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively (post-trim per D-10), and swallows transport
+  errors per FR-9. **Zero structural deviations** from the Intercom
+  template — Mixpanel is a near-pure Intercom twin: D-04 variant 2
+  fallback URL `https://job-boards.greenhouse.io/mixpanel/jobs/<id>`
+  (Spec 062 § 10 D-04 — same shape as Intercom). The description-
+  cleanup pipeline `stripHtmlTags(decodeHtmlEntities(content))` is
+  identical to Intercom's because Mixpanel's `content` is also HTML-
+  entity-encoded (Spec 062 § 10 D-08). The `companyName` reads
+  `listing.company_name` directly with `'Mixpanel'` as a defensive
+  fallback (Spec 062 § 10 D-09 — omitted). Wire `title` IS trimmed
+  via `.trim()` because 1 of 9 wire titles in the run-272 probe
+  (~11.1 %) carries trailing ASCII-space padding (Spec 062 § 10 D-10
+  — seventh cohort plugin to apply D-10). Department pass-through
+  preserves Mixpanel's flat single-token format byte-for-byte (Spec
+  062 § 10 D-11).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (`MixpanelModule` import + append to
+  `ALL_SOURCE_MODULES` between `MicrosoftModule` and `MongoDbModule`
+  per the alphabetical ordering — `Mic` < `Mix` < `Mon`),
+  `tsconfig.base.json` (path-alias entry), `jest.config.js`
+  (`moduleNameMapper` entry).
+- **T04:** Wrote `__tests__/mixpanel.service.spec.ts` with 9 cases and
+  a 2-listing fixture exercising (a) the bare `mixpanel` slug, (b) the
+  entity-decode-then-tag-strip pipeline (D-08 — assertions on `&lt;`,
+  `&quot;`, `&#39;`, `<p>`, `<div>`, `<strong>`, `<em>`), (c) the
+  variant-2 `job-boards.greenhouse.io/mixpanel/jobs/<id>`
+  `absolute_url` byte-for-byte flow-through (D-04 — locks the
+  variant-2 shape against future refactors via assertions that
+  `jobUrl` contains `job-boards.greenhouse.io` AND `/mixpanel/jobs/`
+  AND must NOT contain `?gh_jid=`), (d) the wire-passthrough
+  `companyName === 'Mixpanel'` byte-for-byte AND `companyName ===
+  fixture.jobs[0].company_name` (locking the D-09 omission
+  observability), (e) the D-10 wire-title `.trim()` regression — wire
+  title `'Account Manager '` carries trailing pad bytes pre-emit AND
+  emitted `title === 'Account Manager'` (pad-free) AND emitted `title
+  !== fixture.jobs[0].title`, (f) the case-insensitive `'MANAGER'`
+  `searchTerm` substring matches the trimmed `'Account Manager'`
+  first listing (D-10 trim-then-match guard), (g) the case-insensitive
+  `'engineering'` `searchTerm` substring matches the second listing's
+  `'Engineering'` flat single-token department (D-11 flat-form search
+  guard), and (h) the case-insensitive `'sales'` `searchTerm`
+  substring matches the first listing's `'Sales'` flat single-token
+  department (D-11 flat-form search guard, second instance). All 9
+  cases green in **9.456 s** (`npx jest packages/plugins/source-
+  company-mixpanel --colors=false`).
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (Mixpanel shipped
+  row appended under Intercom), `docs/index.md` (Spec 062 row appended
+  under Spec 061), and `docs/log.md` (this entry).
+
+**Helpers regression:** `npx jest packages/common/__tests__/
+helpers.spec --colors=false` → **77 / 77** green in **7.292 s** —
+the parser regression suite is unaffected by the Site enum / plugins
+barrel / tsconfig path-alias / jest moduleNameMapper edits.
+
+**Cohort statistics after Spec 062:**
+
+- **51** Greenhouse-backed company-direct plugins shipped (Anthropic,
+  Databricks, Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit,
+  Pinterest, Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio,
+  Cloudflare, MongoDB, Datadog, Instacart, Dropbox, Roblox, Block,
+  Vercel, Affirm, Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite,
+  CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow, ZoomInfo,
+  Attentive, Chime, Elastic, Intercom, **Mixpanel** — plus the seven
+  legacy company-direct plugins from before Spec 020).
+- **11** plugins on wire-shape variant 2 (US-region
+  `job-boards.greenhouse.io` permalink subdomain): Vercel, Affirm,
+  Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive,
+  Intercom, **Mixpanel**.
+- **1** plugin on wire-shape variant 10 (legacy hosted-board apex
+  `boards.greenhouse.io/<slug>/jobs/<id>?gh_jid=<id>`): Chime.
+- **1** plugin on wire-shape variant 11 (vanity-domain
+  `jobs.<brand>.<tld>/jobs?gh_jid=<id>&gh_jid=<id>` with duplicate
+  query parameter): Elastic.
+- **18** plugins on the entity-decode-then-tag-strip description
+  pipeline (Klaviyo onwards): Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow,
+  ZoomInfo, Attentive, Chime, Elastic, Intercom, **Mixpanel**.
+- **7** plugins applying a wire-title `.trim()` (D-10): Brex,
+  Buildkite, ZoomInfo, Attentive, Elastic, Intercom, **Mixpanel**.
+- **4** plugins applying a brand-name trim (D-09 string-literal pin
+  over a wire-suffixed `company_name`): Affirm, Gusto, ZoomInfo,
+  Chime — Mixpanel does NOT contribute (wire `company_name ===
+  'Mixpanel'` byte-for-byte; no legal-entity suffix; twelfth cohort
+  plugin to omit D-09 against a single-word bare-brand wire
+  `company_name`).
+
+**Q-042 reminder:** unchanged — pending review since run #84 (~188
+runs / ~188 hours of agent wall-clock); fourth-reminder window opened
+at run #250 per the run #200 forward-pointer convention; next reminder
+window opens at run #300; Default C continues.
+
+**Run-272 next steps queue (runs #273+):**
+
+1. **The run-268 fresh-sweep live-board pool is fully exhausted.** Pivot
+   to a **third fresh probe sweep** targeting the next batch of large-
+   employer Greenhouse-candidate slugs. Suggested probe targets (one
+   bite per run from the live subset): `notion`, `linear`, `loom`,
+   `front`, `moderntreasury`, `shopify`, `square`, `adobe`, `salesforce`,
+   `atlassian`, `slack`, `zoom`, `servicenow`, `workday`, `veeva`,
+   `faire`, `whatnot`, `anduril`, `scaleai`, `glean`, `perplexity`,
+   `mistral`, `cohere`, `togetherai`, `pika`, `runway`, `synthesia`,
+   `elevenlabs`, `photoroom`, `adept`. Run #273 should run the HTTP
+   probe sweep across all of them, log the live-board set, and pick the
+   alphabetically-first live bite.
+2. Re-probe `hubspot` at the start of run #273 to check if the empty-
+   board status has flipped (eleventh consecutive re-probe; if still
+   empty, follow the documented "remains deferred" pattern).
+3. Continue the rolling cohort statistics tracking (variant counts,
+   pipeline counts, D-09/D-10 application counts) on every new plugin
+   so the catalogue retrospective stays current.
+
 ## 2026-05-03 — Scheduled run #271 (Spec 061 closed end-to-end; new `source-company-intercom` plugin shipped — 9 unit tests green in 9.513 s; helpers regression 77/77 still green in 7.343 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **50th Greenhouse-backed company-direct plugin** in the catalogue (a round-number milestone) and the **tenth** to use wire-shape variant 2 (`https://job-boards.greenhouse.io/intercom/jobs/<id>` — the US-region permalink subdomain shape; same as Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, and Attentive); the **seventeenth** to use the entity-decode-then-tag-strip description pipeline; the **sixth** cohort plugin to apply D-10 wire-title `.trim()` (after Brex, Buildkite, ZoomInfo, Attentive, and Elastic) — 25 of 174 wire titles in the run-271 probe (14.4 %) carry trailing ASCII-space padding (e.g. `'Account Executive, Commercial '`, `'Account Executive, Commercial - French Speaking '`, `'Account Executive (Existing Business), Commercial '`, `'Business Development Representative, Emerging AI Products '`, `'Director, Sales Strategy & Planning '`) — **the highest pad-rate of any cohort plugin to date**, beating Elastic's 8.3 %, Attentive's 6.8 %, ZoomInfo's 6.1 %, Buildkite's 7.4 %; **D-09 omitted** (wire `company_name === 'Intercom'` byte-for-byte; no legal-entity suffix on the wire). **Zero structural deviations** from the Attentive (Spec 058) template — Intercom is a near-pure Attentive twin (same variant 2, same D-08, same D-09 omission, same D-10 application). Selected from the **run-268 fresh-sweep live-board pool** as the alphabetically-next bite after Elastic — `int` < `mix`. The one remaining live candidate (Mixpanel) plus a HubSpot re-probe pivot queues up for runs #272+. The HubSpot re-probe at run-271 start returned HTTP 200 with `meta.total === 0` — **ninth-consecutive empty re-probe** across runs #262–#271.)
 
 **Scope:** Run #271 continues the user-owner-directed concrete-action

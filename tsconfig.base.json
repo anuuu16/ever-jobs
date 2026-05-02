@@ -130,6 +130,7 @@
       "@ever-jobs/source-company-chime": ["packages/plugins/source-company-chime/src/index.ts"],
       "@ever-jobs/source-company-elastic": ["packages/plugins/source-company-elastic/src/index.ts"],
       "@ever-jobs/source-company-intercom": ["packages/plugins/source-company-intercom/src/index.ts"],
+      "@ever-jobs/source-company-mixpanel": ["packages/plugins/source-company-mixpanel/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],

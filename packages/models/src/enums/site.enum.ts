@@ -276,6 +276,8 @@ export enum Site {
   ELASTIC = 'elastic',
   // Phase 71: Spec 061 — Source Company Plugin: Intercom
   INTERCOM = 'intercom',
+  // Phase 72: Spec 062 — Source Company Plugin: Mixpanel
+  MIXPANEL = 'mixpanel',
 }
 
 /**
