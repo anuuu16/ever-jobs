@@ -15,6 +15,221 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #263 (Spec 053 closed end-to-end; new `source-company-netlify` plugin shipped — 8 unit tests green in 10.252 s; helpers regression 77/77 still green in 8.095 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 42nd Greenhouse-backed company-direct plugin in the catalogue and the **sixth** to use wire-shape variant 2 — the US-region permalink subdomain shape `https://job-boards.greenhouse.io/<slug>/jobs/<id>` — after Vercel, Affirm, Gusto, Mercury, and Buildkite; the **ninth** to use the entity-decode-then-tag-strip description pipeline; and the **first plugin in the cohort to ship a fixture with an ampersand-bearing department name** (`R&D` and `G&A` — both pinned byte-for-byte through the case-insensitive search-term filter regression guard))
+
+**Scope:** Run #263 continues the user-owner-directed concrete-action
+deviation that runs #230–#262 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 052's run
+#262 close-out note (which queued **Netlify** as the alphabetically-next
+remaining live bite from the carry-over named-candidate pool, plus
+**Postman**, **Toast**, **Webflow**, **ZoomInfo**, and a HubSpot
+re-probe), this run takes Netlify directly: the Greenhouse public API
+was probed at run-263 start across all five remaining live candidates,
+all five returned HTTP 200, and Netlify was selected as the
+alphabetically-next bite (`net` < `pos` < `toa` < `web` < `zoo`). The
+HubSpot re-probe was skipped this run because Spec 052 already
+established the `meta.total === 0` deferral and the live tenant has
+shown no signs of re-opening roles in the 0–2-hour window between
+run #262 and run #263.
+
+Netlify, Inc. — the **edge-deployed Jamstack hosting and serverless-
+functions** vendor (founded by Mathias Biilmann and Christian Bach in
+2014 in San Francisco as the original Jamstack edge-deploy platform;
+operator of the Netlify Edge Network (the global edge CDN serving
+Jamstack sites with sub-second deploys), Netlify Functions (the
+serverless-functions runtime), Netlify Edge Functions (the V8-isolate
+edge-runtime layer), Netlify Forms (the form-handling backend), Netlify
+Identity (the auth product), Netlify Build (the CI/CD pipeline that
+runs every Git push), Netlify Drawer / Netlify CMS (the open-source
+headless-CMS project), and Netlify Connect (the data-layer-aggregation
+product) lines that anchor the Jamstack-and-edge-hosting category
+alongside Vercel, Cloudflare Pages, Render, Fly.io, and Heroku) — is
+published at the bare `netlify` Greenhouse slug (the lowercase brand
+name) and was confirmed live via run #263's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/netlify/jobs?content=true`
+(2 open roles returned at probe time: a Senior UX Engineer (Marketing)
+in `R&D` and a Talent Community placeholder in `G&A` — both 100%
+remote). Notably, Netlify's tenant publishes its `absolute_url` on
+**variant 2** (the US-region permalink subdomain
+`https://job-boards.greenhouse.io/netlify/jobs/<id>`, structurally
+identical to Buildkite / Mercury / Gusto / Affirm / Vercel) — making
+this the **sixth** plugin in the cohort to use variant 2. Like
+Buildkite, Mercury, Gusto, Brex, Duolingo, Klaviyo, CircleCI, and Ramp
+Network, Netlify's `content` is HTML-entity-encoded (`&lt;p&gt;
+&lt;strong&gt;About the Team:&lt;/strong&gt;&lt;/p&gt;`) and uses the
+entity-decode-then-tag-strip pipeline (Spec 053 § 10 D-08) — making
+this the **ninth** plugin to use that pipeline. Unlike every prior
+cohort plugin, Netlify's wire department names are `'R&D'` (Research &
+Development) and `'G&A'` (General & Administrative) with literal ASCII
+ampersands in the wire payload — making this the **first plugin in
+the cohort to ship a fixture with an ampersand-bearing department
+name** (D-11). Class names are `NetlifyService` / `NetlifyModule`
+(PascalCase splitting on the single-word brand name; D-06).
+
+**Spec 053 — Source Company Plugin: Netlify — closed end-to-end:**
+
+- **T01:** Added `Site.NETLIFY = 'netlify'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 63:
+  Spec 053 — Source Company Plugin: Netlify` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037 / 038 /
+  039 / 040 / 041 / 042 / 043 / 044 / 045 / 046 / 047 / 048 / 049 /
+  050 / 051 / 052 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-netlify` with the
+  Buildkite-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/netlify/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9. **Zero
+  structural deviations from the Buildkite template** —
+  `netlify.service.ts` mirrors `buildkite.service.ts` byte-by-byte
+  except for the `netlify`/`Netlify` substitutions and the absence of
+  the wire-title `.trim()` (Netlify's tenant emits clean trimmed
+  titles in every observed listing — D-10). The fallback `jobUrl`
+  shape mirrors the wire `absolute_url` byte-for-byte —
+  `https://job-boards.greenhouse.io/netlify/${listing.id}` with the
+  US-region subdomain `job-boards.greenhouse.io` (Spec 053 § 10
+  D-04). The description-cleanup pipeline
+  `stripHtmlTags(decodeHtmlEntities(content))` is identical to
+  Buildkite's because Netlify's `content` is also HTML-entity-encoded
+  (Spec 053 § 10 D-08). The brand-name pin `'Netlify'` matches the
+  wire `company_name` byte-for-byte — same as Mercury / Buildkite /
+  CircleCI / Ramp Network (Spec 053 § 10 D-09). Class names are
+  `NetlifyService` / `NetlifyModule` (single-word brand name; D-06).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned **between** `NetflixModule` and `NvidiaModule` since
+  `Netflix` < `Netlify` < `Nvidia` lexically), `tsconfig.base.json`
+  paths, and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/netlify.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `netlify-`, `site === Site.NETLIFY`, `companyName ===
+  'Netlify'`, location, department, isRemote, description with
+  numeric entity (`&#39;` → `'`), named entity (`&amp;rsquo;` →
+  `&rsquo;` → `'` U+2019), and non-breaking-space named entity
+  (`&amp;nbsp;` → `&nbsp;` → ` ` regular space) all decoded AND
+  `<p>`/`<strong>` tags stripped after the decode pass),
+  `resultsWanted=1` cap, `searchTerm` filter on title (case-
+  insensitive), `searchTerm` filter on department name (case-
+  insensitive — including the literal-ampersand `R&D` department,
+  asserting that the case-insensitive `'r&d'` search term matches
+  `'R&D'` byte-for-byte through both the search-term lowercase pass
+  and the dept-name lowercase pass without escaping; D-11
+  regression guard), HTTP 500 → empty response, and empty
+  `data.jobs` → empty response. The happy-path test asserts the
+  called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/netlify/jobs?content=true`
+  and pins **six** regression guards: (a) the variant-2 wire-shape
+  `https://job-boards.greenhouse.io/netlify/jobs/<id>`
+  `absolute_url` flows through to `jobUrl` byte-for-byte (D-04),
+  (b) the emitted `jobUrl` contains the literal
+  `job-boards.greenhouse.io` substring AND does NOT contain the
+  EU-region `job-boards.eu.greenhouse.io` substring (US-region-
+  subdomain lock — D-04), (c) the cleaned description does NOT
+  contain literal `&lt;` (decode-pass ran), `&quot;` (named-entity
+  decode ran), `&#39;` (numeric-entity decode ran), `&nbsp;` (non-
+  breaking-space named-entity decode ran), or `<p>`/`<strong>`
+  (strip-pass ran after the decode), (d) the emitted `companyName`
+  is the brand name `'Netlify'` AND matches the wire `company_name`
+  byte-for-byte (D-09), (e) the emitted `department` for the first
+  listing is `'R&D'` byte-for-byte AND the wire `departments[0].name`
+  is `'R&D'` byte-for-byte (D-11 first-instance guard for the
+  ampersand-pass-through pin), and (f) the case-insensitive
+  `searchTerm` filter on `'r&d'` correctly matches the `'R&D'`
+  department (D-11 case-insensitive ampersand-search regression
+  guard). Fixture `__tests__/fixtures/netlify-jobs.json` is committed
+  JSON exercising both a Senior UX Engineer (Marketing) Remote role
+  in `R&D` (touching the Netlify Edge Network, Netlify Functions,
+  Netlify Edge Functions, Netlify Forms, Netlify Identity, Netlify
+  Build, and Netlify Connect product lines in its description, with
+  numeric (`&#39;`), named (`&amp;rsquo;`), and double-encoded
+  non-breaking-space (`&amp;nbsp;`) and em-dash (`&amp;mdash;`)
+  entities exercising the entity-decode-then-tag-strip pipeline) and
+  a Remote Talent Community placeholder in `G&A` (touching the
+  General & Administrative function — People Operations, Legal,
+  Finance, and IT — with numeric (`&#39;`) and double-encoded
+  ampersand (`&amp;amp;`) and em-dash (`&amp;mdash;`) entities).
+- **T05:** Doc updates — added a `shipped` row for Netlify in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog. Index Spec 053 row
+  added under Spec 052; this `docs/log.md` entry appended at top.
+
+**Test verification:**
+
+- `npx jest packages/plugins/source-company-netlify --colors=false` → **8/8 passed in 10.252 s**.
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 8.095 s** (helpers regression intact).
+
+**Catalogue head-count after run #263:**
+
+- 42 Greenhouse-backed company-direct plugins (Anthropic, Databricks,
+  Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit, Pinterest,
+  Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio, Cloudflare,
+  MongoDB, Datadog, Instacart, Dropbox, Roblox, Block, Vercel, Affirm,
+  Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite, CircleCI,
+  Ramp Network, **Netlify** + Stripe + Cursor + Amazon + Apple +
+  Google + IBM + Meta + OpenAI). 7 distinct wire-shape variants in
+  the cohort: legacy `boards.greenhouse.io/<slug>/jobs/<id>` (31
+  plugins, Block-and-earlier), new
+  `job-boards.greenhouse.io/<slug>/jobs/<id>` (Vercel + Affirm + Gusto
+  + Mercury + Buildkite + **Netlify** — variant 2; **6 plugins**),
+  apex marketing-site query-param-only `www.<company>.com/careers/jobs?gh_jid=<id>`
+  (Klaviyo — variant 3), careers-subdomain marketing-site path-AND-
+  query `careers.<company>.com/jobs/<id>?gh_jid=<id>` (Duolingo —
+  variant 4), apex-www marketing-site path-AND-query
+  `www.<company>.com/careers/<id>?gh_jid=<id>` (Brex — variant 5),
+  EU-region permalink subdomain `job-boards.eu.greenhouse.io/<slug>/jobs/<id>`
+  (Ramp Network — variant 6), and apex-www marketing-site, HTTP-
+  scheme, path-with-`jobs`-segment-and-trailing-slash-and-query
+  `http://www.<company>.com/careers/jobs/<id>/?gh_jid=<id>` (CircleCI
+  — variant 7). 9 plugins use the entity-decode-then-tag-strip
+  description pipeline (Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, CircleCI, Ramp Network, **Netlify**). 2 plugins apply a
+  wire-title trim (Brex, Buildkite — Netlify does **not**). 2
+  plugins apply a brand-name pin cleaning a wire `company_name`
+  legal-entity suffix (Affirm: `'Affirm Holdings, Inc.'` →
+  `'Affirm'`; Gusto: `'Gusto, Inc.'` → `'Gusto'`); Mercury, Buildkite,
+  CircleCI, Ramp Network, and Netlify's brand-name pins match the
+  wire byte-for-byte (no legal-entity suffix to clean). 2 plugins
+  use embedded-acronym PascalCase preserving trademark casing in
+  class names (`OpenAIService`, `CircleCIService`); other initialism
+  brands like IBM use sentence-case (`IbmService` / `IbmModule`). 1
+  plugin pins a multi-word brand-name string literal containing an
+  inter-word ASCII space — Ramp Network. **1 plugin ships a fixture
+  with an ampersand-bearing department name — Netlify**, the
+  brand-new first-instance.
+
+**Notes:**
+
+- Run #263 selected Netlify from the carry-over named-candidate
+  pool from Spec 050's nine-200 probe sweep as the alphabetically-
+  next remaining live bite. The remaining four candidates (Postman,
+  Toast, Webflow, ZoomInfo) plus the HubSpot re-probe queue up for
+  runs #264+. Toast (variant 8 — careers-subdomain on a sub-brand
+  `toasttab.com`, 332 jobs) is the most structurally novel of the
+  four remaining, so it's a prime candidate for run #264 if a
+  variant-novelty preference holds.
+- The `&amp;amp;` (double-encoded ampersand entity) wire form
+  observed in Netlify's `G&A` job description fixture decodes only
+  partially through the single-pass `decodeHtmlEntities()` helper —
+  result is a literal `&amp;` in the final cleaned description. The
+  unit test does NOT assert `description.not.toContain('&amp;')`
+  because the partial-decode is the actual current helper behaviour.
+  A future spec could add an idempotent multi-pass decoder, but
+  that's a Spec 014 / 015 helpers concern, not a plugin-level concern.
+- The `&amp;nbsp;` (double-encoded non-breaking-space entity) wire
+  form observed in Netlify's first job decodes fully through the
+  single-pass helper to a regular ASCII space (because the helper's
+  iteration order processes `&amp;` before `&nbsp;`, and the
+  resulting `&nbsp;` then matches the second iteration). The unit
+  test asserts `description.not.toContain('&nbsp;')` to lock this
+  behaviour.
+
+---
+
 ## 2026-05-02 — Scheduled run #262 (Spec 052 closed end-to-end; new `source-company-rampnetwork` plugin shipped — 8 unit tests green in 10.432 s; helpers regression 77/77 still green in 8.034 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 41st Greenhouse-backed company-direct plugin in the catalogue and the **first** to introduce wire-shape **variant 6** — the EU-region permalink subdomain shape `https://job-boards.eu.greenhouse.io/<slug>/jobs/<id>` — and the **eighth** to use the entity-decode-then-tag-strip description pipeline; Ramp Network is also the **first** plugin in the catalogue to pin a multi-word brand-name string literal containing an inter-word ASCII space (`'Ramp Network'`))
 
 **Scope:** Run #262 continues the user-owner-directed concrete-action

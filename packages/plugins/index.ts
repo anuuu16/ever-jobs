@@ -99,6 +99,7 @@ import { MetaModule } from './source-company-meta';
 import { MicrosoftModule } from './source-company-microsoft';
 import { MongoDbModule } from './source-company-mongodb';
 import { NetflixModule } from './source-company-netflix';
+import { NetlifyModule } from './source-company-netlify';
 import { NvidiaModule } from './source-company-nvidia';
 import { OpenAIModule } from './source-company-openai';
 import { PinterestModule } from './source-company-pinterest';
@@ -299,6 +300,7 @@ export const ALL_SOURCE_MODULES = [
   MicrosoftModule,
   MongoDbModule,
   NetflixModule,
+  NetlifyModule,
   NvidiaModule,
   OpenAIModule,
   PinterestModule,

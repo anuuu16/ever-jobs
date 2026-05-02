@@ -258,6 +258,8 @@ export enum Site {
   CIRCLECI = 'circleci',
   // Phase 62: Spec 052 — Source Company Plugin: Ramp Network
   RAMPNETWORK = 'rampnetwork',
+  // Phase 63: Spec 053 — Source Company Plugin: Netlify
+  NETLIFY = 'netlify',
 }
 
 /**
