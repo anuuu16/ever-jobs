@@ -3,6 +3,13 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Native-build toolchain for `better-sqlite3` (and any other node-gyp deps).
+# Alpine's node:20-alpine image ships without python3 / make / g++, so npm ci
+# fails when node-gyp tries to compile native modules. The toolchain only
+# lives in the builder stage — the runtime stage copies prebuilt
+# node_modules and stays slim.
+RUN apk add --no-cache python3 make g++ libc-dev
+
 # Copy dependency manifests
 COPY package*.json ./
 
