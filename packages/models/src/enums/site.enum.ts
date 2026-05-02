@@ -272,6 +272,8 @@ export enum Site {
   ATTENTIVE = 'attentive',
   // Phase 69: Spec 059 — Source Company Plugin: Chime
   CHIME = 'chime',
+  // Phase 70: Spec 060 — Source Company Plugin: Elastic
+  ELASTIC = 'elastic',
 }
 
 /**

@@ -113,6 +113,7 @@ module.exports = {
     '^@ever-jobs/source-company-zoominfo$': '<rootDir>/packages/plugins/source-company-zoominfo/src/index.ts',
     '^@ever-jobs/source-company-attentive$': '<rootDir>/packages/plugins/source-company-attentive/src/index.ts',
     '^@ever-jobs/source-company-chime$': '<rootDir>/packages/plugins/source-company-chime/src/index.ts',
+    '^@ever-jobs/source-company-elastic$': '<rootDir>/packages/plugins/source-company-elastic/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',

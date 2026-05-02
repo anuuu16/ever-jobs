@@ -15,6 +15,190 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #270 (Spec 060 closed end-to-end; new `source-company-elastic` plugin shipped — 8 unit tests green in 9.518 s; helpers regression 77/77 still green in 7.554 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 49th Greenhouse-backed company-direct plugin in the catalogue and the **first** to use wire-shape variant 11 — the **vanity-domain** shape `https://jobs.elastic.co/jobs?gh_jid=<id>&gh_jid=<id>` (the custom `jobs.elastic.co` host hosting the rendered Greenhouse iframe, plus a duplicate `gh_jid=<id>&gh_jid=<id>` query parameter the second of which reflects the same listing id as the first, repeated literally on the wire — first plugin in the cohort with a vanity-domain wire shape and first plugin in the cohort with a duplicate query parameter); the **sixteenth** to use the entity-decode-then-tag-strip description pipeline; the **fifth** cohort plugin to apply D-10 wire-title `.trim()` (after Brex, Buildkite, ZoomInfo, and Attentive) — 16 of 193 wire titles in the run-270 probe (8.3 %) carry trailing ASCII-space padding (e.g. `'Account Executive '`, `'Consulting Architect, Public Sector - Netherlands '`, `'Customer Architect - EMEA Central '`, `'Enterprise Account Executive '`); **D-09 omitted** (wire `company_name === 'Elastic'` byte-for-byte; no legal-entity suffix on the wire). Selected from the **run-268 fresh-sweep live-board pool** as the alphabetically-next bite after Chime — `ela` < `int` < `mix`. The two remaining live candidates (Intercom, Mixpanel) plus a HubSpot re-probe pivot queue up for runs #271+. The HubSpot re-probe at run-270 start returned HTTP 200 with `meta.total === 0` — eighth-consecutive empty re-probe across runs #262–#270.)
+
+**Scope:** Run #270 continues the user-owner-directed concrete-action
+deviation that runs #230–#269 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 059's run
+#269 close-out note (which queued **Elastic** as the alphabetically-next
+bite from the run-268 fresh-sweep live-board pool), this run takes
+Elastic directly: the Greenhouse public API was probed at run-270 start
+returning HTTP 200 with **193 open roles** for the bare `elastic` slug.
+
+Elastic NV — the **dominant search / observability / security
+analytics platform** vendor (founded by Shay Banon and Steven
+Schuurman in 2012 and incorporated in Amsterdam in the Netherlands;
+the developer-and-vendor of the Elastic Stack — Elasticsearch (the
+distributed search and analytics engine), Kibana (the observability
+dashboard surface), Logstash (the log-ingest pipeline), Beats (the
+lightweight data shippers); now a NYSE-listed public company under
+ticker `ESTC`; operator of Elastic Cloud (the managed-search SaaS
+flagship), Elastic Observability (the observability suite), Elastic
+Security (the SIEM / endpoint-security suite), and Elastic Search AI
+Platform (the search + AI orchestration umbrella) lines that anchor
+the search-and-observability category alongside Splunk, Datadog,
+Dynatrace, New Relic, Sumo Logic, Solr / Lucene-derivatives, and
+OpenSearch) — is published at the bare `elastic` Greenhouse slug (the
+lowercase brand name) and was confirmed live via run #270's HTTP 200
+probe of `https://api.greenhouse.io/v1/boards/elastic/jobs?content=true`
+(193 open roles returned at probe time). Notably, Elastic's tenant
+publishes its `absolute_url` on **variant 11** (the vanity-domain
+shape `https://jobs.elastic.co/jobs?gh_jid=<id>&gh_jid=<id>` — the
+custom `jobs.elastic.co` host hosting the rendered Greenhouse iframe,
+plus a duplicate `gh_jid=<id>&gh_jid=<id>` query parameter), making
+this the **first plugin in the cohort to use a vanity-domain wire
+shape** AND the **first plugin in the cohort with a duplicate query
+parameter**. Like every plugin from Klaviyo onwards, Elastic's
+`content` is HTML-entity-encoded (`&lt;div class=&quot;content-intro
+&quot;&gt;&lt;p&gt;Elastic, the Search AI Company...`) and uses the
+entity-decode-then-tag-strip pipeline (Spec 060 § 10 D-08) — making
+this the **sixteenth** plugin to use that pipeline. Like Brex,
+Buildkite, ZoomInfo, and Attentive, a subset of Elastic wire titles
+carry trailing ASCII-space padding (16 of 193 titles in the run-270
+probe — `'Account Executive '`, `'Consulting Architect, Public Sector
+- Netherlands '`, `'Customer Architect - EMEA Central '`, `'Enterprise
+Account Executive '`, etc.) that the plugin trims via `.trim()`
+before downstream filters and emit (D-10). Elastic's wire `company_name`
+is the literal string `'Elastic'` (the bare brand name; no legal-entity
+suffix — distinct from Chime's `'Chime Financial, Inc'`, ZoomInfo's
+`'ZoomInfo Technologies LLC'`, Affirm's `'Affirm, Inc.'`, and Gusto's
+`'Gusto, Inc.'`), so the plugin reads `listing.company_name` directly
+without a string-literal pin (D-09 omitted). Class names are
+`ElasticService` / `ElasticModule` (PascalCase from the bare-brand
+single-word name; D-06).
+
+**Spec 060 — Source Company Plugin: Elastic — closed end-to-end:**
+
+- **T01:** Added `Site.ELASTIC = 'elastic'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 70:
+  Spec 060 — Source Company Plugin: Elastic` header (preserves the
+  Spec 006 / 013 / 020..059 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-elastic` with the
+  Attentive-shape (single-file `service.ts`, 4-line `module.ts`,
+  2-line `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/elastic/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively (post-trim per D-10), and swallows transport
+  errors per FR-9. **One structural deviation from the Attentive
+  template** — D-04 variant 11 vanity-domain fallback URL. The
+  fallback `jobUrl` shape mirrors the wire `absolute_url` byte-for-byte
+  — `https://jobs.elastic.co/jobs?gh_jid=${listing.id}&gh_jid=${listing.id}`
+  with the custom `jobs.elastic.co` vanity-domain host hosting the
+  rendered Greenhouse iframe AND the duplicate `gh_jid=<id>&gh_jid=<id>`
+  query parameter (Spec 060 § 10 D-04). The description-cleanup
+  pipeline `stripHtmlTags(decodeHtmlEntities(content))` is identical
+  to Attentive's because Elastic's `content` is also HTML-entity-encoded
+  (Spec 060 § 10 D-08). The `companyName` reads `listing.company_name`
+  directly; no string-literal pin (Spec 060 § 10 D-09 — omitted).
+  Wire `title` IS trimmed via `.trim()` because 16 of 193 wire titles
+  in the run-270 probe (8.3 %) carry trailing ASCII-space padding
+  (Spec 060 § 10 D-10 — fifth cohort plugin to apply D-10 after Brex,
+  Buildkite, ZoomInfo, Attentive). Department pass-through preserves
+  Elastic's compound `' - '`-separated department names byte-for-byte
+  (Spec 060 § 10 D-11) — first plugin in the cohort to ship a fixture
+  with `' - '`-separated compound department names that scope region
+  within line-of-business (`'Sales - EMEA - UKI'`, `'Sales - APJ -
+  India'`, etc.).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (`ElasticModule` import + append to
+  `ALL_SOURCE_MODULES` between `DuolingoModule` and `FigmaModule` per
+  the alphabetical ordering — `Duo` < `Ela` < `Fig`),
+  `tsconfig.base.json` (path-alias entry), `jest.config.js`
+  (`moduleNameMapper` entry).
+- **T04:** Wrote `__tests__/elastic.service.spec.ts` with 8 cases and a
+  2-listing fixture exercising (a) the bare `elastic` slug, (b) the
+  entity-decode-then-tag-strip pipeline (D-08 — assertions on `&lt;`,
+  `&quot;`, `&#39;`, `<p>`, `<div>`, `<strong>`), (c) the variant-11
+  vanity-domain `jobs.elastic.co/jobs?gh_jid=<id>&gh_jid=<id>`
+  `absolute_url` byte-for-byte flow-through (D-04 — locks the
+  variant-11 vanity-domain shape against future refactors via
+  assertions that `jobUrl` contains `jobs.elastic.co` AND `gh_jid=`
+  AND `gh_jid=7505982&gh_jid=7505982` AND must NOT contain
+  `boards.greenhouse.io`), (d) the wire-passthrough `companyName ===
+  'Elastic'` byte-for-byte AND `companyName === fixture.jobs[0].
+  company_name` (locking the D-09 omission observability), (e) the
+  D-10 wire-title `.trim()` regression — wire title `'Account
+  Executive '` carries trailing pad bytes pre-emit AND emitted
+  `title === 'Account Executive'` (pad-free) AND emitted
+  `title !== fixture.jobs[0].title`, (f) the case-insensitive
+  `'EXECUTIVE'` `searchTerm` substring matches the trimmed
+  `'Account Executive'` first listing (D-10 trim-then-match guard),
+  and (g) the case-insensitive `'sales'` `searchTerm` substring
+  matches the first listing's `'Sales - EMEA - UKI'` compound-form
+  department (D-11 compound-form search guard). All 8 cases green in
+  **9.518 s** (`npx jest packages/plugins/source-company-elastic
+  --colors=false`).
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (Elastic shipped
+  row appended under Chime), `docs/index.md` (Spec 060 row appended
+  under Spec 059), and `docs/log.md` (this entry).
+
+**Helpers regression:** `npx jest packages/common/__tests__/
+helpers.spec --colors=false` → **77 / 77** green in **7.554 s** —
+the parser regression suite is unaffected by the Site enum / plugins
+barrel / tsconfig path-alias / jest moduleNameMapper edits.
+
+**Cohort statistics after Spec 060:**
+
+- **49** Greenhouse-backed company-direct plugins shipped (Anthropic,
+  Databricks, Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit,
+  Pinterest, Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio,
+  Cloudflare, MongoDB, Datadog, Instacart, Dropbox, Roblox, Block,
+  Vercel, Affirm, Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite,
+  CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow, ZoomInfo,
+  Attentive, Chime, Elastic — plus the seven legacy company-direct
+  plugins from before Spec 020).
+- **9** plugins on wire-shape variant 2 (US-region
+  `job-boards.greenhouse.io` permalink subdomain): Vercel, Affirm,
+  Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive.
+- **1** plugin on wire-shape variant 10 (legacy hosted-board apex
+  `boards.greenhouse.io/<slug>/jobs/<id>?gh_jid=<id>`): Chime.
+- **1** plugin on wire-shape variant 11 (vanity-domain
+  `jobs.<brand>.<tld>/jobs?gh_jid=<id>&gh_jid=<id>` with duplicate
+  query parameter): **Elastic**.
+- **16** plugins on the entity-decode-then-tag-strip description
+  pipeline (Klaviyo onwards): Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow,
+  ZoomInfo, Attentive, Chime, **Elastic**.
+- **5** plugins applying a wire-title `.trim()` (D-10): Brex,
+  Buildkite, ZoomInfo, Attentive, **Elastic** — Elastic's 8.3 % of
+  193 (16 padded titles) is the **highest pad-rate of any cohort
+  plugin to date** (Buildkite was 7.4 %, ZoomInfo 6.1 %, Attentive
+  6.8 %).
+- **4** plugins applying a brand-name trim (D-09 string-literal pin
+  over a wire-suffixed `company_name`): Affirm, Gusto, ZoomInfo,
+  Chime — Elastic does NOT contribute (wire `company_name === 'Elastic'`
+  byte-for-byte; no legal-entity suffix; first cohort plugin since
+  Webflow / Spec 056 to omit D-09 against a single-word bare-brand
+  wire `company_name`).
+
+**Q-042 reminder:** unchanged — pending review since run #84 (~186
+runs / ~186 hours of agent wall-clock); fourth-reminder window opened
+at run #250 per the run #200 forward-pointer convention; next reminder
+window opens at run #300; Default C continues.
+
+**Run-270 next steps queue (runs #271+):**
+
+1. Pick the **alphabetically-next** bite from the run-268 fresh-sweep
+   live-board set: `intercom` (`int` < `mix`) — 174 open roles,
+   Intercom Inc. — customer-messaging platform. Plugin id
+   `source-company-intercom`. Spec ID 061. Phase 71.
+2. Continue alphabetically: `mixpanel` (51 jobs, Mixpanel Inc. —
+   product analytics platform).
+3. Re-probe `hubspot` at the start of run #271 to check if the empty-
+   board status has flipped (ninth consecutive re-probe).
+4. Once the run-268 fresh-sweep pool is exhausted (after ~2 more runs
+   at one-plugin-per-run), pivot to a **third** fresh probe sweep
+   targeting the next batch of large-employer candidates (e.g. Notion,
+   Linear, Loom, Front, Modern Treasury, Shopify, Square, Adobe,
+   Salesforce, Atlassian, Slack, Zoom Video Communications,
+   ServiceNow, Workday, Veeva, Toast Tab, Faire, Whatnot, Anduril,
+   Scale AI, Glean, Perplexity, Mistral, Cohere, Together AI, Pika,
+   Runway, Synthesia, Eleven Labs, Photoroom, Adept).
+
 ## 2026-05-02 — Scheduled run #269 (Spec 059 closed end-to-end; new `source-company-chime` plugin shipped — 8 unit tests green in 9.384 s; helpers regression 77/77 still green in 7.455 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 48th Greenhouse-backed company-direct plugin in the catalogue and the **first** to use wire-shape variant 10 — the legacy hosted-board apex `https://boards.greenhouse.io/chime/jobs/<id>?gh_jid=<id>` (the bare `boards.greenhouse.io` host without the `job-` prefix, plus a trailing `?gh_jid=<id>` query suffix); the **fifteenth** to use the entity-decode-then-tag-strip description pipeline; the **fourth** cohort plugin to apply a brand-name trim D-09 (after Affirm, Gusto, and ZoomInfo) — wire `'Chime Financial, Inc'` → emitted `'Chime'`; the **second** to clean a comma-separated suffix (after Affirm) and the **first** to clean a comma-separated suffix where the legal-entity token (`'Inc'`) carries no trailing period; **D-10 omitted** (no padded titles in the run-269 probe — first cohort plugin since Webflow / Spec 056 to omit D-10). Selected from the **run-268 fresh-sweep live-board pool** as the alphabetically-next bite after Attentive — `chi` < `ela` < `int` < `mix`. The four remaining live candidates (Elastic, Intercom, Mixpanel) plus a HubSpot re-probe pivot queue up for runs #270+.)
 
 **Scope:** Run #269 continues the user-owner-directed concrete-action
