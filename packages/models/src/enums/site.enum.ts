@@ -260,6 +260,8 @@ export enum Site {
   RAMPNETWORK = 'rampnetwork',
   // Phase 63: Spec 053 — Source Company Plugin: Netlify
   NETLIFY = 'netlify',
+  // Phase 64: Spec 054 — Source Company Plugin: Postman
+  POSTMAN = 'postman',
 }
 
 /**

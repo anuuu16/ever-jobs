@@ -104,6 +104,7 @@ import { NvidiaModule } from './source-company-nvidia';
 import { OpenAIModule } from './source-company-openai';
 import { PinterestModule } from './source-company-pinterest';
 import { PlaidModule } from './source-company-plaid';
+import { PostmanModule } from './source-company-postman';
 import { RampNetworkModule } from './source-company-rampnetwork';
 import { RedditModule } from './source-company-reddit';
 import { RobinhoodModule } from './source-company-robinhood';
@@ -305,6 +306,7 @@ export const ALL_SOURCE_MODULES = [
   OpenAIModule,
   PinterestModule,
   PlaidModule,
+  PostmanModule,
   RampNetworkModule,
   RedditModule,
   RobinhoodModule,

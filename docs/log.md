@@ -15,6 +15,236 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #264 (Spec 054 closed end-to-end; new `source-company-postman` plugin shipped — 8 unit tests green in 9.080 s; helpers regression 77/77 still green in 7.180 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 43rd Greenhouse-backed company-direct plugin in the catalogue and the **seventh** to use wire-shape variant 2 — the US-region permalink subdomain shape `https://job-boards.greenhouse.io/<slug>/jobs/<id>` — after Vercel, Affirm, Gusto, Mercury, Buildkite, and Netlify; the **tenth** to use the entity-decode-then-tag-strip description pipeline; and the **first plugin in the cohort to ship a fixture exercising the `<div class="content-intro">` recruiter-blurb wrapper** that begins every Postman wire `content` payload (after entity decoding) and which the entity-decode-then-tag-strip pipeline neutralises into clean prose without a per-source content-intro filter)
+
+**Scope:** Run #264 continues the user-owner-directed concrete-action
+deviation that runs #230–#263 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 053's run
+#263 close-out note (which queued **Postman** as the alphabetically-next
+remaining live bite from the carry-over named-candidate pool, plus
+**Toast**, **Webflow**, **ZoomInfo**, and a HubSpot re-probe), this
+run takes Postman directly: the Greenhouse public API was probed at
+run-264 start; Postman returned HTTP 200 with 10 open roles and was
+selected as the alphabetically-next bite (`pos` < `toa` < `web` <
+`zoo`). The HubSpot re-probe was skipped this run because Spec 052
+already established the `meta.total === 0` deferral and the live
+tenant has shown no signs of re-opening roles in the 0–2-hour window
+between run #263 and run #264.
+
+Postman, Inc. — the **dominant API development platform** vendor
+(founded by Abhinav Asthana, Ankit Sobti, and Abhijit Kane in 2014 in
+Bangalore, now headquartered in San Francisco with offices in Boston,
+New York, Austin, Tokyo, London, and Bangalore; operator of the
+Postman Workspaces (the per-team API collaboration surface), Postman
+Collections (the shareable request-bundle primitive every API team
+uses), Postman Mock Servers (the rapid-prototype mock-API runtime),
+Postman Monitors (the scheduled API-uptime monitoring product),
+Postman Flows (the no-code visual API workflow builder), Postman API
+Network (the public discovery catalogue used by 45M+ developers and
+500,000+ organisations including 98% of the Fortune 500), Postman
+Public Workspaces (the OSS-style public collaboration layer), Postman
+Governance (the enterprise API-quality / compliance product), and
+Postman Enterprise (the SOC 2 / SSO / audit-log SKU) lines that
+anchor the API-tooling category alongside Insomnia (Kong), Bruno,
+Hoppscotch, Stoplight, and Apidog) — is published at the bare
+`postman` Greenhouse slug (the lowercase brand name) and was
+confirmed live via run #264's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/postman/jobs?content=true`
+(10 open roles returned at probe time: Account Development
+Representatives across San Francisco, London/Remote-UK, plus other
+Sales-org placements). Notably, Postman's tenant publishes its
+`absolute_url` on **variant 2** (the US-region permalink subdomain
+`https://job-boards.greenhouse.io/postman/jobs/<id>`, structurally
+identical to Vercel / Affirm / Gusto / Mercury / Buildkite / Netlify)
+— making this the **seventh** plugin in the cohort to use variant 2.
+Like every plugin from Klaviyo onwards (Klaviyo, Duolingo, Brex,
+Gusto, Mercury, Buildkite, CircleCI, Ramp Network, Netlify),
+Postman's `content` is HTML-entity-encoded (`&lt;div class=
+&quot;content-intro&quot;&gt;&lt;h2&gt;&lt;strong&gt;Who Are
+We?&lt;/strong&gt;&lt;/h2&gt;`) and uses the entity-decode-then-tag-
+strip pipeline (Spec 054 § 10 D-08) — making this the **tenth**
+plugin to use that pipeline. Unlike every prior cohort plugin,
+Postman's wire `content` payload begins with a structural
+`<div class="content-intro">` recruiter-blurb wrapper carrying the
+standard "Who Are We?" company-context section that introduces
+Postman to external candidates — making this the **first plugin in
+the cohort to ship a fixture exercising the content-intro wrapper
+pass-through** (D-11). The plugin does not apply a per-source
+content-intro filter; the entity-decode-then-tag-strip pipeline
+already strips the wrapping `<div>` and `<h2>` tags and leaves the
+literal "Who Are We?" / "Postman is the world's leading API
+platform..." prose in place as part of the natural job-description
+body. Class names are `PostmanService` / `PostmanModule` (PascalCase
+splitting on the single-word brand name; D-06).
+
+**Spec 054 — Source Company Plugin: Postman — closed end-to-end:**
+
+- **T01:** Added `Site.POSTMAN = 'postman'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 64:
+  Spec 054 — Source Company Plugin: Postman` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037 / 038 /
+  039 / 040 / 041 / 042 / 043 / 044 / 045 / 046 / 047 / 048 / 049 /
+  050 / 051 / 052 / 053 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-postman` with the
+  Netlify-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/postman/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9. **Zero
+  structural deviations from the Netlify template** —
+  `postman.service.ts` mirrors `netlify.service.ts` byte-by-byte
+  except for the `postman`/`Postman` substitutions. The fallback
+  `jobUrl` shape mirrors the wire `absolute_url` byte-for-byte —
+  `https://job-boards.greenhouse.io/postman/${listing.id}` with the
+  US-region subdomain `job-boards.greenhouse.io` (Spec 054 § 10
+  D-04). The description-cleanup pipeline
+  `stripHtmlTags(decodeHtmlEntities(content))` is identical to
+  Netlify's because Postman's `content` is also HTML-entity-encoded
+  (Spec 054 § 10 D-08). The brand-name pin `'Postman'` matches the
+  wire `company_name` byte-for-byte — same as Mercury / Buildkite /
+  CircleCI / Ramp Network / Netlify (Spec 054 § 10 D-09).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned **between** `PlaidModule` and `RampNetworkModule` since
+  `Plaid` < `Postman` < `Ramp` lexically), `tsconfig.base.json`
+  paths, and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/postman.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `postman-`, `site === Site.POSTMAN`, `companyName ===
+  'Postman'`, location, department, isRemote, description with
+  numeric entity (`&#39;`) decoded to apostrophe, named entity
+  (`&quot;`) decoded, double-encoded ampersand entity (`&amp;amp;`)
+  partial-decoded, and `<p>`/`<strong>`/`<div>` tags stripped after
+  the decode pass), `resultsWanted=1` cap, `searchTerm` filter on
+  title (case-insensitive `'DANISH'` matches `'Danish Speaking'`),
+  `searchTerm` filter on department name (case-insensitive
+  `'sales'` matches both fixture rows in the `Sales` department),
+  HTTP 500 → empty response, and empty `data.jobs` → empty response.
+  The happy-path test asserts the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/postman/jobs?content=true`
+  and pins **six** regression guards: (a) the variant-2 wire-shape
+  `https://job-boards.greenhouse.io/postman/jobs/<id>`
+  `absolute_url` flows through to `jobUrl` byte-for-byte (D-04),
+  (b) the emitted `jobUrl` contains the literal
+  `job-boards.greenhouse.io` substring AND does NOT contain the
+  EU-region `job-boards.eu.greenhouse.io` substring (US-region-
+  subdomain lock — D-04), (c) the cleaned description does NOT
+  contain literal `&lt;` (decode-pass ran), `&quot;` (named-entity
+  decode ran), `&#39;` (numeric-entity decode ran), `<p>` /
+  `<strong>` / `<div>` (strip-pass ran after the decode), (d) the
+  emitted `companyName` is the brand name `'Postman'` AND matches
+  the wire `company_name` byte-for-byte (D-09), (e) the cleaned
+  description contains substrings from BOTH the content-intro
+  section (`'Who Are We?'`, `"world's leading API platform"`) AND
+  the role-specific body (`'The Opportunity'`, `'Account Development
+  Representative'`, `'pipeline for the sales organization'`) so
+  the decode-then-strip-pass-through is a complete-document
+  operation (D-11 first-instance content-intro pass-through guard),
+  and (f) the second listing's description contains the role-
+  specific text `'Danish-speaking'` and `'Nordic region'` proving
+  that the entity-decode-then-tag-strip pipeline applies to every
+  fixture row, not just the first. Fixture
+  `__tests__/fixtures/postman-jobs.json` is committed JSON exercising
+  both an Account Development Representative role in San Francisco
+  (touching Postman Workspaces, Postman Collections, Postman Mock
+  Servers, Postman Monitors, Postman Flows, Postman API Network,
+  Postman Public Workspaces, Postman Governance, and Postman
+  Enterprise product lines plus the standard "Who Are We?"
+  content-intro recruiter blurb in its description, with numeric
+  (`&#39;`), double-encoded ampersand (`&amp;amp;`), and double-
+  encoded em-dash (`&amp;mdash;`) entities exercising the entity-
+  decode-then-tag-strip pipeline) and a Danish-speaking ADR role
+  in London/Remote-UK (also with the content-intro wrapper plus
+  numeric (`&#39;`) and double-encoded ampersand (`&amp;amp;`)
+  entities).
+- **T05:** Doc updates — added a `shipped` row for Postman in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog. Index Spec 054 row
+  added under Spec 053; this `docs/log.md` entry appended at top.
+
+**Test verification:**
+
+- `npx jest packages/plugins/source-company-postman --colors=false` → **8/8 passed in 9.080 s**.
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 7.180 s** (helpers regression intact).
+
+**Catalogue head-count after run #264:**
+
+- 43 Greenhouse-backed company-direct plugins (Anthropic, Databricks,
+  Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit, Pinterest,
+  Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio, Cloudflare,
+  MongoDB, Datadog, Instacart, Dropbox, Roblox, Block, Vercel, Affirm,
+  Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite, CircleCI,
+  Ramp Network, Netlify, **Postman** + Stripe + Cursor + Amazon +
+  Apple + Google + IBM + Meta + OpenAI). 7 distinct wire-shape variants
+  in the cohort: legacy `boards.greenhouse.io/<slug>/jobs/<id>` (31
+  plugins, Block-and-earlier), new
+  `job-boards.greenhouse.io/<slug>/jobs/<id>` (Vercel + Affirm + Gusto
+  + Mercury + Buildkite + Netlify + **Postman** — variant 2; **7
+  plugins**), apex marketing-site query-param-only
+  `www.<company>.com/careers/jobs?gh_jid=<id>` (Klaviyo — variant 3),
+  careers-subdomain marketing-site path-AND-query
+  `careers.<company>.com/jobs/<id>?gh_jid=<id>` (Duolingo — variant 4),
+  apex-www marketing-site path-AND-query
+  `www.<company>.com/careers/<id>?gh_jid=<id>` (Brex — variant 5),
+  EU-region permalink subdomain
+  `job-boards.eu.greenhouse.io/<slug>/jobs/<id>` (Ramp Network —
+  variant 6), and apex-www marketing-site, HTTP-scheme, path-with-
+  `jobs`-segment-and-trailing-slash-and-query
+  `http://www.<company>.com/careers/jobs/<id>/?gh_jid=<id>` (CircleCI
+  — variant 7). 10 plugins use the entity-decode-then-tag-strip
+  description pipeline (Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, CircleCI, Ramp Network, Netlify, **Postman**). 2 plugins
+  apply a wire-title trim (Brex, Buildkite — Postman does **not**).
+  2 plugins apply a brand-name pin cleaning a wire `company_name`
+  legal-entity suffix (Affirm, Gusto); Mercury, Buildkite, CircleCI,
+  Ramp Network, Netlify, and Postman's brand-name pins match the
+  wire byte-for-byte (no legal-entity suffix to clean). 2 plugins
+  use embedded-acronym PascalCase preserving trademark casing in
+  class names (`OpenAIService`, `CircleCIService`); other initialism
+  brands like IBM use sentence-case (`IbmService` / `IbmModule`). 1
+  plugin pins a multi-word brand-name string literal containing an
+  inter-word ASCII space — Ramp Network. 1 plugin ships a fixture
+  with an ampersand-bearing department name — Netlify. **1 plugin
+  ships a fixture exercising the `<div class="content-intro">`
+  recruiter-blurb wrapper pass-through — Postman**, the brand-new
+  first-instance.
+
+**Notes:**
+
+- Run #264 selected Postman from the carry-over named-candidate
+  pool from Spec 050's nine-200 probe sweep as the alphabetically-
+  next remaining live bite. The remaining three candidates (Toast,
+  Webflow, ZoomInfo) plus the HubSpot re-probe queue up for
+  runs #265+. Toast (variant 8 — careers-subdomain on a sub-brand
+  `toasttab.com`, ~332 jobs) is the most structurally novel of the
+  three remaining, so it's a prime candidate for run #265 if a
+  variant-novelty preference holds.
+- The `&amp;amp;` (double-encoded ampersand entity) wire form
+  observed in the Postman fixture decodes only partially through the
+  single-pass `decodeHtmlEntities()` helper — result is a literal
+  `&amp;` in the final cleaned description. The unit test does NOT
+  assert `description.not.toContain('&amp;')` because the partial-
+  decode is the actual current helper behaviour (same observation
+  as Netlify run #263). A future spec could add an idempotent
+  multi-pass decoder, but that's a Spec 014 / 015 helpers concern,
+  not a plugin-level concern.
+- The content-intro `<div class="content-intro">` wrapper is a
+  standard Greenhouse template feature observed across multiple
+  tenants. The plugin does not strip it as a per-source filter
+  because the existing `stripHtmlTags()` helper already neutralises
+  the wrapping `<div>` and `<h2>` tags, and the surviving prose is
+  semantically part of the listing's natural job-description body.
+  A future spec could introduce a generic Greenhouse content-intro
+  stripper across multiple tenants, but that would be a `@ever-jobs/
+  common` helpers concern, not a plugin-level concern.
+
+---
+
 ## 2026-05-02 — Scheduled run #263 (Spec 053 closed end-to-end; new `source-company-netlify` plugin shipped — 8 unit tests green in 10.252 s; helpers regression 77/77 still green in 8.095 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 42nd Greenhouse-backed company-direct plugin in the catalogue and the **sixth** to use wire-shape variant 2 — the US-region permalink subdomain shape `https://job-boards.greenhouse.io/<slug>/jobs/<id>` — after Vercel, Affirm, Gusto, Mercury, and Buildkite; the **ninth** to use the entity-decode-then-tag-strip description pipeline; and the **first plugin in the cohort to ship a fixture with an ampersand-bearing department name** (`R&D` and `G&A` — both pinned byte-for-byte through the case-insensitive search-term filter regression guard))
 
 **Scope:** Run #263 continues the user-owner-directed concrete-action

@@ -118,6 +118,7 @@
 | 051 | [Source Company Plugin: CircleCI](../.specify/specs/051-source-company-circleci/spec.md) — [plan](../.specify/specs/051-source-company-circleci/plan.md) — [tasks](../.specify/specs/051-source-company-circleci/tasks.md) | All phases done (T01..T05 run #261); spec complete |
 | 052 | [Source Company Plugin: Ramp Network](../.specify/specs/052-source-company-rampnetwork/spec.md) — [plan](../.specify/specs/052-source-company-rampnetwork/plan.md) — [tasks](../.specify/specs/052-source-company-rampnetwork/tasks.md) | All phases done (T01..T05 run #262); spec complete |
 | 053 | [Source Company Plugin: Netlify](../.specify/specs/053-source-company-netlify/spec.md) — [plan](../.specify/specs/053-source-company-netlify/plan.md) — [tasks](../.specify/specs/053-source-company-netlify/tasks.md) | All phases done (T01..T05 run #263); spec complete |
+| 054 | [Source Company Plugin: Postman](../.specify/specs/054-source-company-postman/spec.md) — [plan](../.specify/specs/054-source-company-postman/plan.md) — [tasks](../.specify/specs/054-source-company-postman/tasks.md) | All phases done (T01..T05 run #264); spec complete |
 
 ## 8. Templates
 
