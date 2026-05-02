@@ -184,6 +184,22 @@ probe.
   run #251. Tracked in `competitor-watch.md` (parent dir, outside
   this repo).
 
+**Post-CI fix (commit `878b0ef`):** Run #252's first push (commit
+`8642866`) had all six CI jobs green *except* **Docker Build**, which
+failed in 35 s during `npm ci` because `node-gyp` couldn't find
+`python3` to compile `better-sqlite3`. The previous run #251 / commit
+`7437166` had built Docker green in 1 m 37 s an hour earlier with
+the identical `package*.json` manifests, so the failure is purely
+environmental — `node:20-alpine` upstream rolled out a base-image
+variant that no longer ships `python3` by default. Fixed by adding
+`apk add --no-cache python3 make g++ libc-dev` to the Dockerfile's
+builder stage (the toolchain stays in the builder only — the runtime
+stage already copies prebuilt `node_modules` from the builder, so
+the final image stays slim). Subsequent CI run on commit `878b0ef`
+is fully green: Build & Type-Check 1 m 3 s · Docs Lint 47 s · E2E
+4 m 8 s · Docker Build 1 m 32 s · Health & Smoke 53 s · Source
+Scrapers 6 m 30 s.
+
 ---
 
 ## 2026-05-02 — Scheduled run #251 (Spec 041 closed end-to-end; new `source-company-roblox` plugin shipped — 8 unit tests green in 8.634 s; helpers regression 77/77 still green in 6.867 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 30th Greenhouse-backed company-direct plugin in the catalogue)
