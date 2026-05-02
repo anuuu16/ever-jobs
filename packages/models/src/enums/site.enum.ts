@@ -250,6 +250,8 @@ export enum Site {
   BREX = 'brex',
   // Phase 58: Spec 048 — Source Company Plugin: Gusto
   GUSTO = 'gusto',
+  // Phase 59: Spec 049 — Source Company Plugin: Mercury
+  MERCURY = 'mercury',
 }
 
 /**

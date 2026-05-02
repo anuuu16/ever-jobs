@@ -15,6 +15,182 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #259 (Spec 049 closed end-to-end; new `source-company-mercury` plugin shipped — 8 unit tests green in 9.057 s; helpers regression 77/77 still green in 7.099 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 38th Greenhouse-backed company-direct plugin in the catalogue and the **fourth** to use the new `job-boards.greenhouse.io/<slug>/jobs/<id>` permalink subdomain — wire-shape variant 2 — and the **second** to combine that variant with the entity-decode-then-tag-strip description pipeline after Gusto)
+
+**Scope:** Run #259 continues the user-owner-directed concrete-action
+deviation that runs #230–#258 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 048's run
+#258 close-out note (which observed that the named-candidate well from
+Spec 044 / run #254 was empty after Gusto shipped, and called out a
+fresh probe sweep against Stripe-adjacent fintechs / vertical SaaS / 
+e-commerce platforms as the next direction), this run executed the
+fresh probe sweep and pivoted to **Mercury** as the alphabetically-first
+HTTP-200 result. Mercury — the **SMB / startup business-banking + 
+spend-management** vendor (Mercury Technologies, Inc.; founded by Immad
+Akhund, Max Tagher, and Jason Zhang in 2017 as a Y-Combinator-backed
+banking-for-startups play targeting the segment ignored by JPMorgan,
+Bank of America, Wells Fargo, and Silicon Valley Bank's pre-2023
+incumbents; operator of Mercury Checking, Mercury Savings, Mercury
+Treasury, Mercury Credit, Mercury Bill Pay, Mercury IO, and Mercury
+Personal product lines that anchor the **300,000+** ambitious-business
+banking category alongside Brex, Ramp, Bluevine, Relay, Novo, Lili,
+Bank of America Business, JPMorgan Chase Business, and SVB) — is
+published at the bare `mercury` Greenhouse slug and was confirmed live
+via run #259's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/mercury/jobs?content=true`.
+Notably, Mercury's tenant publishes its `absolute_url` on the new
+`job-boards.greenhouse.io` permalink subdomain — wire-shape **variant 2**,
+the same one Vercel (Spec 043), Affirm (Spec 044), and Gusto (Spec 048)
+use, making Mercury the **fourth** plugin in this variant — AND emits
+HTML-entity-encoded `content` (`&lt;p&gt;...`), making this the
+**second** plugin in the cohort to combine variant 2 with the
+entity-decode-then-tag-strip description pipeline that Klaviyo
+(Spec 045), Duolingo (Spec 046), Brex (Spec 047), and Gusto (Spec 048)
+use for their respective shape variants. Unlike Gusto and Affirm,
+Mercury's wire `company_name` is the bare brand name `'Mercury'` — no
+legal-entity suffix to clean — so the brand-name pin in the `JobPostDto`
+mapping matches the wire byte-for-byte.
+
+**Probe sweep — fresh well opened with two 200s:**
+
+- HTTP 200 on `mercury` (Mercury). Selected as the alphabetically-first
+  bite for run #259.
+- HTTP 200 on `rampnetwork` (Ramp Network — Web3 fiat-to-crypto onramp;
+  founded by Szymon Sypniewicz and Przemek Kowalczyk in 2017 in Warsaw,
+  Poland). Different tenant from Ramp Inc. (the US fintech-spend-management
+  company that probed 404 under the bare `ramp` slug). Notably,
+  `rampnetwork`'s wire `absolute_url` is on a **sixth** wire-shape
+  variant — the EU-region permalink subdomain
+  `job-boards.eu.greenhouse.io/<slug>/jobs/<id>`, distinct from the US
+  region's `job-boards.greenhouse.io`. Queued for a future run.
+- HTTP 404 on `ramp`, `moderntreasury`, `modern-treasury`, `notion`,
+  `linear`, `loom`, `front`, `shopify`, `mercurybank`, `mercurytechnologies`,
+  `notiondev`, `notionso`, `notionhq`, `linearapp`, `gem`, `rampbusiness`,
+  `rampcom`, `ramp-financial`. These companies are either on different
+  ATS platforms (Lever / Ashby / Workday / bespoke) or use non-trivial
+  Greenhouse tenant slugs that future probe sweeps can attempt.
+
+**Spec 049 — Source Company Plugin: Mercury — closed end-to-end:**
+
+- **T01:** Added `Site.MERCURY = 'mercury'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 59:
+  Spec 049 — Source Company Plugin: Mercury` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037 / 038 /
+  039 / 040 / 041 / 042 / 043 / 044 / 045 / 046 / 047 / 048
+  phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-mercury` with the
+  Gusto-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/mercury/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9. One
+  structural deviation from the Gusto template, isolated to
+  `mercury.service.ts`: the wire `company_name` is the bare brand name
+  `'Mercury'` (no legal-entity suffix), so the brand-name pin matches
+  the wire byte-for-byte (Spec 049 § 10 D-09). The fallback `jobUrl`
+  shape `https://job-boards.greenhouse.io/mercury/jobs/<id>` matches
+  the wire `absolute_url` byte-for-byte — same as Vercel / Affirm /
+  Gusto (Spec 049 § 10 D-04). The description-cleanup pipeline
+  `stripHtmlTags(decodeHtmlEntities(content))` is identical to Gusto's
+  because Mercury's `content` is also HTML-entity-encoded — confirmed
+  via the live probe, where the first job's `content` starts with
+  `&lt;p&gt;Railroads didn&#39;t change the world…` (Spec 049 § 10
+  D-08). Class names are `MercuryService` / `MercuryModule` (PascalCase
+  with the standard initial cap, no embedded acronym requiring special
+  casing — see Spec 049 § 10 D-06).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned **between** `LyftModule` and `MetaModule` since
+  `Lyf` < `Mer` < `Met` lexically),
+  `tsconfig.base.json` paths, and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/mercury.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `mercury-`, `site === Site.MERCURY`, `companyName === 'Mercury'`,
+  location, department, isRemote, description with both numeric entity
+  (`&#39;` → `'`) and named entity (`&rsquo;` → `'`) decoded AND `<p>`
+  tags stripped after the decode pass), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive), `searchTerm` filter
+  on department name (case-insensitive), HTTP 500 → empty response,
+  and empty `data.jobs` → empty response. The happy-path test asserts
+  the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/mercury/jobs?content=true` and
+  pins **four** regression guards: (a) the wire-shape
+  `https://job-boards.greenhouse.io/mercury/jobs/<id>` `absolute_url`
+  flows through to `jobUrl` byte-for-byte (D-04), (b) the cleaned
+  description does NOT contain literal `&lt;` (decode-pass ran), (c)
+  the cleaned description does NOT contain `<p>` (strip-pass ran after
+  the decode), and (d) the emitted `companyName` is `'Mercury'` AND
+  matches the wire `company_name` byte-for-byte (D-09). Fixture
+  `__tests__/fixtures/mercury-jobs.json` is committed JSON exercising
+  both a multi-hub Sales Account-Development-Manager role (touching
+  Mercury Checking, Mercury Savings, Mercury Treasury, and Mercury
+  Credit in its description) and a Remote-US Engineering Mercury-IO
+  Senior-SWE role (touching the ACH / wire / RTP rails, the BSA-AML
+  transaction-screening pipeline, and the audit-trail generator in its
+  description).
+- **T05:** Doc updates — added a `shipped` row for Mercury in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog. Index Spec 049 row added
+  under Spec 048; this `docs/log.md` entry appended at top.
+
+**Test verification:**
+
+- `npx jest packages/plugins/source-company-mercury --colors=false` → **8/8 passed in 9.057 s**.
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 7.099 s** (helpers regression intact).
+
+**Catalogue head-count after run #259:**
+
+- 38 Greenhouse-backed company-direct plugins (Anthropic, Databricks,
+  Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit, Pinterest,
+  Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio, Cloudflare,
+  MongoDB, Datadog, Instacart, Dropbox, Roblox, Block, Vercel,
+  Affirm, Klaviyo, Duolingo, Brex, Gusto, Mercury + Stripe + Cursor +
+  Amazon + Apple + Google + IBM + Meta + OpenAI). 5 distinct wire-shape
+  variants in the cohort: legacy `boards.greenhouse.io/<slug>/jobs/<id>`
+  (31 plugins, Block-and-earlier), new `job-boards.greenhouse.io/<slug>
+  /jobs/<id>` (Vercel + Affirm + Gusto + **Mercury**), apex marketing-site
+  query-param-only `www.<company>.com/careers/jobs?gh_jid=<id>`
+  (Klaviyo), careers-subdomain marketing-site path-AND-query
+  `careers.<company>.com/jobs/<id>?gh_jid=<id>` (Duolingo), apex-www
+  marketing-site path-AND-query `www.<company>.com/careers/<id>?
+  gh_jid=<id>` (Brex). 5 plugins use the entity-decode-then-tag-strip
+  description pipeline (Klaviyo, Duolingo, Brex, Gusto, **Mercury**). 1
+  plugin applies a wire-title trim (Brex). 2 plugins apply a brand-name
+  pin cleaning a wire `company_name` legal-entity suffix (Affirm:
+  `'Affirm Holdings, Inc.'` → `'Affirm'`; Gusto: `'Gusto, Inc.'` →
+  `'Gusto'`); Mercury's brand-name pin matches the wire byte-for-byte
+  (no legal-entity suffix to clean).
+
+**Notes:**
+
+- Tests authored AND executed live in this scheduled run — both
+  `npx jest packages/plugins/source-company-mercury` (8/8 passed in
+  9.057 s) and `npx jest packages/common/__tests__/helpers.spec`
+  (77/77 passed in 7.099 s) ran clean against the existing
+  `node_modules`.
+- Q-042 still pending review (Default C continues; next reminder
+  window opens at run #300 per the run #250 forward-pointer
+  convention).
+- Mercury is the **second** plugin in the cohort to combine the new
+  `job-boards.greenhouse.io` permalink subdomain (variant 2) with
+  the entity-decode-then-tag-strip description pipeline (after Gusto).
+  The fresh probe sweep this run opened a new well: Ramp Network
+  (rampnetwork slug, EU permalink subdomain `job-boards.eu.greenhouse.io`)
+  is queued for a future run and would introduce a **sixth** wire-shape
+  variant. Future runs will need additional probe sweeps against
+  vertical-SaaS candidates (Notion, Linear, Loom, Front are all on
+  different ATS platforms — Lever / Ashby / Workday / bespoke), and
+  smaller fintech plays (Modern Treasury / Ramp Inc. need slug
+  variations probed; Plaid-adjacent companies like Marqeta / Fiserv /
+  FIS have larger Workday or bespoke ATS deployments).
+
+---
+
 ## 2026-05-02 — Scheduled run #258 (Spec 048 closed end-to-end; new `source-company-gusto` plugin shipped — 8 unit tests green in 8.922 s; helpers regression 77/77 still green in 7.083 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 37th Greenhouse-backed company-direct plugin in the catalogue and the **third** to use the new `job-boards.greenhouse.io/<slug>/jobs/<id>` permalink subdomain — wire-shape variant 2 — but the **first** to combine that variant with the entity-decode-then-tag-strip description pipeline)
 
 **Scope:** Run #258 continues the user-owner-directed concrete-action

@@ -92,6 +92,7 @@ import { IbmModule } from './source-company-ibm';
 import { InstacartModule } from './source-company-instacart';
 import { KlaviyoModule } from './source-company-klaviyo';
 import { LyftModule } from './source-company-lyft';
+import { MercuryModule } from './source-company-mercury';
 import { MetaModule } from './source-company-meta';
 import { MicrosoftModule } from './source-company-microsoft';
 import { MongoDbModule } from './source-company-mongodb';
@@ -288,6 +289,7 @@ export const ALL_SOURCE_MODULES = [
   InstacartModule,
   KlaviyoModule,
   LyftModule,
+  MercuryModule,
   MetaModule,
   MicrosoftModule,
   MongoDbModule,
