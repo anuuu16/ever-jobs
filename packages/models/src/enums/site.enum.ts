@@ -262,6 +262,8 @@ export enum Site {
   NETLIFY = 'netlify',
   // Phase 64: Spec 054 — Source Company Plugin: Postman
   POSTMAN = 'postman',
+  // Phase 65: Spec 055 — Source Company Plugin: Toast
+  TOAST = 'toast',
 }
 
 /**

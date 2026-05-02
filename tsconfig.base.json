@@ -123,6 +123,7 @@
       "@ever-jobs/source-company-rampnetwork": ["packages/plugins/source-company-rampnetwork/src/index.ts"],
       "@ever-jobs/source-company-netlify": ["packages/plugins/source-company-netlify/src/index.ts"],
       "@ever-jobs/source-company-postman": ["packages/plugins/source-company-postman/src/index.ts"],
+      "@ever-jobs/source-company-toast": ["packages/plugins/source-company-toast/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],

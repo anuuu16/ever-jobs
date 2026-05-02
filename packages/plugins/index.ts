@@ -111,6 +111,7 @@ import { RobinhoodModule } from './source-company-robinhood';
 import { RobloxModule } from './source-company-roblox';
 import { StripeModule } from './source-company-stripe';
 import { TikTokModule } from './source-company-tiktok';
+import { ToastModule } from './source-company-toast';
 import { TwilioModule } from './source-company-twilio';
 import { TwitchModule } from './source-company-twitch';
 import { UberModule } from './source-company-uber';
@@ -313,6 +314,7 @@ export const ALL_SOURCE_MODULES = [
   RobloxModule,
   StripeModule,
   TikTokModule,
+  ToastModule,
   TwilioModule,
   TwitchModule,
   UberModule,

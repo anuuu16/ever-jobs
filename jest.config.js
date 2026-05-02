@@ -108,6 +108,7 @@ module.exports = {
     '^@ever-jobs/source-company-rampnetwork$': '<rootDir>/packages/plugins/source-company-rampnetwork/src/index.ts',
     '^@ever-jobs/source-company-netlify$': '<rootDir>/packages/plugins/source-company-netlify/src/index.ts',
     '^@ever-jobs/source-company-postman$': '<rootDir>/packages/plugins/source-company-postman/src/index.ts',
+    '^@ever-jobs/source-company-toast$': '<rootDir>/packages/plugins/source-company-toast/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',

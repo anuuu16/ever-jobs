@@ -15,6 +15,262 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #265 (Spec 055 closed end-to-end; new `source-company-toast` plugin shipped — 8 unit tests green in 10.284 s; helpers regression 77/77 still green in 8.228 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 44th Greenhouse-backed company-direct plugin in the catalogue and the **first** to use wire-shape **variant 8** — the careers-subdomain marketing-site shape on a sub-brand product domain `https://careers.toasttab.com/jobs?gh_jid=<id>` (the first plugin in the cohort to publish on a sub-brand product domain `toasttab.com` rather than the slug-name brand domain `toast.com`); the **eleventh** to use the entity-decode-then-tag-strip description pipeline; and the **first plugin in the cohort to ship a fixture with colon-separated nested-path department names with spaced ampersands** — `'Sales : International : Horizon 2'`, `'Sales : Sales Acceleration'` — that the entity-decode-then-tag-strip pipeline pass-through preserves byte-for-byte through to the emitted `JobPostDto.department` field)
+
+**Scope:** Run #265 continues the user-owner-directed concrete-action
+deviation that runs #230–#264 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 054's run
+#264 close-out note (which queued **Toast** as the alphabetically-next
+remaining live bite from the carry-over named-candidate pool, plus
+**Webflow**, **ZoomInfo**, and a HubSpot re-probe), this run takes
+Toast directly: the Greenhouse public API was probed at run-265 start;
+Toast returned HTTP 200 with 332 open roles and was selected as the
+alphabetically-next bite (`toa` < `web` < `zoo`). The HubSpot re-probe
+was skipped this run because Spec 052 already established the
+`meta.total === 0` deferral and the live tenant has shown no signs of
+re-opening roles in the 0–3-hour window between run #264 and run #265.
+
+Toast, Inc. — the **dominant restaurant point-of-sale and management
+platform** vendor (founded by Steve Fredette, Aman Narang, and Jonathan
+Grimm in 2011 in Cambridge, Massachusetts, now headquartered in Boston
+with engineering, product, sales, and customer-success offices across
+the United States, Ireland, India, and Australia; operator of the Toast
+POS (the restaurant-grade point-of-sale terminal flagship), Toast Online
+Ordering (the direct-channel website ordering surface), Toast Delivery
+Services (the in-house delivery dispatch product), Toast Mobile Order &
+Pay (the QR-code in-restaurant ordering surface), Toast Payroll (the
+restaurant-payroll product acquired through StratEx in 2019), Toast
+Capital (the merchant-cash-advance product), Toast Now (the COVID-era
+direct-to-consumer marketing suite), Toast Pickup & Delivery (the
+multi-location dispatch product), Toast Catering & Events (the
+catering-order product), Toast Gift Cards (the loyalty-and-gifting
+product), Toast Loyalty (the rewards product), and Toast Marketing (the
+email/SMS marketing product) lines that anchor the restaurant-tech
+category alongside Square for Restaurants, Clover, Lightspeed
+Restaurant, TouchBistro, and Revel Systems) — is published at the bare
+`toast` Greenhouse slug (the lowercase slug-name brand) and was
+confirmed live via run #265's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/toast/jobs?content=true` (332 open
+roles returned at probe time across Sales, R&D Engineering, R&D Product,
+Customer Success, COGS, and G&A departments — Boston / Chicago /
+Dublin / Bengaluru / Sydney / Melbourne / remote-US/Canada/Ireland/
+India/Australia placements). Notably, Toast's tenant publishes its
+`absolute_url` on **variant 8** (the careers-subdomain marketing-site
+shape on a sub-brand product domain
+`https://careers.toasttab.com/jobs?gh_jid=<id>`) — making this the
+**first plugin in the cohort to use a sub-brand product domain**
+(`toasttab.com`, the operating product domain) rather than the
+slug-name brand domain (`toast.com`). The variant-8 shape is
+structurally similar to Klaviyo's variant 3
+(`www.<company>.com/careers/jobs?gh_jid=<id>` — apex-www marketing-site,
+query-param-only) in that both use the marketing site as the proxy and
+identify the listing through the `gh_jid` query parameter alone (no
+`<id>` in the path), but variant 8 uses the
+`careers.<sub-brand>.com` careers-subdomain shape rather than the
+`www.<company>.com/careers` apex-www-with-careers-path shape, AND
+variant 8 publishes on a sub-brand product domain rather than the
+slug-name brand domain. Like every plugin from Klaviyo onwards
+(Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite, CircleCI, Ramp
+Network, Netlify, Postman), Toast's `content` is HTML-entity-encoded
+(`&lt;p&gt;Our mission is to empower the global restaurant
+community...`) and uses the entity-decode-then-tag-strip pipeline
+(Spec 055 § 10 D-08) — making this the **eleventh** plugin to use that
+pipeline. Unlike every prior cohort plugin, Toast's wire department
+names use a colon-separated nested-path format with **spaced
+ampersands** in the category names (e.g. `'Sales : International :
+Horizon 2'`, `'R & D : Engineering : Retail'`, `'G & A : Finance GL
+Accounting'`, `'COGS : Services COGS : International Horizon 2'`,
+`'Customer Success : Customer Care : POS'`) — making this the **first
+plugin in the cohort to ship a fixture with colon-separated nested-path
+department names** (D-11). The plugin emits the wire path byte-for-byte
+(no leaf extraction, no ampersand normalisation); consumers wanting the
+leaf department segment can split on `' : '` themselves. Class names
+are `ToastService` / `ToastModule` (PascalCase splitting on the
+single-word brand name; D-06).
+
+**Spec 055 — Source Company Plugin: Toast — closed end-to-end:**
+
+- **T01:** Added `Site.TOAST = 'toast'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 65:
+  Spec 055 — Source Company Plugin: Toast` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037 / 038 /
+  039 / 040 / 041 / 042 / 043 / 044 / 045 / 046 / 047 / 048 / 049 /
+  050 / 051 / 052 / 053 / 054 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-toast` with the
+  Postman-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/toast/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9. **One
+  structural deviation from the Postman template** — the fallback
+  `jobUrl` shape mirrors the wire `absolute_url` byte-for-byte —
+  `https://careers.toasttab.com/jobs?gh_jid=${listing.id}` with the
+  variant-8 sub-brand product-domain careers subdomain (Spec 055 § 10
+  D-04). The description-cleanup pipeline
+  `stripHtmlTags(decodeHtmlEntities(content))` is identical to
+  Postman's because Toast's `content` is also HTML-entity-encoded
+  (Spec 055 § 10 D-08). The brand-name pin `'Toast'` matches the
+  wire `company_name` byte-for-byte — same as Postman / Netlify /
+  Mercury / Buildkite / CircleCI / Ramp Network (Spec 055 § 10 D-09).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned **between** `TikTokModule` and `TwilioModule` since
+  `Tiktok` < `Toast` < `Twilio` lexically), `tsconfig.base.json`
+  paths, and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/toast.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `toast-`, `site === Site.TOAST`, `companyName === 'Toast'`,
+  location, department (colon-separated nested path), isRemote,
+  description with numeric entity (`&#39;`) decoded to apostrophe,
+  named entity (`&amp;nbsp;`) decoded, double-encoded ampersand entity
+  (`&amp;amp;`) partial-decoded, and `<p>`/`<strong>`/`<em>` tags
+  stripped after the decode pass), `resultsWanted=1` cap, `searchTerm`
+  filter on title (case-insensitive `'MANDARIN'` matches `'Mandarin'`),
+  `searchTerm` filter on department name (case-insensitive `'horizon'`
+  matches the literal `'Horizon 2'` leaf segment in the first listing's
+  colon-separated nested-path department `'Sales : International :
+  Horizon 2'` — D-11 case-insensitive nested-path-search regression
+  guard), HTTP 500 → empty response, and empty `data.jobs` → empty
+  response. The happy-path test asserts the called URL string is
+  exactly `https://api.greenhouse.io/v1/boards/toast/jobs?content=true`
+  and pins **six** regression guards: (a) the variant-8 wire-shape
+  `https://careers.toasttab.com/jobs?gh_jid=<id>` `absolute_url` flows
+  through to `jobUrl` byte-for-byte (D-04), (b) the emitted `jobUrl`
+  contains the literal `careers.toasttab.com` substring AND the
+  literal `?gh_jid=` substring AND does NOT contain
+  `job-boards.greenhouse.io` (variant-8 sub-brand-domain lock — D-04),
+  (c) the cleaned description does NOT contain literal `&lt;` (decode-
+  pass ran), `&amp;nbsp;` (named-entity decode ran), `&#39;` (numeric-
+  entity decode ran), `<p>` / `<strong>` / `<em>` (strip-pass ran
+  after the decode), (d) the emitted `companyName` is the brand name
+  `'Toast'` AND matches the wire `company_name` byte-for-byte (D-09),
+  (e) the emitted `department` for the first listing is the
+  colon-separated nested path `'Sales : International : Horizon 2'`
+  byte-for-byte AND the wire `departments[0].name` is `'Sales :
+  International : Horizon 2'` byte-for-byte (D-11 first-instance
+  guard for the colon-separated nested-path pass-through), and (f)
+  the emitted `department` for the second listing is `'Sales : Sales
+  Acceleration'` byte-for-byte (different leaf, same Sales root,
+  exercising the path diversity). Fixture
+  `__tests__/fixtures/toast-jobs.json` is committed JSON exercising
+  both an Account Executive role in Melbourne (touching Toast POS,
+  Toast Online Ordering, Toast Mobile Order & Pay, Toast Payroll,
+  Toast Capital, and Toast Catering & Events product lines plus the
+  `'Sales : International : Horizon 2'` colon-nested department, with
+  numeric (`&#39;`), named (`&amp;nbsp;`), and double-encoded
+  ampersand (`&amp;amp;`) entities exercising the entity-decode-then-
+  tag-strip pipeline) and a Bilingual BDR role in Remote-US/PST
+  (touching Toast Pickup & Delivery and Toast Online Ordering plus the
+  `'Sales : Sales Acceleration'` colon-nested department, with numeric
+  (`&#39;`), named (`&amp;nbsp;`), and double-encoded ampersand
+  (`&amp;amp;`) entities).
+- **T05:** Doc updates — added a `shipped` row for Toast in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog. Index Spec 055 row
+  added under Spec 054; this `docs/log.md` entry appended at top.
+
+**Test verification:**
+
+- `npx jest packages/plugins/source-company-toast --colors=false` → **8/8 passed in 10.284 s**.
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 8.228 s** (helpers regression intact).
+
+**Catalogue head-count after run #265:**
+
+- 44 Greenhouse-backed company-direct plugins (Anthropic, Databricks,
+  Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit, Pinterest,
+  Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio, Cloudflare,
+  MongoDB, Datadog, Instacart, Dropbox, Roblox, Block, Vercel, Affirm,
+  Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite, CircleCI,
+  Ramp Network, Netlify, Postman, **Toast** + Stripe + Cursor + Amazon
+  + Apple + Google + IBM + Meta + OpenAI). 8 distinct wire-shape
+  variants in the cohort: legacy `boards.greenhouse.io/<slug>/jobs/<id>`
+  (31 plugins, Block-and-earlier), new
+  `job-boards.greenhouse.io/<slug>/jobs/<id>` (Vercel + Affirm + Gusto
+  + Mercury + Buildkite + Netlify + Postman — variant 2; **7 plugins**),
+  apex marketing-site query-param-only
+  `www.<company>.com/careers/jobs?gh_jid=<id>` (Klaviyo — variant 3),
+  careers-subdomain marketing-site path-AND-query
+  `careers.<company>.com/jobs/<id>?gh_jid=<id>` (Duolingo — variant 4),
+  apex-www marketing-site path-AND-query
+  `www.<company>.com/careers/<id>?gh_jid=<id>` (Brex — variant 5),
+  EU-region permalink subdomain
+  `job-boards.eu.greenhouse.io/<slug>/jobs/<id>` (Ramp Network —
+  variant 6), apex-www marketing-site, HTTP-scheme, path-with-`jobs`-
+  segment-and-trailing-slash-and-query
+  `http://www.<company>.com/careers/jobs/<id>/?gh_jid=<id>` (CircleCI —
+  variant 7), and **careers-subdomain on a sub-brand product domain,
+  query-param-only** `https://careers.<sub-brand>.com/jobs?gh_jid=<id>`
+  (**Toast** — variant 8). 11 plugins use the entity-decode-then-tag-
+  strip description pipeline (Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, CircleCI, Ramp Network, Netlify, Postman, **Toast**). 2
+  plugins apply a wire-title trim (Brex, Buildkite — Toast does **not**).
+  2 plugins apply a brand-name pin cleaning a wire `company_name`
+  legal-entity suffix (Affirm, Gusto); Mercury, Buildkite, CircleCI,
+  Ramp Network, Netlify, Postman, and Toast's brand-name pins match
+  the wire byte-for-byte (no legal-entity suffix to clean). 2 plugins
+  use embedded-acronym PascalCase preserving trademark casing in
+  class names (`OpenAIService`, `CircleCIService`); other initialism
+  brands like IBM use sentence-case (`IbmService` / `IbmModule`). 1
+  plugin pins a multi-word brand-name string literal containing an
+  inter-word ASCII space — Ramp Network. 1 plugin ships a fixture
+  with an ampersand-bearing department name — Netlify (`R&D` / `G&A`
+  no-space). **1 plugin ships a fixture with a `<div class="content-
+  intro">` recruiter-blurb wrapper pass-through — Postman**. **1
+  plugin ships a fixture with colon-separated nested-path department
+  names with spaced ampersands — Toast** (`'Sales : International :
+  Horizon 2'`, `'Sales : Sales Acceleration'`), the brand-new
+  first-instance and the **first plugin in the cohort to use a
+  sub-brand product domain** (`toasttab.com` not `toast.com`).
+
+**Notes:**
+
+- Run #265 selected Toast from the carry-over named-candidate pool
+  from Spec 050's nine-200 probe sweep as the alphabetically-next
+  remaining live bite. The remaining two candidates (Webflow,
+  ZoomInfo) plus the HubSpot re-probe queue up for runs #266+.
+  Webflow (variant 2, ~31 jobs) is the structurally-cleanest of the
+  remaining candidates, so it's the prime candidate for run #266 if
+  a variant-cleanliness preference holds; ZoomInfo (variant 3
+  family — apex-www `careers?gh_jid=<id>`, ~82 jobs, with a wire
+  `company_name` `'ZoomInfo Technologies LLC'` legal-entity suffix
+  to clean — first since Affirm / Gusto) is the next-most-structurally-
+  novel.
+- The `&amp;amp;` (double-encoded ampersand entity) wire form
+  observed in the Toast fixture decodes only partially through the
+  single-pass `decodeHtmlEntities()` helper — result is a literal
+  `&amp;` in the final cleaned description. The unit test does NOT
+  assert `description.not.toContain('&amp;')` because the partial-
+  decode is the actual current helper behaviour (same observation
+  as Netlify run #263 and Postman run #264). A future spec could add
+  an idempotent multi-pass decoder, but that's a Spec 014 / 015
+  helpers concern, not a plugin-level concern.
+- The colon-separated nested-path department-name format
+  (`'Sales : International : Horizon 2'`) is a Toast-tenant-specific
+  pattern, not a generic Greenhouse template feature. Other Greenhouse
+  tenants tracked by the cohort use either single-segment department
+  names (e.g. Postman's `'Sales'`, Mercury's `'Engineering'`) or
+  bracketed department-suffix forms. The plugin emits the wire path
+  byte-for-byte rather than splitting on `' : '` — a future spec could
+  introduce a generic colon-path leaf extractor as a `@ever-jobs/
+  common` helper if needed across multiple tenants, but that's a
+  helpers concern, not a plugin-level concern.
+- Toast is the **first plugin in the cohort to use a sub-brand product
+  domain** (`toasttab.com`, the operating product domain pre-dating
+  the corporate-brand consolidation onto `toast.com`). The fallback
+  `jobUrl` shape pins the sub-brand domain to maintain byte-for-byte
+  consistency with the wire `absolute_url`; consumers wanting the
+  corporate-brand domain alias can rewrite themselves. A future spec
+  could introduce a generic sub-brand-to-corporate-brand domain
+  rewriter as a `@ever-jobs/common` helper if needed across multiple
+  tenants, but that's a helpers concern, not a plugin-level concern.
+
+---
+
 ## 2026-05-02 — Scheduled run #264 (Spec 054 closed end-to-end; new `source-company-postman` plugin shipped — 8 unit tests green in 9.080 s; helpers regression 77/77 still green in 7.180 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 43rd Greenhouse-backed company-direct plugin in the catalogue and the **seventh** to use wire-shape variant 2 — the US-region permalink subdomain shape `https://job-boards.greenhouse.io/<slug>/jobs/<id>` — after Vercel, Affirm, Gusto, Mercury, Buildkite, and Netlify; the **tenth** to use the entity-decode-then-tag-strip description pipeline; and the **first plugin in the cohort to ship a fixture exercising the `<div class="content-intro">` recruiter-blurb wrapper** that begins every Postman wire `content` payload (after entity decoding) and which the entity-decode-then-tag-strip pipeline neutralises into clean prose without a per-source content-intro filter)
 
 **Scope:** Run #264 continues the user-owner-directed concrete-action
