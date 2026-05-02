@@ -15,6 +15,234 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #266 (Spec 056 closed end-to-end; new `source-company-webflow` plugin shipped — 8 unit tests green in 15.792 s; helpers regression 77/77 still green in 12.52 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 45th Greenhouse-backed company-direct plugin in the catalogue and the **eighth** to use wire-shape variant 2 — the US-region permalink subdomain shape `https://job-boards.greenhouse.io/<slug>/jobs/<id>` — after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, and Postman; the **twelfth** to use the entity-decode-then-tag-strip description pipeline; and the **first plugin in the cohort to ship a fixture with semicolon-separated multi-region location names with parenthesised province/state restrictions** — `'CA Remote (BC & ON only); U.K. / Ireland Remote; U.S. Remote'` — that the location pass-through preserves byte-for-byte through to the emitted `JobPostDto.location.city` field)
+
+**Scope:** Run #266 continues the user-owner-directed concrete-action
+deviation that runs #230–#265 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 055's run
+#265 close-out note (which queued **Webflow** as the alphabetically-next
+remaining live bite from the carry-over named-candidate pool, plus
+**ZoomInfo** and a HubSpot re-probe), this run takes Webflow directly:
+the Greenhouse public API was probed at run-266 start; Webflow
+returned HTTP 200 with 31 open roles and was selected as the
+alphabetically-next bite (`web` < `zoo`). The HubSpot re-probe was
+skipped this run because Spec 052 already established the
+`meta.total === 0` deferral and the live tenant has shown no signs of
+re-opening roles in the 0–4-hour window between run #265 and run #266.
+
+Webflow, Inc. — the **dominant AI-native Digital Experience Platform /
+visual website builder** vendor (founded by Vlad Magdalin, Sergie
+Magdalin, and Bryant Chou in 2013 in San Francisco, now operating as a
+remote-first company with offices in San Francisco, New York, London,
+Berlin, Mexico City, and Bengaluru; operator of Webflow Designer (the
+visual-development canvas flagship), Webflow CMS (the content management
+system), Webflow Ecommerce (the storefront product), Webflow Hosting
+(the managed-hosting product), Webflow Localization (the translation
+product), Webflow Optimize (the AI-driven personalisation and A/B
+testing product), Webflow Analyze (the analytics product), Webflow
+Apps (the third-party integration marketplace), Webflow Code Sync (the
+developer-handoff product that syncs Designer changes to Git), Webflow
+AI Site Builder (the generative-AI website creation product), and
+Webflow Workspaces (the team-collaboration surface) lines that anchor
+the visual-development category alongside Framer, Squarespace, Wix,
+Shopify, Editor X, and WordPress elementor) — is published at the bare
+`webflow` Greenhouse slug (the lowercase brand name) and was confirmed
+live via run #266's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/webflow/jobs?content=true` (31
+open roles returned at probe time). Notably, Webflow's tenant publishes
+its `absolute_url` on **variant 2** (the US-region permalink subdomain
+`https://job-boards.greenhouse.io/webflow/jobs/<id>`, structurally
+identical to Vercel / Affirm / Gusto / Mercury / Buildkite / Netlify /
+Postman) — making this the **eighth** plugin in the cohort to use
+variant 2. Like every plugin from Klaviyo onwards (Klaviyo, Duolingo,
+Brex, Gusto, Mercury, Buildkite, CircleCI, Ramp Network, Netlify,
+Postman, Toast), Webflow's `content` is HTML-entity-encoded
+(`&lt;p&gt;At Webflow, we&rsquo;re building...`) and uses the
+entity-decode-then-tag-strip pipeline (Spec 056 § 10 D-08) — making
+this the **twelfth** plugin to use that pipeline. Unlike every prior
+cohort plugin, Webflow's wire `location.name` for remote roles uses a
+semicolon-separated multi-region format with parenthesised
+province/state restrictions (e.g. `'CA Remote (BC & ON only); U.K. /
+Ireland Remote; U.S. Remote'`) — making this the **first plugin in the
+cohort to ship a fixture with semicolon-separated multi-region location
+names** (D-11). The plugin emits the wire `location.name` byte-for-byte
+(no semicolon splitting, no region normalisation); consumers wanting
+per-region splits can split on `'; '` themselves. Class names are
+`WebflowService` / `WebflowModule` (PascalCase splitting on the
+single-word brand name; D-06).
+
+**Spec 056 — Source Company Plugin: Webflow — closed end-to-end:**
+
+- **T01:** Added `Site.WEBFLOW = 'webflow'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 66:
+  Spec 056 — Source Company Plugin: Webflow` header (preserves the
+  Spec 006 / 013 / 020..055 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-webflow` with the
+  Postman-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/webflow/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9. **Zero
+  structural deviations from the Postman template** —
+  `webflow.service.ts` mirrors `postman.service.ts` byte-by-byte
+  except for the `webflow`/`Webflow` substitutions. The fallback
+  `jobUrl` shape mirrors the wire `absolute_url` byte-for-byte —
+  `https://job-boards.greenhouse.io/webflow/${listing.id}` with the
+  US-region subdomain `job-boards.greenhouse.io` (Spec 056 § 10
+  D-04). The description-cleanup pipeline
+  `stripHtmlTags(decodeHtmlEntities(content))` is identical to
+  Postman's because Webflow's `content` is also HTML-entity-encoded
+  (Spec 056 § 10 D-08). The brand-name pin `'Webflow'` matches the
+  wire `company_name` byte-for-byte — same as Postman / Netlify /
+  Mercury / Buildkite / CircleCI / Ramp Network / Toast (Spec 056 §
+  10 D-09).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned **between** `VercelModule` and `ZoomModule` since
+  `Vercel` < `Webflow` < `Zoom` lexically), `tsconfig.base.json`
+  paths, and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/webflow.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `webflow-`, `site === Site.WEBFLOW`, `companyName ===
+  'Webflow'`, location, department, isRemote, description with
+  numeric entity (`&#39;`) decoded to apostrophe, named entity
+  (`&rsquo;`) decoded to right single quotation mark U+2019, and
+  `<p>`/`<strong>`/`<em>` tags stripped after the decode pass),
+  `resultsWanted=1` cap, `searchTerm` filter on title (case-
+  insensitive `'CODE SYNC'` matches `'Code Sync'`), `searchTerm`
+  filter on department name (case-insensitive `'engineering'` matches
+  `'Engineering'`), HTTP 500 → empty response, and empty `data.jobs`
+  → empty response. The happy-path test asserts the called URL
+  string is exactly
+  `https://api.greenhouse.io/v1/boards/webflow/jobs?content=true`
+  and pins **five** regression guards: (a) the variant-2 wire-shape
+  `https://job-boards.greenhouse.io/webflow/jobs/<id>` `absolute_url`
+  flows through to `jobUrl` byte-for-byte (D-04), (b) the emitted
+  `jobUrl` contains the literal `job-boards.greenhouse.io` substring
+  AND does NOT contain the EU-region `job-boards.eu.greenhouse.io`
+  substring (US-region-subdomain lock — D-04), (c) the cleaned
+  description does NOT contain literal `&lt;` (decode-pass ran),
+  `&rsquo;` (named-entity decode ran), `&#39;` (numeric-entity decode
+  ran), `<p>` / `<strong>` / `<em>` (strip-pass ran after the
+  decode), (d) the emitted `companyName` is the brand name `'Webflow'`
+  AND matches the wire `company_name` byte-for-byte (D-09), and
+  (e) the emitted `location.city` for the second (remote) fixture
+  listing is the literal semicolon-separated multi-region string
+  `'CA Remote (BC & ON only); U.K. / Ireland Remote; U.S. Remote'`
+  byte-for-byte AND matches the wire `location.name` byte-for-byte
+  (D-11 first-instance guard for the semicolon-separated multi-region
+  location pass-through), AND `isRemote === true` for that multi-
+  region remote string. Fixture `__tests__/fixtures/webflow-jobs.json`
+  is committed JSON exercising both a Business Development
+  Representative role in Chicago/Hybrid (touching Webflow Designer,
+  Webflow CMS, Webflow Ecommerce, Webflow Hosting, Webflow
+  Localization, Webflow Optimize, Webflow Analyze, Webflow Apps, and
+  Webflow Code Sync product lines in its description, with numeric
+  (`&#39;`), named (`&rsquo;`), and structural (`&lt;p&gt;` /
+  `&lt;strong&gt;`) entities exercising the entity-decode-then-tag-
+  strip pipeline) and an Engineering Manager Code Sync role in
+  multi-region Remote (CA BC&ON / UK / Ireland / US) (touching the
+  Webflow Designer + Git bidirectional sync product line, with
+  numeric (`&#39;`), named (`&rsquo;`, `&mdash;`, `&ndash;`),
+  ASCII-amp (`&amp;`), and structural (`&lt;p&gt;` / `&lt;strong&gt;`
+  / `&lt;em&gt;`) entities).
+- **T05:** Doc updates — added a `shipped` row for Webflow in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog. Index Spec 056 row
+  added under Spec 055; this `docs/log.md` entry appended at top.
+
+**Test verification:**
+
+- `npx jest packages/plugins/source-company-webflow --colors=false` → **8/8 passed in 15.792 s**.
+- `npx jest packages/common/__tests__/helpers.spec --colors=false` → **77/77 passed in 12.52 s** (helpers regression intact).
+
+**Catalogue head-count after run #266:**
+
+- 45 Greenhouse-backed company-direct plugins (Anthropic, Databricks,
+  Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit, Pinterest,
+  Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio, Cloudflare,
+  MongoDB, Datadog, Instacart, Dropbox, Roblox, Block, Vercel, Affirm,
+  Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite, CircleCI,
+  Ramp Network, Netlify, Postman, Toast, **Webflow** + Stripe + Cursor
+  + Amazon + Apple + Google + IBM + Meta + OpenAI). 8 distinct
+  wire-shape variants in the cohort: legacy
+  `boards.greenhouse.io/<slug>/jobs/<id>` (31 plugins, Block-and-
+  earlier), new `job-boards.greenhouse.io/<slug>/jobs/<id>` (Vercel +
+  Affirm + Gusto + Mercury + Buildkite + Netlify + Postman + **Webflow**
+  — variant 2; **8 plugins**), apex marketing-site query-param-only
+  `www.<company>.com/careers/jobs?gh_jid=<id>` (Klaviyo — variant 3),
+  careers-subdomain marketing-site path-AND-query
+  `careers.<company>.com/jobs/<id>?gh_jid=<id>` (Duolingo — variant 4),
+  apex-www marketing-site path-AND-query
+  `www.<company>.com/careers/<id>?gh_jid=<id>` (Brex — variant 5),
+  EU-region permalink subdomain
+  `job-boards.eu.greenhouse.io/<slug>/jobs/<id>` (Ramp Network —
+  variant 6), apex-www marketing-site, HTTP-scheme, path-with-`jobs`-
+  segment-and-trailing-slash-and-query
+  `http://www.<company>.com/careers/jobs/<id>/?gh_jid=<id>` (CircleCI —
+  variant 7), and careers-subdomain on a sub-brand product domain,
+  query-param-only `https://careers.<sub-brand>.com/jobs?gh_jid=<id>`
+  (Toast — variant 8). 12 plugins use the entity-decode-then-tag-strip
+  description pipeline (Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, CircleCI, Ramp Network, Netlify, Postman, Toast,
+  **Webflow**). 2 plugins apply a wire-title trim (Brex, Buildkite —
+  Webflow does **not**). 2 plugins apply a brand-name pin cleaning a
+  wire `company_name` legal-entity suffix (Affirm, Gusto); Mercury,
+  Buildkite, CircleCI, Ramp Network, Netlify, Postman, Toast, and
+  Webflow's brand-name pins match the wire byte-for-byte (no legal-
+  entity suffix to clean). 2 plugins use embedded-acronym PascalCase
+  preserving trademark casing in class names (`OpenAIService`,
+  `CircleCIService`); other initialism brands like IBM use sentence-
+  case (`IbmService` / `IbmModule`). 1 plugin pins a multi-word
+  brand-name string literal containing an inter-word ASCII space —
+  Ramp Network. 1 plugin ships a fixture with an ampersand-bearing
+  department name — Netlify (`R&D` / `G&A` no-space). 1 plugin ships
+  a fixture with a `<div class="content-intro">` recruiter-blurb
+  wrapper pass-through — Postman. 1 plugin ships a fixture with
+  colon-separated nested-path department names with spaced
+  ampersands — Toast. **1 plugin ships a fixture with semicolon-
+  separated multi-region location names with parenthesised
+  province/state restrictions — Webflow** (`'CA Remote (BC & ON only);
+  U.K. / Ireland Remote; U.S. Remote'`), the brand-new first-instance.
+
+**Notes:**
+
+- Run #266 selected Webflow from the carry-over named-candidate pool
+  from Spec 050's nine-200 probe sweep as the alphabetically-next
+  remaining live bite. The remaining one candidate (ZoomInfo) plus
+  the HubSpot re-probe queue up for runs #267+. ZoomInfo (variant 3
+  family — apex-www `careers?gh_jid=<id>`, ~82 jobs, with a wire
+  `company_name` `'ZoomInfo Technologies LLC'` legal-entity suffix to
+  clean — first since Affirm / Gusto) is the most structurally novel
+  of the remaining two; if all pre-probed candidates ship in run
+  #267, run #268 should pivot to a fresh probe sweep of additional
+  Greenhouse tenants (e.g. Squarespace, Wix, Notion, Linear, Loom,
+  Front, Shopify, Modern Treasury) to refresh the named-candidate
+  pool.
+- The `&rsquo;` (right single quotation mark named entity) wire form
+  observed in the Webflow fixture decodes cleanly through the
+  single-pass `decodeHtmlEntities()` helper to U+2019 — the unit
+  test asserts the description does NOT contain `&rsquo;` after the
+  decode-then-strip pipeline (i.e. the entity is gone, replaced by
+  the actual right single quotation mark character).
+- The semicolon-separated multi-region location format
+  (`'CA Remote (BC & ON only); U.K. / Ireland Remote; U.S. Remote'`)
+  is a Webflow-tenant-specific pattern, not a generic Greenhouse
+  template feature. Other Greenhouse tenants tracked by the cohort
+  use either single-region remote strings (e.g. Toast's
+  `'Remote - US (PST time zone)'`) or single-city placements. The
+  plugin emits the wire string byte-for-byte rather than splitting
+  on `'; '` — a future spec could introduce a generic semicolon-
+  region splitter as a `@ever-jobs/common` helper if needed across
+  multiple tenants, but that's a helpers concern, not a plugin-level
+  concern.
+
+---
+
 ## 2026-05-02 — Scheduled run #265 (Spec 055 closed end-to-end; new `source-company-toast` plugin shipped — 8 unit tests green in 10.284 s; helpers regression 77/77 still green in 8.228 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 44th Greenhouse-backed company-direct plugin in the catalogue and the **first** to use wire-shape **variant 8** — the careers-subdomain marketing-site shape on a sub-brand product domain `https://careers.toasttab.com/jobs?gh_jid=<id>` (the first plugin in the cohort to publish on a sub-brand product domain `toasttab.com` rather than the slug-name brand domain `toast.com`); the **eleventh** to use the entity-decode-then-tag-strip description pipeline; and the **first plugin in the cohort to ship a fixture with colon-separated nested-path department names with spaced ampersands** — `'Sales : International : Horizon 2'`, `'Sales : Sales Acceleration'` — that the entity-decode-then-tag-strip pipeline pass-through preserves byte-for-byte through to the emitted `JobPostDto.department` field)
 
 **Scope:** Run #265 continues the user-owner-directed concrete-action

@@ -116,6 +116,7 @@ import { TwilioModule } from './source-company-twilio';
 import { TwitchModule } from './source-company-twitch';
 import { UberModule } from './source-company-uber';
 import { VercelModule } from './source-company-vercel';
+import { WebflowModule } from './source-company-webflow';
 import { ZoomModule } from './source-company-zoom';
 import { ConservationJobsModule } from './source-conservationjobs';
 import { CoroflotModule } from './source-coroflot';
@@ -319,6 +320,7 @@ export const ALL_SOURCE_MODULES = [
   TwitchModule,
   UberModule,
   VercelModule,
+  WebflowModule,
   ZoomModule,
   ConservationJobsModule,
   CoroflotModule,

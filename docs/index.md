@@ -120,6 +120,7 @@
 | 053 | [Source Company Plugin: Netlify](../.specify/specs/053-source-company-netlify/spec.md) — [plan](../.specify/specs/053-source-company-netlify/plan.md) — [tasks](../.specify/specs/053-source-company-netlify/tasks.md) | All phases done (T01..T05 run #263); spec complete |
 | 054 | [Source Company Plugin: Postman](../.specify/specs/054-source-company-postman/spec.md) — [plan](../.specify/specs/054-source-company-postman/plan.md) — [tasks](../.specify/specs/054-source-company-postman/tasks.md) | All phases done (T01..T05 run #264); spec complete |
 | 055 | [Source Company Plugin: Toast](../.specify/specs/055-source-company-toast/spec.md) — [plan](../.specify/specs/055-source-company-toast/plan.md) — [tasks](../.specify/specs/055-source-company-toast/tasks.md) | All phases done (T01..T05 run #265); spec complete |
+| 056 | [Source Company Plugin: Webflow](../.specify/specs/056-source-company-webflow/spec.md) — [plan](../.specify/specs/056-source-company-webflow/plan.md) — [tasks](../.specify/specs/056-source-company-webflow/tasks.md) | All phases done (T01..T05 run #266); spec complete |
 
 ## 8. Templates
 

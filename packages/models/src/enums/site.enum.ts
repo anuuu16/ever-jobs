@@ -264,6 +264,8 @@ export enum Site {
   POSTMAN = 'postman',
   // Phase 65: Spec 055 — Source Company Plugin: Toast
   TOAST = 'toast',
+  // Phase 66: Spec 056 — Source Company Plugin: Webflow
+  WEBFLOW = 'webflow',
 }
 
 /**
