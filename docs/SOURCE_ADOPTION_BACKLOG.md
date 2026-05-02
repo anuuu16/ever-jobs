@@ -52,6 +52,7 @@
 | shipped    | `source-company-roblox`    | `company`  | **Roblox** (`roblox.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/roblox/jobs`). | Spec 041, run #251. Thin wrapper following the `source-company-dropbox` pattern. |
 | shipped    | `source-company-block`     | `company`  | **Block** (`block.xyz`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/block/jobs`). | Spec 042, run #252. Thin wrapper following the `source-company-roblox` pattern. |
 | shipped    | `source-company-vercel`    | `company`  | **Vercel** (`vercel.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/vercel/jobs`). | Spec 043, run #253. Thin wrapper following the `source-company-block` pattern. |
+| shipped    | `source-company-affirm`    | `company`  | **Affirm** (`affirm.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/affirm/jobs`). | Spec 044, run #254. Thin wrapper following the `source-company-vercel` pattern (second cohort member to use Greenhouse's new `job-boards.greenhouse.io` permalink subdomain). |
 
 ## Logic-improvement candidates (existing plugins)
 
@@ -74,4 +75,4 @@
 
 ---
 
-_Last revised: 2026-05-02 (run #253)._
+_Last revised: 2026-05-02 (run #254)._

@@ -15,6 +15,153 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #254 (Spec 044 closed end-to-end; new `source-company-affirm` plugin shipped — 8 unit tests green in 8.938 s; helpers regression 77/77 still green in 6.924 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 33rd Greenhouse-backed company-direct plugin in the catalogue and the **second** to use Greenhouse's new `job-boards.greenhouse.io` permalink subdomain)
+
+**Scope:** Run #254 continues the user-owner-directed concrete-action
+deviation that runs #230–#253 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 043's run
+#253 close-out note (which named **Klaviyo**, **Affirm**, **Niantic**,
+**Snap**, **Duolingo**, **Brex**, and **Gusto** as the next ergonomic
+bites under the same company-direct pattern, with "re-confirm the slug
+via a public-API probe before committing" called out explicitly), this
+run pivoted to **Affirm** after a parallel-probe sweep of all seven
+named candidates. Affirm — the **buy-now-pay-later / consumer-credit-
+fintech / merchant-checkout-financing parent** (Affirm Holdings, Inc.,
+NASDAQ: AFRM; founded by Max Levchin in 2012; operator of the Affirm
+point-of-sale instalment loan product, the Affirm Card debit card, the
+Affirm Money savings product, and the Affirm merchant-network checkout
+integrations layer that anchors the US BNPL category alongside Klarna,
+AfterPay-via-Block, and PayPal Pay-in-4) — is published at the bare
+`affirm` Greenhouse slug and was reconfirmed live via run #254's HTTP
+200 probe of
+`https://api.greenhouse.io/v1/boards/affirm/jobs?content=true`
+(174 open roles returned at probe time). Notably, like Vercel (Spec
+043 / run #253), Affirm's tenant uses the **new**
+`job-boards.greenhouse.io/affirm/jobs/<id>` permalink-subdomain wire
+shape, making this the **second** company-direct plugin in the cohort
+whose fallback URL uses the new permalink subdomain rather than the
+legacy `boards.greenhouse.io` form.
+
+**Probe sweep — five 200s, two 404s:**
+
+- HTTP 200 on `klaviyo`, `affirm`, `duolingo`, `brex`, `gusto`. All
+  five are live Greenhouse company-direct candidates. Affirm picked as
+  the next bite alphabetically; the other four queue up for runs
+  #255 / #256 / #257 / #258.
+- HTTP 404 on `niantic`, `nianticlabs`, `niantictech`, `snap`,
+  `snapchat`, `snapinc`, `snap-inc`, `snapincorporated`. Niantic and
+  Snap Inc. are both **not** on Greenhouse; their public listings live
+  at `careers.nianticlabs.com` (Lever / Workday-proxied) and
+  `careers.snap.com` (custom in-house ATS) respectively. Both are out
+  of scope for the Greenhouse-backed company-direct cohort and recorded
+  here so the next agent doesn't repeat the failed probes — same
+  convention Spec 042 § 10 D-05 used for the Snowflake-not-on-
+  Greenhouse finding.
+
+**Spec 044 — Source Company Plugin: Affirm — closed end-to-end:**
+
+- **T01:** Added `Site.AFFIRM = 'affirm'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 54:
+  Spec 044 — Source Company Plugin: Affirm` header (preserves the
+  Spec 006 / 013 / 020 / 021 / 022 / 023 / 024 / 025 / 026 / 027 /
+  028 / 029 / 030 / 031 / 032 / 033 / 034 / 035 / 036 / 037 / 038 /
+  039 / 040 / 041 / 042 / 043 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-affirm` with the
+  Vercel-shape (single-file `service.ts`, 3-line `module.ts`, 2-line
+  `index.ts`, 4-line `package.json`, 3-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/affirm/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9.
+  Fallback `jobUrl` (when Greenhouse omits `absolute_url`) points at
+  the new Greenhouse permalink template
+  `https://job-boards.greenhouse.io/affirm/jobs/<id>` — a byte-exact
+  match for the wire `absolute_url` Greenhouse returns for this
+  tenant. Spec 044 § 10 D-04 records the deliberate use of the new
+  permalink subdomain. Class names are `AffirmService` /
+  `AffirmModule` (PascalCase with the standard initial cap, no
+  embedded acronym requiring special casing — see Spec 044 § 10 D-06).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES` entry,
+  positioned **before** `AirbnbModule` since `Aff` < `Air` lexically;
+  this is the first company-direct cohort plugin to land at the
+  alphabetical head of the cohort import block since `source-company-
+  airbnb` ceded the position when Spec 044 added Affirm),
+  `tsconfig.base.json` paths, and `jest.config.js` `moduleNameMapper`.
+- **T04:** Authored `__tests__/affirm.service.spec.ts` with 8 cases
+  covering: NestJS DI resolution, enum-literal pin, happy-path
+  fixture-to-DTO mapping (2 listings → 2 `JobPostDto` rows with `id`
+  prefix `affirm-`, `site === Site.AFFIRM`,
+  `companyName === 'Affirm'`, location, department, isRemote, HTML
+  stripped from description), `resultsWanted=1` cap, `searchTerm`
+  filter on title (case-insensitive), `searchTerm` filter on
+  department name (case-insensitive), HTTP 500 → empty response, and
+  empty `data.jobs` → empty response. The happy-path test asserts
+  the called URL string is exactly
+  `https://api.greenhouse.io/v1/boards/affirm/jobs?content=true`
+  and pins the wire-shape `https://job-boards.greenhouse.io/...`
+  `absolute_url` so a future host-normalisation refactor would
+  surface as a test diff (not a silent regression). Fixture
+  `__tests__/fixtures/affirm-jobs.json` is committed JSON exercising
+  both a Remote-US Core-Analytics Credit-Risk-Analytics role (touching
+  the BNPL underwriting decisioning surface and the Affirm Card debit-
+  card portfolio in its description) and a Hybrid-San-Francisco
+  Engineering Merchant-Checkout-Platform role (touching the
+  JavaScript SDK and the Shopify / BigCommerce / WooCommerce adapters
+  in its description).
+- **T05:** Doc updates — added a `shipped` row for Affirm in
+  `docs/SOURCE_ADOPTION_BACKLOG.md` § Backlog (kept the proposed-row
+  layout; the `Plugin id` column width is unchanged at 26 chars),
+  appended Spec 044 to the `docs/index.md` § 7 specs table, and
+  bumped both files' "Last revised" footer to run #254.
+
+**Health-check:**
+
+- `npx jest packages/plugins/source-company-affirm --colors=false`
+  → **8/8 passed in 8.938 s** (registration scaffolding 2 + happy
+  path 1 + cap 1 + searchTerm 2 + error handling 2).
+- `npx jest packages/common/__tests__/helpers.spec --colors=false`
+  → **77/77 passed in 6.924 s** (Spec 015 baseline preserved —
+  registration touch-points did not perturb the parser regression
+  suite).
+- `npm run lint:docs` → **exit 0** (`✓ Doc-lint passed — no
+  issues.`).
+
+**Files changed:**
+
+- `packages/models/src/enums/site.enum.ts` — `+2 lines` (`// Phase 54
+  …` comment + `AFFIRM = 'affirm'` enum entry).
+- `packages/plugins/index.ts` — `+2 lines` (import + module-list entry,
+  placed **before** `AirbnbModule`).
+- `tsconfig.base.json` — `+1 line` (path-alias entry).
+- `jest.config.js` — `+1 line` (`moduleNameMapper` entry).
+- `packages/plugins/source-company-affirm/` — **new package**
+  (5 source files + 1 fixture + 1 test file = 7 files).
+- `.specify/specs/044-source-company-affirm/` — **new spec**
+  (`spec.md`, `plan.md`, `tasks.md`).
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — `+1 row` (Affirm shipped) +
+  footer bump.
+- `docs/index.md` — `+1 row` (Spec 044) + footer bump.
+- `docs/log.md` — this entry.
+
+**Next ergonomic bite:** Re-confirm the slug via a public-API probe
+before committing. The four Greenhouse-200 candidates remaining from
+this run's probe sweep are **Klaviyo**, **Duolingo**, **Brex**, and
+**Gusto** — any can be the next Spec 045 candidate. Klaviyo is the
+alphabetically-next bite (email / SMS / customer-data marketing
+automation; NYSE: KVYO); Duolingo (language learning; NASDAQ: DUOL);
+Brex (corporate cards / spend management for startups; private);
+Gusto (small-business payroll / benefits / HR platform; private).
+Beyond those four, the named-candidate well from Spec 043 is empty —
+future runs will need a fresh probe-sweep against e.g. Stripe-adjacent
+fintechs (Modern Treasury, Mercury, Ramp), e-commerce platforms
+(Shopify-adjacent), or vertical SaaS (Notion, Linear, Loom, Front).
+
+---
+
 ## 2026-05-02 — Scheduled run #253 (Spec 043 closed end-to-end; new `source-company-vercel` plugin shipped — 8 unit tests green in 8.61 s; helpers regression 77/77 still green in 6.859 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 32nd Greenhouse-backed company-direct plugin in the catalogue and the **first** to use Greenhouse's new `job-boards.greenhouse.io` permalink subdomain)
 
 **Scope:** Run #253 continues the user-owner-directed concrete-action

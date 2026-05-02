@@ -240,6 +240,8 @@ export enum Site {
   BLOCK = 'block',
   // Phase 53: Spec 043 — Source Company Plugin: Vercel
   VERCEL = 'vercel',
+  // Phase 54: Spec 044 — Source Company Plugin: Affirm
+  AFFIRM = 'affirm',
 }
 
 /**

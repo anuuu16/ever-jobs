@@ -66,6 +66,7 @@ import { CareerBuilderModule } from './source-careerbuilder';
 import { CareerJetModule } from './source-careerjet';
 import { CareerOneStopModule } from './source-careeronestop';
 import { ClojurejobsModule } from './source-clojurejobs';
+import { AffirmModule } from './source-company-affirm';
 import { AirbnbModule } from './source-company-airbnb';
 import { AmazonModule } from './source-company-amazon';
 import { AnthropicModule } from './source-company-anthropic';
@@ -257,6 +258,7 @@ export const ALL_SOURCE_MODULES = [
   CareerJetModule,
   CareerOneStopModule,
   ClojurejobsModule,
+  AffirmModule,
   AirbnbModule,
   AmazonModule,
   AnthropicModule,
