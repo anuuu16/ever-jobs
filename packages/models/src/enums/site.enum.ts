@@ -270,6 +270,8 @@ export enum Site {
   ZOOMINFO = 'zoominfo',
   // Phase 68: Spec 058 — Source Company Plugin: Attentive
   ATTENTIVE = 'attentive',
+  // Phase 69: Spec 059 — Source Company Plugin: Chime
+  CHIME = 'chime',
 }
 
 /**

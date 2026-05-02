@@ -15,6 +15,184 @@
 
 ---
 
+## 2026-05-02 — Scheduled run #269 (Spec 059 closed end-to-end; new `source-company-chime` plugin shipped — 8 unit tests green in 9.384 s; helpers regression 77/77 still green in 7.455 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 48th Greenhouse-backed company-direct plugin in the catalogue and the **first** to use wire-shape variant 10 — the legacy hosted-board apex `https://boards.greenhouse.io/chime/jobs/<id>?gh_jid=<id>` (the bare `boards.greenhouse.io` host without the `job-` prefix, plus a trailing `?gh_jid=<id>` query suffix); the **fifteenth** to use the entity-decode-then-tag-strip description pipeline; the **fourth** cohort plugin to apply a brand-name trim D-09 (after Affirm, Gusto, and ZoomInfo) — wire `'Chime Financial, Inc'` → emitted `'Chime'`; the **second** to clean a comma-separated suffix (after Affirm) and the **first** to clean a comma-separated suffix where the legal-entity token (`'Inc'`) carries no trailing period; **D-10 omitted** (no padded titles in the run-269 probe — first cohort plugin since Webflow / Spec 056 to omit D-10). Selected from the **run-268 fresh-sweep live-board pool** as the alphabetically-next bite after Attentive — `chi` < `ela` < `int` < `mix`. The four remaining live candidates (Elastic, Intercom, Mixpanel) plus a HubSpot re-probe pivot queue up for runs #270+.)
+
+**Scope:** Run #269 continues the user-owner-directed concrete-action
+deviation that runs #230–#268 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 058's run
+#268 close-out note (which queued **Chime** as the alphabetically-next
+bite from the run-268 fresh-sweep live-board pool), this run takes
+Chime directly: the Greenhouse public API was probed at run-269 start
+returning HTTP 200 with **72 open roles** for the bare `chime` slug.
+
+Chime Financial, Inc. — the **dominant US neobank / challenger-bank /
+consumer-fintech** vendor (founded by Chris Britt and Ryan King in 2012
+in San Francisco; one of the largest US digital-only banks by primary-
+account count; currently a private unicorn after Series G rounds led by
+Sequoia Capital, Tiger Global, and Coatue that valued the company at
+~$25B before the 2022 down-round; now operating with its San Francisco
+headquarters plus offices in Chicago, Vancouver (Washington), San Diego,
+and a remote-first posture across the United States; operator of Chime
+Spending Account (the no-fee debit-card flagship), Chime Credit Builder
+(the secured-card product), Chime SpotMe (the no-fee overdraft
+product), Chime Savings Account (the high-yield-savings product), Chime
+Pay Anyone (the peer-to-peer payments product), and the Chime Mobile
+App (the all-in-one banking surface) lines that anchor the US neobank
+category alongside Cash App, Varo, Current, Aspiration, Dave, and
+Public) — is published at the bare `chime` Greenhouse slug (the
+lowercase brand name) and was confirmed live via run #269's HTTP 200
+probe of `https://api.greenhouse.io/v1/boards/chime/jobs?content=true`
+(72 open roles returned at probe time). Notably, Chime's tenant
+publishes its `absolute_url` on **variant 10** (the legacy
+hosted-board apex `https://boards.greenhouse.io/chime/jobs/<id>?gh_jid=
+<id>` shape — the bare `boards.greenhouse.io` host without the `job-`
+prefix, plus a trailing `?gh_jid=<id>` query suffix), making this the
+**first plugin in the cohort to use this shape**. The legacy host
+issues an HTTP 301 to `https://job-boards.greenhouse.io/chime/jobs/
+<id>?gh_jid=<id>` (confirmed via `curl -I` at run-269 start), but the
+wire shape is the legacy form and the plugin mirrors it byte-for-byte.
+Like every plugin from Klaviyo onwards, Chime's `content` is HTML-
+entity-encoded (`&lt;h2&gt;&lt;span style=&quot;font-family:
+helvetica, arial, sans-serif;&quot;&gt;&lt;strong&gt;About the
+role&lt;/strong&gt;...`) and uses the entity-decode-then-tag-strip
+pipeline (Spec 059 § 10 D-08) — making this the **fifteenth** plugin
+to use that pipeline. Unlike every prior cohort plugin except Affirm,
+Gusto, and ZoomInfo, Chime's wire `company_name` carries a legal-
+entity suffix (`'Chime Financial, Inc'`) that the plugin trims to the
+brand `'Chime'` via string-literal pin (D-09). Notably, this is the
+**first plugin in the cohort to clean a comma-separated suffix where
+the legal-entity token (`'Inc'`) carries no trailing period** (Affirm's
+`'Affirm, Inc.'` form has the trailing period; Chime's
+`'Chime Financial, Inc'` form does not). Class names are
+`ChimeService` / `ChimeModule` (PascalCase from the bare-brand
+single-word name; D-06).
+
+**Spec 059 — Source Company Plugin: Chime — closed end-to-end:**
+
+- **T01:** Added `Site.CHIME = 'chime'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 69:
+  Spec 059 — Source Company Plugin: Chime` header (preserves the
+  Spec 006 / 013 / 020..058 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-chime` with the
+  Attentive-shape (single-file `service.ts`, 4-line `module.ts`,
+  2-line `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/chime/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively, and swallows transport errors per FR-9. **Two
+  structural deviations from the Attentive template** — D-04 variant
+  10 fallback URL and D-09 brand-name trim string-literal pin. The
+  fallback `jobUrl` shape mirrors the wire `absolute_url` byte-for-byte
+  — `https://boards.greenhouse.io/chime/jobs/${listing.id}?gh_jid=
+  ${listing.id}` with the legacy hosted-board apex
+  `boards.greenhouse.io` (no `job-` prefix) and the duplicate-of-id-in-
+  path `?gh_jid=<id>` query suffix (Spec 059 § 10 D-04). The
+  description-cleanup pipeline `stripHtmlTags(decodeHtmlEntities(
+  content))` is identical to Attentive's because Chime's `content` is
+  also HTML-entity-encoded (Spec 059 § 10 D-08). The brand-name pin
+  `'Chime'` differs from the wire `'Chime Financial, Inc'` (Spec 059
+  § 10 D-09 — fourth-instance brand-name trim). Department pass-
+  through preserves Chime's flat single-token format (`'Accounting'`,
+  `'AI & App Experience Engineering'`, `'Engineering'`, `'Finance'`,
+  etc.) byte-for-byte (Spec 059 § 10 D-11) including the literal `&`
+  byte in ampersand-bearing department names which flows through as a
+  literal `&` (not entity-encoded as `&amp;`).
+- **T03:** Registered in the four wiring files —
+  `packages/plugins/index.ts` (`ChimeModule` import + append to
+  `ALL_SOURCE_MODULES` between `BuildkiteModule` and `CircleCIModule`
+  per the alphabetical ordering — `Bui` < `Chi` < `Cir`),
+  `tsconfig.base.json` (path-alias entry), `jest.config.js`
+  (`moduleNameMapper` entry).
+- **T04:** Wrote `__tests__/chime.service.spec.ts` with 8 cases and a
+  2-listing fixture exercising (a) the bare `chime` slug, (b) the
+  entity-decode-then-tag-strip pipeline (D-08 — assertions on `&lt;`,
+  `&quot;`, `&#39;`, `<p>`, `<h2>`, `<strong>`, `<span>`), (c) the
+  variant-10 `boards.greenhouse.io/chime/jobs/<id>?gh_jid=<id>`
+  `absolute_url` byte-for-byte flow-through (D-04 — locks the
+  variant-10 shape against future refactors via assertions that
+  `jobUrl` contains `boards.greenhouse.io` AND `/chime/jobs/` AND
+  `?gh_jid=` AND must NOT contain `job-boards.greenhouse.io`), (d) the
+  brand-name trim D-09 — emitted `companyName === 'Chime'` byte-for-
+  byte AND emitted `companyName !== fixture.jobs[0].company_name`
+  (`'Chime Financial, Inc'`) AND emitted `companyName` does NOT
+  contain `', Inc'`, `', Inc.'`, `'Financial'`, or `'LLC'` substrings
+  (locking the trim observability), (e) the literal `&` byte in
+  `'AI & App Experience Engineering'` is preserved through emit
+  (D-11 ampersand pass-through guard — `department.toContain('&')`
+  AND `department.not.toContain('&amp;')`), and (f) the
+  case-insensitive `'engineering'` `searchTerm` substring matches the
+  second listing's `'AI & App Experience Engineering'` department
+  (D-11 ampersand-bearing search guard). All 8 cases green in
+  **9.384 s** (`npx jest packages/plugins/source-company-chime
+  --colors=false`).
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (Chime shipped
+  row appended under Attentive), `docs/index.md` (Spec 059 row
+  appended under Spec 058), and `docs/log.md` (this entry).
+
+**Helpers regression:** `npx jest packages/common/__tests__/
+helpers.spec --colors=false` → **77 / 77** green in **7.455 s** —
+the parser regression suite is unaffected by the Site enum / plugins
+barrel / tsconfig path-alias / jest moduleNameMapper edits.
+
+**Cohort statistics after Spec 059:**
+
+- **48** Greenhouse-backed company-direct plugins shipped (Anthropic,
+  Databricks, Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit,
+  Pinterest, Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio,
+  Cloudflare, MongoDB, Datadog, Instacart, Dropbox, Roblox, Block,
+  Vercel, Affirm, Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite,
+  CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow, ZoomInfo,
+  Attentive, Chime — plus the seven legacy company-direct plugins
+  from before Spec 020).
+- **9** plugins on wire-shape variant 2 (US-region
+  `job-boards.greenhouse.io` permalink subdomain): Vercel, Affirm,
+  Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive.
+- **1** plugin on wire-shape variant 10 (legacy hosted-board apex
+  `boards.greenhouse.io/<slug>/jobs/<id>?gh_jid=<id>`): **Chime**.
+- **15** plugins on the entity-decode-then-tag-strip description
+  pipeline (Klaviyo onwards): Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow,
+  ZoomInfo, Attentive, **Chime**.
+- **4** plugins applying a wire-title `.trim()` (D-10): Brex,
+  Buildkite, ZoomInfo, Attentive — Chime does NOT contribute (no
+  padded titles in the run-269 probe; first cohort plugin since
+  Webflow / Spec 056 to omit D-10).
+- **4** plugins applying a brand-name trim (D-09 string-literal pin
+  over a wire-suffixed `company_name`): Affirm, Gusto, ZoomInfo,
+  **Chime** — and **2** of those clean a comma-separated suffix
+  (Affirm `'Affirm, Inc.'` and Chime `'Chime Financial, Inc'`); Chime
+  is the **first** to clean a comma-separated suffix where the
+  legal-entity token (`'Inc'`) carries no trailing period.
+
+**Q-042 reminder:** unchanged — pending review since run #84 (~185
+runs / ~185 hours of agent wall-clock); fourth-reminder window opened
+at run #250 per the run #200 forward-pointer convention; next reminder
+window opens at run #300; Default C continues.
+
+**Run-269 next steps queue (runs #270+):**
+
+1. Pick the **alphabetically-next** bite from the run-268 fresh-sweep
+   live-board set: `elastic` (`ela` < `int` < `mix`) — 193 open
+   roles, Elastic NV (the Elastic Stack / Elasticsearch / Kibana /
+   Logstash vendor). Plugin id `source-company-elastic`. Spec ID
+   060. Phase 70.
+2. Continue alphabetically: `intercom` (174 jobs, Intercom Inc. —
+   customer-messaging platform) → `mixpanel` (51 jobs, Mixpanel Inc.
+   — product analytics platform).
+3. Re-probe `hubspot` at the start of run #270 to check if the empty-
+   board status has flipped (eighth consecutive re-probe).
+4. Once the run-268 fresh-sweep pool is exhausted (after ~3 more runs
+   at one-plugin-per-run), pivot to a **second** fresh probe sweep
+   targeting the next batch of large-employer candidates (e.g. Notion,
+   Linear, Loom, Front, Modern Treasury, Shopify, Square, Adobe,
+   Salesforce, Atlassian, Slack, Zoom Video Communications,
+   ServiceNow, Workday, Veeva, Toast Tab, Faire, Whatnot, Anduril,
+   Scale AI, Glean, Perplexity, Mistral, Cohere, Together AI, Pika,
+   Runway, Synthesia, Eleven Labs, Photoroom, Adept).
+
 ## 2026-05-02 — Scheduled run #268 (Spec 058 closed end-to-end; new `source-company-attentive` plugin shipped — 8 unit tests green in 9.631 s; helpers regression 77/77 still green in 7.453 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the 47th Greenhouse-backed company-direct plugin in the catalogue and the **ninth** to use wire-shape variant 2 — the US-region permalink subdomain `https://job-boards.greenhouse.io/attentive/jobs/<id>` (after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow); the **fourteenth** to use the entity-decode-then-tag-strip description pipeline; the **fourth** cohort plugin to apply a wire-title `.trim()` deviation (after Brex, Buildkite, ZoomInfo) — wire titles `'Director of Engineering, Intelligent Messaging '`, `'Principal Technical Program Manager '`, `'Staff Software Engineer, Streaming '`, `'Support Engineer (West) '` (4 of 59) trim to their non-trailing-pad forms before emit. Selected from the **fresh probe sweep** that this run pivoted to per Spec 057's run-267 close-out (carry-over named-candidate pool fully exhausted): probed eighteen large-employer Greenhouse-candidate slugs and got HTTP 200 on six (`attentive` 59 jobs, `chime` 72 jobs, `elastic` 193 jobs, `hubspot` `meta.total === 0` seventh-consecutive empty re-probe, `intercom` 174 jobs, `mixpanel` 51 jobs); Attentive picked as the alphabetically-first bite. The four remaining live candidates (Chime, Elastic, Intercom, Mixpanel) plus a HubSpot re-probe pivot queue up for runs #269+.)
 
 **Scope:** Run #268 continues the user-owner-directed concrete-action
