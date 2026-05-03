@@ -99,6 +99,7 @@ import { ElasticModule } from './source-company-elastic';
 import { EpicgamesModule } from './source-company-epicgames';
 import { FaireModule } from './source-company-faire';
 import { FigmaModule } from './source-company-figma';
+import { FivetranModule } from './source-company-fivetran';
 import { FlexportModule } from './source-company-flexport';
 import { FubotvModule } from './source-company-fubotv';
 import { GitlabModule } from './source-company-gitlab';
@@ -328,6 +329,7 @@ export const ALL_SOURCE_MODULES = [
   EpicgamesModule,
   FaireModule,
   FigmaModule,
+  FivetranModule,
   FlexportModule,
   FubotvModule,
   GitlabModule,

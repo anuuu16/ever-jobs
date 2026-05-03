@@ -135,6 +135,7 @@ module.exports = {
     '^@ever-jobs/source-company-bitwarden$': '<rootDir>/packages/plugins/source-company-bitwarden/src/index.ts',
     '^@ever-jobs/source-company-calendly$': '<rootDir>/packages/plugins/source-company-calendly/src/index.ts',
     '^@ever-jobs/source-company-datacamp$': '<rootDir>/packages/plugins/source-company-datacamp/src/index.ts',
+    '^@ever-jobs/source-company-fivetran$': '<rootDir>/packages/plugins/source-company-fivetran/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',

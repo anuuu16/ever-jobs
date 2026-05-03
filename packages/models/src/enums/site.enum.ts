@@ -316,6 +316,8 @@ export enum Site {
   CALENDLY = 'calendly',
   // Phase 91: Spec 081 — Source Company Plugin: DataCamp
   DATACAMP = 'datacamp',
+  // Phase 92: Spec 082 — Source Company Plugin: Fivetran
+  FIVETRAN = 'fivetran',
 }
 
 /**
