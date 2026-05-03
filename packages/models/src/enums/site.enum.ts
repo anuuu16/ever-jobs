@@ -346,6 +346,8 @@ export enum Site {
   COALITION = 'coalition',
   // Phase 106: Spec 096 — Source Company Plugin: Dollar Shave Club
   DOLLARSHAVECLUB = 'dollarshaveclub',
+  // Phase 107: Spec 097 — Source Company Plugin: HelloFresh
+  HELLOFRESH = 'hellofresh',
 }
 
 /**

@@ -104,6 +104,7 @@ module.exports = {
     '^@ever-jobs/source-company-cerebral$': '<rootDir>/packages/plugins/source-company-cerebral/src/index.ts',
     '^@ever-jobs/source-company-coalition$': '<rootDir>/packages/plugins/source-company-coalition/src/index.ts',
     '^@ever-jobs/source-company-dollarshaveclub$': '<rootDir>/packages/plugins/source-company-dollarshaveclub/src/index.ts',
+    '^@ever-jobs/source-company-hellofresh$': '<rootDir>/packages/plugins/source-company-hellofresh/src/index.ts',
     '^@ever-jobs/source-company-affirm$': '<rootDir>/packages/plugins/source-company-affirm/src/index.ts',
     '^@ever-jobs/source-company-klaviyo$': '<rootDir>/packages/plugins/source-company-klaviyo/src/index.ts',
     '^@ever-jobs/source-company-duolingo$': '<rootDir>/packages/plugins/source-company-duolingo/src/index.ts',
