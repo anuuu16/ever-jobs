@@ -112,6 +112,7 @@ import { InstacartModule } from './source-company-instacart';
 import { IntercomModule } from './source-company-intercom';
 import { KlaviyoModule } from './source-company-klaviyo';
 import { LatticeModule } from './source-company-lattice';
+import { LookoutModule } from './source-company-lookout';
 import { LyftModule } from './source-company-lyft';
 import { MasterclassModule } from './source-company-masterclass';
 import { MavenclinicModule } from './source-company-mavenclinic';
@@ -342,6 +343,7 @@ export const ALL_SOURCE_MODULES = [
   IntercomModule,
   KlaviyoModule,
   LatticeModule,
+  LookoutModule,
   LyftModule,
   MasterclassModule,
   MavenclinicModule,

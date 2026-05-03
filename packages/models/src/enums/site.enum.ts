@@ -318,6 +318,8 @@ export enum Site {
   DATACAMP = 'datacamp',
   // Phase 92: Spec 082 — Source Company Plugin: Fivetran
   FIVETRAN = 'fivetran',
+  // Phase 93: Spec 083 — Source Company Plugin: Lookout
+  LOOKOUT = 'lookout',
 }
 
 /**

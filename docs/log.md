@@ -15,6 +15,92 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #293 (Spec 083 closed end-to-end; new `source-company-lookout` plugin shipped — 8 unit tests green in 10.939 s; helpers regression + Fivetran + Bitwarden + DataCamp + Calendly + Lattice + MasterClass cross-regression 125/125 still green in 17.498 s; **fifth plugin in the fifth fresh probe sweep** following Bitwarden (run #289), Calendly (run #290), DataCamp (run #291), and Fivetran (run #292). The run-293 probe at start sampled 6 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/lookout/jobs?content=true` — the run-289 probe-counter estimate of ~12 was inflated by counting all `"id":` JSON keys including department/office IDs. This is the **72nd Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 20** — the `www.`-prefixed brand-domain singular `/careers/job-post` query-only-id shape `https://www.lookout.com/careers/job-post?gh_jid=<id>` — the **twenty-third distinct wire-shape variant** in the company-direct cohort; the **thirty-ninth** to use the entity-decode-then-tag-strip description pipeline; **D-09 omitted** — 6 of 6 wire `company_name` values in the run-293 probe are the clean 7-byte `'Lookout'` form (slug/wire case-symmetric — slug `lookout` is 7 bytes; the plugin reads `listing.company_name` directly with `'Lookout'` as a defensive fallback); **returns to cohort-default D-09-omitted posture** after Fivetran's first-cohort D-09 application at run #292; **thirty-second cohort plugin** to omit D-09. **D-10 omitted** — 0 of 6 wire titles in the run-293 probe carry whitespace padding (the wire is fully clean); **fifteenth cohort plugin to omit D-10**. **D-11 omitted** — 0 of 6 populated wire department names in the run-293 probe carry pad bytes (`'Engineering'`, `'Sales'` — bare role-domain names without the `' Department'` structural suffix that Fivetran's wire carries); **twenty-ninth cohort plugin** with fully-clean department pass-through. **One structural deviation** from the Fivetran (Spec 082) template — D-04 wire-shape variant 20 (first cohort plugin to use variant 20; distinct from Fivetran's variant 19; same `www.`-prefixed brand-domain cohort but the `-post` suffix on the singular path component is a new sub-axis). All other axes share with Fivetran: D-08 entity-decode-then-tag-strip, D-09 omitted (Lookout 0/6 padded — fully clean; Fivetran 173/173 padded — Lookout returns to cohort-default), D-10 omitted (Lookout 0/6 padded; Fivetran 0/173 padded — both clean), D-11 fully-clean department pass-through. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-fifth live-board hit** after Bitwarden, Calendly, DataCamp, and Fivetran. The remaining six live hits queue for runs #294+ in alphabetical order (`marqeta` next at run #294 with ~330 roles).)
+
+**Scope:** Run #293 continues the user-owner-directed concrete-action
+deviation that runs #230–#292 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 082's run
+#292 close-out note (which queued Lookout as run #293's bite — the
+alphabetically-fifth live hit from the fifth-fresh-sweep candidate
+pool), this run takes **Lookout**.
+
+Lookout, Inc. — operator of the **mobile-endpoint security
+pipeline pioneered around the cloud-delivered phishing-and-
+content-protection (PCP) longitudinal-telemetry data model**
+(founded by John Hering, Kevin Mahaffey, and James Burgess in
+2007 in San Francisco, CA; raised $400M+ across rounds led by
+Andreessen Horowitz, Khosla Ventures, Greylock Partners, Index
+Ventures, and Accel Partners; ships a unified mobile-endpoint
+detection-and-response (Mobile EDR) + zero-trust secure-access
+(ZTNA / SSE) platform across the cybersecurity segment —
+alongside competitors Zimperium, Wandera, MobileIron, Proofpoint,
+and Cisco Umbrella — with a hybrid distributed workforce
+concentrated across San Francisco, Boston, Reston VA, Toronto,
+and Remote across the United States, Canada, and Europe) — is
+published at the bare `lookout` Greenhouse slug (the lowercase
+brand name; case-symmetric with the wire `company_name ===
+'Lookout'`) and was confirmed live via run #293's HTTP 200 probe
+of `https://api.greenhouse.io/v1/boards/lookout/jobs?content=true`.
+
+**Spec 083 — Source Company Plugin: Lookout — closed end-to-end:**
+
+- **T01:** Added `Site.LOOKOUT = 'lookout'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 93:
+  Spec 083 — Source Company Plugin: Lookout` header.
+- **T02:** Scaffolded `@ever-jobs/source-company-lookout` with
+  the five-file shape (`package.json`, `tsconfig.json`,
+  `src/index.ts`, `src/lookout.module.ts`,
+  `src/lookout.service.ts`); mirrors `source-company-fivetran`
+  with the `fivetran`/`Fivetran` → `lookout`/`Lookout`
+  substitutions, the variant-20 wire-shape pass-through with
+  variant-2 fallback (URL `https://www.lookout.com/careers/job-post?gh_jid=<id>`),
+  the **D-09 omitted** clean-wire pass-through
+  (`listing.company_name ?? 'Lookout'` — no `.trim()`, returning
+  to cohort-default after Fivetran's first-cohort D-09
+  application), and the inline doc-comment narrative.
+- **T03:** Registered `LookoutModule` in the four wiring files
+  (`packages/plugins/index.ts` import + `ALL_SOURCE_MODULES`
+  append, `tsconfig.base.json` path-alias, `jest.config.js`
+  `moduleNameMapper`). Placed alphabetically after `LatticeModule`
+  and before `LyftModule` (`Lat` < `Loo` < `Ly`).
+- **T04:** Authored `lookout.service.spec.ts` with **8 cases**
+  — NestJS DI registration scaffolding, `Site.LOOKOUT` literal
+  pin, happy-path 2-listing fixture map (with regression
+  assertions for variant-20 URL pass-through, decode-then-strip
+  pipeline cleanliness, **D-09 omission lock** —
+  `companyName === 'Lookout'` byte-equal to wire form (7 bytes,
+  fully clean) — returning to cohort-default after Fivetran's
+  first-cohort D-09 application, and D-10 + D-11 omission locks
+  — wire-clean title and department pass-through for both
+  listings), `resultsWanted=1` cap, `searchTerm` filter on title
+  (case-insensitive), `searchTerm` filter on department (case-
+  insensitive), HTTP 500 → empty response, empty `data.jobs` →
+  empty response. All 8 cases green in 10.939 s.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added
+  Lookout shipped row), `docs/index.md` (Spec 083 row already
+  present), and `docs/log.md` (this entry).
+
+Helpers + cross-regression sweep
+(`packages/common/__tests__/helpers.spec`,
+`source-company-fivetran`, `source-company-bitwarden`,
+`source-company-datacamp`, `source-company-calendly`,
+`source-company-lattice`, `source-company-masterclass`) →
+**125/125 green in 17.498 s** — unchanged from the run-292
+baseline; no parser-level regressions introduced by the Lookout
+plugin landing.
+
+The remaining six live hits from the fifth-fresh-sweep
+candidate pool queue for runs #294+ in alphabetical order:
+`marqeta` (~330, run #294 next bite), `newrelic` (~370),
+`peloton` (~104), `scopely` (~1190), `squarespace` (~72),
+`typeform` (~132). Subsequent runs after the pool is exhausted
+(#300+ by current arithmetic) will pivot to a **sixth fresh
+probe sweep**.
+
+---
+
 ## 2026-05-03 — Scheduled run #292 (Spec 082 closed end-to-end; new `source-company-fivetran` plugin shipped — 8 unit tests green in 10.733 s; helpers regression + Bitwarden + DataCamp + Calendly + Lattice + MasterClass cross-regression 117/117 still green in 15.846 s; **fourth plugin in the fifth fresh probe sweep** following Bitwarden (run #289), Calendly (run #290), and DataCamp (run #291). The run-292 probe at start sampled 173 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/fivetran/jobs?content=true` — the run-289 probe-counter estimate of 346 was inflated by counting all `"id":` JSON keys including department/office IDs. This is the **71st Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 19** — the `www.`-prefixed brand-domain singular `/careers/job` query-only-id shape `https://www.fivetran.com/careers/job?gh_jid=<id>` — the **twenty-second distinct wire-shape variant** in the company-direct cohort; the **thirty-eighth** to use the entity-decode-then-tag-strip description pipeline; **D-10 omitted** — 0 of 173 wire titles in the run-292 probe carry whitespace padding (the wire is fully clean); **fourteenth cohort plugin to omit D-10**. **D-09 APPLIED for the first time in cohort history** — wire `company_name === 'Fivetran '` byte-for-byte (9 bytes — single trailing ASCII-space pad on 100 % of run-292 listings — 173 of 173); slug `fivetran` is 8 bytes (slug/wire-asymmetric, wire LONGER than slug by 1 byte via the trailing pad); the plugin applies `.trim()` to `listing.company_name` before emit so the emitted `companyName` is the 8-byte `'Fivetran'`. **First cohort plugin to apply D-09** — opening a brand-new sub-axis under D-09 alongside the existing thirty-one D-09 omission cases. Distinct from prior slug/wire asymmetry cases which all preserved the wire byte-for-byte (Honeycomb TLD; MasterClass case; Maven Clinic / Stitch Fix / Scale AI internal-space; Ramp Network shortening; fuboTV truncation); Fivetran is the first cohort case where the slug/wire asymmetry is **noise (whitespace pad) rather than signal**. Analogous to Lattice's first-cohort D-11 application at run #284 and DataCamp's first-cohort D-11 leading-pad at run #291 — all three use the standard `String.prototype.trim()` semantic on different axes. **D-11 omitted** — 0 of 172 populated wire department names in the run-292 probe carry pad bytes (`'Engineering Department'`, `'Sales Department'`, `'Marketing Department'`, `'Finance Department'`, etc. — the `' Department'` suffix is structural data, not pad bytes; one listing has empty `departments` array which the optional-chain emits as `null`); **twenty-eighth cohort plugin** with fully-clean department pass-through. **Two structural deviations** from the Bitwarden (Spec 079) template — D-04 wire-shape variant 19 (first cohort plugin to use variant 19) AND D-09 APPLIED (first cohort plugin to apply D-09). All other axes share with Bitwarden: D-08 entity-decode-then-tag-strip, D-10 omitted, D-11 fully-clean department pass-through. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-fourth live-board hit** after Bitwarden, Calendly, and DataCamp. The remaining seven live hits queue for runs #293+ in alphabetical order (`lookout` next at run #293 with ~12 roles).)
 
 **Scope:** Run #292 continues the user-owner-directed concrete-action
