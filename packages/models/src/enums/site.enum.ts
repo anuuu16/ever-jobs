@@ -330,6 +330,8 @@ export enum Site {
   SCOPELY = 'scopely',
   // Phase 98: Spec 088 — Source Company Plugin: Squarespace
   SQUARESPACE = 'squarespace',
+  // Phase 99: Spec 089 — Source Company Plugin: Typeform
+  TYPEFORM = 'typeform',
 }
 
 /**

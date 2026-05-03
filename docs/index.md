@@ -153,6 +153,7 @@
 | 086 | [Source Company Plugin: Peloton](../.specify/specs/086-source-company-peloton/spec.md) — [plan](../.specify/specs/086-source-company-peloton/plan.md) — [tasks](../.specify/specs/086-source-company-peloton/tasks.md) | All phases done (T01..T05 run #296); spec complete |
 | 087 | [Source Company Plugin: Scopely](../.specify/specs/087-source-company-scopely/spec.md) — [plan](../.specify/specs/087-source-company-scopely/plan.md) — [tasks](../.specify/specs/087-source-company-scopely/tasks.md) | All phases done (T01..T05 run #297); spec complete |
 | 088 | [Source Company Plugin: Squarespace](../.specify/specs/088-source-company-squarespace/spec.md) — [plan](../.specify/specs/088-source-company-squarespace/plan.md) — [tasks](../.specify/specs/088-source-company-squarespace/tasks.md) | All phases done (T01..T05 run #298); spec complete |
+| 089 | [Source Company Plugin: Typeform](../.specify/specs/089-source-company-typeform/spec.md) — [plan](../.specify/specs/089-source-company-typeform/plan.md) — [tasks](../.specify/specs/089-source-company-typeform/tasks.md) | All phases done (T01..T05 run #299); spec complete |
 
 ## 8. Templates
 

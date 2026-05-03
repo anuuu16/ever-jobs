@@ -144,6 +144,7 @@ import { TikTokModule } from './source-company-tiktok';
 import { ToastModule } from './source-company-toast';
 import { TwilioModule } from './source-company-twilio';
 import { TwitchModule } from './source-company-twitch';
+import { TypeformModule } from './source-company-typeform';
 import { UberModule } from './source-company-uber';
 import { UdemyModule } from './source-company-udemy';
 import { VercelModule } from './source-company-vercel';
@@ -380,6 +381,7 @@ export const ALL_SOURCE_MODULES = [
   ToastModule,
   TwilioModule,
   TwitchModule,
+  TypeformModule,
   UberModule,
   UdemyModule,
   VercelModule,

@@ -142,6 +142,7 @@ module.exports = {
     '^@ever-jobs/source-company-peloton$': '<rootDir>/packages/plugins/source-company-peloton/src/index.ts',
     '^@ever-jobs/source-company-scopely$': '<rootDir>/packages/plugins/source-company-scopely/src/index.ts',
     '^@ever-jobs/source-company-squarespace$': '<rootDir>/packages/plugins/source-company-squarespace/src/index.ts',
+    '^@ever-jobs/source-company-typeform$': '<rootDir>/packages/plugins/source-company-typeform/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',
