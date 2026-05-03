@@ -15,6 +15,68 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #295 (Spec 085 closed end-to-end; new `source-company-newrelic` plugin shipped — 8 unit tests green in 9.279 s; helpers regression + Marqeta + Maven Clinic + Fivetran + Bitwarden + Calendly cross-regression 117/117 still green in 13.808 s; **seventh plugin in the fifth fresh probe sweep**. The run-295 probe at start sampled **74 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/newrelic/jobs?content=true` — the run-289 probe-counter estimate of ~370 was inflated by counting all `"id":` JSON keys including department/office IDs. This is the **74th Greenhouse-backed company-direct plugin** in the catalogue and the **twentieth** to use **wire-shape variant 2** — the canonical Greenhouse host `https://job-boards.greenhouse.io/newrelic/jobs/<id>` shape; the **forty-first** to use the entity-decode-then-tag-strip description pipeline. **D-10 applied** — 16 of 74 wire titles in the run-295 probe carry pad bytes (~21.6 % pad rate — the **second-highest D-10 pad rate observed in the cohort to date** after fuboTV's run-281 ~91 % outlier). Pad-form distribution: 4 leading-only, 12 trailing-only, 1 BOTH-LEADING-AND-TRAILING (`" Account Executive - Commercial "`). **First cohort observation of dual-pad on the title axis** — opening a new sub-axis under D-10 analogous to DataCamp's run-291 leading-pad sub-axis under D-11. Standard `String.prototype.trim()` handles all three sub-axes (leading-only, trailing-only, dual) in a single call — no implementation change vs Maven Clinic. **Twenty-first cohort plugin to apply D-10**. **D-09 omitted with internal-whitespace wire asymmetry** — wire `company_name === 'New Relic'` byte-for-byte (9 bytes; slug `newrelic` is 8 bytes — slug/wire-asymmetric, wire LONGER than slug by 1 byte via the internal ASCII space at index 3 between `New` and `Relic`). Same shape as Maven Clinic / Stitch Fix / Scale AI — **fourth** internal-whitespace asymmetry case in the cohort. **Thirty-fourth cohort plugin to omit D-09**, ninth slug/wire asymmetry case overall. **D-11 omitted** — 0 of 74 wire department names padded (clean multi-token forms with internal whitespace, ampersands, and commas — `'Commercial'`, `'Enterprise'`, `'Technical Solution Sales'`, `'G&A, Executive'`, `'Alliances & Channels'`, `'Content, Creative & Communications'`, `'New Relic Global Enablement'`); **thirty-first cohort plugin** with fully-clean department pass-through. **Zero structural deviations** from the Maven Clinic (Spec 076) template — making this the **sixth** Greenhouse-only company-direct plugin in run-history to ship as a clean re-spin (after Coursera off Chime at run #278, Flexport off Faire at run #280, Glossier off Flexport at run #282, and Marqeta off Calendly at run #294). All axes share with Maven Clinic: D-04 wire-shape variant 2, D-08 entity-decode-then-tag-strip, D-09 omitted with internal-whitespace wire asymmetry, D-10 applied (New Relic 16/74 ~21.6 %; Maven Clinic 3/24 ~12.5 %), D-11 fully-clean department pass-through. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-seventh live-board hit** after Bitwarden, Calendly, DataCamp, Fivetran, Lookout, and Marqeta. The remaining four live hits queue for runs #296+ in alphabetical order (`peloton` next at run #296 with ~104 roles).)
+
+**Scope:** Run #295 continues the user-owner-directed concrete-action
+deviation. Per Spec 084's run #294 close-out note (which queued
+New Relic as run #295's bite — the alphabetically-seventh live
+hit from the fifth-fresh-sweep candidate pool), this run takes
+**New Relic**.
+
+New Relic — operator of the **dominant SaaS observability
+platform pioneered around the unified-telemetry-and-AI-monitoring
+data model** (founded by Lew Cirne in 2008 in San Francisco;
+IPO'd on NYSE as `NEWR` in December 2014; taken private by
+Francisco Partners and TPG Capital in November 2023 at a $6.5B
+valuation; ships the New Relic One unified observability
+platform across the cybersecurity / SRE / DevOps / Performance-
+Monitoring segment — alongside competitors Datadog, Dynatrace,
+Splunk, Grafana Labs, and Honeycomb — with a hybrid distributed
+workforce concentrated across San Francisco, Portland OR,
+Atlanta, Dublin, Barcelona, and Remote across the United
+States, Europe, and Asia-Pacific) — is published at the bare
+`newrelic` Greenhouse slug (the lowercase concatenated brand-
+words; case-asymmetric AND length-asymmetric with the wire
+`company_name === 'New Relic'`) and was confirmed live via run
+#295's HTTP 200 probe.
+
+**Spec 085 — Source Company Plugin: New Relic — closed end-to-end:**
+
+- **T01:** Added `Site.NEWRELIC = 'newrelic'` enum.
+- **T02:** Scaffolded `@ever-jobs/source-company-newrelic` —
+  mirrors `source-company-mavenclinic` with the `mavenclinic` →
+  `newrelic`/`NewRelic`/`New Relic` substitutions and the inline
+  doc-comment narrative.
+- **T03:** Registered `NewRelicModule` in the four wiring files;
+  placed alphabetically after `NetlifyModule` and before
+  `NvidiaModule` (`Net` < `New` < `Nvi`).
+- **T04:** Authored `newrelic.service.spec.ts` with **8 cases**.
+  Happy-path test asserts **D-10 application lock with BOTH-
+  LEADING-AND-TRAILING-padded form** — emitted `title` for the
+  dual-padded listing equals trimmed form `'Account Executive -
+  Commercial'` AND byte-distinct from wire `' Account Executive
+  - Commercial '` AND exactly 2 bytes shorter (locking the
+  both-side-pad observable, **first cohort observation of
+  dual-pad on the title axis**). All 8 cases green in 9.279 s.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added
+  New Relic shipped row), `docs/index.md` (Spec 085 row
+  appended), and `docs/log.md` (this entry).
+
+Helpers + cross-regression sweep
+(`packages/common/__tests__/helpers.spec`,
+`source-company-marqeta`, `source-company-mavenclinic`,
+`source-company-fivetran`, `source-company-bitwarden`,
+`source-company-calendly`) → **117/117 green in 13.808 s** —
+unchanged baseline.
+
+The remaining four live hits from the fifth-fresh-sweep pool
+queue for runs #296+ in alphabetical order: `peloton` (~104
+roles, run #296 next bite), `scopely` (~1190), `squarespace`
+(~72), `typeform` (~132). After pool exhaustion (#300+) runs
+will pivot to a **sixth fresh probe sweep**.
+
+---
+
 ## 2026-05-03 — Scheduled run #294 (Spec 084 closed end-to-end; new `source-company-marqeta` plugin shipped — 8 unit tests green in 11.074 s; helpers regression + Lookout + Fivetran + Bitwarden + Calendly + DataCamp cross-regression 117/117 still green in 16.077 s; **sixth plugin in the fifth fresh probe sweep**. The run-294 probe at start sampled **33 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/marqeta/jobs?content=true` — the run-289 probe-counter estimate of ~330 was inflated by counting all `"id":` JSON keys including department/office IDs. This is the **73rd Greenhouse-backed company-direct plugin** in the catalogue and the **nineteenth** to use **wire-shape variant 2** — the canonical Greenhouse host `https://job-boards.greenhouse.io/marqeta/jobs/<id>` shape (after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, Scale AI, Cameo, Carta, Honeycomb, MasterClass, Maven Clinic, Calendly, and DataCamp); the **fortieth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 2 of 33 wire titles in the run-294 probe carry trailing ASCII-space padding (`'Group Product Manager, Fraud '`, `'Senior Director, Global Strategic Partnerships '` — both single-trailing-space-padded; ~6.1 % overall pad rate, in line with Calendly's 1/20 ~5.0 % rate); **twentieth cohort plugin to apply D-10**. **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Marqeta'` byte-for-byte (7 bytes — fully clean, case-symmetric with the lowercase slug); **thirty-third cohort plugin to omit D-09**, returning to the cohort-default D-09-omitted posture. **D-11 omitted** — 0 of 33 wire department names in the run-294 probe carry pad bytes (`'Risk Operations'`, `'Marketing - General'`, `'Credit Engineering'`, `'Risk, Fraud, Disputes Product'`, `'CyberSecurity'`, `'Core Product'` — clean multi-token forms with internal whitespace, hyphens, and commas); **thirtieth cohort plugin** with fully-clean department pass-through. **Zero structural deviations** from the Calendly (Spec 080) template — making this the **fifth** Greenhouse-only company-direct plugin in run-history to ship as a clean re-spin of a prior cohort plugin with no per-axis deviations (after Coursera off Chime at run #278, Flexport off Faire at run #280, and Glossier off Flexport at run #282). All axes share with Calendly: D-04 wire-shape variant 2, D-08 entity-decode-then-tag-strip, D-09 omitted with case-symmetric bare-brand wire, D-10 applied (Marqeta 2/33 padded ~6.1 %; Calendly 1/20 padded ~5.0 % — near-identical pad rate), D-11 fully-clean department pass-through. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-sixth live-board hit** after Bitwarden, Calendly, DataCamp, Fivetran, and Lookout. The remaining five live hits queue for runs #295+ in alphabetical order (`newrelic` next at run #295 with ~370 roles).)
 
 **Scope:** Run #294 continues the user-owner-directed concrete-action

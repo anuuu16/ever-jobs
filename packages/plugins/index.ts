@@ -124,6 +124,7 @@ import { MixpanelModule } from './source-company-mixpanel';
 import { MongoDbModule } from './source-company-mongodb';
 import { NetflixModule } from './source-company-netflix';
 import { NetlifyModule } from './source-company-netlify';
+import { NewRelicModule } from './source-company-newrelic';
 import { NvidiaModule } from './source-company-nvidia';
 import { OpenAIModule } from './source-company-openai';
 import { PinterestModule } from './source-company-pinterest';
@@ -356,6 +357,7 @@ export const ALL_SOURCE_MODULES = [
   MongoDbModule,
   NetflixModule,
   NetlifyModule,
+  NewRelicModule,
   NvidiaModule,
   OpenAIModule,
   PinterestModule,
