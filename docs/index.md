@@ -158,6 +158,7 @@
 | 091 | [Source Company Plugin: Benevity](../.specify/specs/091-source-company-benevity/spec.md) — [plan](../.specify/specs/091-source-company-benevity/plan.md) — [tasks](../.specify/specs/091-source-company-benevity/tasks.md) | All phases done (T01..T05 run #301); spec complete |
 | 092 | [Source Company Plugin: BILL (billcom)](../.specify/specs/092-source-company-billcom/spec.md) — [plan](../.specify/specs/092-source-company-billcom/plan.md) — [tasks](../.specify/specs/092-source-company-billcom/tasks.md) | All phases done (T01..T05 run #302); spec complete — first cohort observation of wire-shape variant 24 (dual-id query), TAB pad-byte under D-10, and slug-vs-wire substring-divergence under D-09 |
 | 093 | [Source Company Plugin: Bobbie](../.specify/specs/093-source-company-bobbie/spec.md) — [plan](../.specify/specs/093-source-company-bobbie/plan.md) — [tasks](../.specify/specs/093-source-company-bobbie/tasks.md) | All phases done (T01..T05 run #303); spec complete — ninth zero-deviation clean re-spin (off Coursera) |
+| 094 | [Source Company Plugin: Cerebral](../.specify/specs/094-source-company-cerebral/spec.md) — [plan](../.specify/specs/094-source-company-cerebral/plan.md) — [tasks](../.specify/specs/094-source-company-cerebral/tasks.md) | All phases done (T01..T05 run #304); spec complete — tenth zero-deviation clean re-spin (off Adyen) |
 
 ## 8. Templates
 

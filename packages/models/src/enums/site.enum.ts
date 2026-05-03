@@ -340,6 +340,8 @@ export enum Site {
   BILLCOM = 'billcom',
   // Phase 103: Spec 093 — Source Company Plugin: Bobbie
   BOBBIE = 'bobbie',
+  // Phase 104: Spec 094 — Source Company Plugin: Cerebral
+  CEREBRAL = 'cerebral',
 }
 
 /**
