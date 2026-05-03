@@ -352,6 +352,8 @@ export enum Site {
   MISFITSMARKET = 'misfitsmarket',
   // Phase 109: Spec 099 — Source Company Plugin: Monzo
   MONZO = 'monzo',
+  // Phase 110: Spec 100 — Source Company Plugin: N26
+  N26 = 'n26',
 }
 
 /**
