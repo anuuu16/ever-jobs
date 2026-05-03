@@ -15,6 +15,125 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #287 (Spec 077 closed end-to-end; new `source-company-stitchfix` plugin shipped — 8 unit tests green in 9.462 s; helpers regression + Maven Clinic + Honeycomb + MasterClass + Lattice + Glossier cross-regression 117/117 still green in 13.722 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **66th Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 16** — the bare-www brand-domain `/careers/jobs`-path duplicate-`gh_jid`-query shape `https://www.stitchfix.com/careers/jobs?gh_jid=<id>&gh_jid=<id>` — the **nineteenth distinct wire-shape variant** in the company-direct cohort; the **thirty-third** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 3 of 22 wire titles in the run-287 probe carry trailing ASCII-space padding (`'Principal Full-Stack Data Scientist - Recommendation Algorithms '`, `'Senior Manager of Data Engineering and AI Automation, Business Systems '`, `'Strategic Program Manager, Styling Enablement '` — all single-trailing-space-padded; ~13.6 % overall pad rate); **sixteenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, and Maven Clinic). **D-09 omitted with internal-whitespace wire asymmetry** — wire `company_name === 'Stitch Fix'` byte-for-byte (10 bytes; the two-word brand with single internal ASCII space at byte index 6). The slug `stitchfix` is 9 bytes — slug/wire-asymmetric, wire LONGER than slug by 1 byte (the internal space). **Twenty-seventh cohort plugin to omit D-09**, but the **seventh** slug/wire asymmetry case in the cohort (after Ramp Network, Scale AI, fuboTV, Honeycomb, MasterClass, and Maven Clinic) — and the **third** internal-whitespace asymmetry case after Scale AI and Maven Clinic (same +1 byte differential, same single-internal-space delta). Stitch Fix proves out that the Scale AI / Maven Clinic internal-whitespace shape is a stable recurring axis rather than a two-off pattern. **D-11 fully-clean** — 0 of 22 wire department names in the run-287 probe carry trailing ASCII-space padding (`'Engineering'`, `'Data Platform'`, `'Marketing'`, `'Product'` — clean single-token and multi-token forms); the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **One structural deviation** from the Maven Clinic (Spec 076) template — D-04 wire-shape variant 16 (first cohort plugin to use variant 16; distinct from Maven Clinic's variant 2 modern hosted-board apex shape). All other axes share with Maven Clinic: D-08 entity-decode-then-tag-strip, D-09 omitted with internal-whitespace wire asymmetry, D-10 applied (Stitch Fix 3/22 padded; Maven Clinic 3/24 padded — near-identical pad rate ~13.6 % vs ~12.5 %), D-11 fully-clean department pass-through. The duplicate `gh_jid` query parameter in variant 16 is the most distinctive feature — distinct from every prior cohort variant where the same query parameter appears at most once. The run-287 probe at start sampled 22 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/stitchfix/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-thirteenth live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, Lattice, MasterClass, and Maven Clinic** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier` < `honeycomb` < `lattice` < `masterclass` < `mavenclinic` < `stitchfix` < `udemy`, so this run takes Stitch Fix). The remaining one live hit queues for run #288 in alphabetical order (`udemy` with 17 roles).)
+
+**Scope:** Run #287 continues the user-owner-directed concrete-action
+deviation that runs #230–#286 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 076's run
+#286 close-out note (which queued Stitch Fix as run #287's bite —
+the alphabetically-thirteenth live hit from the fourth-fresh-sweep
+candidate pool), this run takes **Stitch Fix**. The Greenhouse
+public API was probed at run-287 start returning HTTP 200 with 22
+visible roles confirmed via direct curl probe.
+
+Stitch Fix — operator of the **dominant data-science-driven
+personal-styling-by-mail e-commerce platform pioneered around the
+algorithmic style-recommendation longitudinal-fashion data
+model** (founded by Katrina Lake in 2011 in San Francisco; IPO'd
+on NASDAQ as `SFIX` in November 2017 at a $1.6B valuation —
+peaking near $11B in 2021; ships a hybrid human-stylist /
+algorithmic-recommendation styling-as-a-service product across
+women's, men's, and kids' apparel-and-accessories segments —
+alongside competitors Trunk Club, Wantable, Daily Look, and
+Le Tote — with a hybrid in-office / remote workforce concentrated
+across the United States and the United Kingdom) — is published
+at the bare `stitchfix` Greenhouse slug (the lowercase
+concatenated two-word brand-words; case-asymmetric AND length-
+asymmetric with the wire `company_name === 'Stitch Fix'` which
+carries the brand's two-word internal-whitespace form) and was
+confirmed live via run #287's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/stitchfix/jobs?content=true`.
+Stitch Fix publishes its `absolute_url` on a **previously-
+unobserved wire-shape variant 16** — the bare-www brand-domain
+`/careers/jobs`-path duplicate-`gh_jid`-query shape — making
+this the **first** plugin in the cohort to use variant 16, the
+**nineteenth distinct wire-shape variant** in the company-direct
+cohort.
+
+Like every plugin from Klaviyo onwards, Stitch Fix's `content`
+is HTML-entity-encoded (`&lt;div class=&quot;content-intro&quot;&gt;
+&lt;h3&gt;&lt;strong&gt;About Stitch Fix, Inc. &lt;/strong&gt;&lt;/h3&gt;
+&lt;p&gt;Stitch Fix (NASDAQ: SFIX) is the leading online
+personal styling service...`) and uses the entity-decode-then-
+tag-strip pipeline (Spec 077 § 10 D-08) — making this the
+**thirty-third** plugin to use that pipeline. Stitch Fix's wire
+`company_name` is the literal two-word brand string
+`'Stitch Fix'` byte-for-byte (10 bytes; slug `stitchfix` is 9
+bytes — slug/wire-asymmetric, wire LONGER than slug by 1 byte
+via the internal ASCII space at index 6 between `Stitch` and
+`Fix`); the plugin reads `listing.company_name` directly with
+`'Stitch Fix'` as a defensive fallback (D-09 omitted with
+internal-whitespace asymmetry — the **third** cohort case where
+wire and slug differ by an internal whitespace byte after Scale
+AI and Maven Clinic). Stitch Fix's wire title payload is 3-of-22
+padded — D-10 applied with single-trailing-pad form. Stitch
+Fix's wire department payload is fully clean (0 of 22 padded)
+— D-11 byte-for-byte pass-through is a no-op on the clean wire
+data. Class names are `StitchfixService` / `StitchfixModule`
+(PascalCase from the lowercase concatenated slug rather than
+the two-word wire `Stitch Fix` to keep class names slug-derived
+for grep symmetry across the cohort and avoid TypeScript class
+names containing internal whitespace; D-06).
+
+**Spec 077 — Source Company Plugin: Stitch Fix — closed end-to-end:**
+
+- **T01:** Added `Site.STITCHFIX = 'stitchfix'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 87:
+  Spec 077 — Source Company Plugin: Stitch Fix` header (preserves
+  the Spec 006 / 013 / 020..076 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-stitchfix` with
+  the five-file shape (`package.json`, `tsconfig.json`,
+  `src/index.ts`, `src/stitchfix.module.ts`,
+  `src/stitchfix.service.ts`); mirrors `source-company-mavenclinic`
+  with the `stitchfix`/`Stitchfix`/`Stitch Fix` substitutions, the
+  variant-16 wire-shape pass-through with variant-2 fallback, the
+  internal-whitespace-asymmetric wire `'Stitch Fix'` defensive
+  fallback, and the inline doc-comment narrative.
+- **T03:** Registered `StitchfixModule` in the four wiring files
+  (`packages/plugins/index.ts` import + `ALL_SOURCE_MODULES` append,
+  `tsconfig.base.json` path-alias, `jest.config.js`
+  `moduleNameMapper`). Placed alphabetically after `ScaleaiModule`
+  and before `StripeModule` (`Sca` < `Sti` < `Str`).
+- **T04:** Authored `stitchfix.service.spec.ts` with **8 cases** —
+  NestJS DI registration scaffolding, `Site.STITCHFIX` literal pin,
+  happy-path 2-listing fixture map (with regression assertions for
+  variant-16 URL pass-through with the duplicate-`gh_jid`-query
+  parameter exact-twice-occurrence lock, decode-then-strip
+  pipeline cleanliness, internal-whitespace-asymmetric wire
+  `companyName` byte-for-byte, D-10 application lock — `'Principal
+  Full-Stack Data Scientist - Recommendation Algorithms '` →
+  `'Principal Full-Stack Data Scientist - Recommendation
+  Algorithms'` trim assertion with byte-distinct + 1-byte-shorter
+  checks, D-11 omission lock — wire-clean department pass-through
+  for both listings, and the internal-whitespace asymmetry lock
+  via byte-distinct + +1-byte-length + case-insensitively-with-
+  space-collapsed-equal assertions), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive against the
+  trimmed form — D-10 search guard), `searchTerm` filter on
+  department (case-insensitive), HTTP 500 → empty response, empty
+  `data.jobs` → empty response. All 8 cases green in 9.462 s.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added Stitch
+  Fix shipped row), `docs/index.md` (Spec 077 row appended), and
+  `docs/log.md` (this entry).
+
+Helpers + cross-regression sweep (`packages/common/__tests__/helpers.spec`,
+`source-company-mavenclinic`, `source-company-honeycomb`,
+`source-company-masterclass`, `source-company-lattice`,
+`source-company-glossier`) → **117/117 green in 13.722 s** —
+unchanged from the run-286 baseline; no parser-level regressions
+introduced by the Stitch Fix plugin landing.
+
+The remaining one live hit from the fourth-fresh-sweep candidate
+pool queues for run #288 in alphabetical order: `udemy` (17
+roles, run #288 next bite). Subsequent runs after the pool is
+exhausted (#289+ by current arithmetic) will pivot to a **fifth
+fresh probe sweep** targeting yet-untested large-employer
+candidate slugs.
+
+---
+
 ## 2026-05-03 — Scheduled run #286 (Spec 076 closed end-to-end; new `source-company-mavenclinic` plugin shipped — 8 unit tests green in 9.472 s; helpers regression + Honeycomb + MasterClass + Lattice + Glossier + Carta cross-regression 117/117 still green in 13.781 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **65th Greenhouse-backed company-direct plugin** in the catalogue and the **seventeenth** to use **wire-shape variant 2** — the modern hosted-board apex `https://job-boards.greenhouse.io/mavenclinic/jobs/<id>` shape (after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, Scale AI, Cameo, Carta, Honeycomb, and MasterClass); the **thirty-second** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 3 of 24 wire titles in the run-286 probe carry trailing ASCII-space padding (`'Clinical Outcomes Analyst '`, `'Director, Employer Sales '`, `'Manager, Member Services '` — all single-trailing-space-padded; ~12.5 % overall pad rate); **fifteenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, Flexport, fuboTV, Glossier, and Honeycomb). **D-09 omitted with internal-whitespace wire asymmetry** — wire `company_name === 'Maven Clinic'` byte-for-byte (12 bytes; the two-word brand with single internal ASCII space at byte index 5). The slug `mavenclinic` is 11 bytes — slug/wire-asymmetric, wire LONGER than slug by 1 byte (the internal space). **Twenty-sixth cohort plugin to omit D-09**, but the **sixth** slug/wire asymmetry case in the cohort (after Ramp Network, Scale AI, fuboTV, Honeycomb, and MasterClass) — and the **second** internal-whitespace asymmetry case after Scale AI (same +1 byte differential, same single-internal-space delta). Maven Clinic proves out that Scale AI's internal-whitespace shape was not a one-off but rather a recurring asymmetry-axis case in the cohort. **D-11 fully-clean** — 0 of 24 wire department names in the run-286 probe carry trailing ASCII-space padding (`'Brand & Communications'`, `'Clinical Outcomes'`, `'Employer Sales'`, `'Member Services'`, `'Engineering'` — clean single-token and multi-token forms with internal ampersands and whitespace); the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **One structural deviation** from the Honeycomb (Spec 073) template — D-09 omitted with internal-whitespace wire asymmetry as noted above (Maven Clinic wire 12 bytes vs. slug 11 bytes — wire 1 byte longer with internal space at index 5; Honeycomb wire 12 bytes vs. slug 9 bytes — wire 3 bytes longer with TLD suffix). The run-286 probe at start sampled 24 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/mavenclinic/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-twelfth live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, Lattice, and MasterClass** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier` < `honeycomb` < `lattice` < `masterclass` < `mavenclinic` < `stitchfix`, so this run takes Maven Clinic). The remaining two live hits queue for runs #287+ in alphabetical order (`stitchfix` next at run #287 with 22 roles).)
 
 **Scope:** Run #286 continues the user-owner-directed concrete-action
