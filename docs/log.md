@@ -15,6 +15,185 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #281 (Spec 071 closed end-to-end; new `source-company-fubotv` plugin shipped — 8 unit tests green in 9.197 s; helpers regression + Flexport + ClassPass + Coursera + Epic Games cross-regression 109/109 still green in 12.364 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **60th Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 14** — the **seventeenth distinct wire-shape variant** in the cohort: vanity-domain fixed-path query-only-id `https://careers.fubo.tv/fubotv-job-openings/?gh_jid=<id>` (vanity-domain `careers.fubo.tv` rather than the parent `fubotv.com`; `fubotv-job-openings/` fixed path; single `gh_jid` query parameter — the listing ID appears **only** in the query parameter, not in the path — distinct from variant 12's path-embedded `careers/opportunities/<id>?gh_jid=<id>` shape and variant 13's path-embedded `careers/jobs/<id>?gh_jid=<id>` shape); the **twenty-seventh** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — at least 10 of 11 wire titles in the run-281 probe carry trailing ASCII-space padding (~91 % pad rate, the **highest pad rate observed in the cohort to date**, edging out Flexport's run-280 ~9.7 % pad rate by an order of magnitude); the plugin applies `.trim()` to the wire `title` before downstream filters and emit. **Thirteenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, and Flexport). **D-09 omitted** (wire `company_name === 'Fubo'` byte-for-byte; the single-token bare brand name reflecting the 2023 rebrand from "fuboTV"; no legal-entity suffix on the wire — distinct from the legal-entity name "FuboTV Inc." that appears in current SEC filings under NYSE ticker `FUBO`). **D-11 fully-clean** — 0 of 11 wire department names in the run-281 probe carry trailing ASCII-space padding; the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **D-12 applied (new axis, first cohort application)** — 11 of 11 wire `location.name` values in the run-281 probe carry trailing ASCII-space padding (`'New York, NY '` and `'Denver, CO '` — 100 % pad-rate); the plugin applies `.trim()` to `listing.location?.name` before constructing the `LocationDto({ city })` so downstream consumers see clean `'New York, NY'`. **First cohort plugin to apply D-12.** **Two structural deviations** from the ClassPass (Spec 067) template — D-04 wire-shape variant 14 (vs. ClassPass's variant 12) and D-12 location-side `.trim()` (new axis). **Twenty-first cohort plugin to omit D-09**, but the **third** slug/wire asymmetry case in the cohort (after Ramp Network and Scale AI) — and the **first** asymmetry case where the wire is **shorter** than the slug (wire `'Fubo'` is 4 bytes; slug `fubotv` is 6 bytes), reflecting the brand's 2023 rename. The run-281 probe at start sampled 11 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/fubotv/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-seventh live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, and Flexport** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier`, so this run takes fuboTV). The remaining seven live hits queue for runs #282+ in alphabetical order (`glossier` next at run #282 with 17 roles). The HubSpot re-probe at run-281 start returned HTTP 200 with `meta.total === 0` — **nineteenth-consecutive empty re-probe** across runs #262–#281.)
+
+**Scope:** Run #281 continues the user-owner-directed concrete-action
+deviation that runs #230–#280 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 070's run
+#280 close-out note (which queued fuboTV as run #281's bite — the
+alphabetically-seventh live hit from the fourth-fresh-sweep candidate
+pool), this run takes **fuboTV**. The Greenhouse public API was
+probed at run-281 start returning HTTP 200 with 11 visible roles
+confirmed via direct curl probe.
+
+fuboTV (now branded **"Fubo"**) — operator of the **dominant
+sports-first-live-TV-streaming platform** (founded as Fanvision by
+David Gandler, Sung Ho Ahn, and Alberto Horihuela in 2015 in New
+York City; rebranded to fuboTV in 2017; rebranded again to Fubo
+in 2023; publicly traded on NYSE under ticker `FUBO` since the
+2020 IPO; combined with Hulu + Live TV in 2025; operating with
+anchor offices in New York City (HQ), Paris, and Bengaluru) — is
+published at the legacy `fubotv` Greenhouse slug (the lowercase
+brand name with the legacy "TV" suffix) and was confirmed live
+via run #281's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/fubotv/jobs?content=true`.
+Notably, fuboTV's tenant publishes its `absolute_url` on a
+**previously-unobserved wire-shape variant** — the
+**vanity-domain fixed-path query-only-id shape** `https://careers.fubo.tv/fubotv-job-openings/?gh_jid=<id>`
+(vanity-domain `careers.fubo.tv`; fixed path
+`/fubotv-job-openings/`; the listing ID appears **only** in the
+single `gh_jid` query parameter, not in the path). This is
+**wire-shape variant 14** — the **seventeenth distinct
+wire-shape variant** in the company-direct cohort and the
+**first** to publish the listing ID **only** in the query
+parameter (no path-embedded ID). The plugin emits
+`listing.absolute_url` byte-for-byte to preserve the canonical
+destination; the **fallback** `jobUrl` constructor (when
+Greenhouse omits `absolute_url`) defaults to the canonical
+Greenhouse **variant-2** form
+`https://job-boards.greenhouse.io/fubotv/jobs/<id>` rather than
+reconstructing the vanity-domain shape (same fallback strategy
+as ClassPass and Epic Games).
+
+Like every plugin from Klaviyo onwards, fuboTV's `content` is
+HTML-entity-encoded (`&lt;p&gt;&lt;strong&gt;About Fubo:&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;FuboTV Inc. is a consumer-first live TV streaming
+company...`) and uses the entity-decode-then-tag-strip pipeline
+(Spec 071 § 10 D-08) — making this the **twenty-seventh** plugin
+to use that pipeline. fuboTV's wire titles are extremely padded —
+at least 10 of 11 in the run-281 probe carry trailing ASCII-space
+padding (the single clean-title listing is `'Manager, Business
+Development - Platform Partnerships'`); the plugin applies
+`.trim()` to the wire `title` before downstream filters and emit
+(D-10 applied). fuboTV's wire `company_name` is the literal
+single-token string `'Fubo'` byte-for-byte (4 bytes; reflecting
+the 2023 rebrand from "fuboTV"), **byte-distinct from the slug
+`fubotv` (6 bytes)** — the **third** slug/wire asymmetry case in
+the cohort and the **first** asymmetry case where the wire is
+shorter than the slug. The plugin reads `listing.company_name`
+directly without a string-literal pin (D-09 omitted). fuboTV's
+wire `departments[0].name` payload is **fully clean** — 0 of 11
+wire department names in the run-281 probe carry trailing pad
+bytes (D-11 byte-for-byte pass-through is a no-op on the clean
+wire data). Notably, fuboTV's wire `location.name` payload is
+**universally padded** — 11 of 11 wire location names in the
+run-281 probe carry trailing ASCII-space padding (`'New York,
+NY '` and `'Denver, CO '` — 100 % pad-rate); the plugin applies
+`.trim()` to `listing.location?.name` before constructing the
+`LocationDto({ city })` so downstream consumers see clean
+`'New York, NY'` rather than padded `'New York, NY '` (**D-12
+applied — first cohort plugin to apply D-12; new deviation
+axis**). Class names are `FubotvService` / `FubotvModule`
+(PascalCase from the lowercase slug as a single Pascal token —
+matches the convention `EpicgamesService` and `ClasspassService`
+use for slug-derived class names from compound slugs that don't
+decompose along obvious word boundaries; D-06).
+
+**Spec 071 — Source Company Plugin: fuboTV — closed end-to-end:**
+
+- **T01:** Added `Site.FUBOTV = 'fubotv'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 81:
+  Spec 071 — Source Company Plugin: fuboTV` header (preserves the
+  Spec 006 / 013 / 020..070 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-fubotv` with the
+  ClassPass-shape (single-file `service.ts`, 4-line `module.ts`,
+  2-line `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`),
+  with two structural deviations from the ClassPass template
+  (D-04 variant 14 and D-12 location-side `.trim()`).
+- **T03:** Registered `FubotvModule` in the four wiring files —
+  `packages/plugins/index.ts` (alphabetised between
+  `FlexportModule` and `GitlabModule` per the alphabetical
+  ordering — `Fle` < `Fub` < `Git`), `tsconfig.base.json`,
+  `jest.config.js`, preserving the existing alphabetisation
+  conventions.
+- **T04:** Authored 8 unit tests under
+  `packages/plugins/source-company-fubotv/__tests__/fubotv.service.spec.ts`
+  + 2-listing fixture (clean title `'Manager, Business
+  Development - Platform Partnerships'` / `'Business Development'`
+  department / wire-padded location `'New York, NY '` + wire-padded
+  title `'Senior Software Engineer, Backend '` / `'Technology'`
+  department / wire-padded location `'Denver, CO '`). Tests cover:
+  NestJS DI resolution, `Site.FUBOTV === 'fubotv'` literal pin,
+  happy-path 2-listing mapping (with regression guards for D-04
+  variant-14 shape, D-08 decode-then-strip pipeline, D-09
+  slug/wire-asymmetric `companyName === 'Fubo'`, D-10
+  application, D-11 byte-for-byte department pass-through, D-12
+  location-side `.trim()` application — emitted `location.city`
+  for both listings byte-distinct from wire-padded form AND
+  exactly 1 byte shorter), `resultsWanted=1` cap, `searchTerm`
+  filter on title (case-insensitive `'SOFTWARE ENGINEER'` → 1
+  match), `searchTerm` filter on department (`'technology'` → 1
+  match), HTTP 500 → empty, empty `data.jobs` → empty.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added
+  fuboTV shipped row), `docs/index.md` (added Spec 071 row), and
+  this `docs/log.md` entry.
+
+**Local test verification:**
+- `npx jest packages/plugins/source-company-fubotv --colors=false`
+  → 8/8 green in 9.197 s.
+- `npx jest packages/plugins/source-company-flexport packages/plugins/source-company-classpass packages/plugins/source-company-coursera packages/plugins/source-company-epicgames packages/common/__tests__/helpers.spec --colors=false`
+  → 109/109 still green in 12.364 s (cross-regression unchanged).
+
+**Test count:** Repository jest suite gains 8 cases (fuboTV) for
+a new total of 117 assertions exercised under run-281's local
+pre-push verification (8 fuboTV + 109 cross-regression).
+
+**Cohort statistics after Spec 071:**
+
+- **60** Greenhouse-backed company-direct plugins shipped
+  (Anthropic..Flexport + **fuboTV** — plus the seven legacy
+  company-direct plugins from before Spec 020).
+- **15** plugins on wire-shape variant 2 (unchanged).
+- **3** plugins on wire-shape variant 10 (unchanged).
+- **1** plugin on wire-shape variant 11 (Elastic).
+- **1** plugin on wire-shape variant 12 (ClassPass).
+- **1** plugin on wire-shape variant 13 (Epic Games).
+- **1** plugin on wire-shape variant 14 (**fuboTV** — first
+  cohort plugin to publish the listing ID only in the query
+  parameter, not in the path).
+- **27** plugins on the entity-decode-then-tag-strip description
+  pipeline (Klaviyo..Flexport + **fuboTV**).
+- **13** plugins applying a wire-title `.trim()` (D-10): Brex,
+  Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel,
+  Faire, Carta, ClassPass, Epic Games, Flexport, **fuboTV**.
+- **4** plugins applying a brand-name trim (D-09 string-literal
+  pin): Affirm, Gusto, ZoomInfo, Chime — fuboTV does NOT
+  contribute (wire `company_name === 'Fubo'` byte-for-byte;
+  single-token bare brand without legal-entity suffix; **twenty-
+  first cohort plugin to omit D-09**, but the **third
+  slug/wire asymmetry case** in the cohort — first where the
+  wire is shorter than the slug).
+- **1** plugin shipping a wire department-name with trailing
+  ASCII-space padding pass-through observability (D-11
+  partial-pad): Cameo (fuboTV does NOT contribute — fuboTV's
+  wire department names are fully clean, 0 of 11 padded).
+- **1** plugin applying a wire-`location.name` `.trim()`
+  (D-12): **fuboTV — first cohort plugin to apply D-12; new
+  deviation axis.**
+
+**Q-042 reminder:** unchanged — pending review since run #84
+(~197 runs / ~197 hours of agent wall-clock); fourth-reminder
+window opened at run #250 per the run #200 forward-pointer
+convention; next reminder window opens at run #300; Default C
+continues.
+
+**Run-281 next steps queue (runs #282+):**
+
+1. **The fourth-fresh-sweep live-board pool has 7 unshipped live
+   hits remaining**, in alphabetical order: `glossier` (17
+   roles, run #282 next bite), `honeycomb` (10), `lattice`
+   (11), `masterclass` (6), `mavenclinic` (24), `stitchfix`
+   (22), `udemy` (17). Run #282 should take **Glossier**
+   (alphabetically next after fuboTV).
+2. Re-probe `hubspot` at the start of run #282 to check if the
+   empty-board status has flipped (twentieth consecutive
+   re-probe; if still empty, follow the documented "remains
+   deferred" pattern).
+
+---
+
 ## 2026-05-03 — Scheduled run #280 (Spec 070 closed end-to-end; new `source-company-flexport` plugin shipped — 8 unit tests green in 9.451 s; helpers regression + Faire + Chime + Coursera + Epic Games cross-regression 110/110 still green in 12.403 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **59th Greenhouse-backed company-direct plugin** in the catalogue and the **third** to use **wire-shape variant 10** — the legacy hosted-board apex `https://boards.greenhouse.io/flexport/jobs/<id>?gh_jid=<id>` shape (after Chime and Faire); the **twenty-sixth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — at least 11 of 113 wire titles in the run-280 probe carry trailing ASCII-space padding (`'Area Manager '`, `'Country Manager, Mexico '`, `'Manager, Air Operations '`, plus 8 others; ~9.7 % pad rate, **the highest pad rate observed in the cohort to date**); the plugin applies `.trim()` to the wire `title` before downstream filters and emit. **Twelfth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, and Epic Games). **D-09 omitted** (wire `company_name === 'Flexport'` byte-for-byte; the single-token bare brand name; no legal-entity suffix on the wire — distinct from the legal-entity name "Flexport, Inc." that may appear in corporate filings). **D-11 fully-clean** — 0 of 113 wire department names in the run-280 probe carry trailing ASCII-space padding; the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **Zero structural deviations** from the Faire (Spec 063) template — making this the **second** Greenhouse-only company-direct plugin in run-history to ship as a clean re-spin of a prior cohort plugin with no per-axis deviations (after Coursera off Chime at run #278). **Twentieth cohort plugin to omit D-09**, returning to the single-word bare-brand wire form. The run-280 probe at start sampled 113 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/flexport/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-sixth live-board hit after Cameo, Carta, ClassPass, Coursera, and Epic Games** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv`, so this run takes Flexport). The remaining eight live hits queue for runs #281+ in alphabetical order (`fubotv` next at run #281 with 11 roles). The HubSpot re-probe at run-280 start returned HTTP 200 with `meta.total === 0` — **eighteenth-consecutive empty re-probe** across runs #262–#280.)
 
 **Scope:** Run #280 continues the user-owner-directed concrete-action

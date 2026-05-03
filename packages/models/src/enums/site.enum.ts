@@ -294,6 +294,8 @@ export enum Site {
   EPICGAMES = 'epicgames',
   // Phase 80: Spec 070 — Source Company Plugin: Flexport
   FLEXPORT = 'flexport',
+  // Phase 81: Spec 071 — Source Company Plugin: fuboTV
+  FUBOTV = 'fubotv',
 }
 
 /**
