@@ -79,6 +79,7 @@ module.exports = {
     '^@ever-jobs/source-company-coinbase$': '<rootDir>/packages/plugins/source-company-coinbase/src/index.ts',
     '^@ever-jobs/source-company-doordash$': '<rootDir>/packages/plugins/source-company-doordash/src/index.ts',
     '^@ever-jobs/source-company-airbnb$': '<rootDir>/packages/plugins/source-company-airbnb/src/index.ts',
+    '^@ever-jobs/source-company-airtable$': '<rootDir>/packages/plugins/source-company-airtable/src/index.ts',
     '^@ever-jobs/source-company-robinhood$': '<rootDir>/packages/plugins/source-company-robinhood/src/index.ts',
     '^@ever-jobs/source-company-reddit$': '<rootDir>/packages/plugins/source-company-reddit/src/index.ts',
     '^@ever-jobs/source-company-pinterest$': '<rootDir>/packages/plugins/source-company-pinterest/src/index.ts',

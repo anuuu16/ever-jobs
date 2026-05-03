@@ -69,6 +69,7 @@ import { ClojurejobsModule } from './source-clojurejobs';
 import { AdyenModule } from './source-company-adyen';
 import { AffirmModule } from './source-company-affirm';
 import { AirbnbModule } from './source-company-airbnb';
+import { AirtableModule } from './source-company-airtable';
 import { AmazonModule } from './source-company-amazon';
 import { AnthropicModule } from './source-company-anthropic';
 import { AppleModule } from './source-company-apple';
@@ -322,6 +323,7 @@ export const ALL_SOURCE_MODULES = [
   AdyenModule,
   AffirmModule,
   AirbnbModule,
+  AirtableModule,
   AmazonModule,
   AnthropicModule,
   AppleModule,

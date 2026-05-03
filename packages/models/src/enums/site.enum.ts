@@ -364,6 +364,8 @@ export enum Site {
   SWEETGREEN = 'sweetgreen',
   // Phase 115: Spec 105 — Source Company Plugin: xAI
   XAI = 'xai',
+  // Phase 116: Spec 106 — Source Company Plugin: Airtable
+  AIRTABLE = 'airtable',
 }
 
 /**
