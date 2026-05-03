@@ -336,6 +336,8 @@ export enum Site {
   ADYEN = 'adyen',
   // Phase 101: Spec 091 — Source Company Plugin: Benevity
   BENEVITY = 'benevity',
+  // Phase 102: Spec 092 — Source Company Plugin: BILL (billcom)
+  BILLCOM = 'billcom',
 }
 
 /**

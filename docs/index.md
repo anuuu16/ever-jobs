@@ -156,6 +156,7 @@
 | 089 | [Source Company Plugin: Typeform](../.specify/specs/089-source-company-typeform/spec.md) — [plan](../.specify/specs/089-source-company-typeform/plan.md) — [tasks](../.specify/specs/089-source-company-typeform/tasks.md) | All phases done (T01..T05 run #299); spec complete |
 | 090 | [Source Company Plugin: Adyen](../.specify/specs/090-source-company-adyen/spec.md) — [plan](../.specify/specs/090-source-company-adyen/plan.md) — [tasks](../.specify/specs/090-source-company-adyen/tasks.md) | All phases done (T01..T05 run #300); spec complete — first plugin in sixth fresh probe sweep |
 | 091 | [Source Company Plugin: Benevity](../.specify/specs/091-source-company-benevity/spec.md) — [plan](../.specify/specs/091-source-company-benevity/plan.md) — [tasks](../.specify/specs/091-source-company-benevity/tasks.md) | All phases done (T01..T05 run #301); spec complete |
+| 092 | [Source Company Plugin: BILL (billcom)](../.specify/specs/092-source-company-billcom/spec.md) — [plan](../.specify/specs/092-source-company-billcom/plan.md) — [tasks](../.specify/specs/092-source-company-billcom/tasks.md) | All phases done (T01..T05 run #302); spec complete — first cohort observation of wire-shape variant 24 (dual-id query), TAB pad-byte under D-10, and slug-vs-wire substring-divergence under D-09 |
 
 ## 8. Templates
 
