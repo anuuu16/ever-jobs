@@ -145,6 +145,7 @@
 | 078 | [Source Company Plugin: Udemy](../.specify/specs/078-source-company-udemy/spec.md) — [plan](../.specify/specs/078-source-company-udemy/plan.md) — [tasks](../.specify/specs/078-source-company-udemy/tasks.md) | All phases done (T01..T05 run #288); spec complete |
 | 079 | [Source Company Plugin: Bitwarden](../.specify/specs/079-source-company-bitwarden/spec.md) — [plan](../.specify/specs/079-source-company-bitwarden/plan.md) — [tasks](../.specify/specs/079-source-company-bitwarden/tasks.md) | All phases done (T01..T05 run #289); spec complete |
 | 080 | [Source Company Plugin: Calendly](../.specify/specs/080-source-company-calendly/spec.md) — [plan](../.specify/specs/080-source-company-calendly/plan.md) — [tasks](../.specify/specs/080-source-company-calendly/tasks.md) | All phases done (T01..T05 run #290); spec complete |
+| 081 | [Source Company Plugin: DataCamp](../.specify/specs/081-source-company-datacamp/spec.md) — [plan](../.specify/specs/081-source-company-datacamp/plan.md) — [tasks](../.specify/specs/081-source-company-datacamp/tasks.md) | All phases done (T01..T05 run #291); spec complete |
 
 ## 8. Templates
 

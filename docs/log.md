@@ -15,6 +15,93 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #291 (Spec 081 closed end-to-end; new `source-company-datacamp` plugin shipped — 8 unit tests green in 7.840 s; helpers regression + MasterClass + Lattice + Calendly + Bitwarden + Udemy cross-regression 117/117 still green in 15.906 s; **third plugin in the fifth fresh probe sweep** following Bitwarden (run #289) and Calendly (run #290). Spec 081 was partially pre-scaffolded (spec.md / plan.md / tasks.md / src + module + service + package.json + tsconfig + 4-file wirings + fixture + test-spec) by an out-of-band batch operation; run #291's work picked up from that point and verified the implementation, ran the test suite, ran cross-regression, and added the doc updates (index.md, log.md, SOURCE_ADOPTION_BACKLOG.md). The run-291 probe at start sampled 41 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/datacamp/jobs?content=true`. This is the **70th Greenhouse-backed company-direct plugin** in the catalogue and the **eighteenth** to use **wire-shape variant 2** — the modern hosted-board apex `https://job-boards.greenhouse.io/datacamp/jobs/<id>` shape (after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, Scale AI, Cameo, Carta, Honeycomb, MasterClass, Maven Clinic, and Calendly); the **thirty-seventh** to use the entity-decode-then-tag-strip description pipeline; **D-10 omitted** — 0 of 41 wire titles in the run-291 probe carry whitespace padding (the wire is fully clean — `'Curriculum Manager - Data Science and AI'`, `'Senior Data Engineer'`, etc.); **thirteenth cohort plugin to omit D-10**. **D-09 omitted with case-only asymmetry** — wire `company_name === 'DataCamp'` byte-for-byte (8 bytes; the CamelCase brand form). The slug `datacamp` is also 8 bytes — slug/wire EQUAL-byte-length but byte-distinct via case alone at byte index 4 (`c` vs `C`). **Thirty-first cohort plugin to omit D-09**, but the **eighth slug/wire asymmetry case overall** (after Ramp Network, Scale AI, fuboTV, Honeycomb, MasterClass, Maven Clinic, and Stitch Fix) — and the **second** equal-length-case-only asymmetry case after MasterClass (proving out the case-only asymmetry shape is a recurring axis). **D-11 APPLIED with leading-pad form (FIRST cohort observation of leading-space pad on the department axis)** — 1 of 41 wire department names in the run-291 probe carries leading ASCII-space padding (`' IT'` — single-leading-space-padded; ~2.4 % pad rate; the leading-space form is distinct from Lattice's three trailing-space-padded departments at run #284, all of which were trailing-pad). The plugin applies `.trim()` to `listing.departments?.[0]?.name` before downstream filters and emit, handling both leading AND trailing pad bytes via the standard `String.prototype.trim()` semantic. **Second cohort plugin to apply D-11** (after Lattice). **One structural deviation** from the MasterClass (Spec 075) template — D-11 applied with leading-pad form (DataCamp 1/41 padded with leading-space `' IT'`; MasterClass 0/6 padded). All other axes share with MasterClass: D-04 wire-shape variant 2 (modern hosted-board apex), D-08 entity-decode-then-tag-strip, D-09 omitted with case-only asymmetry (DataCamp `'DataCamp'` 8 bytes byte 4 / MasterClass `'MasterClass'` 11 bytes byte 6), D-10 omitted (both 0/N padded). **Distinct deviation axis from Lattice's first D-11 application**: DataCamp leading-space vs Lattice trailing-space; both handled by the same `String.prototype.trim()` semantic — opening the leading-pad sub-axis under D-11. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-third live-board hit** after Bitwarden and Calendly. The remaining eight live hits queue for runs #292+ in alphabetical order (`fivetran` next at run #292 with ~346 roles).)
+
+**Scope:** Run #291 continues the user-owner-directed concrete-action
+deviation that runs #230–#290 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 080's run
+#290 close-out note (which queued DataCamp as run #291's bite — the
+alphabetically-third live hit from the fifth-fresh-sweep candidate
+pool), this run takes **DataCamp**.
+
+DataCamp — operator of the **dominant data-and-AI-skills online-
+learning platform pioneered around the in-browser interactive-
+coding-exercise data model** (founded by Jonathan Cornelissen,
+Dieter De Mesmaeker, and Martijn Theuwissen in 2013 in Leuven,
+Belgium; raised $30M+ across rounds led by Spectrum Equity,
+Accomplice, and Arthur Ventures; ships a hybrid B2C interactive-
+coding-tutorial subscription + B2B DataCamp for Business
+enterprise-skill-tracking platform across the lifelong-learning
+segment — alongside competitors Coursera, Udemy, Pluralsight,
+edX, and Codecademy — with a hybrid distributed workforce
+concentrated across Belgium, the Netherlands, the United Kingdom,
+and Remote EU/US) — is published at the bare `datacamp` Greenhouse
+slug (the lowercase concatenated brand-words; case-asymmetric with
+the wire `company_name === 'DataCamp'` which carries the brand's
+CamelCase form) and was confirmed live via run #291's HTTP 200
+probe of `https://api.greenhouse.io/v1/boards/datacamp/jobs?content=true`.
+
+**Spec 081 — Source Company Plugin: DataCamp — closed end-to-end:**
+
+- **T01:** `Site.DATACAMP = 'datacamp'` already in
+  `packages/models/src/enums/site.enum.ts` under the `// Phase 91:
+  Spec 081 — Source Company Plugin: DataCamp` header.
+- **T02:** `@ever-jobs/source-company-datacamp` package already
+  scaffolded (five-file shape: `package.json`, `tsconfig.json`,
+  `src/index.ts`, `src/datacamp.module.ts`,
+  `src/datacamp.service.ts`); mirrors `source-company-masterclass`
+  with the `datacamp`/`DataCamp` substitutions, the D-11
+  application (`.trim()` on `listing.departments?.[0]?.name`),
+  and the inline doc-comment narrative. Class names are
+  `DataCampService` / `DataCampModule` (PascalCase preserving the
+  internal capital `C` from the wire CamelCase form, distinct
+  from the slug-derived `MasterclassService` convention but
+  matching the wire's CamelCase shape).
+- **T03:** `DataCampModule` already registered in the four
+  wiring files (`packages/plugins/index.ts` import +
+  `ALL_SOURCE_MODULES` append, `tsconfig.base.json` path-alias,
+  `jest.config.js` `moduleNameMapper`). Placed alphabetically
+  after `DatabricksModule` and before `DatadogModule` (`Datab` <
+  `Datac` < `Datad`).
+- **T04:** Test fixture and `datacamp.service.spec.ts` (8 cases)
+  also already in place via the pre-scaffolding. Verified all 8
+  cases pass — NestJS DI registration scaffolding, `Site.DATACAMP`
+  literal pin, happy-path 2-listing fixture map (with regression
+  assertions for variant-2 URL pass-through, decode-then-strip
+  pipeline cleanliness, case-only-asymmetric wire `companyName`
+  byte-for-byte, D-10 omission lock — wire-clean title pass-
+  through for both listings, and **D-11 application lock with
+  leading-pad form** — `' IT'` → `'IT'` trim assertion with
+  byte-distinct + 1-byte-shorter + does-NOT-start-with-leading-
+  space checks), `resultsWanted=1` cap, `searchTerm` filter on
+  title (case-insensitive), `searchTerm` filter on department
+  (case-insensitive against the trimmed form — D-11 search
+  guard), HTTP 500 → empty response, empty `data.jobs` → empty
+  response. All 8 cases green in 7.840 s.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added
+  DataCamp shipped row), `docs/index.md` (Spec 081 row appended),
+  and `docs/log.md` (this entry).
+
+Helpers + cross-regression sweep
+(`packages/common/__tests__/helpers.spec`,
+`source-company-masterclass`, `source-company-lattice`,
+`source-company-calendly`, `source-company-bitwarden`,
+`source-company-udemy`) → **117/117 green in 15.906 s** —
+unchanged from the run-290 baseline; no parser-level regressions
+introduced by the DataCamp plugin landing.
+
+The remaining eight live hits from the fifth-fresh-sweep
+candidate pool queue for runs #292+ in alphabetical order:
+`fivetran` (~346 roles, run #292 next bite), `lookout` (~12),
+`marqeta` (~330), `newrelic` (~370), `peloton` (~104), `scopely`
+(~1190), `squarespace` (~72), `typeform` (~132). Subsequent runs
+after the pool is exhausted (#300+ by current arithmetic) will
+pivot to a **sixth fresh probe sweep**.
+
+---
+
 ## 2026-05-03 — Scheduled run #290 (Spec 080 closed end-to-end; new `source-company-calendly` plugin shipped — 8 unit tests green in 10.185 s; **second plugin in the fifth fresh probe sweep** following the run-289 launch. Spec 080 was partially pre-scaffolded (spec.md / plan.md / tasks.md / src + module + service + package.json + tsconfig + 4-file wirings + fixture) by an out-of-band batch operation; run #290's work picked up from that point and added the missing pieces: (a) authored `calendly.service.spec.ts` with 8 cases (NestJS DI, enum-literal pin, happy-path 2-listing fixture map with all decoration locks, `resultsWanted=1` cap, `searchTerm` filter on title and department, HTTP 500 → empty, empty `data.jobs` → empty), (b) updated `docs/index.md` (Spec 080 row), `docs/log.md` (this entry), and `docs/SOURCE_ADOPTION_BACKLOG.md` (Calendly shipped row). The run-290 probe at start sampled 20 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/calendly/jobs?content=true` — slightly under the run-289 probe-sweep estimate of 40 (the discrepancy is the run-289 probe-counter inflation from counting all `"id":` JSON keys including department/office IDs rather than just job IDs; the actual job count is 20). This is the **69th Greenhouse-backed company-direct plugin** in the catalogue and the **eighteenth** to use **wire-shape variant 2** — the modern hosted-board apex `https://job-boards.greenhouse.io/calendly/jobs/<id>` shape (returning to baseline after Bitwarden's first-cohort variant-18 observation in Spec 079); the **thirty-sixth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 1 of 20 wire titles in the run-290 probe carries trailing ASCII-space padding (`'Sr. Director, Engineering '` — single-trailing-space-padded; ~5.0 % overall pad rate, the **lowest cohort observation among D-10-applying plugins** since Carta's run-276 ~10 % rate); **nineteenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, Maven Clinic, Stitch Fix, Udemy, and Bitwarden). **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Calendly'` byte-for-byte (8 bytes; case-symmetric with the lowercase slug `calendly`); no legal-entity suffix on the wire — distinct from the legal-entity name "Calendly LLC" that may appear in corporate filings. **Thirtieth cohort plugin to omit D-09**, returning to the case-symmetric bare-brand wire form. **D-11 fully-clean** — 0 of 20 wire department names in the run-290 probe carry trailing ASCII-space padding (`'Marketing'`, `'Engineering'`, `'Product'`, `'Customer Experience'`, `'Security'` — clean single-token and multi-token forms); the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **One structural deviation** from the Bitwarden (Spec 079) template — D-04 wire-shape variant 2 (canonical Greenhouse host; Calendly returns to baseline after Bitwarden's variant-18 first-cohort observation). All other axes share with Bitwarden: D-08 entity-decode-then-tag-strip, D-09 omitted with case-symmetric bare-brand wire, D-10 applied (Calendly 1/20 padded ~5.0 %; Bitwarden 1/11 padded ~9.1 % — Calendly's posting hygiene slightly cleaner), D-11 fully-clean department pass-through. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-second live-board hit** after Bitwarden. The remaining nine live hits queue for runs #291+ in alphabetical order (`datacamp` next at run #291).)
 
 **Scope:** Run #290 continues the user-owner-directed concrete-action

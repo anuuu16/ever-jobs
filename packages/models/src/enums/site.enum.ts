@@ -314,6 +314,8 @@ export enum Site {
   BITWARDEN = 'bitwarden',
   // Phase 90: Spec 080 — Source Company Plugin: Calendly
   CALENDLY = 'calendly',
+  // Phase 91: Spec 081 — Source Company Plugin: DataCamp
+  DATACAMP = 'datacamp',
 }
 
 /**
