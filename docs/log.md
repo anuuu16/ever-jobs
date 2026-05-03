@@ -15,6 +15,81 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #294 (Spec 084 closed end-to-end; new `source-company-marqeta` plugin shipped — 8 unit tests green in 11.074 s; helpers regression + Lookout + Fivetran + Bitwarden + Calendly + DataCamp cross-regression 117/117 still green in 16.077 s; **sixth plugin in the fifth fresh probe sweep**. The run-294 probe at start sampled **33 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/marqeta/jobs?content=true` — the run-289 probe-counter estimate of ~330 was inflated by counting all `"id":` JSON keys including department/office IDs. This is the **73rd Greenhouse-backed company-direct plugin** in the catalogue and the **nineteenth** to use **wire-shape variant 2** — the canonical Greenhouse host `https://job-boards.greenhouse.io/marqeta/jobs/<id>` shape (after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, Scale AI, Cameo, Carta, Honeycomb, MasterClass, Maven Clinic, Calendly, and DataCamp); the **fortieth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 2 of 33 wire titles in the run-294 probe carry trailing ASCII-space padding (`'Group Product Manager, Fraud '`, `'Senior Director, Global Strategic Partnerships '` — both single-trailing-space-padded; ~6.1 % overall pad rate, in line with Calendly's 1/20 ~5.0 % rate); **twentieth cohort plugin to apply D-10**. **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Marqeta'` byte-for-byte (7 bytes — fully clean, case-symmetric with the lowercase slug); **thirty-third cohort plugin to omit D-09**, returning to the cohort-default D-09-omitted posture. **D-11 omitted** — 0 of 33 wire department names in the run-294 probe carry pad bytes (`'Risk Operations'`, `'Marketing - General'`, `'Credit Engineering'`, `'Risk, Fraud, Disputes Product'`, `'CyberSecurity'`, `'Core Product'` — clean multi-token forms with internal whitespace, hyphens, and commas); **thirtieth cohort plugin** with fully-clean department pass-through. **Zero structural deviations** from the Calendly (Spec 080) template — making this the **fifth** Greenhouse-only company-direct plugin in run-history to ship as a clean re-spin of a prior cohort plugin with no per-axis deviations (after Coursera off Chime at run #278, Flexport off Faire at run #280, and Glossier off Flexport at run #282). All axes share with Calendly: D-04 wire-shape variant 2, D-08 entity-decode-then-tag-strip, D-09 omitted with case-symmetric bare-brand wire, D-10 applied (Marqeta 2/33 padded ~6.1 %; Calendly 1/20 padded ~5.0 % — near-identical pad rate), D-11 fully-clean department pass-through. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-sixth live-board hit** after Bitwarden, Calendly, DataCamp, Fivetran, and Lookout. The remaining five live hits queue for runs #295+ in alphabetical order (`newrelic` next at run #295 with ~370 roles).)
+
+**Scope:** Run #294 continues the user-owner-directed concrete-action
+deviation. Per Spec 083's run #293 close-out note (which queued
+Marqeta as run #294's bite — the alphabetically-sixth live hit
+from the fifth-fresh-sweep candidate pool), this run takes
+**Marqeta**.
+
+Marqeta — operator of the **dominant modern card-issuing
+platform pioneered around the open-API embedded-payments-and-
+instant-funds-disbursement data model** (founded by Jason
+Gardner in 2010 in Oakland, CA; IPO'd on NASDAQ as `MQ` in June
+2021 at a $14B valuation; ships a B2B card-issuing + program-
+management platform across the embedded-payments segment —
+alongside competitors Stripe Issuing, Lithic, Galileo, Adyen
+Issuing, and i2c — with a hybrid distributed workforce
+concentrated across Oakland, London, Singapore, and Remote
+across the United States, Europe, and Asia-Pacific) — is
+published at the bare `marqeta` Greenhouse slug (the lowercase
+brand name; case-symmetric with the wire `company_name ===
+'Marqeta'`) and was confirmed live via run #294's HTTP 200
+probe of `https://api.greenhouse.io/v1/boards/marqeta/jobs?content=true`.
+
+**Spec 084 — Source Company Plugin: Marqeta — closed end-to-end:**
+
+- **T01:** Added `Site.MARQETA = 'marqeta'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 94:
+  Spec 084 — Source Company Plugin: Marqeta` header.
+- **T02:** Scaffolded `@ever-jobs/source-company-marqeta` with
+  the five-file shape (`package.json`, `tsconfig.json`,
+  `src/index.ts`, `src/marqeta.module.ts`,
+  `src/marqeta.service.ts`); mirrors `source-company-calendly`
+  with the `calendly`/`Calendly` → `marqeta`/`Marqeta`
+  substitutions and the inline doc-comment narrative. Zero
+  structural deviations.
+- **T03:** Registered `MarqetaModule` in the four wiring files
+  (`packages/plugins/index.ts` import + `ALL_SOURCE_MODULES`
+  append, `tsconfig.base.json` path-alias, `jest.config.js`
+  `moduleNameMapper`). Placed alphabetically after `LyftModule`
+  and before `MasterclassModule` (`Lyf` < `Mar` < `Mas`).
+- **T04:** Authored `marqeta.service.spec.ts` with **8 cases** —
+  NestJS DI registration scaffolding, `Site.MARQETA` literal pin,
+  happy-path 2-listing fixture map (with regression assertions
+  for variant-2 URL pass-through, decode-then-strip pipeline
+  cleanliness, case-symmetric wire `companyName` byte-for-byte,
+  D-10 application lock — `'Group Product Manager, Fraud '` →
+  `'Group Product Manager, Fraud'` trim assertion with byte-
+  distinct + 1-byte-shorter checks, and D-11 omission lock with
+  multi-token department forms preserved byte-for-byte),
+  `resultsWanted=1` cap, `searchTerm` filter on title (case-
+  insensitive against the trimmed form — D-10 search guard),
+  `searchTerm` filter on department (case-insensitive), HTTP
+  500 → empty response, empty `data.jobs` → empty response.
+  All 8 cases green in 11.074 s.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added
+  Marqeta shipped row), `docs/index.md` (Spec 084 row appended),
+  and `docs/log.md` (this entry).
+
+Helpers + cross-regression sweep
+(`packages/common/__tests__/helpers.spec`,
+`source-company-lookout`, `source-company-fivetran`,
+`source-company-bitwarden`, `source-company-calendly`,
+`source-company-datacamp`) → **117/117 green in 16.077 s** —
+unchanged from the run-293 baseline; no parser-level regressions
+introduced by the Marqeta plugin landing.
+
+The remaining five live hits from the fifth-fresh-sweep
+candidate pool queue for runs #295+ in alphabetical order:
+`newrelic` (~370 roles, run #295 next bite), `peloton` (~104),
+`scopely` (~1190), `squarespace` (~72), `typeform` (~132).
+Subsequent runs after the pool is exhausted (#300+ by current
+arithmetic) will pivot to a **sixth fresh probe sweep**.
+
+---
+
 ## 2026-05-03 — Scheduled run #293 (Spec 083 closed end-to-end; new `source-company-lookout` plugin shipped — 8 unit tests green in 10.939 s; helpers regression + Fivetran + Bitwarden + DataCamp + Calendly + Lattice + MasterClass cross-regression 125/125 still green in 17.498 s; **fifth plugin in the fifth fresh probe sweep** following Bitwarden (run #289), Calendly (run #290), DataCamp (run #291), and Fivetran (run #292). The run-293 probe at start sampled 6 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/lookout/jobs?content=true` — the run-289 probe-counter estimate of ~12 was inflated by counting all `"id":` JSON keys including department/office IDs. This is the **72nd Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 20** — the `www.`-prefixed brand-domain singular `/careers/job-post` query-only-id shape `https://www.lookout.com/careers/job-post?gh_jid=<id>` — the **twenty-third distinct wire-shape variant** in the company-direct cohort; the **thirty-ninth** to use the entity-decode-then-tag-strip description pipeline; **D-09 omitted** — 6 of 6 wire `company_name` values in the run-293 probe are the clean 7-byte `'Lookout'` form (slug/wire case-symmetric — slug `lookout` is 7 bytes; the plugin reads `listing.company_name` directly with `'Lookout'` as a defensive fallback); **returns to cohort-default D-09-omitted posture** after Fivetran's first-cohort D-09 application at run #292; **thirty-second cohort plugin** to omit D-09. **D-10 omitted** — 0 of 6 wire titles in the run-293 probe carry whitespace padding (the wire is fully clean); **fifteenth cohort plugin to omit D-10**. **D-11 omitted** — 0 of 6 populated wire department names in the run-293 probe carry pad bytes (`'Engineering'`, `'Sales'` — bare role-domain names without the `' Department'` structural suffix that Fivetran's wire carries); **twenty-ninth cohort plugin** with fully-clean department pass-through. **One structural deviation** from the Fivetran (Spec 082) template — D-04 wire-shape variant 20 (first cohort plugin to use variant 20; distinct from Fivetran's variant 19; same `www.`-prefixed brand-domain cohort but the `-post` suffix on the singular path component is a new sub-axis). All other axes share with Fivetran: D-08 entity-decode-then-tag-strip, D-09 omitted (Lookout 0/6 padded — fully clean; Fivetran 173/173 padded — Lookout returns to cohort-default), D-10 omitted (Lookout 0/6 padded; Fivetran 0/173 padded — both clean), D-11 fully-clean department pass-through. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-fifth live-board hit** after Bitwarden, Calendly, DataCamp, and Fivetran. The remaining six live hits queue for runs #294+ in alphabetical order (`marqeta` next at run #294 with ~330 roles).)
 
 **Scope:** Run #293 continues the user-owner-directed concrete-action

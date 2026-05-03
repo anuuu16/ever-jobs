@@ -152,6 +152,7 @@
       "@ever-jobs/source-company-datacamp": ["packages/plugins/source-company-datacamp/src/index.ts"],
       "@ever-jobs/source-company-fivetran": ["packages/plugins/source-company-fivetran/src/index.ts"],
       "@ever-jobs/source-company-lookout": ["packages/plugins/source-company-lookout/src/index.ts"],
+      "@ever-jobs/source-company-marqeta": ["packages/plugins/source-company-marqeta/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],

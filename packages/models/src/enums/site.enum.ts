@@ -320,6 +320,8 @@ export enum Site {
   FIVETRAN = 'fivetran',
   // Phase 93: Spec 083 — Source Company Plugin: Lookout
   LOOKOUT = 'lookout',
+  // Phase 94: Spec 084 — Source Company Plugin: Marqeta
+  MARQETA = 'marqeta',
 }
 
 /**
