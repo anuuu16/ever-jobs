@@ -15,6 +15,206 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #277 (Spec 067 closed end-to-end; new `source-company-classpass` plugin shipped — 8 unit tests green in 6.507 s; helpers regression + Carta + Cameo + Mixpanel + Faire cross-regression 112/112 still green in 12.52 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **56th Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 12** — the **fifteenth distinct wire-shape variant** in the cohort: vanity-domain `https://www.playlist.com/careers/opportunities/<id>?gh_jid=<id>` (parent-domain `www.playlist.com` rather than ClassPass's own `classpass.com`; `careers/opportunities` path; single `gh_jid` query parameter — distinct from Elastic's variant-11 duplicate-`gh_jid` shape); the **twenty-third** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — at least 10 of 70 wire titles in the run-277 probe carry trailing ASCII-space padding; the plugin applies `.trim()` to the wire `title` before downstream filters and emit. **Tenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, and Carta). **D-09 omitted** (wire `company_name === 'ClassPass'` byte-for-byte; the single-token bare brand name with internal capital P; no parent-company suffix on the wire — distinct from the parent-company name "Mindbody" that owns ClassPass since 2021). **D-11 fully-clean** — 0 of 70 wire department names in the run-277 probe carry trailing ASCII-space padding; the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **One structural deviation** from the Carta (Spec 066) template — **D-04 wire-shape variant 12** (Carta uses variant 2; ClassPass uses the previously-unobserved vanity-domain shape). **Seventeenth cohort plugin to omit D-09**, returning to the single-word bare-brand wire form. The run-277 probe at start sampled 70 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/classpass/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-third live-board hit after Cameo and Carta** (`cameo` < `carta` < `classpass` < `coursera`, so this run takes ClassPass). The remaining eleven live hits queue for runs #278+ in alphabetical order (`coursera` next at run #278 with 8 roles). The HubSpot re-probe at run-277 start returned HTTP 200 with `meta.total === 0` — **fifteenth-consecutive empty re-probe** across runs #262–#277.)
+
+**Scope:** Run #277 continues the user-owner-directed concrete-action
+deviation that runs #230–#276 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 066's run
+#276 close-out note (which queued ClassPass as run #277's bite — the
+alphabetically-third live hit from the fourth-fresh-sweep candidate
+pool), this run takes **ClassPass**. The Greenhouse public API was
+probed at run-277 start returning HTTP 200 with 70 visible roles
+confirmed via direct curl probe.
+
+ClassPass — operator of the **dominant
+subscription-fitness-aggregator platform** (founded by Payal Kadakia
+in 2013 in New York City; acquired by Mindbody in 2021 to form a
+unified wellness/fitness marketplace; the
+subscription-fitness-aggregator surface that anchors the
+boutique-fitness category alongside Gympass / Wellhub, EquinoxPlus,
+and the wave of corporate-wellness challengers; operating with anchor
+offices in San Francisco, New York, London, Lisbon, Portland, and
+Singapore; partnering with 30,000+ fitness studios and gyms to bring
+boutique fitness, wellness experiences, and recovery services to
+consumers worldwide) — is published at the bare `classpass`
+Greenhouse slug (the lowercase brand name; no whitespace transform
+required since the brand is a single word) and was confirmed live via
+run #277's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/classpass/jobs?content=true`.
+Notably, ClassPass's tenant publishes its `absolute_url` on a
+**previously-unobserved wire-shape variant** — the **vanity-domain
+shape** `https://www.playlist.com/careers/opportunities/<id>?gh_jid=<id>`
+(parent-domain `www.playlist.com` rather than ClassPass's own
+`classpass.com`; `careers/opportunities` path; single `gh_jid`
+query parameter). This is **wire-shape variant 12** — the
+**fifteenth distinct wire-shape variant** in the company-direct
+cohort and the **first vanity-domain variant** with a
+non-`jobs.<brand>.<tld>` host pattern. The plugin emits
+`listing.absolute_url` byte-for-byte to preserve the canonical
+destination; the **fallback** `jobUrl` constructor (when Greenhouse
+omits `absolute_url`) defaults to the canonical Greenhouse
+**variant-2** form `https://job-boards.greenhouse.io/classpass/jobs/<id>`
+rather than reconstructing the vanity-domain shape, because the
+fallback can only produce a guaranteed-resolvable URL using the
+Greenhouse subdomain.
+
+Like every plugin from Klaviyo onwards, ClassPass's `content` is
+HTML-entity-encoded (`&lt;div class=&quot;content-intro&quot;&gt;
+&lt;p&gt;At Playlist, life&#39;s rich...`) and uses the entity-
+decode-then-tag-strip pipeline (Spec 067 § 10 D-08) — making this
+the **twenty-third** plugin to use that pipeline. ClassPass's wire
+titles are partly padded — at least 10 of 70 in the run-277 probe
+carry trailing ASCII-space padding (`'Director, Product Management,
+ClassPass Consumer '`, `'Engineering Manager - Consumer &
+Merchandising '`, `'Field Account Executive - Portland, OR '`, plus
+7 others); the plugin applies `.trim()` to the wire `title` before
+downstream filters and emit (D-10 applied). ClassPass's wire
+`company_name` is the literal single-token string `'ClassPass'`
+byte-for-byte (with internal capital P), byte-distinct from
+Cameo's `'Cameo'` and Scale AI's multi-token `'Scale AI'` and the
+parent-company name `'Mindbody'`; the plugin reads
+`listing.company_name` directly without a string-literal pin (D-09
+omitted). ClassPass's wire `departments[0].name` payload is **fully
+clean** — 0 of 70 wire department names in the run-277 probe carry
+trailing pad bytes (D-11 byte-for-byte pass-through is a no-op on
+the clean wire data). Class names are `ClasspassService` /
+`ClasspassModule` (PascalCase from the lowercase slug — the brand's
+marketing form is `ClassPass` with internal capital P, but
+TypeScript class naming uses `Classpass` to match the slug-derived
+PascalCase convention from Cameo, Carta, Faire, Mixpanel, etc.; D-06).
+
+**Spec 067 — Source Company Plugin: ClassPass — closed end-to-end:**
+
+- **T01:** Added `Site.CLASSPASS = 'classpass'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 77:
+  Spec 067 — Source Company Plugin: ClassPass` header (preserves the
+  Spec 006 / 013 / 020..066 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-classpass` with the
+  Carta-shape (single-file `service.ts`, 4-line `module.ts`,
+  2-line `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/classpass/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively (with `.trim()` on `title` per D-10
+  application), and swallows transport errors per FR-9. **One
+  structural deviation** from the Carta template — D-04 variant 12
+  (Carta uses variant 2; ClassPass uses the previously-unobserved
+  vanity-domain shape). The description-cleanup pipeline
+  `stripHtmlTags(decodeHtmlEntities(content))` is identical to
+  Carta's because ClassPass's `content` is also HTML-entity-encoded
+  (Spec 067 § 10 D-08). The wire `absolute_url` flows through to
+  `jobUrl` byte-for-byte to preserve the variant-12 vanity-domain
+  shape; the **fallback** constructor uses the canonical Greenhouse
+  variant-2 form (Spec 067 § 10 D-04). Department pass-through
+  preserves ClassPass's clean single-token format (`'Sales'`,
+  `'Marketing'`, `'Engineering'`) byte-for-byte (Spec 067 § 10 D-11).
+- **T03:** Registered the plugin in the four wiring files —
+  `packages/plugins/index.ts` (alphabetised import + `ALL_SOURCE_MODULES`
+  insert between `CircleCIModule` and `CloudflareModule` per the
+  alphabetical ordering — `Cir` < `Cla` < `Clo`),
+  `tsconfig.base.json` (path-alias entry), `jest.config.js`
+  (`moduleNameMapper` entry).
+- **T04:** Wrote 8 unit tests under
+  `__tests__/classpass.service.spec.ts` covering NestJS DI resolution,
+  enum-literal pin, happy-path 2-listing mapping (with regression
+  guards on the variant-12
+  `playlist.com/careers/opportunities/<id>?gh_jid=<id>` shape, the
+  decode-then-strip pipeline cleanliness, the single-token
+  bare-brand `companyName === 'ClassPass'` D-09 omission lock, the
+  D-10 application lock — emitted `title` for the second listing
+  equals the trimmed form `'Director, Product Management, ClassPass
+  Consumer'` AND is byte-distinct from the wire-padded form, the
+  D-11 first-listing clean department pass-through `'Sales'`, AND
+  the D-11 second-listing clean department pass-through
+  `'Marketing'`), `resultsWanted=1` cap, `searchTerm` title filter
+  (`'PRODUCT MANAGEMENT'` → 1 match against the trimmed form),
+  `searchTerm` department filter on `'marketing'` substring → 1
+  match, HTTP 500 → empty, and empty `data.jobs` → empty. All 8
+  cases green in 6.507 s.
+- **T05:** Doc updates — `docs/SOURCE_ADOPTION_BACKLOG.md` adds the
+  ClassPass shipped row; `docs/index.md` appends the Spec 067 row to
+  the specs table; this `docs/log.md` entry.
+
+**Verification:** `npx jest packages/plugins/source-company-classpass
+--colors=false` → 8/8 green in 6.507 s. `npx jest
+packages/common/__tests__/helpers.spec
+packages/plugins/source-company-carta
+packages/plugins/source-company-cameo
+packages/plugins/source-company-mixpanel
+packages/plugins/source-company-faire --colors=false` → 112/112
+still green in 12.52 s (no regression in the helpers parser suite,
+the closest-cousin Carta plugin, the prior-cousin Cameo, the closest
+D-10 cousins Mixpanel and Faire).
+
+**Cohort statistics after Spec 067:**
+
+- **56** Greenhouse-backed company-direct plugins shipped (Anthropic,
+  Databricks, Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit,
+  Pinterest, Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio,
+  Cloudflare, MongoDB, Datadog, Instacart, Dropbox, Roblox, Block,
+  Vercel, Affirm, Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite,
+  CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow, ZoomInfo,
+  Attentive, Chime, Elastic, Intercom, Mixpanel, Faire, Scale AI,
+  Cameo, Carta, **ClassPass** — plus the seven legacy company-direct
+  plugins from before Spec 020).
+- **14** plugins on wire-shape variant 2 (US-region
+  `job-boards.greenhouse.io` permalink subdomain): Vercel, Affirm,
+  Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive,
+  Intercom, Mixpanel, Scale AI, Cameo, Carta.
+- **2** plugins on wire-shape variant 10 (legacy hosted-board apex
+  `boards.greenhouse.io/<slug>/jobs/<id>?gh_jid=<id>`): Chime, Faire.
+- **1** plugin on wire-shape variant 11 (vanity-domain
+  `jobs.<brand>.<tld>/jobs?gh_jid=<id>&gh_jid=<id>` with duplicate
+  query parameter): Elastic.
+- **1** plugin on wire-shape variant 12 (vanity-domain
+  `www.<parent>.com/careers/opportunities/<id>?gh_jid=<id>` with
+  single query parameter and `careers/opportunities` path):
+  **ClassPass** — first cohort plugin in this variant.
+- **23** plugins on the entity-decode-then-tag-strip description
+  pipeline (Klaviyo onwards): Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow,
+  ZoomInfo, Attentive, Chime, Elastic, Intercom, Mixpanel, Faire,
+  Scale AI, Cameo, Carta, **ClassPass**.
+- **10** plugins applying a wire-title `.trim()` (D-10): Brex,
+  Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire,
+  Carta, **ClassPass** — Cameo does NOT contribute (0 of 3 wire
+  titles in the run-275 probe carry trailing pad bytes; structurally
+  analogous to Chime and Scale AI).
+- **4** plugins applying a brand-name trim (D-09 string-literal pin
+  over a wire-suffixed `company_name`): Affirm, Gusto, ZoomInfo,
+  Chime — ClassPass does NOT contribute (wire `company_name === 'ClassPass'`
+  byte-for-byte; no parent-company suffix; **seventeenth cohort
+  plugin to omit D-09**, returning to the single-word bare-brand wire
+  form).
+- **1** plugin shipping a wire department-name with trailing
+  ASCII-space padding pass-through observability (D-11 partial-pad):
+  Cameo (ClassPass does NOT contribute — ClassPass's wire department
+  names are fully clean, 0 of 70 padded).
+
+**Q-042 reminder:** unchanged — pending review since run #84 (~193
+runs / ~193 hours of agent wall-clock); fourth-reminder window opened
+at run #250 per the run #200 forward-pointer convention; next reminder
+window opens at run #300; Default C continues.
+
+**Run-277 next steps queue (runs #278+):**
+
+1. **The fourth-fresh-sweep live-board pool has 11 unshipped live
+   hits remaining**, in alphabetical order: `coursera` (8 roles,
+   run #278 next bite), `epicgames` (74), `flexport` (113), `fubotv`
+   (11), `glossier` (17), `honeycomb` (10), `lattice` (11),
+   `masterclass` (6), `mavenclinic` (24), `stitchfix` (22), `udemy`
+   (17). Run #278 should take **Coursera** (alphabetically next
+   after ClassPass).
+2. Re-probe `hubspot` at the start of run #278 to check if the
+   empty-board status has flipped (sixteenth consecutive re-probe;
+   if still empty, follow the documented "remains deferred"
+   pattern).
+
+---
+
 ## 2026-05-03 — Scheduled run #276 (Spec 066 closed end-to-end; new `source-company-carta` plugin shipped — 8 unit tests green in 9.271 s; helpers regression + Cameo + Mixpanel + Faire cross-regression 104/104 still green in 11.237 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **55th Greenhouse-backed company-direct plugin** in the catalogue and the **fourteenth** to use wire-shape variant 2 (`https://job-boards.greenhouse.io/carta/jobs/<id>` — the modern US-region permalink subdomain shape; same as Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, Scale AI, and Cameo); the **twenty-second** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — at least 1 of 10 wire titles in the run-276 probe carries trailing ASCII-space padding (`'Business Development Manager, Private Equity '`); the plugin applies `.trim()` to the wire `title` before downstream filters and emit. **Ninth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, and Faire). **D-09 omitted** (wire `company_name === 'Carta'` byte-for-byte; the single-token bare brand name; no legal-entity suffix on the wire — distinct from the legal-entity name "Carta, Inc." that appears in current SEC filings and the prior "eShares, Inc." legal name from before the 2017 rebrand). **Two structural deviations** from the Cameo (Spec 065) template — **D-10 applied** (Cameo had it omitted; Carta's run-276 probe surfaces a wire-padded title) AND **D-11 fully-clean** (Cameo had partial-pad pass-through with 1 of 3 padded; Carta's wire department names are 0 of 10 padded — fully clean). **Sixteenth cohort plugin to omit D-09**, returning to the single-word bare-brand wire form (after Cameo `'Cameo'`, Mixpanel `'Mixpanel'`, Faire `'Faire'`, Intercom `'Intercom'`, Elastic `'Elastic'`, Webflow `'Webflow'`, Attentive `'Attentive'`, Postman `'Postman'`, Netlify `'Netlify'`, Mercury `'Mercury'`, Buildkite `'Buildkite'`, CircleCI `'CircleCI'`, Toast `'Toast'`, plus the Ramp Network slug-collapse case). The run-276 probe at start sampled at least 10 visible roles (52 confirmed at run-275 close). Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-second live-board hit after Cameo** (`cameo` < `carta` < `classpass`, so this run takes Carta). The remaining twelve live hits queue for runs #277+ in alphabetical order (`classpass` next at run #277 with 70 roles). The HubSpot re-probe at run-276 start returned HTTP 200 with `meta.total === 0` — **fourteenth-consecutive empty re-probe** across runs #262–#276.)
 
 **Scope:** Run #276 continues the user-owner-directed concrete-action

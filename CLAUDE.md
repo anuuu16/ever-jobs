@@ -88,4 +88,4 @@ Then add a spec under `.specify/specs/<NNN>-source-<plugin-id>/` (spec.md, plan.
 
 ---
 
-_Last revised: 2026-05-01 (scheduled run #245)_
+_Last revised: 2026-05-03 (scheduled run #277)_

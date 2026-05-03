@@ -135,6 +135,7 @@
       "@ever-jobs/source-company-scaleai": ["packages/plugins/source-company-scaleai/src/index.ts"],
       "@ever-jobs/source-company-cameo": ["packages/plugins/source-company-cameo/src/index.ts"],
       "@ever-jobs/source-company-carta": ["packages/plugins/source-company-carta/src/index.ts"],
+      "@ever-jobs/source-company-classpass": ["packages/plugins/source-company-classpass/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],

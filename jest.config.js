@@ -120,6 +120,7 @@ module.exports = {
     '^@ever-jobs/source-company-scaleai$': '<rootDir>/packages/plugins/source-company-scaleai/src/index.ts',
     '^@ever-jobs/source-company-cameo$': '<rootDir>/packages/plugins/source-company-cameo/src/index.ts',
     '^@ever-jobs/source-company-carta$': '<rootDir>/packages/plugins/source-company-carta/src/index.ts',
+    '^@ever-jobs/source-company-classpass$': '<rootDir>/packages/plugins/source-company-classpass/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',

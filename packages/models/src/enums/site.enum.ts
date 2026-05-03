@@ -286,6 +286,8 @@ export enum Site {
   CAMEO = 'cameo',
   // Phase 76: Spec 066 — Source Company Plugin: Carta
   CARTA = 'carta',
+  // Phase 77: Spec 067 — Source Company Plugin: ClassPass
+  CLASSPASS = 'classpass',
 }
 
 /**

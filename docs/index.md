@@ -131,6 +131,7 @@
 | 064 | [Source Company Plugin: Scale AI](../.specify/specs/064-source-company-scaleai/spec.md) — [plan](../.specify/specs/064-source-company-scaleai/plan.md) — [tasks](../.specify/specs/064-source-company-scaleai/tasks.md) | All phases done (T01..T05 run #274); spec complete |
 | 065 | [Source Company Plugin: Cameo](../.specify/specs/065-source-company-cameo/spec.md) — [plan](../.specify/specs/065-source-company-cameo/plan.md) — [tasks](../.specify/specs/065-source-company-cameo/tasks.md) | All phases done (T01..T05 run #275); spec complete |
 | 066 | [Source Company Plugin: Carta](../.specify/specs/066-source-company-carta/spec.md) — [plan](../.specify/specs/066-source-company-carta/plan.md) — [tasks](../.specify/specs/066-source-company-carta/tasks.md) | All phases done (T01..T05 run #276); spec complete |
+| 067 | [Source Company Plugin: ClassPass](../.specify/specs/067-source-company-classpass/spec.md) — [plan](../.specify/specs/067-source-company-classpass/plan.md) — [tasks](../.specify/specs/067-source-company-classpass/tasks.md) | All phases done (T01..T05 run #277); spec complete |
 
 ## 8. Templates
 
@@ -142,4 +143,4 @@
 
 ---
 
-_Last revised: 2026-05-02 (run #258)._
+_Last revised: 2026-05-03 (run #277)._

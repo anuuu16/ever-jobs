@@ -81,6 +81,7 @@ import { CameoModule } from './source-company-cameo';
 import { CartaModule } from './source-company-carta';
 import { ChimeModule } from './source-company-chime';
 import { CircleCIModule } from './source-company-circleci';
+import { ClasspassModule } from './source-company-classpass';
 import { CloudflareModule } from './source-company-cloudflare';
 import { CoinbaseModule } from './source-company-coinbase';
 import { CursorModule } from './source-company-cursor';
@@ -295,6 +296,7 @@ export const ALL_SOURCE_MODULES = [
   CartaModule,
   ChimeModule,
   CircleCIModule,
+  ClasspassModule,
   CloudflareModule,
   CoinbaseModule,
   CursorModule,
