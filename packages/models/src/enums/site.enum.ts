@@ -354,6 +354,8 @@ export enum Site {
   MONZO = 'monzo',
   // Phase 110: Spec 100 — Source Company Plugin: N26
   N26 = 'n26',
+  // Phase 111: Spec 101 — Source Company Plugin: PlanetScale
+  PLANETSCALE = 'planetscale',
 }
 
 /**

@@ -141,6 +141,7 @@ import { OpenAIModule } from './source-company-openai';
 import { PelotonModule } from './source-company-peloton';
 import { PinterestModule } from './source-company-pinterest';
 import { PlaidModule } from './source-company-plaid';
+import { PlanetScaleModule } from './source-company-planetscale';
 import { PostmanModule } from './source-company-postman';
 import { RampNetworkModule } from './source-company-rampnetwork';
 import { RedditModule } from './source-company-reddit';
@@ -389,6 +390,7 @@ export const ALL_SOURCE_MODULES = [
   PelotonModule,
   PinterestModule,
   PlaidModule,
+  PlanetScaleModule,
   PostmanModule,
   RampNetworkModule,
   RedditModule,
