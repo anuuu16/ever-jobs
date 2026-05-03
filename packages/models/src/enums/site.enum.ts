@@ -366,6 +366,8 @@ export enum Site {
   XAI = 'xai',
   // Phase 116: Spec 106 — Source Company Plugin: Airtable
   AIRTABLE = 'airtable',
+  // Phase 117: Spec 107 — Source Company Plugin: Amplitude
+  AMPLITUDE = 'amplitude',
 }
 
 /**

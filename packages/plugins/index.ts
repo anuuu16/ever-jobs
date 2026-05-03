@@ -71,6 +71,7 @@ import { AffirmModule } from './source-company-affirm';
 import { AirbnbModule } from './source-company-airbnb';
 import { AirtableModule } from './source-company-airtable';
 import { AmazonModule } from './source-company-amazon';
+import { AmplitudeModule } from './source-company-amplitude';
 import { AnthropicModule } from './source-company-anthropic';
 import { AppleModule } from './source-company-apple';
 import { AsanaModule } from './source-company-asana';
@@ -325,6 +326,7 @@ export const ALL_SOURCE_MODULES = [
   AirbnbModule,
   AirtableModule,
   AmazonModule,
+  AmplitudeModule,
   AnthropicModule,
   AppleModule,
   AsanaModule,
