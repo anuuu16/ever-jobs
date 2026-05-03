@@ -344,6 +344,8 @@ export enum Site {
   CEREBRAL = 'cerebral',
   // Phase 105: Spec 095 — Source Company Plugin: Coalition
   COALITION = 'coalition',
+  // Phase 106: Spec 096 — Source Company Plugin: Dollar Shave Club
+  DOLLARSHAVECLUB = 'dollarshaveclub',
 }
 
 /**

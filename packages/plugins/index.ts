@@ -98,6 +98,7 @@ import { DatabricksModule } from './source-company-databricks';
 import { DatacampModule } from './source-company-datacamp';
 import { DatadogModule } from './source-company-datadog';
 import { DiscordModule } from './source-company-discord';
+import { DollarShaveClubModule } from './source-company-dollarshaveclub';
 import { DoorDashModule } from './source-company-doordash';
 import { DropboxModule } from './source-company-dropbox';
 import { DuolingoModule } from './source-company-duolingo';
@@ -341,6 +342,7 @@ export const ALL_SOURCE_MODULES = [
   DatacampModule,
   DatadogModule,
   DiscordModule,
+  DollarShaveClubModule,
   DoorDashModule,
   DropboxModule,
   DuolingoModule,
