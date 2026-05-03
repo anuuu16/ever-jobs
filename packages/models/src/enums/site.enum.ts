@@ -312,6 +312,8 @@ export enum Site {
   UDEMY = 'udemy',
   // Phase 89: Spec 079 — Source Company Plugin: Bitwarden
   BITWARDEN = 'bitwarden',
+  // Phase 90: Spec 080 — Source Company Plugin: Calendly
+  CALENDLY = 'calendly',
 }
 
 /**

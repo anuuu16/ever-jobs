@@ -15,6 +15,85 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #290 (Spec 080 closed end-to-end; new `source-company-calendly` plugin shipped — 8 unit tests green in 10.185 s; **second plugin in the fifth fresh probe sweep** following the run-289 launch. Spec 080 was partially pre-scaffolded (spec.md / plan.md / tasks.md / src + module + service + package.json + tsconfig + 4-file wirings + fixture) by an out-of-band batch operation; run #290's work picked up from that point and added the missing pieces: (a) authored `calendly.service.spec.ts` with 8 cases (NestJS DI, enum-literal pin, happy-path 2-listing fixture map with all decoration locks, `resultsWanted=1` cap, `searchTerm` filter on title and department, HTTP 500 → empty, empty `data.jobs` → empty), (b) updated `docs/index.md` (Spec 080 row), `docs/log.md` (this entry), and `docs/SOURCE_ADOPTION_BACKLOG.md` (Calendly shipped row). The run-290 probe at start sampled 20 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/calendly/jobs?content=true` — slightly under the run-289 probe-sweep estimate of 40 (the discrepancy is the run-289 probe-counter inflation from counting all `"id":` JSON keys including department/office IDs rather than just job IDs; the actual job count is 20). This is the **69th Greenhouse-backed company-direct plugin** in the catalogue and the **eighteenth** to use **wire-shape variant 2** — the modern hosted-board apex `https://job-boards.greenhouse.io/calendly/jobs/<id>` shape (returning to baseline after Bitwarden's first-cohort variant-18 observation in Spec 079); the **thirty-sixth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 1 of 20 wire titles in the run-290 probe carries trailing ASCII-space padding (`'Sr. Director, Engineering '` — single-trailing-space-padded; ~5.0 % overall pad rate, the **lowest cohort observation among D-10-applying plugins** since Carta's run-276 ~10 % rate); **nineteenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, Maven Clinic, Stitch Fix, Udemy, and Bitwarden). **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Calendly'` byte-for-byte (8 bytes; case-symmetric with the lowercase slug `calendly`); no legal-entity suffix on the wire — distinct from the legal-entity name "Calendly LLC" that may appear in corporate filings. **Thirtieth cohort plugin to omit D-09**, returning to the case-symmetric bare-brand wire form. **D-11 fully-clean** — 0 of 20 wire department names in the run-290 probe carry trailing ASCII-space padding (`'Marketing'`, `'Engineering'`, `'Product'`, `'Customer Experience'`, `'Security'` — clean single-token and multi-token forms); the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **One structural deviation** from the Bitwarden (Spec 079) template — D-04 wire-shape variant 2 (canonical Greenhouse host; Calendly returns to baseline after Bitwarden's variant-18 first-cohort observation). All other axes share with Bitwarden: D-08 entity-decode-then-tag-strip, D-09 omitted with case-symmetric bare-brand wire, D-10 applied (Calendly 1/20 padded ~5.0 %; Bitwarden 1/11 padded ~9.1 % — Calendly's posting hygiene slightly cleaner), D-11 fully-clean department pass-through. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-second live-board hit** after Bitwarden. The remaining nine live hits queue for runs #291+ in alphabetical order (`datacamp` next at run #291).)
+
+**Scope:** Run #290 continues the user-owner-directed concrete-action
+deviation that runs #230–#289 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 079's run
+#289 close-out note (which queued Calendly as run #290's bite — the
+alphabetically-second live hit from the fifth-fresh-sweep candidate
+pool), this run takes **Calendly**.
+
+Calendly — operator of the **dominant scheduling-automation
+platform pioneered around the meeting-link-and-availability
+data model** (founded by Tope Awotona in 2013 in Atlanta;
+raised $350M+ across rounds led by OpenView Venture Partners
+and Iconiq Capital at a peak $3B valuation in 2021; ships a
+freemium B2C scheduling-link product + a B2B Calendly-for-Teams
+enterprise-scheduling platform across the productivity-software
+segment — alongside competitors Doodle, Cal.com, Acuity
+Scheduling, Microsoft Bookings, and Google Appointment
+Schedules — with a hybrid distributed workforce concentrated in
+Atlanta and Remote US) — is published at the bare `calendly`
+Greenhouse slug (the lowercase brand name; case-symmetric with
+the wire `company_name === 'Calendly'`) and was confirmed live
+via run #290's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/calendly/jobs?content=true`
+(20 open roles confirmed at run-290 start). Calendly publishes
+its `absolute_url` on the canonical Greenhouse variant-2 shape
+— returning to baseline after Bitwarden's first-cohort variant-
+18 observation in Spec 079.
+
+**Spec 080 — Source Company Plugin: Calendly — closed end-to-end:**
+
+- **T01:** `Site.CALENDLY = 'calendly'` already in
+  `packages/models/src/enums/site.enum.ts` under the `// Phase 90:
+  Spec 080 — Source Company Plugin: Calendly` header (preserves
+  the Spec 006 / 013 / 020..079 phase-ordering convention).
+- **T02:** `@ever-jobs/source-company-calendly` package already
+  scaffolded (five-file shape: `package.json`, `tsconfig.json`,
+  `src/index.ts`, `src/calendly.module.ts`,
+  `src/calendly.service.ts`); mirrors `source-company-bitwarden`
+  with the `calendly`/`Calendly` substitutions and the inline
+  doc-comment narrative. Variant-2 wire-shape (the baseline,
+  no fallback divergence from wire shape — distinct from
+  Bitwarden's variant-18 wire vs variant-2 fallback split).
+- **T03:** `CalendlyModule` already registered in the four
+  wiring files (`packages/plugins/index.ts` import +
+  `ALL_SOURCE_MODULES` append, `tsconfig.base.json` path-alias,
+  `jest.config.js` `moduleNameMapper`). Placed alphabetically
+  after `BuildkiteModule` and before `CameoModule` (`Bu` < `Ca`).
+- **T04:** Authored `calendly.service.spec.ts` with **8 cases**
+  — NestJS DI registration scaffolding, `Site.CALENDLY` literal
+  pin, happy-path 2-listing fixture map (with regression
+  assertions for variant-2 URL pass-through, decode-then-strip
+  pipeline cleanliness, case-symmetric wire `companyName` byte-
+  for-byte, D-10 application lock — `'Sr. Director, Engineering '`
+  → `'Sr. Director, Engineering'` trim assertion with byte-
+  distinct + 1-byte-shorter checks, and D-11 omission lock —
+  wire-clean department pass-through for both listings),
+  `resultsWanted=1` cap, `searchTerm` filter on title (case-
+  insensitive against the trimmed form — D-10 search guard),
+  `searchTerm` filter on department (case-insensitive), HTTP
+  500 → empty response, empty `data.jobs` → empty response.
+  All 8 cases green in 10.185 s.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added
+  Calendly shipped row), `docs/index.md` (Spec 080 row appended),
+  and `docs/log.md` (this entry).
+
+The remaining nine live hits from the fifth-fresh-sweep candidate
+pool queue for runs #291+ in alphabetical order: `datacamp`
+(run-289-probe estimate ~41 jobs, run #291 next bite),
+`fivetran` (~346), `lookout` (~12), `marqeta` (~330), `newrelic`
+(~370), `peloton` (~104), `scopely` (~1190), `squarespace`
+(~72), `typeform` (~132). Subsequent runs after the pool is
+exhausted (#300+ by current arithmetic) will pivot to a **sixth
+fresh probe sweep**.
+
+---
+
 ## 2026-05-03 — Scheduled run #289 (Spec 079 closed end-to-end; new `source-company-bitwarden` plugin shipped — 8 unit tests green in 9.277 s; helpers regression + Udemy + Stitch Fix + Maven Clinic + Honeycomb + Carta cross-regression 117/117 still green in 13.764 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; **first run of the fifth fresh probe sweep** following the run-288 close-out of the fourth-fresh-sweep candidate pool. The run-289 probe sweep across forty-one candidate slugs found **eleven** fresh non-empty live boards on Greenhouse: `bitwarden` (11 jobs, run #289 shipped), `calendly` (40), `datacamp` (41), `fivetran` (346), `lookout` (12), `marqeta` (330), `newrelic` (370), `peloton` (104), `scopely` (1190), `squarespace` (72), `typeform` (132). Plus two HTTP-200-with-zero-jobs deferred slugs (`hubspot` — twenty-second consecutive empty re-probe; `allbirds` — first observation). The remaining twenty-eight candidate slugs returned HTTP 404. This is the **68th Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 18** — the bare brand-domain `/careers/<id>/`-trailing-slash query-with-id shape `https://bitwarden.com/careers/<id>/?gh_jid=<id>` — the **twenty-first distinct wire-shape variant** in the company-direct cohort; the **thirty-fifth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 1 of 11 wire titles in the run-289 probe carries trailing ASCII-space padding (`'Senior Full Stack Software Engineer '` — single-trailing-space-padded; ~9.1 % overall pad rate); **eighteenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, Maven Clinic, Stitch Fix, and Udemy). **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Bitwarden'` byte-for-byte (9 bytes; case-symmetric with the lowercase slug `bitwarden`); no legal-entity suffix on the wire — distinct from the legal-entity name "Bitwarden, Inc." that may appear in corporate filings. **Twenty-ninth cohort plugin to omit D-09**, returning to the case-symmetric bare-brand wire form (after the seven slug/wire asymmetry cases — Ramp Network, Scale AI, fuboTV, Honeycomb, MasterClass, Maven Clinic, and Stitch Fix). **D-11 fully-clean** — 0 of 11 wire department names in the run-289 probe carry trailing ASCII-space padding (`'Engineering'`, `'Sales'`, `'Customer Success'`, `'Product'` — clean single-token and multi-token forms); the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **One structural deviation** from the Udemy (Spec 078) template — D-04 wire-shape variant 18 (first cohort plugin to use variant 18; distinct from Udemy's variant 17 third-party-SaaS-host shape — Bitwarden uses a brand-owned domain rather than a third-party SaaS host). All other axes share with Udemy: D-08 entity-decode-then-tag-strip, D-09 omitted with case-symmetric bare-brand wire, D-10 applied (Bitwarden 1/11 padded; Udemy 2/17 padded — near-identical pad rate ~9.1 % vs ~11.8 %), D-11 fully-clean department pass-through. The trailing-slash-before-query in variant 18 is the most distinctive feature — distinct from every prior cohort variant which all omit the trailing slash before `?gh_jid=`. The run-289 probe at start sampled 11 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/bitwarden/jobs?content=true`. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-first live-board hit** — the **first run** of the new sweep. The remaining ten live hits queue for runs #290+ in alphabetical order (`calendly` next at run #290 with 40 roles).)
 
 **Scope:** Run #289 continues the user-owner-directed concrete-action

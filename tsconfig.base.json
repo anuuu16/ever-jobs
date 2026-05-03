@@ -148,6 +148,7 @@
       "@ever-jobs/source-company-stitchfix": ["packages/plugins/source-company-stitchfix/src/index.ts"],
       "@ever-jobs/source-company-udemy": ["packages/plugins/source-company-udemy/src/index.ts"],
       "@ever-jobs/source-company-bitwarden": ["packages/plugins/source-company-bitwarden/src/index.ts"],
+      "@ever-jobs/source-company-calendly": ["packages/plugins/source-company-calendly/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],

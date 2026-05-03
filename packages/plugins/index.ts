@@ -78,6 +78,7 @@ import { BlockModule } from './source-company-block';
 import { BoeingModule } from './source-company-boeing';
 import { BrexModule } from './source-company-brex';
 import { BuildkiteModule } from './source-company-buildkite';
+import { CalendlyModule } from './source-company-calendly';
 import { CameoModule } from './source-company-cameo';
 import { CartaModule } from './source-company-carta';
 import { ChimeModule } from './source-company-chime';
@@ -305,6 +306,7 @@ export const ALL_SOURCE_MODULES = [
   BoeingModule,
   BrexModule,
   BuildkiteModule,
+  CalendlyModule,
   CameoModule,
   CartaModule,
   ChimeModule,
