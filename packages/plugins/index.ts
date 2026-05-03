@@ -89,6 +89,7 @@ import { DoorDashModule } from './source-company-doordash';
 import { DropboxModule } from './source-company-dropbox';
 import { DuolingoModule } from './source-company-duolingo';
 import { ElasticModule } from './source-company-elastic';
+import { FaireModule } from './source-company-faire';
 import { FigmaModule } from './source-company-figma';
 import { GitlabModule } from './source-company-gitlab';
 import { GoogleCareersModule } from './source-company-google';
@@ -299,6 +300,7 @@ export const ALL_SOURCE_MODULES = [
   DropboxModule,
   DuolingoModule,
   ElasticModule,
+  FaireModule,
   FigmaModule,
   GitlabModule,
   GoogleCareersModule,

@@ -15,6 +15,125 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #273 (Spec 063 closed end-to-end; new `source-company-faire` plugin shipped — 9 unit tests green in 9.384 s; helpers regression 77/77 still green in 7.287 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **52nd Greenhouse-backed company-direct plugin** in the catalogue and the **second** to use wire-shape variant 10 (`https://boards.greenhouse.io/faire/jobs/<id>?gh_jid=<id>` — the legacy hosted-board apex shape; second cohort member after Chime); the **nineteenth** to use the entity-decode-then-tag-strip description pipeline; the **eighth** cohort plugin to apply D-10 wire-title `.trim()` (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, and Mixpanel) — 3 of 72 wire titles in the run-273 probe (~4.2 %) carry trailing ASCII-space padding (`'Production Designer, Brand '`, `'Senior Product Marketing Manager - Faire Pay '`, `'Staff Product Designer, Discovery Experience '`); **D-09 omitted** (wire `company_name === 'Faire'` byte-for-byte; no legal-entity suffix on the wire — distinct from the legal-entity name "Faire Wholesale, Inc." that appears in SEC filings). **Two structural deviations** from the Chime (Spec 059) template — D-09 omitted (Chime pinned the brand) and D-10 applied (Chime had no padded titles). Selected from a **third fresh probe sweep** targeting 30 candidate slugs (Notion, Linear, Loom, Front, Modern Treasury, Shopify, Square, Adobe, Salesforce, Atlassian, Slack, Zoom, ServiceNow, Workday, Veeva, Faire, Whatnot, Anduril, Scale AI, Glean, Perplexity, Mistral, Cohere, Together, Pika, Runway, Synthesia, Eleven Labs, Photoroom, Adept) — exactly **two** returned HTTP 200 (`faire` 72 jobs, `scaleai` 170 jobs); the other 28 returned HTTP 404 (those tenants are either not on Greenhouse, on authenticated-only boards, or on a non-public ATS — most likely Lever, Ashby, Workday native, Workable). `faire` is alphabetically first among the live hits, so this run takes Faire; Scale AI queues for run #274.)
+
+**Scope:** Run #273 continues the user-owner-directed concrete-action
+deviation that runs #230–#272 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 062's run
+#272 close-out note (which exhausted the run-268 fresh-sweep live-board
+pool and queued runs #273+ to pivot to a third fresh probe sweep), this
+run probes the third-sweep candidate pool and ships the alphabetically-
+first live hit: **Faire**. The Greenhouse public API was probed at
+run-273 start returning HTTP 200 with **72 open roles** for the bare
+`faire` slug.
+
+Faire Wholesale, Inc. — the **dominant B2B wholesale-marketplace
+platform** vendor (founded by Max Rhodes, Daniele Perito, Marcelo
+Cortes, and Jeff Kolovson in 2017 in San Francisco; currently a private
+company after Series G rounds led by Sequoia Capital, Y Combinator,
+Forerunner Ventures, Founders Fund, Khosla Ventures, Lightspeed Venture
+Partners, DST Global, and others; now operating from its San Francisco
+headquarters plus offices in New York, Toronto, London, Kitchener-
+Waterloo, and Salt Lake City, with a remote-first posture across the
+United States, Canada, the United Kingdom, and Europe; operator of
+Faire Marketplace (the wholesale-buying flagship), Faire Direct (the
+brand-direct ordering tool), Open With Faire (the financing program for
+small retailers), Faire Insider (the analytics surface for brands), and
+Faire Logistics (the fulfilment / shipping backbone) lines that anchor
+the wholesale-marketplace category alongside Joor, NuOrder, RangeMe,
+Tundra, Abound, Bulletin, and Handshake (Shopify B2B)) — is published
+at the bare `faire` Greenhouse slug (the lowercase brand name) and was
+confirmed live via run #273's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/faire/jobs?content=true` (72 open
+roles returned at probe time). Notably, Faire's tenant publishes its
+`absolute_url` on **variant 10** (the legacy hosted-board apex
+`https://boards.greenhouse.io/faire/jobs/<id>?gh_jid=<id>` shape — the
+same shape as Chime), making this the **second plugin in the cohort to
+use variant 10**. Like every plugin from Klaviyo onwards, Faire's
+`content` is HTML-entity-encoded (`&lt;div class=&quot;content-
+intro&quot;&gt;&lt;p&gt;&lt;strong&gt;About Faire&lt;/strong&gt;...`)
+and uses the entity-decode-then-tag-strip pipeline (Spec 063 § 10 D-08)
+— making this the **nineteenth** plugin to use that pipeline. Like
+Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, and Mixpanel,
+a subset of Faire wire titles carry trailing ASCII-space padding (3 of
+72 titles in the run-273 probe — ~4.2 %) that the plugin trims via
+`.trim()` before downstream filters and emit (D-10). Faire's wire
+`company_name` is the literal string `'Faire'` (the bare brand name; no
+legal-entity suffix — distinct from Chime's `'Chime Financial, Inc'`,
+ZoomInfo's `'ZoomInfo Technologies LLC'`, Affirm's `'Affirm, Inc.'`,
+and Gusto's `'Gusto, Inc.'`), so the plugin reads `listing.company_name`
+directly without a string-literal pin (D-09 omitted). Class names are
+`FaireService` / `FaireModule` (PascalCase from the bare-brand single-
+word name; D-06).
+
+**Spec 063 — Source Company Plugin: Faire — closed end-to-end:**
+
+- **T01:** Added `Site.FAIRE = 'faire'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 73:
+  Spec 063 — Source Company Plugin: Faire` header (preserves the
+  Spec 006 / 013 / 020..062 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-faire` with the
+  Chime-shape (single-file `service.ts`, 4-line `module.ts`, 2-line
+  `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`). The
+  scraper hits
+  `https://api.greenhouse.io/v1/boards/faire/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively (post-trim per D-10), and swallows transport
+  errors per FR-9. **Two structural deviations** from the Chime
+  template — D-09 omitted (wire `company_name === 'Faire'` byte-for-
+  byte; no legal-entity suffix) and D-10 applied (3 of 72 titles
+  carry trailing pad bytes). The description-cleanup pipeline
+  `stripHtmlTags(decodeHtmlEntities(content))` is identical to
+  Chime's because Faire's `content` is also HTML-entity-encoded
+  (Spec 063 § 10 D-08). The fallback `jobUrl` constructor mirrors
+  Chime's variant-10 shape byte-for-byte
+  (`https://boards.greenhouse.io/faire/jobs/${listing.id}?gh_jid=${listing.id}`
+  — Spec 063 § 10 D-04). Department pass-through preserves Faire's
+  multi-word descriptive format (`'Customer Support Management'`,
+  `'Engineering'`, etc.) byte-for-byte (Spec 063 § 10 D-11).
+- **T03:** Registered the plugin in the four wiring files —
+  `packages/plugins/index.ts` (alphabetised import + `ALL_SOURCE_MODULES`
+  insert between `ElasticModule` and `FigmaModule`),
+  `tsconfig.base.json` (path-alias entry), `jest.config.js`
+  (`moduleNameMapper` entry).
+- **T04:** Wrote 9 unit tests under
+  `__tests__/faire.service.spec.ts` covering NestJS DI resolution,
+  enum-literal pin, happy-path 2-listing mapping (with regression
+  guards on the variant-10 fallback URL shape, the
+  decode-then-strip pipeline cleanliness, the D-09 omission lock,
+  the D-10 trim observability, and the D-11 multi-word department
+  pass-through), `resultsWanted=1` cap, `searchTerm` title filter
+  (post-trim), `searchTerm` department filter on multi-word
+  `'support'` substring, `searchTerm` department filter on second-
+  listing `'engineering'` substring, HTTP 500 → empty, and empty
+  `data.jobs` → empty. All 9 cases green in 9.384 s.
+- **T05:** Doc updates — `docs/SOURCE_ADOPTION_BACKLOG.md` adds the
+  Faire shipped row; `docs/index.md` appends the Spec 063 row to the
+  specs table; this `docs/log.md` entry.
+
+**Verification:** `npx jest packages/plugins/source-company-faire
+--colors=false` → 9/9 green in 9.384 s. `npx jest
+packages/common/__tests__/helpers.spec --colors=false` → 77/77 still
+green in 7.287 s (no regression in the locale-and-prose-immunity
+parser suite).
+
+**Next-steps queue:** Scale AI is the alphabetically-next live
+candidate from the run-273 third-fresh-sweep (`scaleai` returned HTTP
+200 with 170 open roles). Run #274 should ship `source-company-scaleai`
+following the same near-pure-twin template (Faire is closer to Chime
+than to Mixpanel because of the variant-10 URL; Scale AI's wire shape
+will be probed at run-274 start to determine the correct cousin and
+deviations). The third-fresh-sweep candidate pool can also be expanded
+in subsequent runs by adding more LinkedIn-identified large-employer
+brands not yet probed (e.g. Carta, Brightwheel, Maven Clinic, Glossier,
+Casper, Chewy, Wayfair, Flexport, Epic Games, Zendesk, Asana — many of
+which use Greenhouse as their primary public ATS).
+
+---
+
 ## 2026-05-03 — Scheduled run #272 (Spec 062 closed end-to-end; new `source-company-mixpanel` plugin shipped — 9 unit tests green in 9.456 s; helpers regression 77/77 still green in 7.292 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **51st Greenhouse-backed company-direct plugin** in the catalogue and the **eleventh** to use wire-shape variant 2 (`https://job-boards.greenhouse.io/mixpanel/jobs/<id>` — the US-region permalink subdomain shape; same as Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, and Intercom); the **eighteenth** to use the entity-decode-then-tag-strip description pipeline; the **seventh** cohort plugin to apply D-10 wire-title `.trim()` (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, and Intercom) — 1 of 9 wire titles in the run-272 probe (~11.1 %) carries trailing ASCII-space padding (`'Account Manager '`); **D-09 omitted** (wire `company_name === 'Mixpanel'` byte-for-byte; no legal-entity suffix on the wire). **Zero structural deviations** from the Intercom (Spec 061) template — Mixpanel is a near-pure Intercom twin (same variant 2, same D-08, same D-09 omission, same D-10 application). Selected from the **run-268 fresh-sweep live-board pool** as the alphabetically-final bite after Intercom — `mix` is the last live member. **The run-268 fresh-sweep live-board pool is now fully exhausted**; runs #273+ will pivot to a third fresh probe sweep targeting the next batch of large-employer candidates (Notion, Linear, Loom, Front, Modern Treasury, Shopify, Square, Adobe, Salesforce, Atlassian, Slack, Zoom, ServiceNow, Workday, Veeva, Faire, Whatnot, Anduril, Scale AI, Glean, Perplexity, Mistral, Cohere, Together AI, Pika, Runway, Synthesia, Eleven Labs, Photoroom, Adept). The HubSpot re-probe at run-272 start returned HTTP 200 with `meta.total === 0` — **tenth-consecutive empty re-probe** across runs #262–#272.)
 
 **Scope:** Run #272 continues the user-owner-directed concrete-action

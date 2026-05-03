@@ -278,6 +278,8 @@ export enum Site {
   INTERCOM = 'intercom',
   // Phase 72: Spec 062 — Source Company Plugin: Mixpanel
   MIXPANEL = 'mixpanel',
+  // Phase 73: Spec 063 — Source Company Plugin: Faire
+  FAIRE = 'faire',
 }
 
 /**
