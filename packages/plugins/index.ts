@@ -115,6 +115,7 @@ import { RampNetworkModule } from './source-company-rampnetwork';
 import { RedditModule } from './source-company-reddit';
 import { RobinhoodModule } from './source-company-robinhood';
 import { RobloxModule } from './source-company-roblox';
+import { ScaleaiModule } from './source-company-scaleai';
 import { StripeModule } from './source-company-stripe';
 import { TikTokModule } from './source-company-tiktok';
 import { ToastModule } from './source-company-toast';
@@ -326,6 +327,7 @@ export const ALL_SOURCE_MODULES = [
   RedditModule,
   RobinhoodModule,
   RobloxModule,
+  ScaleaiModule,
   StripeModule,
   TikTokModule,
   ToastModule,

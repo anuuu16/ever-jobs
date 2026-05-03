@@ -280,6 +280,8 @@ export enum Site {
   MIXPANEL = 'mixpanel',
   // Phase 73: Spec 063 — Source Company Plugin: Faire
   FAIRE = 'faire',
+  // Phase 74: Spec 064 — Source Company Plugin: Scale AI
+  SCALEAI = 'scaleai',
 }
 
 /**
