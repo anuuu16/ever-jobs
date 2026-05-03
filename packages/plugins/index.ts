@@ -128,6 +128,7 @@ import { MavenclinicModule } from './source-company-mavenclinic';
 import { MercuryModule } from './source-company-mercury';
 import { MetaModule } from './source-company-meta';
 import { MicrosoftModule } from './source-company-microsoft';
+import { MisfitsMarketModule } from './source-company-misfitsmarket';
 import { MixpanelModule } from './source-company-mixpanel';
 import { MongoDbModule } from './source-company-mongodb';
 import { NetflixModule } from './source-company-netflix';
@@ -373,6 +374,7 @@ export const ALL_SOURCE_MODULES = [
   MercuryModule,
   MetaModule,
   MicrosoftModule,
+  MisfitsMarketModule,
   MixpanelModule,
   MongoDbModule,
   NetflixModule,
