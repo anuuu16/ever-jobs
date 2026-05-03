@@ -15,6 +15,195 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #275 (Spec 065 closed end-to-end; new `source-company-cameo` plugin shipped — 9 unit tests green in 9.664 s; helpers regression 77/77 still green in 7.375 s; Scale AI and Faire cross-regression 18/18 still green in 8.783 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **54th Greenhouse-backed company-direct plugin** in the catalogue and the **thirteenth** to use wire-shape variant 2 (`https://job-boards.greenhouse.io/cameo/jobs/<id>` — the modern US-region permalink subdomain shape; same as Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, and Scale AI); the **twenty-first** to use the entity-decode-then-tag-strip description pipeline; **D-10 omitted** — 0 of 3 wire titles in the run-275 probe carry trailing ASCII-space padding (every title surveyed — `'Automation Engineer'`, `'Business Development Representative - Cameo for Business'`, `'Summer Internship (2026)- Talent/Creator Acquisition'` — closes with an alphanumeric byte); structurally analogous to Chime (Spec 059 § 10 D-10) and Scale AI (Spec 064 § 10 D-10) — both also omitted, distinct from the trim-applied cohort (Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire). **D-09 omitted** (wire `company_name === 'Cameo'` byte-for-byte; the single-token bare brand name; no legal-entity suffix on the wire — distinct from the legal-entity name "Cameo, Inc." that appears in SEC filings). **One structural deviation** from the Scale AI (Spec 064) template — **D-11 partial-pad department pass-through**: 1 of 3 wire `departments[0].name` values in the run-275 probe (~33.3 %) carries a trailing ASCII-space pad byte (`'Cameo for Business '` — the second-listing department; the other two `'Engineering'` and `'Talent'` are clean); the plugin emits the wire `departments[0].name` byte-for-byte without a `.trim()`. **First cohort plugin to ship a wire department-name with trailing ASCII-space padding pass-through observability** — every prior plugin had either fully-clean department names or applied a `.trim()` upstream before this spec. The cohort-first observation (encoded as a regression guard) is the **partial-pad department pass-through** — the second fixture listing's emitted `department === 'Cameo for Business '` byte-for-byte (with trailing pad byte preserved). The run-275 probe at start returned **3 open roles**, the **smallest live board to ship in the cohort to date** — below the prior cohort minimum of 9 (Mixpanel shipped at 9; ZoomInfo at 14; Scale AI at 11), making this the **first cohort plugin to redefine the floor downward to 3**. Selected from a **fourth fresh probe sweep** targeting 36 candidate slugs (`carta`, `brightwheel`, `mavenclinic`, `glossier`, `casper`, `chewy`, `wayfair`, `flexport`, `epicgames`, `zendesk`, `stitchfix`, `classpass`, `plex`, `cameo`, `hims`, `compass`, `bumble`, `hinge`, `masterclass`, `skillshare`, `coursera`, `udemy`, `honeycomb`, `blameless`, `opslevel`, `lattice`, `workrise`, `niantic`, `tubi`, `fubotv`, `rover`, `fanatics`, `nylas`, `sanity`, `vidio`, plus the rolling `hubspot` re-probe) — fourteen returned HTTP 200 (`cameo` 3 jobs, `carta` 52, `classpass` 70, `coursera` 8, `epicgames` 74, `flexport` 113, `fubotv` 11, `glossier` 17, `honeycomb` 10, `lattice` 11, `masterclass` 6, `mavenclinic` 24, `stitchfix` 22, `udemy` 17); the other 21 returned HTTP 404. `cameo` is alphabetically first among the live hits, so this run takes Cameo; the remaining thirteen live hits queue for runs #276+ in alphabetical order (`carta` next at run #276 with 52 roles). The HubSpot re-probe at run-275 start returned HTTP 200 with `meta.total === 0` — **thirteenth-consecutive empty re-probe** across runs #262–#275.)
+
+**Scope:** Run #275 continues the user-owner-directed concrete-action
+deviation that runs #230–#274 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 064's run
+#274 close-out note (which exhausted the run-272 / run-273
+third-fresh-sweep live-board pool and queued runs #275+ to pivot to a
+fourth fresh probe sweep), this run probed the fourth-sweep candidate
+pool of 36 slugs and ships the alphabetically-first live hit:
+**Cameo**. The Greenhouse public API was probed at run-275 start
+returning HTTP 200 with **3 open roles** for the bare `cameo` slug.
+
+Cameo, Inc. — the **dominant celebrity-personalised-video
+marketplace** vendor (founded by Steven Galanis, Martin Blencowe, and
+Devon Spinnler Townsend in 2017 in Chicago, Illinois; currently a
+private company after Series C rounds led by Softbank Vision Fund 2,
+e.ventures, Lightspeed Venture Partners, Bain Capital Ventures,
+Kleiner Perkins, Spark Capital, and others; now operating as a
+remote-first organisation with anchor offices in Chicago, Los
+Angeles, and New York; operator of Cameo Marketplace (the
+celebrity-video flagship), Cameo for Business (the B2B branded-
+video program), Cameo Calls (the live-video Q&A surface), Cameo Kids
+(the parental-mode children's-celebrity surface), Cameo Direct (the
+premium fan-engagement subscription), and Cameo Pass (the
+all-you-can-stream subscription) lines that anchor the personalised-
+video category alongside Memmo, Greetzly, StarsForFans, ShoutOutMe,
+and the wave of TikTok-Live celebrity-engagement and Substack-
+celebrity-newsletter challengers) — is published at the bare `cameo`
+Greenhouse slug (the lowercase brand name; no whitespace transform
+required since the brand is a single word) and was confirmed live
+via run #275's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/cameo/jobs?content=true` (3
+open roles returned at probe time). Notably, Cameo's tenant
+publishes its `absolute_url` on **variant 2** (the modern US-region
+permalink subdomain `https://job-boards.greenhouse.io/cameo/jobs/<id>`
+shape — the same shape as Vercel, Affirm, Gusto, Mercury, Buildkite,
+Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, and Scale
+AI), making this the **thirteenth plugin in the cohort to use
+variant 2**. Like every plugin from Klaviyo onwards, Cameo's
+`content` is HTML-entity-encoded (`&lt;p&gt;At Cameo, we make
+impossible connections possible...`) and uses the entity-decode-
+then-tag-strip pipeline (Spec 065 § 10 D-08) — making this the
+**twenty-first** plugin to use that pipeline. Cameo's wire titles
+are fully trim-clean (0 of 3 in the run-275 probe), so D-10 is
+omitted (the plugin emits `listing.title` byte-for-byte without a
+`.trim()`). Cameo's wire `company_name` is the literal single-token
+string `'Cameo'` byte-for-byte, byte-distinct from Scale AI's
+multi-token `'Scale AI'` (with internal whitespace) and the legal-
+entity form `'Cameo, Inc.'` that appears in SEC filings; the plugin
+reads `listing.company_name` directly without a string-literal pin
+(D-09 omitted). Cameo's wire `departments[0].name` payload is
+**partly padded** — 1 of 3 (`'Cameo for Business '`, the second-
+listing department) carries a trailing ASCII-space pad byte; the
+plugin emits the wire `departments[0].name` byte-for-byte without a
+`.trim()`, locking the partial-pad pass-through as an observable
+regression guard. **First cohort plugin to ship a wire department-
+name with trailing ASCII-space padding pass-through observability**.
+Class names are `CameoService` / `CameoModule` (PascalCase from the
+bare-brand single-word name; D-06).
+
+**Spec 065 — Source Company Plugin: Cameo — closed end-to-end:**
+
+- **T01:** Added `Site.CAMEO = 'cameo'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 75:
+  Spec 065 — Source Company Plugin: Cameo` header (preserves the
+  Spec 006 / 013 / 020..064 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-cameo` with the
+  Scale AI-shape (single-file `service.ts`, 4-line `module.ts`,
+  2-line `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/cameo/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively (no `.trim()` per D-10 omission and no
+  department `.trim()` per D-11 pass-through), and swallows transport
+  errors per FR-9. **One structural deviation** from the Scale AI
+  template — D-11 partial-pad department pass-through (1 of 3 wire
+  department names carries a trailing pad byte). The description-
+  cleanup pipeline `stripHtmlTags(decodeHtmlEntities(content))` is
+  identical to Scale AI's because Cameo's `content` is also HTML-
+  entity-encoded (Spec 065 § 10 D-08). The fallback `jobUrl`
+  constructor mirrors Scale AI's variant-2 shape byte-for-byte
+  (`https://job-boards.greenhouse.io/cameo/jobs/${listing.id}` —
+  Spec 065 § 10 D-04). Department pass-through preserves Cameo's
+  mixed clean and pad-suffixed multi-word descriptive format
+  (`'Engineering'`, `'Cameo for Business '`, `'Talent'`) byte-for-
+  byte (Spec 065 § 10 D-11).
+- **T03:** Registered the plugin in the four wiring files —
+  `packages/plugins/index.ts` (alphabetised import + `ALL_SOURCE_MODULES`
+  insert between `BuildkiteModule` and `ChimeModule` per the
+  alphabetical ordering — `Bui` < `Cam` < `Chi`),
+  `tsconfig.base.json` (path-alias entry), `jest.config.js`
+  (`moduleNameMapper` entry).
+- **T04:** Wrote 9 unit tests under
+  `__tests__/cameo.service.spec.ts` covering NestJS DI resolution,
+  enum-literal pin, happy-path 2-listing mapping (with regression
+  guards on the variant-2 `job-boards.greenhouse.io/cameo/jobs/<id>`
+  shape, the decode-then-strip pipeline cleanliness, the single-
+  token bare-brand `companyName === 'Cameo'` D-09 omission lock,
+  the D-10 omission lock — emitted `title` matches wire `title`
+  byte-for-byte, the D-11 first-listing clean department pass-
+  through `'Engineering'`, AND the D-11 second-listing partial-pad
+  department pass-through `'Cameo for Business '` with the trailing
+  pad byte preserved), `resultsWanted=1` cap, `searchTerm` title
+  filter (`'AUTOMATION'` → 1 match), `searchTerm` department filter
+  on padded multi-word `'business'` substring matching `'Cameo for
+  Business '` (D-11 padded multi-word search guard), `searchTerm`
+  department filter on first-listing `'engineering'` substring,
+  HTTP 500 → empty, and empty `data.jobs` → empty. All 9 cases green
+  in 9.664 s.
+- **T05:** Doc updates — `docs/SOURCE_ADOPTION_BACKLOG.md` adds the
+  Cameo shipped row; `docs/index.md` appends the Spec 065 row to the
+  specs table; this `docs/log.md` entry.
+
+**Verification:** `npx jest packages/plugins/source-company-cameo
+--colors=false` → 9/9 green in 9.664 s. `npx jest
+packages/common/__tests__/helpers.spec --colors=false` → 77/77 still
+green in 7.375 s (no regression in the locale-and-prose-immunity
+parser suite). `npx jest packages/plugins/source-company-scaleai
+packages/plugins/source-company-faire --colors=false` → 18/18 still
+green in 8.783 s (no regression in the closest-cousin plugins).
+
+**Cohort statistics after Spec 065:**
+
+- **54** Greenhouse-backed company-direct plugins shipped (Anthropic,
+  Databricks, Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit,
+  Pinterest, Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio,
+  Cloudflare, MongoDB, Datadog, Instacart, Dropbox, Roblox, Block,
+  Vercel, Affirm, Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite,
+  CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow, ZoomInfo,
+  Attentive, Chime, Elastic, Intercom, Mixpanel, Faire, Scale AI,
+  **Cameo** — plus the seven legacy company-direct plugins from
+  before Spec 020).
+- **13** plugins on wire-shape variant 2 (US-region
+  `job-boards.greenhouse.io` permalink subdomain): Vercel, Affirm,
+  Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive,
+  Intercom, Mixpanel, Scale AI, **Cameo**.
+- **2** plugins on wire-shape variant 10 (legacy hosted-board apex
+  `boards.greenhouse.io/<slug>/jobs/<id>?gh_jid=<id>`): Chime, Faire.
+- **1** plugin on wire-shape variant 11 (vanity-domain
+  `jobs.<brand>.<tld>/jobs?gh_jid=<id>&gh_jid=<id>` with duplicate
+  query parameter): Elastic.
+- **21** plugins on the entity-decode-then-tag-strip description
+  pipeline (Klaviyo onwards): Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow,
+  ZoomInfo, Attentive, Chime, Elastic, Intercom, Mixpanel, Faire,
+  Scale AI, **Cameo**.
+- **8** plugins applying a wire-title `.trim()` (D-10): Brex,
+  Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire
+  — Cameo does NOT contribute (0 of 3 wire titles in the run-275
+  probe carry trailing pad bytes; structurally analogous to Chime
+  and Scale AI).
+- **4** plugins applying a brand-name trim (D-09 string-literal pin
+  over a wire-suffixed `company_name`): Affirm, Gusto, ZoomInfo,
+  Chime — Cameo does NOT contribute (wire `company_name === 'Cameo'`
+  byte-for-byte; no legal-entity suffix; **fifteenth cohort plugin
+  to omit D-09**, returning to the single-word bare-brand wire form).
+- **1** plugin shipping a wire department-name with trailing
+  ASCII-space padding pass-through observability (D-11 partial-pad):
+  **Cameo** (first cohort plugin in this category — 1 of 3 wire
+  department names carries a trailing pad byte; the plugin emits
+  byte-for-byte without a `.trim()`).
+
+**Q-042 reminder:** unchanged — pending review since run #84 (~191
+runs / ~191 hours of agent wall-clock); fourth-reminder window opened
+at run #250 per the run #200 forward-pointer convention; next reminder
+window opens at run #300; Default C continues.
+
+**Run-275 next steps queue (runs #276+):**
+
+1. **The fourth-fresh-sweep live-board pool has 13 unshipped live
+   hits remaining**, in alphabetical order: `carta` (52 roles, run
+   #276 next bite), `classpass` (70), `coursera` (8), `epicgames`
+   (74), `flexport` (113), `fubotv` (11), `glossier` (17),
+   `honeycomb` (10), `lattice` (11), `masterclass` (6), `mavenclinic`
+   (24), `stitchfix` (22), `udemy` (17). Run #276 should take
+   **Carta** (alphabetically next after Cameo).
+2. Re-probe `hubspot` at the start of run #276 to check if the
+   empty-board status has flipped (fourteenth consecutive re-probe;
+   if still empty, follow the documented "remains deferred"
+   pattern).
+3. Continue the rolling cohort statistics tracking (variant counts,
+   pipeline counts, D-09/D-10/D-11 application counts) on every new
+   plugin so the catalogue retrospective stays current.
+
+---
+
 ## 2026-05-03 — Scheduled run #274 (Spec 064 closed end-to-end; new `source-company-scaleai` plugin shipped — 9 unit tests green in 9.195 s; helpers regression 77/77 still green in 7.260 s; Faire and Mixpanel cross-regression 18/18 still green in 8.787 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **53rd Greenhouse-backed company-direct plugin** in the catalogue and the **twelfth** to use wire-shape variant 2 (`https://job-boards.greenhouse.io/scaleai/jobs/<id>` — the modern US-region permalink subdomain shape; same as Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, and Mixpanel); the **twentieth** to use the entity-decode-then-tag-strip description pipeline; **D-10 omitted** — 0 of 11 wire titles in the run-274 probe carry trailing ASCII-space padding (every title surveyed — `'Account Executive, Saudi Arabia'`, `'AI Applications Ops Lead, GPS'`, `'AI Deployment Strategist Intern'`, `'AI Product Manager'`, `'AI Strategy Consultant, Frontier Tech'`, `'Analytics & Data Science Manager, Finance'`, `'[Annotations] Operations Associate'`, `'[Annotations] Operations Program Manager'`, `'Applied AI Engineer, Enterprise'`, `'Applied AI Engineer, Enterprise GenAI'`, `'Applied AI Engineer, Global Public Sector'` — closes with a comma-suffix or alphanumeric byte); structurally analogous to Chime (Spec 059 § 10 D-10 — also omitted), distinct from the trim-applied cohort (Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire). **D-09 omitted** (wire `company_name === 'Scale AI'` byte-for-byte; the multi-token bare brand name with internal ASCII space; no legal-entity suffix on the wire — distinct from the legal-entity name "Scale AI, Inc." that appears in SEC filings). **One structural deviation** from the Mixpanel (Spec 062) template — D-10 omitted (Mixpanel had ~11.1 % padded titles; Scale AI is fully trim-clean at run-274). The cohort-first observation is the **slug-vs-display-name whitespace-collapse asymmetry** — Greenhouse slug `scaleai` (no space) vs. wire `company_name` `'Scale AI'` (with internal ASCII space) — Scale AI is the **first cohort plugin to omit D-09 against a multi-token bare-brand wire `company_name`** (every prior D-09-omission plugin had a single-word bare-brand wire). The run-274 probe at start returned **11 open roles**, a sharp drop from run-273's `scaleai` 170-role figure (likely due to recent fills and posting-expiration churn on the Scale AI side; the wire shape and tenant-enable status are unchanged). 11 roles is comfortably above the cohort minimum (Mixpanel shipped at 9; ZoomInfo at 14). With Scale AI shipped, the **run-272 third-fresh-sweep live-board pool is fully exhausted** (Faire ✓ shipped run #273; Scale AI ✓ shipped run #274) — runs #275+ pivot to a **fourth fresh probe sweep** targeting the next batch of large-employer candidates. The HubSpot re-probe at run-274 start returned HTTP 200 with `meta.total === 0` — **twelfth-consecutive empty re-probe** across runs #262–#274.)
 
 **Scope:** Run #274 continues the user-owner-directed concrete-action

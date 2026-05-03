@@ -129,6 +129,7 @@
 | 062 | [Source Company Plugin: Mixpanel](../.specify/specs/062-source-company-mixpanel/spec.md) — [plan](../.specify/specs/062-source-company-mixpanel/plan.md) — [tasks](../.specify/specs/062-source-company-mixpanel/tasks.md) | All phases done (T01..T05 run #272); spec complete |
 | 063 | [Source Company Plugin: Faire](../.specify/specs/063-source-company-faire/spec.md) — [plan](../.specify/specs/063-source-company-faire/plan.md) — [tasks](../.specify/specs/063-source-company-faire/tasks.md) | All phases done (T01..T05 run #273); spec complete |
 | 064 | [Source Company Plugin: Scale AI](../.specify/specs/064-source-company-scaleai/spec.md) — [plan](../.specify/specs/064-source-company-scaleai/plan.md) — [tasks](../.specify/specs/064-source-company-scaleai/tasks.md) | All phases done (T01..T05 run #274); spec complete |
+| 065 | [Source Company Plugin: Cameo](../.specify/specs/065-source-company-cameo/spec.md) — [plan](../.specify/specs/065-source-company-cameo/plan.md) — [tasks](../.specify/specs/065-source-company-cameo/tasks.md) | All phases done (T01..T05 run #275); spec complete |
 
 ## 8. Templates
 
