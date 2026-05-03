@@ -83,6 +83,7 @@ module.exports = {
     '^@ever-jobs/source-company-amplitude$': '<rootDir>/packages/plugins/source-company-amplitude/src/index.ts',
     '^@ever-jobs/source-company-assemblyai$': '<rootDir>/packages/plugins/source-company-assemblyai/src/index.ts',
     '^@ever-jobs/source-company-bandwidth$': '<rootDir>/packages/plugins/source-company-bandwidth/src/index.ts',
+    '^@ever-jobs/source-company-braze$': '<rootDir>/packages/plugins/source-company-braze/src/index.ts',
     '^@ever-jobs/source-company-robinhood$': '<rootDir>/packages/plugins/source-company-robinhood/src/index.ts',
     '^@ever-jobs/source-company-reddit$': '<rootDir>/packages/plugins/source-company-reddit/src/index.ts',
     '^@ever-jobs/source-company-pinterest$': '<rootDir>/packages/plugins/source-company-pinterest/src/index.ts',

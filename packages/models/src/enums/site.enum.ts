@@ -372,6 +372,8 @@ export enum Site {
   ASSEMBLYAI = 'assemblyai',
   // Phase 119: Spec 109 — Source Company Plugin: Bandwidth
   BANDWIDTH = 'bandwidth',
+  // Phase 120: Spec 110 — Source Company Plugin: Braze
+  BRAZE = 'braze',
 }
 
 /**

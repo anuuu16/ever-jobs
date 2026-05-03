@@ -84,6 +84,7 @@ import { BitwardenModule } from './source-company-bitwarden';
 import { BlockModule } from './source-company-block';
 import { BobbieModule } from './source-company-bobbie';
 import { BoeingModule } from './source-company-boeing';
+import { BrazeModule } from './source-company-braze';
 import { BrexModule } from './source-company-brex';
 import { BuildkiteModule } from './source-company-buildkite';
 import { CalendlyModule } from './source-company-calendly';
@@ -341,6 +342,7 @@ export const ALL_SOURCE_MODULES = [
   BlockModule,
   BobbieModule,
   BoeingModule,
+  BrazeModule,
   BrexModule,
   BuildkiteModule,
   CalendlyModule,
