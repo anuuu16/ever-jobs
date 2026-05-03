@@ -102,6 +102,7 @@ import { GitlabModule } from './source-company-gitlab';
 import { GlossierModule } from './source-company-glossier';
 import { GoogleCareersModule } from './source-company-google';
 import { GustoModule } from './source-company-gusto';
+import { HoneycombModule } from './source-company-honeycomb';
 import { IbmModule } from './source-company-ibm';
 import { InstacartModule } from './source-company-instacart';
 import { IntercomModule } from './source-company-intercom';
@@ -322,6 +323,7 @@ export const ALL_SOURCE_MODULES = [
   GlossierModule,
   GoogleCareersModule,
   GustoModule,
+  HoneycombModule,
   IbmModule,
   InstacartModule,
   IntercomModule,

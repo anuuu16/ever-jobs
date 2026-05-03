@@ -15,6 +15,154 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #283 (Spec 073 closed end-to-end; new `source-company-honeycomb` plugin shipped — 8 unit tests green in 9.453 s; helpers regression + Glossier + Carta + Flexport + fuboTV + Coursera cross-regression 117/117 still green in 13.771 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **62nd Greenhouse-backed company-direct plugin** in the catalogue and the **fifteenth** to use **wire-shape variant 2** — the modern hosted-board apex `https://job-boards.greenhouse.io/honeycomb/jobs/<id>` shape (after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, Scale AI, Cameo, and Carta); the **twenty-ninth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 2 of 10 wire titles in the run-283 probe carry trailing ASCII-space padding (`'Staff Solution Architect '` × 2 listings — IDs 5162709008 and 5162707008 — both single-trailing-space-padded; ~20 % overall pad rate). **Fourteenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, Flexport, fuboTV, and Glossier). **D-09 omitted with TLD-suffix wire asymmetry** — wire `company_name === 'Honeycomb.io'` byte-for-byte (12 bytes; the brand-with-TLD form). The slug `honeycomb` is 9 bytes — slug/wire-asymmetric, wire LONGER than slug by the 3-byte `.io` TLD suffix. **Twenty-third cohort plugin to omit D-09**, but the **fourth** slug/wire asymmetry case in the cohort (after Ramp Network slug `rampnetwork` / wire `'Ramp'`, Scale AI slug `scaleai` / wire `'Scale AI'`, and fuboTV slug `fubotv` / wire `'Fubo'`) — and the **second** asymmetry case where the wire is **longer** than the slug after Scale AI (8 vs. 7 bytes). Honeycomb is the **first** cohort plugin where the wire `company_name` carries the brand's TLD as a 3-byte trailing suffix (`.io`) — distinct from Scale AI's internal-whitespace asymmetry, fuboTV's brand-rebrand truncation, and Ramp Network's brand-shortening asymmetry. **D-11 fully-clean** — 0 of 10 wire department names in the run-283 probe carry trailing ASCII-space padding (`'Sales'`, `'Finance & Accounting'`, `'RevOps'` — clean single-token and multi-token forms with internal ampersands); the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **One structural deviation** from the Carta (Spec 066) template — D-09 omitted with TLD-suffix wire asymmetry as noted above. The run-283 probe at start sampled 10 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/honeycomb/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-ninth live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, Flexport, fuboTV, and Glossier** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier` < `honeycomb` < `lattice`, so this run takes Honeycomb). The remaining five live hits queue for runs #284+ in alphabetical order (`lattice` next at run #284 with 11 roles). The HubSpot re-probe at run-283 start returned HTTP 200 with `meta.total === 0` — **twenty-first-consecutive empty re-probe** across runs #262–#283.)
+
+**Scope:** Run #283 continues the user-owner-directed concrete-action
+deviation that runs #230–#282 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 072's run
+#282 close-out note (which queued Honeycomb as run #283's bite — the
+alphabetically-ninth live hit from the fourth-fresh-sweep candidate
+pool), this run takes **Honeycomb**. The Greenhouse public API was
+probed at run-283 start returning HTTP 200 with 10 visible roles
+confirmed via direct curl probe.
+
+Honeycomb.io, Inc. — operator of the **dominant
+production-observability platform pioneered around the
+high-cardinality event-as-the-unit-of-work data model**
+(founded by Christine Yen and Charity Majors in 2016 in San
+Francisco; raised $200M+ across rounds led by Insight
+Partners, Scale Venture Partners, e.ventures, Storm Ventures,
+and Headline at a Series D valuation; coined the modern usage
+of "observability" in software engineering through Charity
+Majors's writing and conference talks; ships an
+OpenTelemetry-native SaaS product across the
+engineering-observability segment alongside competitors
+Datadog, New Relic, Splunk, and Grafana Cloud, with a
+remote-first workforce concentrated across the United States,
+United Kingdom, Ireland, and Canada) — is published at the
+bare `honeycomb` Greenhouse slug (the lowercase brand name
+without the `.io` TLD that appears in the wire `company_name`)
+and was confirmed live via run #283's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/honeycomb/jobs?content=true`.
+Honeycomb publishes its `absolute_url` on **wire-shape variant 2**
+— the modern `https://job-boards.greenhouse.io/honeycomb/jobs/<id>`
+shape — making this the **fifteenth** plugin in the cohort to use
+variant 2 (after Vercel, Affirm, Gusto, Mercury, Buildkite,
+Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, Scale
+AI, Cameo, and Carta). The plugin emits `listing.absolute_url`
+byte-for-byte to preserve the canonical destination; the
+**fallback** `jobUrl` constructor (when Greenhouse omits
+`absolute_url`) defaults to the same canonical Greenhouse
+variant-2 form
+`https://job-boards.greenhouse.io/honeycomb/jobs/<id>`.
+
+Like every plugin from Klaviyo onwards, Honeycomb's `content` is
+HTML-entity-encoded (`&lt;div class=&quot;content-intro&quot;&gt;
+&lt;div&gt;&lt;strong&gt;What We're Building&lt;/strong&gt;
+&lt;/div&gt;...`) and uses the entity-decode-then-tag-strip
+pipeline (Spec 073 § 10 D-08) — making this the **twenty-ninth**
+plugin to use that pipeline. Honeycomb's wire `company_name` is
+the literal TLD-suffix string `'Honeycomb.io'` byte-for-byte (12
+bytes; slug `honeycomb` is 9 bytes — slug/wire-asymmetric, wire
+LONGER than slug by the 3-byte `.io` TLD suffix); the plugin
+reads `listing.company_name` directly with `'Honeycomb.io'` as a
+defensive fallback (D-09 omitted with TLD-suffix asymmetry —
+the **first** cohort plugin where the wire `company_name`
+carries the brand's TLD as a 3-byte trailing suffix). Honeycomb's
+wire `departments[0].name` payload is **fully clean** — 0 of 10
+wire department names in the run-283 probe carry trailing pad
+bytes (`'Sales'`, `'Finance & Accounting'`, `'RevOps'` — clean
+single-token and multi-token forms with internal ampersands and
+whitespace); D-11 byte-for-byte pass-through is a no-op on the
+clean wire data. Class names are `HoneycombService` /
+`HoneycombModule` (PascalCase from the lowercase slug — derived
+from the slug rather than the wire `company_name` because
+TypeScript class names cannot contain `.`; D-06).
+
+**Spec 073 — Source Company Plugin: Honeycomb — closed end-to-end:**
+
+- **T01:** Added `Site.HONEYCOMB = 'honeycomb'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 83:
+  Spec 073 — Source Company Plugin: Honeycomb` header (preserves the
+  Spec 006 / 013 / 020..072 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-honeycomb` with the
+  five-file shape (`package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/honeycomb.module.ts`, `src/honeycomb.service.ts`); mirrors
+  `source-company-carta` with the `honeycomb`/`Honeycomb`/`Honeycomb.io`
+  substitutions and the inline doc-comment narrative.
+- **T03:** Registered `HoneycombModule` in the four wiring files
+  (`packages/plugins/index.ts` import + `ALL_SOURCE_MODULES` append,
+  `tsconfig.base.json` path-alias, `jest.config.js` `moduleNameMapper`).
+  Placed alphabetically after `GustoModule` and before `IbmModule`
+  (`Gus` < `Hon` < `Ibm`).
+- **T04:** Authored `honeycomb.service.spec.ts` with **8 cases** —
+  (1) NestJS DI resolves `HoneycombService` through `HoneycombModule`,
+  (2) `Site.HONEYCOMB === 'honeycomb'` literal pin, (3) happy path —
+  fixture with two listings → two `JobPostDto` rows mapped with
+  expected fields including the **D-10 trim lock** (emitted
+  second-listing `title === 'Staff Solution Architect'` AND
+  byte-distinct from wire form AND exactly **1 byte shorter**), the
+  **D-04 variant-2 lock** (`jobUrl` contains
+  `job-boards.greenhouse.io/honeycomb/jobs/` AND must NOT contain
+  `?gh_jid=`), the **D-08 decode-then-strip pipeline cleanliness**
+  (no `&lt;`, `&quot;`, `&amp;`, `<p>`, `<div>`, `<strong>`, `<em>`),
+  the **D-09 TLD-suffix asymmetry lock** (`companyName ===
+  'Honeycomb.io'` byte-for-byte AND matches wire `company_name` AND
+  byte-distinct from slug `honeycomb` AND exactly 3 bytes longer
+  than slug — locking the `.io` TLD-suffix asymmetry), and the
+  **D-11 fully-clean pass-through locks** (`'Sales'` for first
+  listing, `'Finance & Accounting'` for second), (4) `resultsWanted=1`
+  cap, (5) `searchTerm` filter on title (case-insensitive against
+  trimmed form, locking the D-10 search guard), (6) `searchTerm`
+  filter on department, (7) HTTP 500 → empty `JobResponseDto`,
+  (8) empty `data.jobs` → empty `JobResponseDto`. Fixture
+  `honeycomb-jobs.json` carries two listings with byte-faithful
+  payloads — first `'Enterprise Account Executive - Benelux'`
+  (clean title, `'Sales'` department, `'Remote - United Kingdom'`
+  location), second `'Staff Solution Architect '` (wire-padded
+  title with one trailing space, `'Finance & Accounting'`
+  department, `'Remote - Canada'` location).
+- **T05:** Doc updates — `docs/SOURCE_ADOPTION_BACKLOG.md` Honeycomb
+  shipped row, `docs/index.md` Spec 073 row, and this
+  `docs/log.md` run #283 entry at the top.
+
+**Test outcomes (executed in this run):**
+
+- `npx jest packages/plugins/source-company-honeycomb --colors=false`
+  → **8 passing in 9.453 s** (1 file, 0 failed).
+- `npx jest packages/common/__tests__/helpers.spec
+  packages/plugins/source-company-glossier
+  packages/plugins/source-company-carta
+  packages/plugins/source-company-flexport
+  packages/plugins/source-company-fubotv
+  packages/plugins/source-company-coursera --colors=false`
+  → **117 passing in 13.771 s** (6 files, 0 failed) — confirms
+  registration in `tsconfig.base.json` and `jest.config.js` did not
+  perturb the parser regression suite or the closest-cousin cohort
+  plugins.
+
+**Q-042 reminder:** unchanged — pending review since run #84
+(~199 runs / ~199 hours of agent wall-clock); fourth-reminder
+window opened at run #250 per the run #200 forward-pointer
+convention; next reminder window opens at run #300; Default C
+continues.
+
+**Run-283 next steps queue (runs #284+):**
+
+1. **The fourth-fresh-sweep live-board pool has 5 unshipped live
+   hits remaining**, in alphabetical order: `lattice` (11 roles,
+   run #284 next bite), `masterclass` (6), `mavenclinic` (24),
+   `stitchfix` (22), `udemy` (17). Run #284 should take **Lattice**
+   (alphabetically next after Honeycomb).
+2. Re-probe `hubspot` at the start of run #284 to check if the
+   empty-board status has flipped (twenty-second consecutive
+   re-probe; if still empty, follow the documented "remains
+   deferred" pattern).
+
+---
+
 ## 2026-05-03 — Scheduled run #282 (Spec 072 closed end-to-end; new `source-company-glossier` plugin shipped — 8 unit tests green in 9.305 s; helpers regression + Flexport + fuboTV + Coursera + Faire cross-regression 110/110 still green in 12.39 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **61st Greenhouse-backed company-direct plugin** in the catalogue and the **fourth** to use **wire-shape variant 10** — the legacy hosted-board apex `https://boards.greenhouse.io/glossier/jobs/<id>?gh_jid=<id>` shape (after Chime, Faire, and Flexport); the **twenty-eighth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 2 of 17 wire titles in the run-282 probe carry whitespace padding, with **a notable distribution wrinkle** — one title carries a **leading** ASCII-space (`' (Sales Associate, Part-Time) Editor, Los Angeles'`, listing 7723309) and one carries a **double trailing** ASCII-space (`'(Seasonal Sales Associate, Part-Time) Editor, Boston  '`, listing 7787412); ~11.8 % overall pad rate. **Glossier is the first cohort plugin where the observed pad-byte distribution includes a leading-pad case AND a multi-byte (double-space) trailing-pad case** — distinct from the trailing-single-pad uniform distributions of fuboTV (~91 % rate, all single trailing space), Flexport (~9.7 %, all single trailing space), and the prior D-10 cohort. Standard `String.prototype.trim()` handles both axes — the existing one-line `.trim()` semantics carry through unchanged; the deviation is observable but the implementation is byte-identical to the prior cohort. **Thirteenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, Flexport, and fuboTV). **D-09 omitted** (wire `company_name === 'Glossier'` byte-for-byte; the single-token bare brand name; no legal-entity suffix on the wire — distinct from the legal-entity name "Glossier, Inc." that may appear in corporate filings). **D-11 fully-clean** — 0 of 17 wire department names in the run-282 probe carry trailing ASCII-space padding (`'Retail (Stores)'`, `'Creative'`, `'Product Development'` — clean multi-token form with internal whitespace and parentheses); the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **Zero structural deviations** from the Flexport (Spec 070) template — making this the **third** Greenhouse-only company-direct plugin in run-history to ship as a clean re-spin of a prior cohort plugin with no per-axis deviations (after Coursera off Chime at run #278 and Flexport off Faire at run #280). **Twenty-second cohort plugin to omit D-09**, returning to the single-word bare-brand wire form. The run-282 probe at start sampled 17 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/glossier/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-eighth live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, Flexport, and fuboTV** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier` < `honeycomb`, so this run takes Glossier). The remaining six live hits queue for runs #283+ in alphabetical order (`honeycomb` next at run #283 with 10 roles). The HubSpot re-probe at run-282 start returned HTTP 200 with `meta.total === 0` — **twentieth-consecutive empty re-probe** across runs #262–#282.)
 
 **Scope:** Run #282 continues the user-owner-directed concrete-action

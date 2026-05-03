@@ -298,6 +298,8 @@ export enum Site {
   FUBOTV = 'fubotv',
   // Phase 82: Spec 072 — Source Company Plugin: Glossier
   GLOSSIER = 'glossier',
+  // Phase 83: Spec 073 — Source Company Plugin: Honeycomb
+  HONEYCOMB = 'honeycomb',
 }
 
 /**

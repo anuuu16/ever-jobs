@@ -126,6 +126,7 @@ module.exports = {
     '^@ever-jobs/source-company-flexport$': '<rootDir>/packages/plugins/source-company-flexport/src/index.ts',
     '^@ever-jobs/source-company-fubotv$': '<rootDir>/packages/plugins/source-company-fubotv/src/index.ts',
     '^@ever-jobs/source-company-glossier$': '<rootDir>/packages/plugins/source-company-glossier/src/index.ts',
+    '^@ever-jobs/source-company-honeycomb$': '<rootDir>/packages/plugins/source-company-honeycomb/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',
