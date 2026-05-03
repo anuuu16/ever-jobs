@@ -300,6 +300,8 @@ export enum Site {
   GLOSSIER = 'glossier',
   // Phase 83: Spec 073 — Source Company Plugin: Honeycomb
   HONEYCOMB = 'honeycomb',
+  // Phase 84: Spec 074 — Source Company Plugin: Lattice
+  LATTICE = 'lattice',
 }
 
 /**

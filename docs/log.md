@@ -15,6 +15,112 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #284 (Spec 074 closed end-to-end; new `source-company-lattice` plugin shipped — 8 unit tests green in 9.476 s; helpers regression + Honeycomb + Glossier + Carta + Flexport + fuboTV cross-regression 117/117 still green in 13.903 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **63rd Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 15** — the bare brand-domain singular-`/job` query-only-id shape `https://lattice.com/job?gh_jid=<id>` — the **eighteenth distinct wire-shape variant** in the company-direct cohort; the **thirtieth** to use the entity-decode-then-tag-strip description pipeline; **D-10 omitted** — 0 of 11 wire titles in the run-284 probe carry whitespace padding (the wire is fully clean); **eleventh cohort plugin to omit D-10**. **D-09 omitted** — wire `company_name === 'Lattice'` byte-for-byte (the single-token bare brand name; case-symmetric with the lowercase slug `lattice`); **twenty-fourth cohort plugin to omit D-09**, returning to the case-symmetric bare-brand wire form. **D-11 APPLIED for the first time in cohort history** — 3 of 11 wire department names in the run-284 probe carry trailing ASCII-space padding (`'Customer Account Management '` × 1 — listing 8468904002, `'Product '` × 2 — listings 8523623002 and 8523624002; ~27 % pad rate; the wire-padded forms appear repeatedly across distinct department buckets — Customer Account Management vs. Product — so this is not a one-off Greenhouse-side typo but a systematic padding pattern in Lattice's tenant data); the plugin applies `.trim()` to `listing.departments?.[0]?.name` before downstream filters and emit; **first cohort plugin to apply D-11**, opening the deviation axis from "fully-clean pass-through" to "trim-on-emit" (twenty-three prior cohort plugins emitted department names byte-for-byte because their wire data was 0/N padded; Lattice is the first plugin where the wire pad rate is non-zero on the department axis). **Three structural deviations** from the Honeycomb (Spec 073) template — D-04 wire-shape variant 15 (first cohort plugin to use variant 15; distinct from Honeycomb's variant 2), D-10 omitted (Lattice 0/11 titles padded; Honeycomb 2/10 padded), and D-11 applied (Lattice 3/11 departments padded; Honeycomb 0/10 padded). The run-284 probe at start sampled 11 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/lattice/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-tenth live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, Flexport, fuboTV, Glossier, and Honeycomb** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier` < `honeycomb` < `lattice` < `masterclass`, so this run takes Lattice). The remaining four live hits queue for runs #285+ in alphabetical order (`masterclass` next at run #285 with 6 roles).)
+
+**Scope:** Run #284 continues the user-owner-directed concrete-action
+deviation that runs #230–#283 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 073's run
+#283 close-out note (which queued Lattice as run #284's bite — the
+alphabetically-tenth live hit from the fourth-fresh-sweep candidate
+pool), this run takes **Lattice**. The Greenhouse public API was
+probed at run-284 start returning HTTP 200 with 11 visible roles
+confirmed via direct curl probe.
+
+Lattice — operator of the **dominant continuous-performance-
+management and HR-software platform pioneered around the
+employee-engagement, OKR-tracking, growth-and-feedback data
+model** (founded by Jack Altman and Eric Koslow in 2015 in San
+Francisco; raised $328M+ across rounds led by Tiger Global, Founders
+Fund, Y Combinator, Khosla Ventures, and Thrive Capital at a peak
+$3B valuation in 2022; ships an HRIS / performance / engagement /
+growth / compensation suite across the people-management segment
+alongside competitors Workday, BambooHR, Culture Amp, 15Five, and
+Leapsome, with a remote-first workforce concentrated across the
+United States, Canada, and the United Kingdom) — is published at the
+bare `lattice` Greenhouse slug (the lowercase brand name; symmetric
+case-insensitively with the wire `company_name`) and was confirmed
+live via run #284's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/lattice/jobs?content=true`.
+Lattice publishes its `absolute_url` on **wire-shape variant 15** —
+the bare brand-domain `https://lattice.com/job?gh_jid=<id>` shape —
+making this the **first** plugin in the cohort to use variant 15.
+The plugin emits `listing.absolute_url` byte-for-byte to preserve
+the canonical destination; the **fallback** `jobUrl` constructor
+defaults to the canonical Greenhouse **variant-2** form
+`https://job-boards.greenhouse.io/lattice/jobs/<id>` (same fallback
+strategy as ClassPass, Epic Games, and fuboTV).
+
+Like every plugin from Klaviyo onwards, Lattice's `content` is
+HTML-entity-encoded (`&lt;h2&gt;&lt;strong&gt;This is Sales at
+Lattice&lt;/strong&gt;&lt;/h2&gt;...`) and uses the entity-decode-
+then-tag-strip pipeline (Spec 074 § 10 D-08) — making this the
+**thirtieth** plugin to use that pipeline. Lattice's wire
+`company_name` is the literal bare-brand string `'Lattice'`
+byte-for-byte (7 bytes; case-symmetric with the lowercase slug
+`lattice`); the plugin reads `listing.company_name` directly with
+`'Lattice'` as a defensive fallback (D-09 omitted). Lattice's wire
+title payload is fully clean (0 of 11 titles padded) — D-10 omitted
+with byte-for-byte pass-through. Lattice's wire department payload
+is the **first cohort observation of non-zero department padding**
+— 3 of 11 wire department names in the run-284 probe carry trailing
+ASCII-space padding, so the plugin applies `.trim()` to
+`listing.departments?.[0]?.name` (D-11 APPLIED — first cohort
+plugin). Class names are `LatticeService` / `LatticeModule`
+(PascalCase from the lowercase slug; D-06).
+
+**Spec 074 — Source Company Plugin: Lattice — closed end-to-end:**
+
+- **T01:** Added `Site.LATTICE = 'lattice'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 84:
+  Spec 074 — Source Company Plugin: Lattice` header (preserves the
+  Spec 006 / 013 / 020..073 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-lattice` with the
+  five-file shape (`package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/lattice.module.ts`, `src/lattice.service.ts`); mirrors
+  `source-company-honeycomb` with the `lattice`/`Lattice`
+  substitutions, the variant-15 fallback URL, the omitted title
+  `.trim()`, the applied department `.trim()`, and the inline
+  doc-comment narrative.
+- **T03:** Registered `LatticeModule` in the four wiring files
+  (`packages/plugins/index.ts` import + `ALL_SOURCE_MODULES` append,
+  `tsconfig.base.json` path-alias, `jest.config.js`
+  `moduleNameMapper`). Placed alphabetically after `KlaviyoModule`
+  and before `LyftModule` (`Kla` < `Lat` < `Lyf`).
+- **T04:** Authored `lattice.service.spec.ts` with **8 cases** —
+  NestJS DI registration scaffolding, `Site.LATTICE` literal pin,
+  happy-path 2-listing fixture map (with regression assertions for
+  variant-15 URL pass-through, decode-then-strip pipeline
+  cleanliness, slug-symmetric wire `companyName` byte-for-byte,
+  D-10 omission lock — wire-clean title pass-through, D-11
+  application lock — `'Product '` → `'Product'` trim assertion with
+  byte-distinct + 1-byte-shorter checks),
+  `resultsWanted=1` cap, `searchTerm` filter on title (case-
+  insensitive), `searchTerm` filter on department (case-insensitive
+  against trimmed form — D-11 search guard), HTTP 500 → empty
+  response, empty `data.jobs` → empty response. All 8 cases green
+  in 9.476 s.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added Lattice
+  shipped row), `docs/index.md` (Spec 074 row appended), and
+  `docs/log.md` (this entry).
+
+Helpers + cross-regression sweep (`packages/common/__tests__/helpers.spec`,
+`source-company-honeycomb`, `source-company-glossier`,
+`source-company-carta`, `source-company-flexport`,
+`source-company-fubotv`) → **117/117 green in 13.903 s** —
+unchanged from the run-283 baseline; no parser-level regressions
+introduced by the Lattice plugin landing.
+
+The remaining four live hits from the fourth-fresh-sweep candidate
+pool queue for runs #285+ in alphabetical order: `masterclass` (6
+roles, run #285 next bite), `mavenclinic` (24), `stitchfix` (22),
+`udemy` (17). Subsequent runs after the pool is exhausted (#288+ by
+current arithmetic) will pivot to a **fifth fresh probe sweep**
+targeting yet-untested large-employer candidate slugs.
+
+---
+
 ## 2026-05-03 — Scheduled run #283 (Spec 073 closed end-to-end; new `source-company-honeycomb` plugin shipped — 8 unit tests green in 9.453 s; helpers regression + Glossier + Carta + Flexport + fuboTV + Coursera cross-regression 117/117 still green in 13.771 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **62nd Greenhouse-backed company-direct plugin** in the catalogue and the **fifteenth** to use **wire-shape variant 2** — the modern hosted-board apex `https://job-boards.greenhouse.io/honeycomb/jobs/<id>` shape (after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, Scale AI, Cameo, and Carta); the **twenty-ninth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 2 of 10 wire titles in the run-283 probe carry trailing ASCII-space padding (`'Staff Solution Architect '` × 2 listings — IDs 5162709008 and 5162707008 — both single-trailing-space-padded; ~20 % overall pad rate). **Fourteenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, Flexport, fuboTV, and Glossier). **D-09 omitted with TLD-suffix wire asymmetry** — wire `company_name === 'Honeycomb.io'` byte-for-byte (12 bytes; the brand-with-TLD form). The slug `honeycomb` is 9 bytes — slug/wire-asymmetric, wire LONGER than slug by the 3-byte `.io` TLD suffix. **Twenty-third cohort plugin to omit D-09**, but the **fourth** slug/wire asymmetry case in the cohort (after Ramp Network slug `rampnetwork` / wire `'Ramp'`, Scale AI slug `scaleai` / wire `'Scale AI'`, and fuboTV slug `fubotv` / wire `'Fubo'`) — and the **second** asymmetry case where the wire is **longer** than the slug after Scale AI (8 vs. 7 bytes). Honeycomb is the **first** cohort plugin where the wire `company_name` carries the brand's TLD as a 3-byte trailing suffix (`.io`) — distinct from Scale AI's internal-whitespace asymmetry, fuboTV's brand-rebrand truncation, and Ramp Network's brand-shortening asymmetry. **D-11 fully-clean** — 0 of 10 wire department names in the run-283 probe carry trailing ASCII-space padding (`'Sales'`, `'Finance & Accounting'`, `'RevOps'` — clean single-token and multi-token forms with internal ampersands); the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **One structural deviation** from the Carta (Spec 066) template — D-09 omitted with TLD-suffix wire asymmetry as noted above. The run-283 probe at start sampled 10 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/honeycomb/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-ninth live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, Flexport, fuboTV, and Glossier** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier` < `honeycomb` < `lattice`, so this run takes Honeycomb). The remaining five live hits queue for runs #284+ in alphabetical order (`lattice` next at run #284 with 11 roles). The HubSpot re-probe at run-283 start returned HTTP 200 with `meta.total === 0` — **twenty-first-consecutive empty re-probe** across runs #262–#283.)
 
 **Scope:** Run #283 continues the user-owner-directed concrete-action

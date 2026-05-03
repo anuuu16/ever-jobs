@@ -107,6 +107,7 @@ import { IbmModule } from './source-company-ibm';
 import { InstacartModule } from './source-company-instacart';
 import { IntercomModule } from './source-company-intercom';
 import { KlaviyoModule } from './source-company-klaviyo';
+import { LatticeModule } from './source-company-lattice';
 import { LyftModule } from './source-company-lyft';
 import { MercuryModule } from './source-company-mercury';
 import { MetaModule } from './source-company-meta';
@@ -328,6 +329,7 @@ export const ALL_SOURCE_MODULES = [
   InstacartModule,
   IntercomModule,
   KlaviyoModule,
+  LatticeModule,
   LyftModule,
   MercuryModule,
   MetaModule,
