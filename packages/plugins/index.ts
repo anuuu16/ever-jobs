@@ -149,6 +149,7 @@ import { RobinhoodModule } from './source-company-robinhood';
 import { RobloxModule } from './source-company-roblox';
 import { ScaleaiModule } from './source-company-scaleai';
 import { ScopelyModule } from './source-company-scopely';
+import { SoFiModule } from './source-company-sofi';
 import { SquarespaceModule } from './source-company-squarespace';
 import { StitchfixModule } from './source-company-stitchfix';
 import { StripeModule } from './source-company-stripe';
@@ -398,6 +399,7 @@ export const ALL_SOURCE_MODULES = [
   RobloxModule,
   ScaleaiModule,
   ScopelyModule,
+  SoFiModule,
   SquarespaceModule,
   StitchfixModule,
   StripeModule,
