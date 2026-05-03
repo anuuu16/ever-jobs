@@ -131,6 +131,7 @@ import { MicrosoftModule } from './source-company-microsoft';
 import { MisfitsMarketModule } from './source-company-misfitsmarket';
 import { MixpanelModule } from './source-company-mixpanel';
 import { MongoDbModule } from './source-company-mongodb';
+import { MonzoModule } from './source-company-monzo';
 import { NetflixModule } from './source-company-netflix';
 import { NetlifyModule } from './source-company-netlify';
 import { NewRelicModule } from './source-company-newrelic';
@@ -377,6 +378,7 @@ export const ALL_SOURCE_MODULES = [
   MisfitsMarketModule,
   MixpanelModule,
   MongoDbModule,
+  MonzoModule,
   NetflixModule,
   NetlifyModule,
   NewRelicModule,

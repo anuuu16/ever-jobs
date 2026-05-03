@@ -350,6 +350,8 @@ export enum Site {
   HELLOFRESH = 'hellofresh',
   // Phase 108: Spec 098 — Source Company Plugin: Misfits Market
   MISFITSMARKET = 'misfitsmarket',
+  // Phase 109: Spec 099 — Source Company Plugin: Monzo
+  MONZO = 'monzo',
 }
 
 /**
