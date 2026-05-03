@@ -362,6 +362,8 @@ export enum Site {
   STOCKX = 'stockx',
   // Phase 114: Spec 104 — Source Company Plugin: sweetgreen
   SWEETGREEN = 'sweetgreen',
+  // Phase 115: Spec 105 — Source Company Plugin: xAI
+  XAI = 'xai',
 }
 
 /**

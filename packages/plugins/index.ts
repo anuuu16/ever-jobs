@@ -164,6 +164,7 @@ import { UberModule } from './source-company-uber';
 import { UdemyModule } from './source-company-udemy';
 import { VercelModule } from './source-company-vercel';
 import { WebflowModule } from './source-company-webflow';
+import { XaiModule } from './source-company-xai';
 import { ZoomModule } from './source-company-zoom';
 import { ZoomInfoModule } from './source-company-zoominfo';
 import { ConservationJobsModule } from './source-conservationjobs';
@@ -416,6 +417,7 @@ export const ALL_SOURCE_MODULES = [
   UdemyModule,
   VercelModule,
   WebflowModule,
+  XaiModule,
   ZoomModule,
   ZoomInfoModule,
   ConservationJobsModule,

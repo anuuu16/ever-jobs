@@ -112,6 +112,7 @@ module.exports = {
     '^@ever-jobs/source-company-sofi$': '<rootDir>/packages/plugins/source-company-sofi/src/index.ts',
     '^@ever-jobs/source-company-stockx$': '<rootDir>/packages/plugins/source-company-stockx/src/index.ts',
     '^@ever-jobs/source-company-sweetgreen$': '<rootDir>/packages/plugins/source-company-sweetgreen/src/index.ts',
+    '^@ever-jobs/source-company-xai$': '<rootDir>/packages/plugins/source-company-xai/src/index.ts',
     '^@ever-jobs/source-company-affirm$': '<rootDir>/packages/plugins/source-company-affirm/src/index.ts',
     '^@ever-jobs/source-company-klaviyo$': '<rootDir>/packages/plugins/source-company-klaviyo/src/index.ts',
     '^@ever-jobs/source-company-duolingo$': '<rootDir>/packages/plugins/source-company-duolingo/src/index.ts',
