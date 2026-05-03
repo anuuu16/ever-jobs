@@ -292,6 +292,8 @@ export enum Site {
   COURSERA = 'coursera',
   // Phase 79: Spec 069 — Source Company Plugin: Epic Games
   EPICGAMES = 'epicgames',
+  // Phase 80: Spec 070 — Source Company Plugin: Flexport
+  FLEXPORT = 'flexport',
 }
 
 /**

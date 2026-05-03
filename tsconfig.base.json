@@ -138,6 +138,7 @@
       "@ever-jobs/source-company-classpass": ["packages/plugins/source-company-classpass/src/index.ts"],
       "@ever-jobs/source-company-coursera": ["packages/plugins/source-company-coursera/src/index.ts"],
       "@ever-jobs/source-company-epicgames": ["packages/plugins/source-company-epicgames/src/index.ts"],
+      "@ever-jobs/source-company-flexport": ["packages/plugins/source-company-flexport/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],

@@ -134,6 +134,7 @@
 | 067 | [Source Company Plugin: ClassPass](../.specify/specs/067-source-company-classpass/spec.md) — [plan](../.specify/specs/067-source-company-classpass/plan.md) — [tasks](../.specify/specs/067-source-company-classpass/tasks.md) | All phases done (T01..T05 run #277); spec complete |
 | 068 | [Source Company Plugin: Coursera](../.specify/specs/068-source-company-coursera/spec.md) — [plan](../.specify/specs/068-source-company-coursera/plan.md) — [tasks](../.specify/specs/068-source-company-coursera/tasks.md) | All phases done (T01..T05 run #278); spec complete |
 | 069 | [Source Company Plugin: Epic Games](../.specify/specs/069-source-company-epicgames/spec.md) — [plan](../.specify/specs/069-source-company-epicgames/plan.md) — [tasks](../.specify/specs/069-source-company-epicgames/tasks.md) | All phases done (T01..T05 run #279); spec complete |
+| 070 | [Source Company Plugin: Flexport](../.specify/specs/070-source-company-flexport/spec.md) — [plan](../.specify/specs/070-source-company-flexport/plan.md) — [tasks](../.specify/specs/070-source-company-flexport/tasks.md) | All phases done (T01..T05 run #280); spec complete |
 
 ## 8. Templates
 

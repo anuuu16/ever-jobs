@@ -96,6 +96,7 @@ import { ElasticModule } from './source-company-elastic';
 import { EpicgamesModule } from './source-company-epicgames';
 import { FaireModule } from './source-company-faire';
 import { FigmaModule } from './source-company-figma';
+import { FlexportModule } from './source-company-flexport';
 import { GitlabModule } from './source-company-gitlab';
 import { GoogleCareersModule } from './source-company-google';
 import { GustoModule } from './source-company-gusto';
@@ -313,6 +314,7 @@ export const ALL_SOURCE_MODULES = [
   EpicgamesModule,
   FaireModule,
   FigmaModule,
+  FlexportModule,
   GitlabModule,
   GoogleCareersModule,
   GustoModule,

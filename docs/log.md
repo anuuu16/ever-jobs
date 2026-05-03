@@ -15,6 +15,171 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #280 (Spec 070 closed end-to-end; new `source-company-flexport` plugin shipped — 8 unit tests green in 9.451 s; helpers regression + Faire + Chime + Coursera + Epic Games cross-regression 110/110 still green in 12.403 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **59th Greenhouse-backed company-direct plugin** in the catalogue and the **third** to use **wire-shape variant 10** — the legacy hosted-board apex `https://boards.greenhouse.io/flexport/jobs/<id>?gh_jid=<id>` shape (after Chime and Faire); the **twenty-sixth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — at least 11 of 113 wire titles in the run-280 probe carry trailing ASCII-space padding (`'Area Manager '`, `'Country Manager, Mexico '`, `'Manager, Air Operations '`, plus 8 others; ~9.7 % pad rate, **the highest pad rate observed in the cohort to date**); the plugin applies `.trim()` to the wire `title` before downstream filters and emit. **Twelfth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, and Epic Games). **D-09 omitted** (wire `company_name === 'Flexport'` byte-for-byte; the single-token bare brand name; no legal-entity suffix on the wire — distinct from the legal-entity name "Flexport, Inc." that may appear in corporate filings). **D-11 fully-clean** — 0 of 113 wire department names in the run-280 probe carry trailing ASCII-space padding; the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **Zero structural deviations** from the Faire (Spec 063) template — making this the **second** Greenhouse-only company-direct plugin in run-history to ship as a clean re-spin of a prior cohort plugin with no per-axis deviations (after Coursera off Chime at run #278). **Twentieth cohort plugin to omit D-09**, returning to the single-word bare-brand wire form. The run-280 probe at start sampled 113 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/flexport/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-sixth live-board hit after Cameo, Carta, ClassPass, Coursera, and Epic Games** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv`, so this run takes Flexport). The remaining eight live hits queue for runs #281+ in alphabetical order (`fubotv` next at run #281 with 11 roles). The HubSpot re-probe at run-280 start returned HTTP 200 with `meta.total === 0` — **eighteenth-consecutive empty re-probe** across runs #262–#280.)
+
+**Scope:** Run #280 continues the user-owner-directed concrete-action
+deviation that runs #230–#279 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 069's run
+#279 close-out note (which queued Flexport as run #280's bite — the
+alphabetically-sixth live hit from the fourth-fresh-sweep candidate
+pool), this run takes **Flexport**. The Greenhouse public API was
+probed at run-280 start returning HTTP 200 with 113 visible roles
+confirmed via direct curl probe.
+
+Flexport, Inc. — operator of the **dominant
+software-defined-freight-forwarding and global-trade-orchestration
+platform** (founded by Ryan Petersen in 2013 in San Francisco;
+raised $935M+ across rounds led by SoftBank, Founders Fund, and DST
+Global at a peak $8B valuation; offers ocean / air / truck / rail
+freight-forwarding, customs-brokerage, fulfillment-warehousing,
+trade-financing (Flexport Capital), and the proprietary Flexport
+Platform that consolidates shipment-tracking, document-management,
+and trade-compliance workflows for ~30,000 importer/exporter
+customers across 200+ countries) — is published at the bare
+`flexport` Greenhouse slug (the lowercase brand name; no whitespace
+transform required since the brand is a single word) and was
+confirmed live via run #280's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/flexport/jobs?content=true`.
+Flexport's tenant publishes its `absolute_url` on **wire-shape
+variant 10** — the legacy hosted-board apex
+`https://boards.greenhouse.io/flexport/jobs/<id>?gh_jid=<id>` — the
+**third** plugin in the cohort to use this shape (after Chime and
+Faire). The plugin emits `listing.absolute_url` byte-for-byte; the
+fallback `jobUrl` constructor mirrors the variant-10 shape
+byte-for-byte.
+
+Like every plugin from Klaviyo onwards, Flexport's `content` is
+HTML-entity-encoded (`&lt;div class=&quot;content-intro&quot;&gt;
+&lt;h2&gt;&lt;strong&gt;About Flexport:&amp;nbsp;&lt;/strong&gt;
+&lt;/h2&gt;...`) and uses the entity-decode-then-tag-strip pipeline
+(Spec 070 § 10 D-08) — making this the **twenty-sixth** plugin to
+use that pipeline. Flexport's wire titles are partly padded — at
+least 11 of 113 in the run-280 probe carry trailing ASCII-space
+padding (`'Area Manager '`, `'Country Manager, Mexico '`, `'Manager,
+Air Operations '`, plus 8 others — ~9.7 % pad rate, the highest pad
+rate observed in the cohort to date); the plugin applies `.trim()`
+to the wire `title` before downstream filters and emit (D-10
+applied). Flexport's wire `company_name` is the literal single-token
+string `'Flexport'` byte-for-byte, byte-distinct from Faire's
+`'Faire'`, Coursera's `'Coursera'`, ClassPass's `'ClassPass'`, and
+Cameo's `'Cameo'`; the plugin reads `listing.company_name` directly
+without a string-literal pin (D-09 omitted). Flexport's wire
+`departments[0].name` payload is **fully clean** — 0 of 113 wire
+department names in the run-280 probe carry trailing pad bytes
+(D-11 byte-for-byte pass-through is a no-op on the clean wire
+data). Class names are `FlexportService` / `FlexportModule`
+(PascalCase from the lowercase slug — matches the brand's marketing
+form `Flexport` because the slug is already in the brand's
+marketing case; D-06).
+
+**Spec 070 — Source Company Plugin: Flexport — closed end-to-end:**
+
+- **T01:** Added `Site.FLEXPORT = 'flexport'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 80:
+  Spec 070 — Source Company Plugin: Flexport` header (preserves the
+  Spec 006 / 013 / 020..069 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-flexport` with the
+  Faire-shape (single-file `service.ts`, 4-line `module.ts`,
+  2-line `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/flexport/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  (case-insensitive, with `.trim()` on `title` per D-10 application),
+  applies `location` filter against `location.name`, and swallows
+  transport errors. **Zero structural deviations** from the Faire
+  template — second clean re-spin in run-history after Coursera off
+  Chime. The wire `absolute_url` flows through to `jobUrl`
+  byte-for-byte to preserve the variant-10 shape; the **fallback**
+  constructor mirrors the variant-10 form byte-for-byte (Spec 070 §
+  10 D-04).
+- **T03:** Registered `FlexportModule` in the four wiring files —
+  `packages/plugins/index.ts` (alphabetised between `FigmaModule`
+  and `GitlabModule` per the alphabetical ordering — `Fai` < `Fig`
+  < `Fle` < `Gitlab`), `tsconfig.base.json`, `jest.config.js`,
+  preserving the existing alphabetisation conventions.
+- **T04:** Authored 8 unit tests under
+  `packages/plugins/source-company-flexport/__tests__/flexport.service.spec.ts`
+  + 2-listing fixture (clean title `'Account Executive, ENT'` /
+  `'Sales'` department + wire-padded title `'Country Manager,
+  Mexico '` (single trailing space) / `'Partnerships'` department).
+  Tests cover: NestJS DI resolution, `Site.FLEXPORT === 'flexport'`
+  literal pin, happy-path 2-listing mapping (with regression guards
+  for D-04 variant-10 shape, D-08 decode-then-strip pipeline, D-09
+  single-token bare-brand `companyName === 'Flexport'`, D-10
+  application — emitted `title` for second listing equals trimmed
+  form `'Country Manager, Mexico'` AND is byte-distinct from
+  wire-padded form AND is exactly 1 byte shorter, D-11 first-listing
+  department `'Sales'` byte-for-byte, D-11 second-listing department
+  `'Partnerships'` byte-for-byte), `resultsWanted=1` cap,
+  `searchTerm` filter on title (case-insensitive `'COUNTRY MANAGER'`
+  → 1 match), `searchTerm` filter on department (`'partnerships'`
+  substring → 1 match), HTTP 500 → empty, empty `data.jobs` → empty.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added Flexport
+  shipped row), `docs/index.md` (added Spec 070 row), and this
+  `docs/log.md` entry.
+
+**Local test verification:**
+- `npx jest packages/plugins/source-company-flexport --colors=false`
+  → 8/8 green in 9.451 s.
+- `npx jest packages/plugins/source-company-faire packages/plugins/source-company-chime packages/plugins/source-company-coursera packages/plugins/source-company-epicgames packages/common/__tests__/helpers.spec --colors=false`
+  → 110/110 still green in 12.403 s (cross-regression unchanged).
+
+**Test count:** Repository jest suite gains 8 cases (Flexport) for
+a new total of 118 assertions exercised under run-280's local
+pre-push verification (8 Flexport + 110 cross-regression).
+
+**Cohort statistics after Spec 070:**
+
+- **59** Greenhouse-backed company-direct plugins shipped
+  (Anthropic..Epic Games + **Flexport** — plus the seven legacy
+  company-direct plugins from before Spec 020).
+- **15** plugins on wire-shape variant 2 (US-region
+  `job-boards.greenhouse.io` permalink subdomain): Vercel..Coursera
+  (unchanged).
+- **3** plugins on wire-shape variant 10 (legacy hosted-board apex
+  `boards.greenhouse.io/<slug>/jobs/<id>?gh_jid=<id>`): Chime,
+  Faire, **Flexport**.
+- **1** plugin on wire-shape variant 11 (Elastic).
+- **1** plugin on wire-shape variant 12 (ClassPass).
+- **1** plugin on wire-shape variant 13 (Epic Games).
+- **26** plugins on the entity-decode-then-tag-strip description
+  pipeline (Klaviyo..Epic Games + **Flexport**).
+- **12** plugins applying a wire-title `.trim()` (D-10): Brex,
+  Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel,
+  Faire, Carta, ClassPass, Epic Games, **Flexport**.
+- **4** plugins applying a brand-name trim (D-09 string-literal
+  pin): Affirm, Gusto, ZoomInfo, Chime — Flexport does NOT
+  contribute (wire `company_name === 'Flexport'` byte-for-byte;
+  single-token bare brand without legal-entity suffix; **twentieth
+  cohort plugin to omit D-09**).
+- **1** plugin shipping a wire department-name with trailing
+  ASCII-space padding pass-through observability (D-11 partial-pad):
+  Cameo (Flexport does NOT contribute — Flexport's wire department
+  names are fully clean, 0 of 113 padded).
+
+**Q-042 reminder:** unchanged — pending review since run #84 (~196
+runs / ~196 hours of agent wall-clock); fourth-reminder window opened
+at run #250 per the run #200 forward-pointer convention; next reminder
+window opens at run #300; Default C continues.
+
+**Run-280 next steps queue (runs #281+):**
+
+1. **The fourth-fresh-sweep live-board pool has 8 unshipped live
+   hits remaining**, in alphabetical order: `fubotv` (11 roles,
+   run #281 next bite), `glossier` (17), `honeycomb` (10),
+   `lattice` (11), `masterclass` (6), `mavenclinic` (24),
+   `stitchfix` (22), `udemy` (17). Run #281 should take **fuboTV**
+   (alphabetically next after Flexport).
+2. Re-probe `hubspot` at the start of run #281 to check if the
+   empty-board status has flipped (nineteenth consecutive
+   re-probe; if still empty, follow the documented "remains
+   deferred" pattern).
+
+---
+
 ## 2026-05-03 — Scheduled run #279 (Spec 069 closed end-to-end; new `source-company-epicgames` plugin shipped — 8 unit tests green in 9.781 s; helpers regression + Coursera + ClassPass + Carta + Cameo cross-regression 110/110 still green in 12.397 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **58th Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 13** — the **sixteenth distinct wire-shape variant** in the cohort: vanity-domain bare-brand `https://epicgames.com/careers/jobs/<id>?gh_jid=<id>` (bare brand-domain `epicgames.com` rather than the `www.epicgames.com` parent-domain or any `jobs.epicgames.com` subdomain; `careers/jobs` path; single `gh_jid` query parameter — distinct from ClassPass's variant-12 parent-domain `www.playlist.com/careers/opportunities/<id>?gh_jid=<id>` shape and Elastic's variant-11 duplicate-`gh_jid` shape; this is the **second** vanity-domain variant in the cohort after ClassPass's variant 12); the **twenty-fifth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — at least 2 of 74 wire titles in the run-279 probe carry trailing ASCII-space padding (`'Partnerships Director - Sports & Talent '` — twice on two distinct listing IDs targeting the Cary, North Carolina HQ; ~2.7 % pad rate); the plugin applies `.trim()` to the wire `title` before downstream filters and emit. **Eleventh cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, and ClassPass). **D-09 omitted** (wire `company_name === 'Epic Games'` byte-for-byte; the multi-token bare brand name with internal whitespace; no legal-entity suffix on the wire — distinct from the legal-entity name "Epic Games, Inc." that appears in current SEC filings and the prior "Epic MegaGames, Inc." legal name from before the 1999 rebrand). **D-11 fully-clean** — 0 of 74 wire department names in the run-279 probe carry trailing ASCII-space padding; the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **One structural deviation** from the ClassPass (Spec 067) template — **D-04 wire-shape variant 13** (ClassPass uses parent-domain variant 12; Epic Games uses the previously-unobserved bare-brand vanity-domain shape). **Nineteenth cohort plugin to omit D-09**, but the **second** cohort plugin (after Scale AI `'Scale AI'`) to ship with a multi-token bare-brand wire `company_name` — distinct from ClassPass's `'ClassPass'` and Coursera's `'Coursera'` single-token bare-brand wire forms. The run-279 probe at start sampled 74 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/epicgames/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-fifth live-board hit after Cameo, Carta, ClassPass, and Coursera** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport`, so this run takes Epic Games). The remaining nine live hits queue for runs #280+ in alphabetical order (`flexport` next at run #280 with 113 roles). The HubSpot re-probe at run-279 start returned HTTP 200 with `meta.total === 0` — **seventeenth-consecutive empty re-probe** across runs #262–#279.)
 
 **Scope:** Run #279 continues the user-owner-directed concrete-action
