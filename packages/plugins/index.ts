@@ -75,6 +75,7 @@ import { AmplitudeModule } from './source-company-amplitude';
 import { AnthropicModule } from './source-company-anthropic';
 import { AppleModule } from './source-company-apple';
 import { AsanaModule } from './source-company-asana';
+import { AssemblyAIModule } from './source-company-assemblyai';
 import { AttentiveModule } from './source-company-attentive';
 import { BenevityModule } from './source-company-benevity';
 import { BillcomModule } from './source-company-billcom';
@@ -330,6 +331,7 @@ export const ALL_SOURCE_MODULES = [
   AnthropicModule,
   AppleModule,
   AsanaModule,
+  AssemblyAIModule,
   AttentiveModule,
   BenevityModule,
   BillcomModule,

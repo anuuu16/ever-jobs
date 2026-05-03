@@ -96,6 +96,7 @@
       "@ever-jobs/source-company-airbnb": ["packages/plugins/source-company-airbnb/src/index.ts"],
       "@ever-jobs/source-company-airtable": ["packages/plugins/source-company-airtable/src/index.ts"],
       "@ever-jobs/source-company-amplitude": ["packages/plugins/source-company-amplitude/src/index.ts"],
+      "@ever-jobs/source-company-assemblyai": ["packages/plugins/source-company-assemblyai/src/index.ts"],
       "@ever-jobs/source-company-robinhood": ["packages/plugins/source-company-robinhood/src/index.ts"],
       "@ever-jobs/source-company-reddit": ["packages/plugins/source-company-reddit/src/index.ts"],
       "@ever-jobs/source-company-pinterest": ["packages/plugins/source-company-pinterest/src/index.ts"],

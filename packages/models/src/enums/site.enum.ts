@@ -368,6 +368,8 @@ export enum Site {
   AIRTABLE = 'airtable',
   // Phase 117: Spec 107 — Source Company Plugin: Amplitude
   AMPLITUDE = 'amplitude',
+  // Phase 118: Spec 108 — Source Company Plugin: AssemblyAI
+  ASSEMBLYAI = 'assemblyai',
 }
 
 /**
