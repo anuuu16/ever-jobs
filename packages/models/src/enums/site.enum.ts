@@ -360,6 +360,8 @@ export enum Site {
   SOFI = 'sofi',
   // Phase 113: Spec 103 — Source Company Plugin: StockX
   STOCKX = 'stockx',
+  // Phase 114: Spec 104 — Source Company Plugin: sweetgreen
+  SWEETGREEN = 'sweetgreen',
 }
 
 /**

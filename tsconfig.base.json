@@ -126,6 +126,7 @@
       "@ever-jobs/source-company-planetscale": ["packages/plugins/source-company-planetscale/src/index.ts"],
       "@ever-jobs/source-company-sofi": ["packages/plugins/source-company-sofi/src/index.ts"],
       "@ever-jobs/source-company-stockx": ["packages/plugins/source-company-stockx/src/index.ts"],
+      "@ever-jobs/source-company-sweetgreen": ["packages/plugins/source-company-sweetgreen/src/index.ts"],
       "@ever-jobs/source-company-affirm": ["packages/plugins/source-company-affirm/src/index.ts"],
       "@ever-jobs/source-company-klaviyo": ["packages/plugins/source-company-klaviyo/src/index.ts"],
       "@ever-jobs/source-company-duolingo": ["packages/plugins/source-company-duolingo/src/index.ts"],
