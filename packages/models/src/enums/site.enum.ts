@@ -342,6 +342,8 @@ export enum Site {
   BOBBIE = 'bobbie',
   // Phase 104: Spec 094 — Source Company Plugin: Cerebral
   CEREBRAL = 'cerebral',
+  // Phase 105: Spec 095 — Source Company Plugin: Coalition
+  COALITION = 'coalition',
 }
 
 /**

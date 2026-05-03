@@ -159,6 +159,7 @@
 | 092 | [Source Company Plugin: BILL (billcom)](../.specify/specs/092-source-company-billcom/spec.md) — [plan](../.specify/specs/092-source-company-billcom/plan.md) — [tasks](../.specify/specs/092-source-company-billcom/tasks.md) | All phases done (T01..T05 run #302); spec complete — first cohort observation of wire-shape variant 24 (dual-id query), TAB pad-byte under D-10, and slug-vs-wire substring-divergence under D-09 |
 | 093 | [Source Company Plugin: Bobbie](../.specify/specs/093-source-company-bobbie/spec.md) — [plan](../.specify/specs/093-source-company-bobbie/plan.md) — [tasks](../.specify/specs/093-source-company-bobbie/tasks.md) | All phases done (T01..T05 run #303); spec complete — ninth zero-deviation clean re-spin (off Coursera) |
 | 094 | [Source Company Plugin: Cerebral](../.specify/specs/094-source-company-cerebral/spec.md) — [plan](../.specify/specs/094-source-company-cerebral/plan.md) — [tasks](../.specify/specs/094-source-company-cerebral/tasks.md) | All phases done (T01..T05 run #304); spec complete — tenth zero-deviation clean re-spin (off Adyen) |
+| 095 | [Source Company Plugin: Coalition](../.specify/specs/095-source-company-coalition/spec.md) — [plan](../.specify/specs/095-source-company-coalition/plan.md) — [tasks](../.specify/specs/095-source-company-coalition/tasks.md) | All phases done (T01..T05 run #305); spec complete — variant 25 inaugurated; first cohort legal-entity-suffix wire form `'Coalition, Inc.'` and leading-double-space D-10 sub-axis |
 
 ## 8. Templates
 

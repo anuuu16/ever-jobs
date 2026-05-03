@@ -90,6 +90,7 @@ import { ChimeModule } from './source-company-chime';
 import { CircleCIModule } from './source-company-circleci';
 import { ClasspassModule } from './source-company-classpass';
 import { CloudflareModule } from './source-company-cloudflare';
+import { CoalitionModule } from './source-company-coalition';
 import { CoinbaseModule } from './source-company-coinbase';
 import { CourseraModule } from './source-company-coursera';
 import { CursorModule } from './source-company-cursor';
@@ -332,6 +333,7 @@ export const ALL_SOURCE_MODULES = [
   CircleCIModule,
   ClasspassModule,
   CloudflareModule,
+  CoalitionModule,
   CoinbaseModule,
   CourseraModule,
   CursorModule,
