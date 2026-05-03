@@ -324,6 +324,8 @@ export enum Site {
   MARQETA = 'marqeta',
   // Phase 95: Spec 085 — Source Company Plugin: New Relic
   NEWRELIC = 'newrelic',
+  // Phase 96: Spec 086 — Source Company Plugin: Peloton
+  PELOTON = 'peloton',
 }
 
 /**

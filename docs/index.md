@@ -150,6 +150,7 @@
 | 083 | [Source Company Plugin: Lookout](../.specify/specs/083-source-company-lookout/spec.md) — [plan](../.specify/specs/083-source-company-lookout/plan.md) — [tasks](../.specify/specs/083-source-company-lookout/tasks.md) | All phases done (T01..T05 run #293); spec complete |
 | 084 | [Source Company Plugin: Marqeta](../.specify/specs/084-source-company-marqeta/spec.md) — [plan](../.specify/specs/084-source-company-marqeta/plan.md) — [tasks](../.specify/specs/084-source-company-marqeta/tasks.md) | All phases done (T01..T05 run #294); spec complete |
 | 085 | [Source Company Plugin: New Relic](../.specify/specs/085-source-company-newrelic/spec.md) — [plan](../.specify/specs/085-source-company-newrelic/plan.md) — [tasks](../.specify/specs/085-source-company-newrelic/tasks.md) | All phases done (T01..T05 run #295); spec complete |
+| 086 | [Source Company Plugin: Peloton](../.specify/specs/086-source-company-peloton/spec.md) — [plan](../.specify/specs/086-source-company-peloton/plan.md) — [tasks](../.specify/specs/086-source-company-peloton/tasks.md) | All phases done (T01..T05 run #296); spec complete |
 
 ## 8. Templates
 

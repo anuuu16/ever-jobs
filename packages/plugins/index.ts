@@ -127,6 +127,7 @@ import { NetlifyModule } from './source-company-netlify';
 import { NewRelicModule } from './source-company-newrelic';
 import { NvidiaModule } from './source-company-nvidia';
 import { OpenAIModule } from './source-company-openai';
+import { PelotonModule } from './source-company-peloton';
 import { PinterestModule } from './source-company-pinterest';
 import { PlaidModule } from './source-company-plaid';
 import { PostmanModule } from './source-company-postman';
@@ -360,6 +361,7 @@ export const ALL_SOURCE_MODULES = [
   NewRelicModule,
   NvidiaModule,
   OpenAIModule,
+  PelotonModule,
   PinterestModule,
   PlaidModule,
   PostmanModule,

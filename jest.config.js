@@ -139,6 +139,7 @@ module.exports = {
     '^@ever-jobs/source-company-lookout$': '<rootDir>/packages/plugins/source-company-lookout/src/index.ts',
     '^@ever-jobs/source-company-marqeta$': '<rootDir>/packages/plugins/source-company-marqeta/src/index.ts',
     '^@ever-jobs/source-company-newrelic$': '<rootDir>/packages/plugins/source-company-newrelic/src/index.ts',
+    '^@ever-jobs/source-company-peloton$': '<rootDir>/packages/plugins/source-company-peloton/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',

@@ -154,6 +154,7 @@
       "@ever-jobs/source-company-lookout": ["packages/plugins/source-company-lookout/src/index.ts"],
       "@ever-jobs/source-company-marqeta": ["packages/plugins/source-company-marqeta/src/index.ts"],
       "@ever-jobs/source-company-newrelic": ["packages/plugins/source-company-newrelic/src/index.ts"],
+      "@ever-jobs/source-company-peloton": ["packages/plugins/source-company-peloton/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],

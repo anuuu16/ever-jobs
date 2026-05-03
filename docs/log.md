@@ -15,6 +15,64 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #296 (Spec 086 closed end-to-end; new `source-company-peloton` plugin shipped — 8 unit tests green in 8.996 s; helpers regression + New Relic + Marqeta + Maven Clinic + Fivetran + Bitwarden cross-regression 117/117 still green in 11.172 s; **eighth plugin in the fifth fresh probe sweep**. Spec 086 was partially pre-scaffolded (spec.md / plan.md / tasks.md / src + module + service + package.json + tsconfig + 4-file wirings + fixture) by an out-of-band batch operation; run #296's work picked up from that point and authored the missing test-spec file (8 cases — NestJS DI, enum-literal pin, happy-path 2-listing fixture map with regression assertions for variant-21 URL pass-through (slug-divergent vanity-domain `onepeloton.com`, locale-prefix `/en/`, fixed-path `/all-jobs/` with trailing slash, single `gh_jid` query), decode-then-strip pipeline cleanliness, case-symmetric wire `companyName`, D-10 application lock — `'Senior Full Stack Software Engineer, Device Services '` → `'Senior Full Stack Software Engineer, Device Services'` trim assertion with byte-distinct + 1-byte-shorter checks, and D-11 omission lock; `resultsWanted=1` cap; `searchTerm` filter on title; `searchTerm` filter on department; HTTP 500 → empty; empty `data.jobs` → empty), ran the test suite (all 8 green in 8.996 s), ran cross-regression (117/117 still green in 11.172 s), and added the doc updates (index.md, log.md). The run-296 probe at start sampled **52 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/peloton/jobs?content=true` — the run-289 probe-counter estimate of ~104 was inflated. This is the **75th Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 21** — the vanity-subdomain locale-prefixed fixed-path query-only-id shape `https://careers.onepeloton.com/en/all-jobs/?gh_jid=<id>` — the **twenty-fourth distinct wire-shape variant** in the company-direct cohort. **Variant 21 introduces three new sub-axes**: (a) **slug-divergent vanity domain** (`onepeloton.com` is the brand product domain while the Greenhouse slug is `peloton` — the `one` prefix is a 2014-era branding artefact); first cohort observation of slug-divergent vanity domain, distinct from every prior vanity-domain case where the brand-domain matched the Greenhouse slug byte-for-byte. (b) **Locale-prefix `/en/` in path** — first cohort observation of locale-prefix in URL path. (c) **Fixed-path `/all-jobs/`** with trailing slash — same trailing-slash sub-axis as variant 14's `/fubotv-job-openings/` and variant 18's `/<id>/`. The **forty-second** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-10 applied** — 2 of 52 wire titles in the run-296 probe carry trailing ASCII-space padding (`'Senior Full Stack Software Engineer, Device Services '`, `'Software Engineer III, Social '` — both trailing-only; ~3.8 % pad rate, the **lowest D-10 pad rate observed in the cohort to date** — undercutting Calendly's prior cohort-low ~5.0 % rate). **Twenty-second cohort plugin to apply D-10**. **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Peloton'` byte-for-byte (7 bytes — fully clean, case-symmetric with the lowercase slug); **thirty-fifth cohort plugin to omit D-09**, returning to the cohort-default posture. **D-11 omitted** — 0 of 52 wire department names padded (`'Marketing'`, `'Sales'`, `'Data Analytics'`, `'Hardware'`, `'Supply Chain & Logistics'`, `'Software'`, `'Studio & Content Production'`, `'Product Development'`, `'Security & Risk'`, `'Enterprise Systems'` — clean multi-token forms with internal whitespace and ampersands); **thirty-second cohort plugin** with fully-clean department pass-through. **One structural deviation** from the Marqeta (Spec 084) template — D-04 wire-shape variant 21. All other axes share with Marqeta: D-08 entity-decode-then-tag-strip, D-09 omitted with case-symmetric bare-brand wire, D-10 applied (Peloton 2/52 ~3.8 %; Marqeta 2/33 ~6.1 % — Peloton's posting hygiene cleaner), D-11 fully-clean department pass-through. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-eighth live-board hit** after Bitwarden, Calendly, DataCamp, Fivetran, Lookout, Marqeta, and New Relic. The remaining three live hits queue for runs #297+ in alphabetical order (`scopely` next at run #297 with ~1190 roles).)
+
+**Scope:** Run #296 continues the user-owner-directed concrete-action
+deviation. Per Spec 085's run #295 close-out note (which queued
+Peloton as run #296's bite — the alphabetically-eighth live hit
+from the fifth-fresh-sweep candidate pool), this run takes
+**Peloton**.
+
+Peloton — operator of the **dominant connected-fitness platform
+pioneered around the live-and-on-demand streaming-cycling-and-
+running data model** (founded by John Foley, Tom Cortese, Hisao
+Kushi, Yony Feng, and Graham Stanton in 2012 in New York City;
+IPO'd on NASDAQ as `PTON` in September 2019; ships connected
+hardware (Bike, Bike+, Tread, Row, Guide) + content subscription
+across the connected-fitness segment — alongside competitors
+NordicTrack (iFit), Hydrow, Tonal, Lululemon Studio Mirror, and
+Apple Fitness+ — with a hybrid distributed workforce concentrated
+across New York, Plano TX, Toronto, London, and Remote across
+the United States, Canada, and the United Kingdom) — is published
+at the bare `peloton` Greenhouse slug and was confirmed live via
+run #296's HTTP 200 probe.
+
+**Spec 086 — Source Company Plugin: Peloton — closed end-to-end:**
+
+- **T01:** `Site.PELOTON = 'peloton'` already in
+  `packages/models/src/enums/site.enum.ts` under `// Phase 96`.
+- **T02:** `@ever-jobs/source-company-peloton` package already
+  scaffolded; mirrors `source-company-marqeta` with the
+  variant-21 wire-shape pass-through and variant-2 fallback,
+  plus the inline doc-comment narrative.
+- **T03:** `PelotonModule` already registered in the four wiring
+  files. Placed alphabetically after `OpenAIModule` and before
+  `PinterestModule` (`Ope` < `Pel` < `Pin`).
+- **T04:** Authored `peloton.service.spec.ts` with **8 cases**.
+  Happy-path test asserts variant-21 URL contains
+  `careers.onepeloton.com/en/all-jobs/?gh_jid=` AND
+  `onepeloton.com` AND `/en/all-jobs/` AND must NOT contain
+  `job-boards.greenhouse.io` (locking the variant-21 shape).
+  All 8 cases green in 8.996 s.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added
+  Peloton shipped row), `docs/index.md` (Spec 086 row appended),
+  and `docs/log.md` (this entry).
+
+Helpers + cross-regression sweep
+(`packages/common/__tests__/helpers.spec`,
+`source-company-newrelic`, `source-company-marqeta`,
+`source-company-mavenclinic`, `source-company-fivetran`,
+`source-company-bitwarden`) → **117/117 green in 11.172 s** —
+unchanged baseline.
+
+The remaining three live hits from the fifth-fresh-sweep pool
+queue for runs #297+ in alphabetical order: `scopely` (~1190
+roles, run #297 next bite), `squarespace` (~72), `typeform`
+(~132). After pool exhaustion (#300+) runs will pivot to a
+**sixth fresh probe sweep**.
+
+---
+
 ## 2026-05-03 — Scheduled run #295 (Spec 085 closed end-to-end; new `source-company-newrelic` plugin shipped — 8 unit tests green in 9.279 s; helpers regression + Marqeta + Maven Clinic + Fivetran + Bitwarden + Calendly cross-regression 117/117 still green in 13.808 s; **seventh plugin in the fifth fresh probe sweep**. The run-295 probe at start sampled **74 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/newrelic/jobs?content=true` — the run-289 probe-counter estimate of ~370 was inflated by counting all `"id":` JSON keys including department/office IDs. This is the **74th Greenhouse-backed company-direct plugin** in the catalogue and the **twentieth** to use **wire-shape variant 2** — the canonical Greenhouse host `https://job-boards.greenhouse.io/newrelic/jobs/<id>` shape; the **forty-first** to use the entity-decode-then-tag-strip description pipeline. **D-10 applied** — 16 of 74 wire titles in the run-295 probe carry pad bytes (~21.6 % pad rate — the **second-highest D-10 pad rate observed in the cohort to date** after fuboTV's run-281 ~91 % outlier). Pad-form distribution: 4 leading-only, 12 trailing-only, 1 BOTH-LEADING-AND-TRAILING (`" Account Executive - Commercial "`). **First cohort observation of dual-pad on the title axis** — opening a new sub-axis under D-10 analogous to DataCamp's run-291 leading-pad sub-axis under D-11. Standard `String.prototype.trim()` handles all three sub-axes (leading-only, trailing-only, dual) in a single call — no implementation change vs Maven Clinic. **Twenty-first cohort plugin to apply D-10**. **D-09 omitted with internal-whitespace wire asymmetry** — wire `company_name === 'New Relic'` byte-for-byte (9 bytes; slug `newrelic` is 8 bytes — slug/wire-asymmetric, wire LONGER than slug by 1 byte via the internal ASCII space at index 3 between `New` and `Relic`). Same shape as Maven Clinic / Stitch Fix / Scale AI — **fourth** internal-whitespace asymmetry case in the cohort. **Thirty-fourth cohort plugin to omit D-09**, ninth slug/wire asymmetry case overall. **D-11 omitted** — 0 of 74 wire department names padded (clean multi-token forms with internal whitespace, ampersands, and commas — `'Commercial'`, `'Enterprise'`, `'Technical Solution Sales'`, `'G&A, Executive'`, `'Alliances & Channels'`, `'Content, Creative & Communications'`, `'New Relic Global Enablement'`); **thirty-first cohort plugin** with fully-clean department pass-through. **Zero structural deviations** from the Maven Clinic (Spec 076) template — making this the **sixth** Greenhouse-only company-direct plugin in run-history to ship as a clean re-spin (after Coursera off Chime at run #278, Flexport off Faire at run #280, Glossier off Flexport at run #282, and Marqeta off Calendly at run #294). All axes share with Maven Clinic: D-04 wire-shape variant 2, D-08 entity-decode-then-tag-strip, D-09 omitted with internal-whitespace wire asymmetry, D-10 applied (New Relic 16/74 ~21.6 %; Maven Clinic 3/24 ~12.5 %), D-11 fully-clean department pass-through. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-seventh live-board hit** after Bitwarden, Calendly, DataCamp, Fivetran, Lookout, and Marqeta. The remaining four live hits queue for runs #296+ in alphabetical order (`peloton` next at run #296 with ~104 roles).)
 
 **Scope:** Run #295 continues the user-owner-directed concrete-action
