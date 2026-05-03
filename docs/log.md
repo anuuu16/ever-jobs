@@ -15,6 +15,191 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #276 (Spec 066 closed end-to-end; new `source-company-carta` plugin shipped — 8 unit tests green in 9.271 s; helpers regression + Cameo + Mixpanel + Faire cross-regression 104/104 still green in 11.237 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **55th Greenhouse-backed company-direct plugin** in the catalogue and the **fourteenth** to use wire-shape variant 2 (`https://job-boards.greenhouse.io/carta/jobs/<id>` — the modern US-region permalink subdomain shape; same as Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, Scale AI, and Cameo); the **twenty-second** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — at least 1 of 10 wire titles in the run-276 probe carries trailing ASCII-space padding (`'Business Development Manager, Private Equity '`); the plugin applies `.trim()` to the wire `title` before downstream filters and emit. **Ninth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, and Faire). **D-09 omitted** (wire `company_name === 'Carta'` byte-for-byte; the single-token bare brand name; no legal-entity suffix on the wire — distinct from the legal-entity name "Carta, Inc." that appears in current SEC filings and the prior "eShares, Inc." legal name from before the 2017 rebrand). **Two structural deviations** from the Cameo (Spec 065) template — **D-10 applied** (Cameo had it omitted; Carta's run-276 probe surfaces a wire-padded title) AND **D-11 fully-clean** (Cameo had partial-pad pass-through with 1 of 3 padded; Carta's wire department names are 0 of 10 padded — fully clean). **Sixteenth cohort plugin to omit D-09**, returning to the single-word bare-brand wire form (after Cameo `'Cameo'`, Mixpanel `'Mixpanel'`, Faire `'Faire'`, Intercom `'Intercom'`, Elastic `'Elastic'`, Webflow `'Webflow'`, Attentive `'Attentive'`, Postman `'Postman'`, Netlify `'Netlify'`, Mercury `'Mercury'`, Buildkite `'Buildkite'`, CircleCI `'CircleCI'`, Toast `'Toast'`, plus the Ramp Network slug-collapse case). The run-276 probe at start sampled at least 10 visible roles (52 confirmed at run-275 close). Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-second live-board hit after Cameo** (`cameo` < `carta` < `classpass`, so this run takes Carta). The remaining twelve live hits queue for runs #277+ in alphabetical order (`classpass` next at run #277 with 70 roles). The HubSpot re-probe at run-276 start returned HTTP 200 with `meta.total === 0` — **fourteenth-consecutive empty re-probe** across runs #262–#276.)
+
+**Scope:** Run #276 continues the user-owner-directed concrete-action
+deviation that runs #230–#275 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 065's run
+#275 close-out note (which queued Carta as run #276's bite — the
+alphabetically-second live hit from the fourth-fresh-sweep
+candidate pool), this run takes **Carta**. The Greenhouse public API
+was probed at run-276 start returning HTTP 200 with at least 10
+visible roles (52 confirmed at run-275 close).
+
+Carta, Inc. — the **dominant cap-table-and-equity-management
+platform** vendor (founded by Henry Ward and Manu Kumar in 2012 in
+Palo Alto, California, originally as eShares; rebranded to Carta in
+2017; currently a private company after Series G rounds led by
+Silver Lake, Andreessen Horowitz, Tribe Capital, Lightspeed Venture
+Partners, Spark Capital, Goldman Sachs, Tiger Global, and others;
+operating with anchor offices in San Francisco, New York, Salt
+Lake City, Sydney, and Tokyo; operator of Carta Cap Table, Carta
+Fund Administration (the largest US fund-admin operation by AUM
+after SS&C and Apex), Carta Equity Plans (the 409A valuation and
+ESOP-administration surface), Carta Liquidity (the secondary-market
+exchange for private-company shareholders), Carta Total Comp (the
+compensation-benchmarking surface), Carta X Tax (the tax-delivery
+surface for portfolio-company K-1s and tax filings), and Carta
+Market Insights (the private-market-data surface alongside Pitchbook
+and Crunchbase) lines that anchor the private-market-infrastructure
+category alongside Pulley, Cake, Capdesk, and the wave of cap-table-
+as-a-service challengers) — is published at the bare `carta`
+Greenhouse slug (the lowercase brand name; no whitespace transform
+required since the brand is a single word) and was confirmed live
+via run #276's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/carta/jobs?content=true`.
+Notably, Carta's tenant publishes its `absolute_url` on **variant
+2** (the modern US-region permalink subdomain
+`https://job-boards.greenhouse.io/carta/jobs/<id>` shape — the same
+shape as Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman,
+Webflow, Attentive, Intercom, Mixpanel, Scale AI, and Cameo), making
+this the **fourteenth plugin in the cohort to use variant 2**. Like
+every plugin from Klaviyo onwards, Carta's `content` is HTML-entity-
+encoded (`&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;
+&lt;strong&gt;About Carta&lt;/strong&gt;...`) and uses the entity-
+decode-then-tag-strip pipeline (Spec 066 § 10 D-08) — making this
+the **twenty-second** plugin to use that pipeline. Carta's wire
+titles are partly padded — at least 1 of 10 in the run-276 probe
+carries trailing ASCII-space padding (`'Business Development
+Manager, Private Equity '`); the plugin applies `.trim()` to the
+wire `title` before downstream filters and emit (D-10 applied).
+Carta's wire `company_name` is the literal single-token string
+`'Carta'` byte-for-byte, byte-distinct from Cameo's `'Cameo'` and
+Scale AI's multi-token `'Scale AI'` and the legal-entity form
+`'Carta, Inc.'` that appears in current SEC filings; the plugin
+reads `listing.company_name` directly without a string-literal pin
+(D-09 omitted). Carta's wire `departments[0].name` payload is
+**fully clean** — 0 of 10 wire department names in the run-276
+probe carry trailing pad bytes (D-11 byte-for-byte pass-through is
+a no-op on the clean wire data). Class names are `CartaService` /
+`CartaModule` (PascalCase from the bare-brand single-word name;
+D-06).
+
+**Spec 066 — Source Company Plugin: Carta — closed end-to-end:**
+
+- **T01:** Added `Site.CARTA = 'carta'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 76:
+  Spec 066 — Source Company Plugin: Carta` header (preserves the
+  Spec 006 / 013 / 020..065 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-carta` with the
+  Cameo-shape (single-file `service.ts`, 4-line `module.ts`,
+  2-line `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/carta/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  case-insensitively (with `.trim()` on `title` per D-10
+  application), and swallows transport errors per FR-9. **Two
+  structural deviations** from the Cameo template — D-10 applied
+  (at least 1 of 10 wire titles padded) AND D-11 fully-clean (0 of
+  10 wire department names padded). The description-cleanup
+  pipeline `stripHtmlTags(decodeHtmlEntities(content))` is identical
+  to Cameo's because Carta's `content` is also HTML-entity-encoded
+  (Spec 066 § 10 D-08). The fallback `jobUrl` constructor mirrors
+  Cameo's variant-2 shape byte-for-byte
+  (`https://job-boards.greenhouse.io/carta/jobs/${listing.id}` —
+  Spec 066 § 10 D-04). Department pass-through preserves Carta's
+  multi-word descriptive format (`'Account Executive'`,
+  `'Marketing'`, `'Tax'`, etc.) byte-for-byte (Spec 066 § 10 D-11).
+- **T03:** Registered the plugin in the four wiring files —
+  `packages/plugins/index.ts` (alphabetised import + `ALL_SOURCE_MODULES`
+  insert between `CameoModule` and `ChimeModule` per the
+  alphabetical ordering — `Cam` < `Car` < `Chi`),
+  `tsconfig.base.json` (path-alias entry), `jest.config.js`
+  (`moduleNameMapper` entry).
+- **T04:** Wrote 8 unit tests under
+  `__tests__/carta.service.spec.ts` covering NestJS DI resolution,
+  enum-literal pin, happy-path 2-listing mapping (with regression
+  guards on the variant-2 `job-boards.greenhouse.io/carta/jobs/<id>`
+  shape, the decode-then-strip pipeline cleanliness, the single-
+  token bare-brand `companyName === 'Carta'` D-09 omission lock,
+  the D-10 application lock — emitted `title` for the second
+  listing equals the trimmed form `'Business Development Manager,
+  Private Equity'` AND is byte-distinct from the wire-padded form,
+  the D-11 first-listing clean department pass-through `'Account
+  Executive'`, AND the D-11 second-listing clean department pass-
+  through `'Marketing'`), `resultsWanted=1` cap, `searchTerm` title
+  filter (`'PRIVATE EQUITY'` → 1 match against the trimmed form),
+  `searchTerm` department filter on `'marketing'` substring → 1
+  match, HTTP 500 → empty, and empty `data.jobs` → empty. All 8
+  cases green in 9.271 s.
+- **T05:** Doc updates — `docs/SOURCE_ADOPTION_BACKLOG.md` adds the
+  Carta shipped row; `docs/index.md` appends the Spec 066 row to the
+  specs table; this `docs/log.md` entry.
+
+**Verification:** `npx jest packages/plugins/source-company-carta
+--colors=false` → 8/8 green in 9.271 s. `npx jest
+packages/common/__tests__/helpers.spec
+packages/plugins/source-company-cameo
+packages/plugins/source-company-mixpanel
+packages/plugins/source-company-faire --colors=false` → 104/104
+still green in 11.237 s (no regression in the helpers parser suite,
+the closest-cousin Cameo plugin, the closest D-10 cousins Mixpanel
+and Faire).
+
+**Cohort statistics after Spec 066:**
+
+- **55** Greenhouse-backed company-direct plugins shipped (Anthropic,
+  Databricks, Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit,
+  Pinterest, Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio,
+  Cloudflare, MongoDB, Datadog, Instacart, Dropbox, Roblox, Block,
+  Vercel, Affirm, Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite,
+  CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow, ZoomInfo,
+  Attentive, Chime, Elastic, Intercom, Mixpanel, Faire, Scale AI,
+  Cameo, **Carta** — plus the seven legacy company-direct plugins
+  from before Spec 020).
+- **14** plugins on wire-shape variant 2 (US-region
+  `job-boards.greenhouse.io` permalink subdomain): Vercel, Affirm,
+  Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive,
+  Intercom, Mixpanel, Scale AI, Cameo, **Carta**.
+- **2** plugins on wire-shape variant 10 (legacy hosted-board apex
+  `boards.greenhouse.io/<slug>/jobs/<id>?gh_jid=<id>`): Chime, Faire.
+- **1** plugin on wire-shape variant 11 (vanity-domain
+  `jobs.<brand>.<tld>/jobs?gh_jid=<id>&gh_jid=<id>` with duplicate
+  query parameter): Elastic.
+- **22** plugins on the entity-decode-then-tag-strip description
+  pipeline (Klaviyo onwards): Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow,
+  ZoomInfo, Attentive, Chime, Elastic, Intercom, Mixpanel, Faire,
+  Scale AI, Cameo, **Carta**.
+- **9** plugins applying a wire-title `.trim()` (D-10): Brex,
+  Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire,
+  **Carta** — Cameo does NOT contribute (0 of 3 wire titles in the
+  run-275 probe carry trailing pad bytes; structurally analogous to
+  Chime and Scale AI).
+- **4** plugins applying a brand-name trim (D-09 string-literal pin
+  over a wire-suffixed `company_name`): Affirm, Gusto, ZoomInfo,
+  Chime — Carta does NOT contribute (wire `company_name === 'Carta'`
+  byte-for-byte; no legal-entity suffix; **sixteenth cohort plugin
+  to omit D-09**, returning to the single-word bare-brand wire form).
+- **1** plugin shipping a wire department-name with trailing
+  ASCII-space padding pass-through observability (D-11 partial-pad):
+  Cameo (Carta does NOT contribute — Carta's wire department names
+  are fully clean, 0 of 10 padded).
+
+**Q-042 reminder:** unchanged — pending review since run #84 (~192
+runs / ~192 hours of agent wall-clock); fourth-reminder window opened
+at run #250 per the run #200 forward-pointer convention; next reminder
+window opens at run #300; Default C continues.
+
+**Run-276 next steps queue (runs #277+):**
+
+1. **The fourth-fresh-sweep live-board pool has 12 unshipped live
+   hits remaining**, in alphabetical order: `classpass` (70 roles,
+   run #277 next bite), `coursera` (8), `epicgames` (74), `flexport`
+   (113), `fubotv` (11), `glossier` (17), `honeycomb` (10), `lattice`
+   (11), `masterclass` (6), `mavenclinic` (24), `stitchfix` (22),
+   `udemy` (17). Run #277 should take **ClassPass** (alphabetically
+   next after Carta).
+2. Re-probe `hubspot` at the start of run #277 to check if the
+   empty-board status has flipped (fifteenth consecutive re-probe;
+   if still empty, follow the documented "remains deferred"
+   pattern).
+
+---
+
 ## 2026-05-03 — Scheduled run #275 (Spec 065 closed end-to-end; new `source-company-cameo` plugin shipped — 9 unit tests green in 9.664 s; helpers regression 77/77 still green in 7.375 s; Scale AI and Faire cross-regression 18/18 still green in 8.783 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **54th Greenhouse-backed company-direct plugin** in the catalogue and the **thirteenth** to use wire-shape variant 2 (`https://job-boards.greenhouse.io/cameo/jobs/<id>` — the modern US-region permalink subdomain shape; same as Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, and Scale AI); the **twenty-first** to use the entity-decode-then-tag-strip description pipeline; **D-10 omitted** — 0 of 3 wire titles in the run-275 probe carry trailing ASCII-space padding (every title surveyed — `'Automation Engineer'`, `'Business Development Representative - Cameo for Business'`, `'Summer Internship (2026)- Talent/Creator Acquisition'` — closes with an alphanumeric byte); structurally analogous to Chime (Spec 059 § 10 D-10) and Scale AI (Spec 064 § 10 D-10) — both also omitted, distinct from the trim-applied cohort (Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire). **D-09 omitted** (wire `company_name === 'Cameo'` byte-for-byte; the single-token bare brand name; no legal-entity suffix on the wire — distinct from the legal-entity name "Cameo, Inc." that appears in SEC filings). **One structural deviation** from the Scale AI (Spec 064) template — **D-11 partial-pad department pass-through**: 1 of 3 wire `departments[0].name` values in the run-275 probe (~33.3 %) carries a trailing ASCII-space pad byte (`'Cameo for Business '` — the second-listing department; the other two `'Engineering'` and `'Talent'` are clean); the plugin emits the wire `departments[0].name` byte-for-byte without a `.trim()`. **First cohort plugin to ship a wire department-name with trailing ASCII-space padding pass-through observability** — every prior plugin had either fully-clean department names or applied a `.trim()` upstream before this spec. The cohort-first observation (encoded as a regression guard) is the **partial-pad department pass-through** — the second fixture listing's emitted `department === 'Cameo for Business '` byte-for-byte (with trailing pad byte preserved). The run-275 probe at start returned **3 open roles**, the **smallest live board to ship in the cohort to date** — below the prior cohort minimum of 9 (Mixpanel shipped at 9; ZoomInfo at 14; Scale AI at 11), making this the **first cohort plugin to redefine the floor downward to 3**. Selected from a **fourth fresh probe sweep** targeting 36 candidate slugs (`carta`, `brightwheel`, `mavenclinic`, `glossier`, `casper`, `chewy`, `wayfair`, `flexport`, `epicgames`, `zendesk`, `stitchfix`, `classpass`, `plex`, `cameo`, `hims`, `compass`, `bumble`, `hinge`, `masterclass`, `skillshare`, `coursera`, `udemy`, `honeycomb`, `blameless`, `opslevel`, `lattice`, `workrise`, `niantic`, `tubi`, `fubotv`, `rover`, `fanatics`, `nylas`, `sanity`, `vidio`, plus the rolling `hubspot` re-probe) — fourteen returned HTTP 200 (`cameo` 3 jobs, `carta` 52, `classpass` 70, `coursera` 8, `epicgames` 74, `flexport` 113, `fubotv` 11, `glossier` 17, `honeycomb` 10, `lattice` 11, `masterclass` 6, `mavenclinic` 24, `stitchfix` 22, `udemy` 17); the other 21 returned HTTP 404. `cameo` is alphabetically first among the live hits, so this run takes Cameo; the remaining thirteen live hits queue for runs #276+ in alphabetical order (`carta` next at run #276 with 52 roles). The HubSpot re-probe at run-275 start returned HTTP 200 with `meta.total === 0` — **thirteenth-consecutive empty re-probe** across runs #262–#275.)
 
 **Scope:** Run #275 continues the user-owner-directed concrete-action

@@ -78,6 +78,7 @@ import { BoeingModule } from './source-company-boeing';
 import { BrexModule } from './source-company-brex';
 import { BuildkiteModule } from './source-company-buildkite';
 import { CameoModule } from './source-company-cameo';
+import { CartaModule } from './source-company-carta';
 import { ChimeModule } from './source-company-chime';
 import { CircleCIModule } from './source-company-circleci';
 import { CloudflareModule } from './source-company-cloudflare';
@@ -291,6 +292,7 @@ export const ALL_SOURCE_MODULES = [
   BrexModule,
   BuildkiteModule,
   CameoModule,
+  CartaModule,
   ChimeModule,
   CircleCIModule,
   CloudflareModule,

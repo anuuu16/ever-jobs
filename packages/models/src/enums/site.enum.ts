@@ -284,6 +284,8 @@ export enum Site {
   SCALEAI = 'scaleai',
   // Phase 75: Spec 065 — Source Company Plugin: Cameo
   CAMEO = 'cameo',
+  // Phase 76: Spec 066 — Source Company Plugin: Carta
+  CARTA = 'carta',
 }
 
 /**
