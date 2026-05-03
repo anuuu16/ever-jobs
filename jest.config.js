@@ -98,6 +98,7 @@ module.exports = {
     '^@ever-jobs/source-company-block$': '<rootDir>/packages/plugins/source-company-block/src/index.ts',
     '^@ever-jobs/source-company-vercel$': '<rootDir>/packages/plugins/source-company-vercel/src/index.ts',
     '^@ever-jobs/source-company-adyen$': '<rootDir>/packages/plugins/source-company-adyen/src/index.ts',
+    '^@ever-jobs/source-company-benevity$': '<rootDir>/packages/plugins/source-company-benevity/src/index.ts',
     '^@ever-jobs/source-company-affirm$': '<rootDir>/packages/plugins/source-company-affirm/src/index.ts',
     '^@ever-jobs/source-company-klaviyo$': '<rootDir>/packages/plugins/source-company-klaviyo/src/index.ts',
     '^@ever-jobs/source-company-duolingo$': '<rootDir>/packages/plugins/source-company-duolingo/src/index.ts',

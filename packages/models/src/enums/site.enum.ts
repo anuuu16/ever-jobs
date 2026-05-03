@@ -334,6 +334,8 @@ export enum Site {
   TYPEFORM = 'typeform',
   // Phase 100: Spec 090 — Source Company Plugin: Adyen
   ADYEN = 'adyen',
+  // Phase 101: Spec 091 — Source Company Plugin: Benevity
+  BENEVITY = 'benevity',
 }
 
 /**
