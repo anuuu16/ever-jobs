@@ -110,6 +110,7 @@ module.exports = {
     '^@ever-jobs/source-company-n26$': '<rootDir>/packages/plugins/source-company-n26/src/index.ts',
     '^@ever-jobs/source-company-planetscale$': '<rootDir>/packages/plugins/source-company-planetscale/src/index.ts',
     '^@ever-jobs/source-company-sofi$': '<rootDir>/packages/plugins/source-company-sofi/src/index.ts',
+    '^@ever-jobs/source-company-stockx$': '<rootDir>/packages/plugins/source-company-stockx/src/index.ts',
     '^@ever-jobs/source-company-affirm$': '<rootDir>/packages/plugins/source-company-affirm/src/index.ts',
     '^@ever-jobs/source-company-klaviyo$': '<rootDir>/packages/plugins/source-company-klaviyo/src/index.ts',
     '^@ever-jobs/source-company-duolingo$': '<rootDir>/packages/plugins/source-company-duolingo/src/index.ts',

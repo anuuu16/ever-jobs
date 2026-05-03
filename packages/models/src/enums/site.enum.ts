@@ -358,6 +358,8 @@ export enum Site {
   PLANETSCALE = 'planetscale',
   // Phase 112: Spec 102 — Source Company Plugin: SoFi
   SOFI = 'sofi',
+  // Phase 113: Spec 103 — Source Company Plugin: StockX
+  STOCKX = 'stockx',
 }
 
 /**

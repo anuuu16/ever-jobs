@@ -152,6 +152,7 @@ import { ScopelyModule } from './source-company-scopely';
 import { SoFiModule } from './source-company-sofi';
 import { SquarespaceModule } from './source-company-squarespace';
 import { StitchfixModule } from './source-company-stitchfix';
+import { StockXModule } from './source-company-stockx';
 import { StripeModule } from './source-company-stripe';
 import { TikTokModule } from './source-company-tiktok';
 import { ToastModule } from './source-company-toast';
@@ -402,6 +403,7 @@ export const ALL_SOURCE_MODULES = [
   SoFiModule,
   SquarespaceModule,
   StitchfixModule,
+  StockXModule,
   StripeModule,
   TikTokModule,
   ToastModule,
