@@ -310,6 +310,8 @@ export enum Site {
   STITCHFIX = 'stitchfix',
   // Phase 88: Spec 078 — Source Company Plugin: Udemy
   UDEMY = 'udemy',
+  // Phase 89: Spec 079 — Source Company Plugin: Bitwarden
+  BITWARDEN = 'bitwarden',
 }
 
 /**

@@ -143,6 +143,7 @@
 | 076 | [Source Company Plugin: Maven Clinic](../.specify/specs/076-source-company-mavenclinic/spec.md) — [plan](../.specify/specs/076-source-company-mavenclinic/plan.md) — [tasks](../.specify/specs/076-source-company-mavenclinic/tasks.md) | All phases done (T01..T05 run #286); spec complete |
 | 077 | [Source Company Plugin: Stitch Fix](../.specify/specs/077-source-company-stitchfix/spec.md) — [plan](../.specify/specs/077-source-company-stitchfix/plan.md) — [tasks](../.specify/specs/077-source-company-stitchfix/tasks.md) | All phases done (T01..T05 run #287); spec complete |
 | 078 | [Source Company Plugin: Udemy](../.specify/specs/078-source-company-udemy/spec.md) — [plan](../.specify/specs/078-source-company-udemy/plan.md) — [tasks](../.specify/specs/078-source-company-udemy/tasks.md) | All phases done (T01..T05 run #288); spec complete |
+| 079 | [Source Company Plugin: Bitwarden](../.specify/specs/079-source-company-bitwarden/spec.md) — [plan](../.specify/specs/079-source-company-bitwarden/plan.md) — [tasks](../.specify/specs/079-source-company-bitwarden/tasks.md) | All phases done (T01..T05 run #289); spec complete |
 
 ## 8. Templates
 

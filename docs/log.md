@@ -15,6 +15,120 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #289 (Spec 079 closed end-to-end; new `source-company-bitwarden` plugin shipped — 8 unit tests green in 9.277 s; helpers regression + Udemy + Stitch Fix + Maven Clinic + Honeycomb + Carta cross-regression 117/117 still green in 13.764 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; **first run of the fifth fresh probe sweep** following the run-288 close-out of the fourth-fresh-sweep candidate pool. The run-289 probe sweep across forty-one candidate slugs found **eleven** fresh non-empty live boards on Greenhouse: `bitwarden` (11 jobs, run #289 shipped), `calendly` (40), `datacamp` (41), `fivetran` (346), `lookout` (12), `marqeta` (330), `newrelic` (370), `peloton` (104), `scopely` (1190), `squarespace` (72), `typeform` (132). Plus two HTTP-200-with-zero-jobs deferred slugs (`hubspot` — twenty-second consecutive empty re-probe; `allbirds` — first observation). The remaining twenty-eight candidate slugs returned HTTP 404. This is the **68th Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 18** — the bare brand-domain `/careers/<id>/`-trailing-slash query-with-id shape `https://bitwarden.com/careers/<id>/?gh_jid=<id>` — the **twenty-first distinct wire-shape variant** in the company-direct cohort; the **thirty-fifth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 1 of 11 wire titles in the run-289 probe carries trailing ASCII-space padding (`'Senior Full Stack Software Engineer '` — single-trailing-space-padded; ~9.1 % overall pad rate); **eighteenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, Maven Clinic, Stitch Fix, and Udemy). **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Bitwarden'` byte-for-byte (9 bytes; case-symmetric with the lowercase slug `bitwarden`); no legal-entity suffix on the wire — distinct from the legal-entity name "Bitwarden, Inc." that may appear in corporate filings. **Twenty-ninth cohort plugin to omit D-09**, returning to the case-symmetric bare-brand wire form (after the seven slug/wire asymmetry cases — Ramp Network, Scale AI, fuboTV, Honeycomb, MasterClass, Maven Clinic, and Stitch Fix). **D-11 fully-clean** — 0 of 11 wire department names in the run-289 probe carry trailing ASCII-space padding (`'Engineering'`, `'Sales'`, `'Customer Success'`, `'Product'` — clean single-token and multi-token forms); the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **One structural deviation** from the Udemy (Spec 078) template — D-04 wire-shape variant 18 (first cohort plugin to use variant 18; distinct from Udemy's variant 17 third-party-SaaS-host shape — Bitwarden uses a brand-owned domain rather than a third-party SaaS host). All other axes share with Udemy: D-08 entity-decode-then-tag-strip, D-09 omitted with case-symmetric bare-brand wire, D-10 applied (Bitwarden 1/11 padded; Udemy 2/17 padded — near-identical pad rate ~9.1 % vs ~11.8 %), D-11 fully-clean department pass-through. The trailing-slash-before-query in variant 18 is the most distinctive feature — distinct from every prior cohort variant which all omit the trailing slash before `?gh_jid=`. The run-289 probe at start sampled 11 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/bitwarden/jobs?content=true`. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-first live-board hit** — the **first run** of the new sweep. The remaining ten live hits queue for runs #290+ in alphabetical order (`calendly` next at run #290 with 40 roles).)
+
+**Scope:** Run #289 continues the user-owner-directed concrete-action
+deviation that runs #230–#288 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 078's run
+#288 close-out note (which exhausted the fourth-fresh-sweep
+candidate pool and queued runs #289+ to pivot to a fifth fresh probe
+sweep), this run **launches the fifth fresh probe sweep** by probing
+forty-one candidate slugs and taking the alphabetically-first live
+hit (`bitwarden` with 11 roles).
+
+Bitwarden — operator of the **dominant open-source-friendly
+identity-security and password-management platform pioneered
+around the cross-platform end-to-end-encrypted credential vault
+data model** (founded by Kyle Spearrin in 2015 in Santa Barbara;
+raised $112M+ across rounds led by PSG and Battery Ventures at
+a peak $1.5B valuation in 2024; ships a freemium B2C password-
+manager + B2B Bitwarden-for-Business enterprise-credential-
+platform product across the identity-security segment —
+alongside competitors 1Password, Dashlane, LastPass, NordPass,
+and Keeper Security — with a fully-distributed remote-first
+workforce concentrated across the United States and Europe) —
+is published at the bare `bitwarden` Greenhouse slug (the
+lowercase brand name; case-symmetric with the wire `company_name
+=== 'Bitwarden'`) and was confirmed live via run #289's HTTP 200
+probe of
+`https://api.greenhouse.io/v1/boards/bitwarden/jobs?content=true`.
+Bitwarden publishes its `absolute_url` on a **previously-unobserved
+wire-shape variant 18** — the bare brand-domain
+`/careers/<id>/`-trailing-slash query-with-id shape — making
+this the **first** plugin in the cohort to use variant 18, the
+**twenty-first distinct wire-shape variant** in the company-
+direct cohort.
+
+Like every plugin from Klaviyo onwards, Bitwarden's `content`
+is HTML-entity-encoded (`&lt;p&gt;Bitwarden is the trusted
+identity security leader for millions of users worldwide,
+empowering enterprises, developers, and individuals to securely
+manage and share sensitive information anywhere...`) and uses
+the entity-decode-then-tag-strip pipeline (Spec 079 § 10 D-08)
+— making this the **thirty-fifth** plugin to use that pipeline.
+Bitwarden's wire `company_name` is the literal single-token
+bare-brand string `'Bitwarden'` byte-for-byte (9 bytes; case-
+symmetric with the lowercase slug `bitwarden`); the plugin
+reads `listing.company_name` directly with `'Bitwarden'` as a
+defensive fallback (D-09 omitted with case-symmetric bare-brand
+wire form). Bitwarden's wire title payload is 1-of-11 padded —
+D-10 applied with single-trailing-pad form. Bitwarden's wire
+department payload is fully clean (0 of 11 padded) — D-11
+byte-for-byte pass-through is a no-op on the clean wire data.
+Class names are `BitwardenService` / `BitwardenModule`
+(PascalCase from the lowercase slug; D-06).
+
+**Spec 079 — Source Company Plugin: Bitwarden — closed end-to-end:**
+
+- **T01:** Added `Site.BITWARDEN = 'bitwarden'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 89:
+  Spec 079 — Source Company Plugin: Bitwarden` header (preserves
+  the Spec 006 / 013 / 020..078 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-bitwarden` with
+  the five-file shape (`package.json`, `tsconfig.json`,
+  `src/index.ts`, `src/bitwarden.module.ts`,
+  `src/bitwarden.service.ts`); mirrors `source-company-udemy`
+  with the `bitwarden`/`Bitwarden` substitutions, the variant-18
+  wire-shape pass-through with variant-2 fallback, and the inline
+  doc-comment narrative.
+- **T03:** Registered `BitwardenModule` in the four wiring files
+  (`packages/plugins/index.ts` import + `ALL_SOURCE_MODULES` append,
+  `tsconfig.base.json` path-alias, `jest.config.js`
+  `moduleNameMapper`). Placed alphabetically after `AttentiveModule`
+  and before `BlockModule` (`At` < `Bi` < `Bl`).
+- **T04:** Authored `bitwarden.service.spec.ts` with **8 cases**
+  — NestJS DI registration scaffolding, `Site.BITWARDEN` literal
+  pin, happy-path 2-listing fixture map (with regression
+  assertions for variant-18 bare brand-domain URL pass-through
+  with `bitwarden.com/careers/` substring lock and
+  `/?gh_jid=` trailing-slash-before-query lock and
+  greenhouse.io anti-substring lock, decode-then-strip pipeline
+  cleanliness, case-symmetric wire `companyName` byte-for-byte,
+  D-10 application lock — `'Senior Full Stack Software Engineer '`
+  → `'Senior Full Stack Software Engineer'` trim assertion with
+  byte-distinct + 1-byte-shorter checks, and D-11 omission lock
+  — wire-clean department pass-through for both listings),
+  `resultsWanted=1` cap, `searchTerm` filter on title (case-
+  insensitive against the trimmed form — D-10 search guard),
+  `searchTerm` filter on department (case-insensitive), HTTP
+  500 → empty response, empty `data.jobs` → empty response.
+  All 8 cases green in 9.277 s.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added
+  Bitwarden shipped row + fifth-fresh-sweep candidate pool
+  documentation), `docs/index.md` (Spec 079 row appended), and
+  `docs/log.md` (this entry).
+
+Helpers + cross-regression sweep (`packages/common/__tests__/helpers.spec`,
+`source-company-udemy`, `source-company-stitchfix`,
+`source-company-mavenclinic`, `source-company-honeycomb`,
+`source-company-carta`) → **117/117 green in 13.764 s** —
+unchanged from the run-288 baseline; no parser-level regressions
+introduced by the Bitwarden plugin landing.
+
+**Fifth fresh probe sweep launched** with eleven fresh non-empty
+live hits forming the new candidate pool. The remaining ten
+live hits queue for runs #290+ in alphabetical order:
+`calendly` (40 roles, run #290 next bite), `datacamp` (41),
+`fivetran` (346), `lookout` (12), `marqeta` (330), `newrelic`
+(370), `peloton` (104), `scopely` (1190), `squarespace` (72),
+`typeform` (132). Subsequent runs after the pool is exhausted
+(#300+ by current arithmetic) will pivot to a **sixth fresh
+probe sweep**.
+
+---
+
 ## 2026-05-03 — Scheduled run #288 (Spec 078 closed end-to-end; new `source-company-udemy` plugin shipped — 8 unit tests green in 7.882 s; helpers regression + Stitch Fix + Maven Clinic + Honeycomb + Carta + Lattice cross-regression 117/117 still green in 14.035 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **67th Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 17** — the third-party-SaaS-host shape `https://app.careerpuck.com/job-board/udemy/job/<id>?gh_jid=<id>` — the **twentieth distinct wire-shape variant** in the company-direct cohort and the **first** to publish through a third-party SaaS career-board host (CareerPuck) rather than a brand-owned domain or a Greenhouse-owned host; the **thirty-fourth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 2 of 17 wire titles in the run-288 probe carry trailing ASCII-space padding (`'Join Our Talent Community '`, `'Sales Development Representative '` — both single-trailing-space-padded; ~11.8 % overall pad rate); **seventeenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, Maven Clinic, and Stitch Fix). **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Udemy'` byte-for-byte (5 bytes; case-symmetric with the lowercase slug `udemy`); no legal-entity suffix on the wire — distinct from the legal-entity name "Udemy, Inc." that appears in current SEC filings under NASDAQ ticker `UDMY`. **Twenty-eighth cohort plugin to omit D-09**, returning to the case-symmetric bare-brand wire form (after the seven slug/wire asymmetry cases — Ramp Network, Scale AI, fuboTV, Honeycomb, MasterClass, Maven Clinic, and Stitch Fix). **D-11 fully-clean** — 0 of 16 populated wire department names in the run-288 probe carry trailing ASCII-space padding (`'UB Sales - ADR'`, `'Sales'`, `'Consumer Partnerships'`, `'Product Design and UXR'`, `'UB Sales - Enterprise'`, `'Product Management'`, `'Engineering'` — clean single-token and multi-token forms with internal whitespace, hyphens, and ampersands); one listing has empty `departments` array — the plugin's `?.[0]?.name` optional-chain emits `null` for that listing. **One structural deviation** from the Carta (Spec 066) template — D-04 wire-shape variant 17 (first cohort plugin to use variant 17; first cohort observation of a third-party SaaS career-board host; distinct from Carta's variant 2 modern hosted-board apex shape). All other axes share with Carta: D-08 entity-decode-then-tag-strip, D-09 omitted with case-symmetric bare-brand wire, D-10 applied (Udemy 2/17 padded; Carta 1/10 padded — near-identical pad rate ~11.8 % vs ~10 %), D-11 fully-clean department pass-through. The CareerPuck third-party-SaaS-host shape is the most distinctive feature — distinct from every prior cohort variant which all use either Greenhouse-owned hosts or the brand's own domain. The run-288 probe at start sampled 17 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/udemy/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-fourteenth and last live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, Lattice, MasterClass, Maven Clinic, and Stitch Fix** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier` < `honeycomb` < `lattice` < `masterclass` < `mavenclinic` < `stitchfix` < `udemy`, so this run takes Udemy and **closes out the fourth-fresh-sweep candidate pool**). With Udemy shipped, the fourth-fresh-sweep candidate pool is **fully exhausted**. Subsequent runs (#289+ by current arithmetic) will pivot to a **fifth fresh probe sweep** targeting yet-untested large-employer candidate slugs.)
 
 **Scope:** Run #288 continues the user-owner-directed concrete-action
