@@ -15,6 +15,124 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #278 (Spec 068 closed end-to-end; new `source-company-coursera` plugin shipped — 8 unit tests green in 9.694 s; helpers regression + ClassPass + Carta + Cameo + Chime cross-regression 110/110 still green in 12.301 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **57th Greenhouse-backed company-direct plugin** in the catalogue and the **first** Greenhouse-only plugin to ship as a **clean re-spin** of a prior cohort plugin with **zero structural deviations** from its template (Chime — Spec 059 / run #269); the **fourteenth** plugin to use wire-shape variant 2 (`https://job-boards.greenhouse.io/coursera/jobs/<id>` — the canonical Greenhouse subdomain shape, after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, Scale AI, Cameo, and Carta); the **twenty-fourth** to use the entity-decode-then-tag-strip description pipeline; **D-10 omitted** — 0 of 8 wire titles in the run-278 probe carry trailing ASCII-space padding; the plugin emits `listing.title` byte-for-byte without a `.trim()`. **Sixth cohort plugin to omit D-10** — structurally analogous to Chime (Spec 059), Scale AI (Spec 064), Cameo (Spec 065), and Webflow (Spec 056). **D-09 omitted** (wire `company_name === 'Coursera'` byte-for-byte; the single-token bare brand name; no legal-entity suffix on the wire — distinct from the legal-entity name "Coursera, Inc." that may appear in SEC filings or the NYSE ticker `COUR` since 2021). **D-11 fully-clean** — 0 of 8 wire department names in the run-278 probe carry trailing ASCII-space padding; the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **Zero structural deviations** from the Chime (Spec 059) template — making this the **first** Greenhouse-only company-direct plugin in run-history to ship as a clean re-spin of a prior cohort plugin with no per-axis deviations. **Eighteenth cohort plugin to omit D-09**, returning to the single-word bare-brand wire form. The run-278 probe at start sampled 8 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/coursera/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-fourth live-board hit after Cameo, Carta, and ClassPass** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames`, so this run takes Coursera). The remaining ten live hits queue for runs #279+ in alphabetical order (`epicgames` next at run #279 with 74 roles). The HubSpot re-probe at run-278 start returned HTTP 200 with `meta.total === 0` — **sixteenth-consecutive empty re-probe** across runs #262–#278.)
+
+**Scope:** Run #278 continues the user-owner-directed concrete-action
+deviation that runs #230–#277 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 067's run
+#277 close-out note (which queued Coursera as run #278's bite — the
+alphabetically-fourth live hit from the fourth-fresh-sweep candidate
+pool), this run takes **Coursera**. The Greenhouse public API was
+probed at run-278 start returning HTTP 200 with 8 visible roles
+confirmed via direct curl probe.
+
+Coursera, Inc. — operator of the **dominant
+massive-open-online-course (MOOC) platform** (founded by Andrew Ng
+and Daphne Koller in 2012 in Mountain View, California; publicly
+traded on NYSE under ticker `COUR` since the 2021 IPO; 205M+
+registered learners as of March 2026; partners with 375+ leading
+universities and industry partners including Stanford, Yale, Google,
+IBM, and Meta; offers professional certificates, bachelor's and
+master's degrees, and the Coursera Plus subscription product;
+operating with anchor offices in Mountain View, New York City,
+Toronto, London, Gurgaon (India), Abu Dhabi, and Doha) — is published
+at the bare `coursera` Greenhouse slug (the lowercase brand name; no
+whitespace transform required since the brand is a single word) and
+was confirmed live via run #278's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/coursera/jobs?content=true`.
+Coursera's tenant publishes its `absolute_url` on the canonical
+Greenhouse **wire-shape variant 2** —
+`https://job-boards.greenhouse.io/coursera/jobs/<id>` — the
+fourteenth cohort plugin to use this shape.
+
+Like every plugin from Klaviyo onwards, Coursera's `content` is
+HTML-entity-encoded (`&lt;div class=&quot;content-intro&quot;&gt;
+&lt;p&gt;&lt;strong&gt;About Coursera&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Coursera was launched in 2012 by Andrew Ng and Daphne
+Koller...`) and uses the entity-decode-then-tag-strip pipeline (Spec
+068 § 10 D-08) — making this the **twenty-fourth** plugin to use
+that pipeline. Coursera's wire titles are fully clean — 0 of 8 in
+the run-278 probe carry trailing ASCII-space padding (`'Chief of
+Staff - CTO'`, `'Content Ingestion & Transformation Specialist'`,
+`'Degree Program Operations Specialist (NCR Region)'`, `'Degrees
+Success Manager'`, `'Director, Global Benefits'`, `'Senior Product
+Marketing Manager'`, `'Stock Compensation Accountant'`, `'VP,
+Corporate Development'`); the plugin emits `listing.title`
+byte-for-byte without a `.trim()` (D-10 omitted). Coursera's wire
+`company_name` is the literal single-token string `'Coursera'`
+byte-for-byte, byte-distinct from Cameo's `'Cameo'`, Scale AI's
+multi-token `'Scale AI'`, ClassPass's `'ClassPass'`, and the
+legal-entity name `'Coursera, Inc.'`; the plugin reads
+`listing.company_name` directly without a string-literal pin (D-09
+omitted). Coursera's wire `departments[0].name` payload is **fully
+clean** — 0 of 8 wire department names in the run-278 probe carry
+trailing pad bytes (D-11 byte-for-byte pass-through is a no-op on
+the clean wire data). Class names are `CourseraService` /
+`CourseraModule` (PascalCase from the lowercase slug — matches the
+brand's marketing form `Coursera` because the slug is already in the
+brand's marketing case; D-06).
+
+**Spec 068 — Source Company Plugin: Coursera — closed end-to-end:**
+
+- **T01:** Added `Site.COURSERA = 'coursera'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 78:
+  Spec 068 — Source Company Plugin: Coursera` header (preserves the
+  Spec 006 / 013 / 020..067 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-coursera` with the
+  Chime-shape (single-file `service.ts`, 4-line `module.ts`,
+  2-line `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/coursera/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  (case-insensitive), applies `location` filter against
+  `location.name`, and swallows transport errors.
+- **T03:** Registered `CourseraModule` in the four wiring files —
+  `packages/plugins/index.ts` (alphabetised between `CoinbaseModule`
+  and `CursorModule`), `tsconfig.base.json`, `jest.config.js`,
+  preserving the existing alphabetisation conventions.
+- **T04:** Authored 8 unit tests under
+  `packages/plugins/source-company-coursera/__tests__/coursera.service.spec.ts`
+  + 2-listing fixture (clean title `'Chief of Staff - CTO'` /
+  `'Chief of Staff'` department + wire title `'Content Ingestion &
+  Transformation Specialist'` / `'Industry Partnerships'` department).
+  Tests cover: NestJS DI resolution, `Site.COURSERA === 'coursera'`
+  literal pin, happy-path 2-listing mapping (with regression guards
+  for D-04 variant-2 shape, D-08 decode-then-strip pipeline, D-09
+  bare-brand `companyName === 'Coursera'`, D-10 omission — wire
+  title byte-for-byte, D-11 first-listing department `'Chief of
+  Staff'` byte-for-byte, D-11 second-listing department `'Industry
+  Partnerships'` byte-for-byte), `resultsWanted=1` cap, `searchTerm`
+  filter on title (case-insensitive), `searchTerm` filter on
+  department, HTTP 500 → empty, empty `data.jobs` → empty.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added
+  Coursera shipped row), `docs/index.md` (added Spec 068 row), and
+  this `docs/log.md` entry.
+
+**Local test verification:**
+- `npx jest packages/plugins/source-company-coursera --colors=false`
+  → 8/8 green in 9.694 s.
+- `npx jest packages/plugins/source-company-classpass packages/plugins/source-company-carta packages/plugins/source-company-cameo packages/plugins/source-company-chime packages/common/__tests__/helpers.spec --colors=false`
+  → 110/110 still green in 12.301 s (cross-regression unchanged).
+
+**Test count:** Repository jest suite gains 8 cases (Coursera) for a
+new total of 118 assertions exercised under run-278's local pre-push
+verification (8 Coursera + 110 cross-regression).
+
+**Forward queue:** With ten live-board hits remaining from the
+run-275 fourth-fresh-sweep candidate pool, runs #279+ continue
+processing in alphabetical order: `epicgames` (74 roles, run #279
+next bite), `flexport` (113), `fubotv` (11), `glossier` (17),
+`honeycomb` (10), `lattice` (11), `masterclass` (6), `mavenclinic`
+(24), `stitchfix` (22), `udemy` (17). Subsequent runs after the
+pool is exhausted (#288+ by current arithmetic) will pivot to a
+**fifth fresh probe sweep** targeting yet-untested large-employer
+candidate slugs.
+
+---
+
 ## 2026-05-03 — Scheduled run #277 (Spec 067 closed end-to-end; new `source-company-classpass` plugin shipped — 8 unit tests green in 6.507 s; helpers regression + Carta + Cameo + Mixpanel + Faire cross-regression 112/112 still green in 12.52 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **56th Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 12** — the **fifteenth distinct wire-shape variant** in the cohort: vanity-domain `https://www.playlist.com/careers/opportunities/<id>?gh_jid=<id>` (parent-domain `www.playlist.com` rather than ClassPass's own `classpass.com`; `careers/opportunities` path; single `gh_jid` query parameter — distinct from Elastic's variant-11 duplicate-`gh_jid` shape); the **twenty-third** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — at least 10 of 70 wire titles in the run-277 probe carry trailing ASCII-space padding; the plugin applies `.trim()` to the wire `title` before downstream filters and emit. **Tenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, and Carta). **D-09 omitted** (wire `company_name === 'ClassPass'` byte-for-byte; the single-token bare brand name with internal capital P; no parent-company suffix on the wire — distinct from the parent-company name "Mindbody" that owns ClassPass since 2021). **D-11 fully-clean** — 0 of 70 wire department names in the run-277 probe carry trailing ASCII-space padding; the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **One structural deviation** from the Carta (Spec 066) template — **D-04 wire-shape variant 12** (Carta uses variant 2; ClassPass uses the previously-unobserved vanity-domain shape). **Seventeenth cohort plugin to omit D-09**, returning to the single-word bare-brand wire form. The run-277 probe at start sampled 70 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/classpass/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-third live-board hit after Cameo and Carta** (`cameo` < `carta` < `classpass` < `coursera`, so this run takes ClassPass). The remaining eleven live hits queue for runs #278+ in alphabetical order (`coursera` next at run #278 with 8 roles). The HubSpot re-probe at run-277 start returned HTTP 200 with `meta.total === 0` — **fifteenth-consecutive empty re-probe** across runs #262–#277.)
 
 **Scope:** Run #277 continues the user-owner-directed concrete-action

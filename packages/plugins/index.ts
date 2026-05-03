@@ -84,6 +84,7 @@ import { CircleCIModule } from './source-company-circleci';
 import { ClasspassModule } from './source-company-classpass';
 import { CloudflareModule } from './source-company-cloudflare';
 import { CoinbaseModule } from './source-company-coinbase';
+import { CourseraModule } from './source-company-coursera';
 import { CursorModule } from './source-company-cursor';
 import { DatabricksModule } from './source-company-databricks';
 import { DatadogModule } from './source-company-datadog';
@@ -299,6 +300,7 @@ export const ALL_SOURCE_MODULES = [
   ClasspassModule,
   CloudflareModule,
   CoinbaseModule,
+  CourseraModule,
   CursorModule,
   DatabricksModule,
   DatadogModule,

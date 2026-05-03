@@ -288,6 +288,8 @@ export enum Site {
   CARTA = 'carta',
   // Phase 77: Spec 067 — Source Company Plugin: ClassPass
   CLASSPASS = 'classpass',
+  // Phase 78: Spec 068 — Source Company Plugin: Coursera
+  COURSERA = 'coursera',
 }
 
 /**
