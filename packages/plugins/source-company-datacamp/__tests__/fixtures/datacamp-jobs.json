@@ -14,7 +14,7 @@
     },
     {
       "id": 7531007,
-      "title": "Senior Backend Engineer",
+      "title": "Senior Data Engineer",
       "company_name": "DataCamp",
       "absolute_url": "https://job-boards.greenhouse.io/datacamp/jobs/7531007",
       "updated_at": "2026-04-29T10:42:11-04:00",
@@ -22,7 +22,7 @@
       "location": { "name": "Remote - EMEA" },
       "departments": [{ "id": 4089992005, "name": " IT" }],
       "offices": [{ "id": 21002, "name": "Remote" }],
-      "content": "&lt;p&gt;DataCamp is reimagining the in-browser code-execution-and-immediate-feedback data model.&lt;/p&gt;&lt;p&gt;&lt;strong&gt;The Role:&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;The Senior Backend Engineer owns DataCamp-for-Business enterprise-data-skills-training platform across server-side pipelines.&lt;/p&gt;"
+      "content": "&lt;p&gt;DataCamp is reimagining the in-browser code-execution-and-immediate-feedback data model.&lt;/p&gt;&lt;p&gt;&lt;strong&gt;The Role:&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;The Senior Data Engineer owns DataCamp-for-Business enterprise-data-skills-training platform across server-side pipelines.&lt;/p&gt;"
     }
   ]
 }

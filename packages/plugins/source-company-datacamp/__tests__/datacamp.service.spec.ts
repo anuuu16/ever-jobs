@@ -18,7 +18,7 @@ jest.mock('@ever-jobs/common', () => {
   };
 });
 
-import { DataCampModule, DataCampService } from '../src';
+import { DatacampModule, DatacampService } from '../src';
 
 const FIXTURE_DIR = path.join(__dirname, 'fixtures');
 const JOBS_PAGE_RAW = JSON.parse(
@@ -30,10 +30,10 @@ function clone<T>(v: T): T {
 }
 
 /**
- * Spec 081 / T04 — `DataCampService` unit tests.
+ * Spec 081 / T04 — `DatacampService` unit tests.
  *
  * Coverage (>= 8 mandated by spec § 8 / FR-10):
- *   1. NestJS DI resolves `DataCampService` through `DataCampModule`.
+ *   1. NestJS DI resolves `DatacampService` through `DatacampModule`.
  *   2. `Site.DATACAMP === 'datacamp'` literal pin.
  *   3. Happy path — fixture with two listings → two `JobPostDto`s,
  *      including regression assertions that (a) the fetched URL uses
@@ -67,18 +67,18 @@ function clone<T>(v: T): T {
  *   7. HTTP 500 → `scrape` resolves to `{ jobs: [] }`, never throws.
  *   8. Empty `data.jobs` → `{ jobs: [] }`.
  */
-describe('DataCampService — Spec 081 / T04', () => {
+describe('DatacampService — Spec 081 / T04', () => {
   beforeEach(() => {
     mockGet.mockReset();
   });
 
   describe('registration scaffolding', () => {
-    it('resolves through DataCampModule via NestJS DI', async () => {
+    it('resolves through DatacampModule via NestJS DI', async () => {
       const moduleRef = await Test.createTestingModule({
-        imports: [DataCampModule],
+        imports: [DatacampModule],
       }).compile();
-      const service = moduleRef.get(DataCampService);
-      expect(service).toBeInstanceOf(DataCampService);
+      const service = moduleRef.get(DatacampService);
+      expect(service).toBeInstanceOf(DatacampService);
       await moduleRef.close();
     });
 
@@ -91,7 +91,7 @@ describe('DataCampService — Spec 081 / T04', () => {
     it('maps both fixture listings to JobPostDto with expected fields', async () => {
       mockGet.mockResolvedValueOnce({ data: clone(JOBS_PAGE_RAW) });
 
-      const service = new DataCampService();
+      const service = new DatacampService();
       const input: ScraperInputDto = {
         siteType: [Site.DATACAMP],
         resultsWanted: 100,
@@ -169,8 +169,8 @@ describe('DataCampService — Spec 081 / T04', () => {
 
       const sre = dto.jobs.find((j) => j.id === 'datacamp-7531007');
       expect(sre).toBeDefined();
-      // Second-listing title is wire-clean — trim is a no-op here.
-      expect(sre?.title).toBe('Senior Backend Engineer');
+      // Second-listing title is wire-clean (D-10 omitted).
+      expect(sre?.title).toBe('Senior Data Engineer');
       expect(sre?.title).toBe(JOBS_PAGE_RAW.jobs[1].title);
       expect(sre?.companyName).toBe('DataCamp');
       expect(sre?.location?.city).toBe('Remote - EMEA');
@@ -218,7 +218,7 @@ describe('DataCampService — Spec 081 / T04', () => {
     it('honours resultsWanted=1 against a 2-item page', async () => {
       mockGet.mockResolvedValueOnce({ data: clone(JOBS_PAGE_RAW) });
 
-      const service = new DataCampService();
+      const service = new DatacampService();
       const input: ScraperInputDto = {
         siteType: [Site.DATACAMP],
         resultsWanted: 1,
@@ -233,7 +233,7 @@ describe('DataCampService — Spec 081 / T04', () => {
     it('filters by case-insensitive substring of title', async () => {
       mockGet.mockResolvedValueOnce({ data: clone(JOBS_PAGE_RAW) });
 
-      const service = new DataCampService();
+      const service = new DatacampService();
       const result = await service.scrape({
         siteType: [Site.DATACAMP],
         searchTerm: 'CURRICULUM',
@@ -248,7 +248,7 @@ describe('DataCampService — Spec 081 / T04', () => {
     it('filters by case-insensitive substring of department name (against trimmed form — D-11 leading-pad search guard)', async () => {
       mockGet.mockResolvedValueOnce({ data: clone(JOBS_PAGE_RAW) });
 
-      const service = new DataCampService();
+      const service = new DatacampService();
       const result = await service.scrape({
         siteType: [Site.DATACAMP],
         searchTerm: 'it',
@@ -276,7 +276,7 @@ describe('DataCampService — Spec 081 / T04', () => {
     it('catches an HTTP 500 → empty JobResponseDto, never throws', async () => {
       mockGet.mockRejectedValueOnce(new Error('Request failed with status 500'));
 
-      const service = new DataCampService();
+      const service = new DatacampService();
       const result = await service.scrape({
         siteType: [Site.DATACAMP],
       } as ScraperInputDto);
@@ -288,7 +288,7 @@ describe('DataCampService — Spec 081 / T04', () => {
     it('returns empty when the response payload has no jobs', async () => {
       mockGet.mockResolvedValueOnce({ data: { jobs: [] } });
 
-      const service = new DataCampService();
+      const service = new DatacampService();
       const result = await service.scrape({
         siteType: [Site.DATACAMP],
       } as ScraperInputDto);

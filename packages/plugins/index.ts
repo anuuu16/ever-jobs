@@ -88,8 +88,8 @@ import { CloudflareModule } from './source-company-cloudflare';
 import { CoinbaseModule } from './source-company-coinbase';
 import { CourseraModule } from './source-company-coursera';
 import { CursorModule } from './source-company-cursor';
-import { DataCampModule } from './source-company-datacamp';
 import { DatabricksModule } from './source-company-databricks';
+import { DatacampModule } from './source-company-datacamp';
 import { DatadogModule } from './source-company-datadog';
 import { DiscordModule } from './source-company-discord';
 import { DoorDashModule } from './source-company-doordash';
@@ -317,8 +317,8 @@ export const ALL_SOURCE_MODULES = [
   CoinbaseModule,
   CourseraModule,
   CursorModule,
-  DataCampModule,
   DatabricksModule,
+  DatacampModule,
   DatadogModule,
   DiscordModule,
   DoorDashModule,

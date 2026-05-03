@@ -1,2 +1,2 @@
-export { DataCampModule } from './datacamp.module';
-export { DataCampService } from './datacamp.service';
+export { DatacampModule } from './datacamp.module';
+export { DatacampService } from './datacamp.service';

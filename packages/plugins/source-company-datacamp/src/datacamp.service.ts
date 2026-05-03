@@ -7,45 +7,41 @@ import {
 import { createHttpClient, decodeHtmlEntities, stripHtmlTags } from '@ever-jobs/common';
 
 /**
- * DataCamp — operator of the dominant interactive online
- * data-and-AI-skills learning platform pioneered around the
- * in-browser code-execution-and-immediate-feedback data
- * model (founded by Jonathan Cornelissen, Dieter De Mesmaeker,
- * and Martijn Theuwissen in 2014 in Leuven, Belgium; raised
- * $30M+ across rounds led by Accomplice and Spectrum Equity at
- * a peak valuation in the high-9-figures range; ships a
- * freemium B2C self-serve course catalogue + a B2B DataCamp-
- * for-Business enterprise-data-skills-training platform across
- * the corporate-training segment — alongside competitors
- * Coursera, Udemy, Pluralsight, Codecademy, and Udacity — with
- * a hybrid distributed workforce concentrated in Leuven
- * (Belgium), London, and Remote across Europe and North
- * America) — publishes its consolidated careers board through
- * Greenhouse at the bare slug `datacamp` (the lowercase brand
- * name; slug/wire-asymmetric — wire `company_name === 'DataCamp'`
- * carries an internal capital `C` that the lowercase slug does
- * not; see Spec 081 § 10 D-05). The wire `company_name` is the
- * literal single-token bare-brand string `'DataCamp'` byte-for-
- * byte (8 bytes; same byte count as the lowercase slug `datacamp`
- * but with a single internal-capital byte difference at offset
- * 4 — the `C` of `Camp`).
+ * DataCamp — operator of the dominant data-and-AI-skills online-
+ * learning platform pioneered around the in-browser interactive-
+ * coding-exercise data model (founded by Jonathan Cornelissen,
+ * Dieter De Mesmaeker, and Martijn Theuwissen in 2013 in Leuven,
+ * Belgium; raised $30M+ across rounds led by Spectrum Equity,
+ * Accomplice, and Arthur Ventures; ships a hybrid B2C
+ * interactive-coding-tutorial subscription + B2B DataCamp for
+ * Business enterprise-skill-tracking platform across the
+ * lifelong-learning segment — alongside competitors Coursera,
+ * Udemy, Pluralsight, edX, and Codecademy — with a hybrid
+ * distributed workforce concentrated across Belgium, the
+ * Netherlands, the United Kingdom, and Remote EU/US) — publishes
+ * its consolidated careers board through Greenhouse at the bare
+ * lowercase concatenated slug `datacamp` (case-asymmetric with
+ * the wire `company_name === 'DataCamp'` which carries the
+ * brand's CamelCase form; see Spec 081 § 10 D-05). The wire
+ * `company_name` is the literal CamelCase brand string
+ * `'DataCamp'` byte-for-byte (8 bytes; same byte-count as the
+ * lowercase slug `datacamp` but byte-distinct via case at byte
+ * index 4 — `C` vs `c`).
  *
- * **One structural deviation from the Calendly (Spec 080)
- * template** — D-09 omitted with **slug/wire-asymmetric**
- * internal-capital wire form (DataCamp's wire `'DataCamp'` is
- * slug/wire-asymmetric vs Calendly's case-symmetric wire
- * `'Calendly'`). **One additional structural deviation** —
- * D-11 **applied with a leading-space pad form** (the **third**
- * cohort plugin to apply D-11, the **first** to apply D-11
- * with a leading-pad form — distinct from Lattice's Spec-074
- * trailing-pad and Stitch Fix's Spec-077 trailing-pad). All
- * other axes share with Calendly: D-04 wire-shape variant 2
- * (canonical Greenhouse host), D-08 entity-decode-then-tag-
- * strip description pipeline, D-10 omitted (DataCamp's wire
- * titles are 0/41 padded — fully clean — distinct from
- * Calendly's 1/20 padded ~5.0 % rate; the title pass-through
- * still applies a defensive `.trim()` only because we share the
- * implementation pattern, but on DataCamp's wire it is a no-op).
+ * **One structural deviation** from the MasterClass (Spec 075)
+ * template — D-11 **applied** with leading-space-pad form
+ * (DataCamp 1/41 padded with single-leading-space `' IT'`;
+ * MasterClass 0/6 padded — fully-clean department pass-
+ * through). All other axes share with MasterClass: D-04
+ * wire-shape variant 2 (canonical Greenhouse host), D-08
+ * entity-decode-then-tag-strip, D-09 omitted with case-only
+ * asymmetry, D-10 omitted (both 0/N padded). DataCamp is the
+ * **second cohort plugin** with case-only slug/wire asymmetry
+ * — proving out the MasterClass shape is a recurring axis.
+ * **Distinct deviation axis from Lattice's first D-11
+ * application**: DataCamp leading-space vs Lattice trailing-
+ * space; both handled by the same `String.prototype.trim()`
+ * semantic.
  *
  *   1. **D-04 — wire-shape variant 2 (canonical Greenhouse
  *      host).** DataCamp's tenant publishes its `absolute_url`
@@ -73,37 +69,30 @@ import { createHttpClient, decodeHtmlEntities, stripHtmlTags } from '@ever-jobs/
  *      stripping tags. **Thirty-seventh** plugin in the cohort
  *      to apply D-08.
  *
- *   3. **D-09 — brand-name trim omitted (slug/wire-
- *      asymmetric, internal-capital wire form).** Wire
- *      `company_name === 'DataCamp'` byte-for-byte (the single-
- *      token PascalCase brand name; slug/wire-asymmetric — the
- *      wire's internal capital `C` at offset 4 is missing from
- *      the lowercase slug `datacamp`); no legal-entity suffix
- *      on the wire — the wire is the bare PascalCase brand.
- *      The plugin reads `listing.company_name` directly with
- *      `'DataCamp'` as a defensive fallback. **Eighth slug/
- *      wire-asymmetry case** in the cohort (after Ramp Network,
- *      Scale AI, fuboTV, Honeycomb, MasterClass, Maven Clinic,
- *      and Stitch Fix). Distinct from the prior seven cases:
- *      DataCamp's wire and slug have the SAME byte count
- *      (8 bytes each) — the asymmetry is a pure case-fold
- *      diff at one internal byte offset, NOT an extra TLD
- *      suffix (Honeycomb), an extra space (Stitch Fix / Maven
- *      Clinic / Scale AI / Ramp Network), or an extra TV
- *      acronym (fuboTV). DataCamp is the **first** slug/wire-
- *      asymmetric case where the wire and slug share byte
- *      length and differ only by a single case-fold inversion.
+ *   3. **D-09 — brand-name trim omitted (case-only
+ *      asymmetry).** Wire `company_name === 'DataCamp'` byte-
+ *      for-byte (8 bytes; PascalCase). Slug `datacamp` is also
+ *      8 bytes — slug/wire EQUAL-byte-length but byte-distinct
+ *      via case alone at byte index 4. Same shape as
+ *      MasterClass (Spec 075 § 10 D-09 — slug `masterclass` /
+ *      wire `'MasterClass'`). The plugin reads
+ *      `listing.company_name` directly with `'DataCamp'` as a
+ *      defensive fallback. **Thirty-first cohort plugin to omit
+ *      D-09**, but the **eighth slug/wire asymmetry case
+ *      overall** (after Ramp Network, Scale AI, fuboTV,
+ *      Honeycomb, MasterClass, Maven Clinic, and Stitch Fix);
+ *      and the **second** equal-length-case-only asymmetry
+ *      case after MasterClass.
  *
  *   4. **D-10 — wire-title `.trim()` omitted (no observed
  *      pad).** DataCamp's wire titles are 0 of 41 padded
- *      (~0 % pad rate — fully clean) in the run-291 probe.
- *      Distinct from Calendly's 1/20 padded ~5.0 % rate. The
- *      plugin's title pass-through still calls `.trim()` for
- *      defence-in-depth (matching the cohort implementation
- *      template), but the pass-through is a no-op on the
- *      clean wire data. If DataCamp adds title padding upstream
- *      in the future, the trim catches it without surprising
- *      the consumer.
+ *      (~0 % pad rate — fully clean) in the run-291 probe. The
+ *      plugin emits `listing.title` byte-for-byte without a
+ *      `.trim()` (the pass-through preserves byte-fidelity to
+ *      the wire shape; if DataCamp introduces title padding
+ *      upstream, the byte-for-byte assertion in the unit-test
+ *      happy path catches the diff). **Thirteenth cohort plugin
+ *      to omit D-10**.
  *
  *   5. **D-11 — wire-department `.trim()` applied (leading-
  *      pad form — first cohort observation).** DataCamp's wire
@@ -111,14 +100,11 @@ import { createHttpClient, decodeHtmlEntities, stripHtmlTags } from '@ever-jobs/
  *      ASCII space (`' IT'` — the `' IT'` 3-byte form trims to
  *      the 2-byte `'IT'`; ~2.4 % overall pad rate). The plugin
  *      applies `.trim()` to the wire `departments[0].name`
- *      before downstream filters and emit. **Third cohort
+ *      before downstream filters and emit. **Second cohort
  *      plugin to apply D-11** (after Lattice in Spec 074 with
- *      a trailing-pad form, and Stitch Fix in Spec 077 with
  *      a trailing-pad form); **first** cohort plugin to apply
  *      D-11 with a **leading-pad** form — opening the leading-
- *      pad sub-axis under D-11. The plugin therefore emits
- *      the trimmed `'IT'` (2 bytes) for the affected listing,
- *      byte-distinct from the wire `' IT'` (3 bytes).
+ *      pad sub-axis under D-11.
  */
 const API_URL = 'https://api.greenhouse.io/v1/boards/datacamp/jobs';
 
@@ -128,8 +114,8 @@ const API_URL = 'https://api.greenhouse.io/v1/boards/datacamp/jobs';
   category: 'company',
 })
 @Injectable()
-export class DataCampService implements IScraper {
-  private readonly logger = new Logger(DataCampService.name);
+export class DatacampService implements IScraper {
+  private readonly logger = new Logger(DatacampService.name);
 
   async scrape(input: ScraperInputDto): Promise<JobResponseDto> {
     const jobs: JobPostDto[] = [];
@@ -150,18 +136,16 @@ export class DataCampService implements IScraper {
       for (const listing of listings) {
         if (jobs.length >= resultsWanted) break;
 
-        // D-10 omitted (no pad observed) — but defensive `.trim()`
-        // applied to follow the cohort implementation pattern; on
-        // DataCamp's run-291 wire data this is a no-op (0/41 padded).
-        const title = (listing.title ?? '').trim();
+        // D-10 omitted (no pad observed — 0/41 in run #291): emit
+        // wire title byte-for-byte without `.trim()`.
+        const title = listing.title ?? '';
         if (!title) continue;
 
         // D-11 applied (leading-pad form — first cohort observation):
         // 1 of 41 wire departments in run #291 carries a single-
         // leading ASCII space (`' IT'` → `'IT'`). The plugin trims
         // BEFORE the searchTerm guard so case-insensitive department
-        // matches honour the trimmed form (e.g. searching `'it'`
-        // matches the trimmed `'IT'`).
+        // matches honour the trimmed form.
         const department = (listing.departments?.[0]?.name ?? '').trim() || null;
 
         if (input.searchTerm) {
@@ -188,12 +172,12 @@ export class DataCampService implements IScraper {
             id,
             site: Site.DATACAMP,
             title,
-            // D-09 omitted: slug/wire-asymmetric internal-capital
-            // wire form `company_name === 'DataCamp'` byte-for-byte
-            // (8 bytes; PascalCase with internal capital `C` at
-            // offset 4 — slug/wire-asymmetric vs the lowercase
-            // 8-byte slug `datacamp`); pass-through with a
-            // defensive `'DataCamp'` fallback.
+            // D-09 omitted: case-only asymmetric wire form
+            // `company_name === 'DataCamp'` byte-for-byte
+            // (8 bytes; PascalCase brand; same byte count as the
+            // lowercase 8-byte slug `datacamp` but byte-distinct
+            // via case alone at byte index 4); pass-through with
+            // a defensive `'DataCamp'` fallback.
             companyName: listing.company_name ?? 'DataCamp',
             // D-04: wire `absolute_url` flows through to `jobUrl`
             // byte-for-byte (preserving the canonical variant-2
@@ -210,9 +194,9 @@ export class DataCampService implements IScraper {
             datePosted: listing.updated_at ?? null,
             isRemote: locationStr?.toLowerCase().includes('remote') ?? false,
             // D-11 applied (leading-pad form): trimmed wire
-            // department; the wire pad bytes (1 of 41 listings have
-            // a leading-space pad — `' IT'`) are stripped before
-            // emit.
+            // department; the wire pad bytes (1 of 41 listings
+            // have a leading-space pad — `' IT'`) are stripped
+            // before emit.
             department,
           }),
         );

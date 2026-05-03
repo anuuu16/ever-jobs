@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { DataCampService } from './datacamp.service';
+import { DatacampService } from './datacamp.service';
 
-@Module({ providers: [DataCampService], exports: [DataCampService] })
-export class DataCampModule {}
+@Module({ providers: [DatacampService], exports: [DatacampService] })
+export class DatacampModule {}
