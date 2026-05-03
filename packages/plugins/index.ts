@@ -136,6 +136,7 @@ import { RedditModule } from './source-company-reddit';
 import { RobinhoodModule } from './source-company-robinhood';
 import { RobloxModule } from './source-company-roblox';
 import { ScaleaiModule } from './source-company-scaleai';
+import { ScopelyModule } from './source-company-scopely';
 import { StitchfixModule } from './source-company-stitchfix';
 import { StripeModule } from './source-company-stripe';
 import { TikTokModule } from './source-company-tiktok';
@@ -370,6 +371,7 @@ export const ALL_SOURCE_MODULES = [
   RobinhoodModule,
   RobloxModule,
   ScaleaiModule,
+  ScopelyModule,
   StitchfixModule,
   StripeModule,
   TikTokModule,

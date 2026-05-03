@@ -326,6 +326,8 @@ export enum Site {
   NEWRELIC = 'newrelic',
   // Phase 96: Spec 086 — Source Company Plugin: Peloton
   PELOTON = 'peloton',
+  // Phase 97: Spec 087 — Source Company Plugin: Scopely
+  SCOPELY = 'scopely',
 }
 
 /**

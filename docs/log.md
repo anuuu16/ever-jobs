@@ -15,6 +15,75 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #297 (Spec 087 closed end-to-end; new `source-company-scopely` plugin shipped — 8 unit tests green in 13.135 s; helpers regression + Peloton + New Relic + Marqeta + Maven Clinic + Fivetran + Bitwarden + Calendly cross-regression 141/141 still green in 22.999 s; **ninth plugin in the fifth fresh probe sweep**. Run #297 ran end-to-end from spec-authoring through commit: live-probe of `https://api.greenhouse.io/v1/boards/scopely/jobs?content=true` confirmed 170 visible roles (the run-289 probe-counter estimate of ~1190 was inflated by counting all `"id":` JSON keys including department/office IDs — same probe-counter inflation pattern observed for Peloton, New Relic, Marqeta, and DataCamp). Authored Spec 087 (spec.md / plan.md / tasks.md), added the `Site.SCOPELY = 'scopely'` enum value under `// Phase 97`, scaffolded the `@ever-jobs/source-company-scopely` package (5 files mirroring the `source-company-marqeta` template byte-for-byte except for `marqeta`/`Marqeta` → `scopely`/`Scopely` substitutions and the inline doc-comment narrative), wired `ScopelyModule` in the four registration files (placed alphabetically after `ScaleaiModule` and before `StitchfixModule` — `Sca` < `Sco` < `Sti`), authored `scopely.service.spec.ts` with 8 cases (NestJS DI registration, enum-literal pin, happy-path 2-listing fixture map with regression assertions for variant-2 URL byte-for-byte pass-through, decode-then-strip pipeline cleanliness, case-symmetric wire `companyName === 'Scopely'`, D-10 application lock — `'Accounting Specialist '` → `'Accounting Specialist'` trim assertion with byte-distinct + 1-byte-shorter checks, D-11 omission lock with operating-division banners (`'MonopolyGo'`, `'Finance'`) preserved byte-for-byte; `resultsWanted=1` cap; `searchTerm` filter on title; `searchTerm` filter on department; HTTP 500 → empty; empty `data.jobs` → empty), ran the test suite (all 8 green in 13.135 s), ran cross-regression (141/141 still green in 22.999 s — the cross-regression sweep includes `helpers.spec` + the eight most-recent peer plugins: scopely + peloton + newrelic + marqeta + mavenclinic + fivetran + bitwarden + calendly), and added the doc updates (SOURCE_ADOPTION_BACKLOG.md, index.md, log.md). This is the **76th Greenhouse-backed company-direct plugin** in the catalogue and the **twentieth** to use **wire-shape variant 2** — the canonical Greenhouse host shape `https://job-boards.greenhouse.io/scopely/jobs/<id>`; the **forty-third** to use the entity-decode-then-tag-strip description pipeline. **D-10 applied** — 17 of 170 wire titles in the run-297 probe carry pad bytes (~10.0 % pad rate). Pad-form distribution: 2 leading-only, 12 trailing-only, 2 dual (`' D2C Program Manager '`, `' Senior Performance Marketing Manager '`), 1 multi-byte trailing (`'Senior Software Engineer - Pikmin Bloom   '` — 3 trailing ASCII spaces), 1 NBSP-trailing (`'Senior Analytics Engineer '` — U+00A0 non-breaking space). **Three new sub-axes opened under D-10**: (a) **Second cohort observation of dual-pad on the title axis** — after New Relic's run-295 single dual-pad case (`" Account Executive - Commercial "`); Scopely lifts dual-pad from a one-off to a recurring observation with 2 of 170 dual-padded listings. (b) **First cohort observation of multi-byte trailing pad** — Pikmin Bloom listing carries 3 trailing ASCII spaces, distinct from prior single-trailing-pad observations across the cohort. (c) **First cohort observation of NBSP (U+00A0) pad byte** — Senior Analytics Engineer listing carries trailing NBSP rather than ASCII space. Standard `String.prototype.trim()` strips all five sub-axes (leading-only, trailing-only, dual, multi-byte trailing, NBSP-trailing) in a single call — no implementation change vs Marqeta. **Twenty-third cohort plugin to apply D-10**. **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Scopely'` byte-for-byte (7 bytes — fully clean, case-symmetric with the lowercase slug; same shape as Marqeta / Calendly / DataCamp / Bitwarden / Lookout / Peloton). All 170 listings in the run-297 probe carry the wire `'Scopely'` form (including listings tagged under `departments[0].name === 'Niantic'` and `'Playgami'` operating-division banners — these reflect the post-acquisition structure after Scopely acquired Niantic's games division for $3.5B in September 2024, not separate Greenhouse tenants). **Thirty-sixth cohort plugin to omit D-09**, returning to the cohort-default D-09-omitted posture. **D-11 omitted** — 0 of 170 wire department names padded (clean multi-token forms with internal whitespace — `'Slate Development Group'`, `'MonopolyGo'`, `'Finance'`, `'People'`, `'Legal'`, `'Slate Portfolio'`, `'Publishing'`, `'Operations'`, `'Niantic'`, `'Live Games Portfolio'`, `'Corporate'`, `'Playgami'`); **thirty-third cohort plugin** with fully-clean department pass-through. **Zero structural deviations** from the Marqeta (Spec 084) template — making this the **seventh** Greenhouse-only company-direct plugin in run-history to ship as a clean re-spin of a prior cohort plugin with no per-axis deviations (after Coursera off Chime at run #278, Flexport off Faire at run #280, Glossier off Flexport at run #282, Marqeta off Calendly at run #294, and New Relic off Maven Clinic at run #295). All five primary axes share with Marqeta: D-04 variant 2 (canonical Greenhouse host), D-08 entity-decode-then-tag-strip, D-09 omitted with case-symmetric bare-brand wire form, D-10 applied (Scopely 17/170 ~10.0 %; Marqeta 2/33 ~6.1 % — Scopely slightly noisier across the larger board), D-11 fully-clean department pass-through. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-ninth live-board hit** after Bitwarden, Calendly, DataCamp, Fivetran, Lookout, Marqeta, New Relic, and Peloton. The remaining two live hits queue for runs #298+ in alphabetical order (`squarespace` next at run #298 with ~72 roles; `typeform` ~132). After pool exhaustion (#300+) runs will pivot to a **sixth fresh probe sweep**.)
+
+**Scope:** Run #297 continues the user-owner-directed concrete-action
+deviation. Per Spec 086's run #296 close-out note (which queued
+Scopely as run #297's bite — the alphabetically-ninth live hit
+from the fifth-fresh-sweep candidate pool), this run takes
+**Scopely**.
+
+Scopely Inc. — operator of the **dominant mobile-games publishing
+platform pioneered around the live-operations-and-licensed-IP-
+game-portfolio data model** (founded by Walter Driver, Eytan
+Elbaz, Eric Futoran, and Ankur Bulsara in 2011 in Culver City,
+CA; acquired by Savvy Games Group / Public Investment Fund of
+Saudi Arabia in April 2023 at a $4.9B valuation; ships Monopoly
+GO!, Star Trek Fleet Command, MARVEL Strike Force, WWE Champions,
+Stumble Guys, and Pokémon GO (via the September 2024 acquisition
+of Niantic's games division for $3.5B which brought Pikmin Bloom
+under the Scopely umbrella) across the mobile-games segment —
+alongside competitors Zynga, Playtika, Activision Blizzard
+(King), Supercell, and Niantic — with a hybrid distributed
+workforce concentrated across Culver City, Barcelona, Madrid,
+Mexico City, Tel Aviv, Bangalore, Seoul, Tokyo, and Remote across
+the United States, Europe, the Middle East, and Asia-Pacific) —
+is published at the bare `scopely` Greenhouse slug (the lowercase
+single-word brand; case-symmetric with the wire `company_name
+=== 'Scopely'`) and was confirmed live via run #297's HTTP 200
+probe.
+
+**Spec 087 — Source Company Plugin: Scopely — closed end-to-end:**
+
+- **T01:** Added `Site.SCOPELY = 'scopely'` enum under `// Phase
+  97: Spec 087 — Source Company Plugin: Scopely`.
+- **T02:** Scaffolded `@ever-jobs/source-company-scopely` —
+  mirrors `source-company-marqeta` with the `marqeta` →
+  `scopely`/`Scopely` substitutions and the inline doc-comment
+  narrative documenting the three new D-10 sub-axes (dual-pad
+  recurring, multi-byte trailing, NBSP-trailing).
+- **T03:** Registered `ScopelyModule` in the four wiring files;
+  placed alphabetically after `ScaleaiModule` and before
+  `StitchfixModule` (`Sca` < `Sco` < `Sti`).
+- **T04:** Authored `scopely.service.spec.ts` with **8 cases**.
+  Happy-path test asserts D-04 variant-2 lock, decode-then-strip
+  pipeline cleanliness, case-symmetric wire `companyName ===
+  'Scopely'`, **D-10 application lock with single-trailing-pad
+  form** — `'Accounting Specialist '` → `'Accounting Specialist'`
+  trim with byte-distinct + 1-byte-shorter checks, AND D-11
+  omission lock with operating-division banners (`'MonopolyGo'`,
+  `'Finance'`) preserved byte-for-byte. All 8 cases green in
+  13.135 s.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added
+  Scopely shipped row), `docs/index.md` (Spec 087 row appended),
+  and `docs/log.md` (this entry).
+
+Helpers + cross-regression sweep
+(`packages/common/__tests__/helpers.spec`,
+`source-company-scopely`, `source-company-peloton`,
+`source-company-newrelic`, `source-company-marqeta`,
+`source-company-mavenclinic`, `source-company-fivetran`,
+`source-company-bitwarden`, `source-company-calendly`) →
+**141/141 green in 22.999 s** — unchanged baseline.
+
+The remaining two live hits from the fifth-fresh-sweep pool
+queue for runs #298+ in alphabetical order: `squarespace`
+(~72 roles, run #298 next bite), `typeform` (~132). After pool
+exhaustion (#299+) runs will pivot to a **sixth fresh probe
+sweep**.
+
+---
+
 ## 2026-05-03 — Scheduled run #296 (Spec 086 closed end-to-end; new `source-company-peloton` plugin shipped — 8 unit tests green in 11.104 s; helpers regression + Marqeta + New Relic + Maven Clinic + Fivetran + Bitwarden + Calendly cross-regression 125/125 still green in 19.948 s; **eighth plugin in the fifth fresh probe sweep**. Spec 086 was partially pre-scaffolded (spec.md / plan.md / tasks.md / src + module + service + package.json + tsconfig + 4-file wirings + fixture) by an out-of-band batch operation; run #296's work picked up from that point and authored the missing test-spec file (8 cases — NestJS DI, enum-literal pin, happy-path 2-listing fixture map with regression assertions for variant-21 URL pass-through (slug-divergent vanity-domain `onepeloton.com`, locale-prefix `/en/`, fixed-path `/all-jobs/` with trailing slash, single `gh_jid` query), decode-then-strip pipeline cleanliness, case-symmetric wire `companyName`, D-10 application lock — `'Senior Full Stack Software Engineer, Device Services '` → `'Senior Full Stack Software Engineer, Device Services'` trim assertion with byte-distinct + 1-byte-shorter checks, and D-11 omission lock; `resultsWanted=1` cap; `searchTerm` filter on title; `searchTerm` filter on department; HTTP 500 → empty; empty `data.jobs` → empty), ran the test suite (all 8 green in 11.104 s), ran cross-regression (125/125 still green in 19.948 s), and added the doc updates (index.md, log.md). The run-296 probe at start sampled **52 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/peloton/jobs?content=true` — the run-289 probe-counter estimate of ~104 was inflated. This is the **75th Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 21** — the vanity-subdomain locale-prefixed fixed-path query-only-id shape `https://careers.onepeloton.com/en/all-jobs/?gh_jid=<id>` — the **twenty-fourth distinct wire-shape variant** in the company-direct cohort. **Variant 21 introduces three new sub-axes**: (a) **slug-divergent vanity domain** (`onepeloton.com` is the brand product domain while the Greenhouse slug is `peloton` — the `one` prefix is a 2014-era branding artefact); first cohort observation of slug-divergent vanity domain, distinct from every prior vanity-domain case where the brand-domain matched the Greenhouse slug byte-for-byte. (b) **Locale-prefix `/en/` in path** — first cohort observation of locale-prefix in URL path. (c) **Fixed-path `/all-jobs/`** with trailing slash — same trailing-slash sub-axis as variant 14's `/fubotv-job-openings/` and variant 18's `/<id>/`. The **forty-second** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-10 applied** — 2 of 52 wire titles in the run-296 probe carry trailing ASCII-space padding (`'Senior Full Stack Software Engineer, Device Services '`, `'Software Engineer III, Social '` — both trailing-only; ~3.8 % pad rate, the **lowest D-10 pad rate observed in the cohort to date** — undercutting Calendly's prior cohort-low ~5.0 % rate). **Twenty-second cohort plugin to apply D-10**. **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Peloton'` byte-for-byte (7 bytes — fully clean, case-symmetric with the lowercase slug); **thirty-fifth cohort plugin to omit D-09**, returning to the cohort-default posture. **D-11 omitted** — 0 of 52 wire department names padded (`'Marketing'`, `'Sales'`, `'Data Analytics'`, `'Hardware'`, `'Supply Chain & Logistics'`, `'Software'`, `'Studio & Content Production'`, `'Product Development'`, `'Security & Risk'`, `'Enterprise Systems'` — clean multi-token forms with internal whitespace and ampersands); **thirty-second cohort plugin** with fully-clean department pass-through. **One structural deviation** from the Marqeta (Spec 084) template — D-04 wire-shape variant 21. All other axes share with Marqeta: D-08 entity-decode-then-tag-strip, D-09 omitted with case-symmetric bare-brand wire, D-10 applied (Peloton 2/52 ~3.8 %; Marqeta 2/33 ~6.1 % — Peloton's posting hygiene cleaner), D-11 fully-clean department pass-through. Selected from the **fifth-fresh-sweep live-board pool** as the **alphabetically-eighth live-board hit** after Bitwarden, Calendly, DataCamp, Fivetran, Lookout, Marqeta, and New Relic. The remaining three live hits queue for runs #297+ in alphabetical order (`scopely` next at run #297 with ~1190 roles).)
 
 **Scope:** Run #296 continues the user-owner-directed concrete-action
