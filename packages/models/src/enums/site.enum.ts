@@ -332,6 +332,8 @@ export enum Site {
   SQUARESPACE = 'squarespace',
   // Phase 99: Spec 089 — Source Company Plugin: Typeform
   TYPEFORM = 'typeform',
+  // Phase 100: Spec 090 — Source Company Plugin: Adyen
+  ADYEN = 'adyen',
 }
 
 /**
