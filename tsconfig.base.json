@@ -100,6 +100,7 @@
       "@ever-jobs/source-company-bandwidth": ["packages/plugins/source-company-bandwidth/src/index.ts"],
       "@ever-jobs/source-company-braze": ["packages/plugins/source-company-braze/src/index.ts"],
       "@ever-jobs/source-company-constantcontact": ["packages/plugins/source-company-constantcontact/src/index.ts"],
+      "@ever-jobs/source-company-descript": ["packages/plugins/source-company-descript/src/index.ts"],
       "@ever-jobs/source-company-robinhood": ["packages/plugins/source-company-robinhood/src/index.ts"],
       "@ever-jobs/source-company-reddit": ["packages/plugins/source-company-reddit/src/index.ts"],
       "@ever-jobs/source-company-pinterest": ["packages/plugins/source-company-pinterest/src/index.ts"],

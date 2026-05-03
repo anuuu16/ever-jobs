@@ -376,6 +376,8 @@ export enum Site {
   BRAZE = 'braze',
   // Phase 121: Spec 111 — Source Company Plugin: Constant Contact
   CONSTANTCONTACT = 'constantcontact',
+  // Phase 122: Spec 112 — Source Company Plugin: Descript
+  DESCRIPT = 'descript',
 }
 
 /**

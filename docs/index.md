@@ -176,6 +176,7 @@
 | 109 | [Source Company Plugin: Bandwidth](../.specify/specs/109-source-company-bandwidth/spec.md) — [plan](../.specify/specs/109-source-company-bandwidth/plan.md) — [tasks](../.specify/specs/109-source-company-bandwidth/tasks.md) | All phases done (T01..T05 run #319); spec complete — fifteenth zero-deviation clean re-spin (off Airtable) |
 | 110 | [Source Company Plugin: Braze](../.specify/specs/110-source-company-braze/spec.md) — [plan](../.specify/specs/110-source-company-braze/plan.md) — [tasks](../.specify/specs/110-source-company-braze/tasks.md) | All phases done (T01..T05 run #320); spec complete — seventeenth clean re-spin (off Flexport); 4th variant-10 plugin (legacy hosted-board apex) |
 | 111 | [Source Company Plugin: Constant Contact](../.specify/specs/111-source-company-constantcontact/spec.md) — [plan](../.specify/specs/111-source-company-constantcontact/plan.md) — [tasks](../.specify/specs/111-source-company-constantcontact/tasks.md) | All phases done (T01..T05 run #321); spec complete — eighteenth clean re-spin (off Misfits Market); 7th internal-whitespace D-09 asymmetry; first cohort numeric-prefix dept names |
+| 112 | [Source Company Plugin: Descript](../.specify/specs/112-source-company-descript/spec.md) — [plan](../.specify/specs/112-source-company-descript/plan.md) — [tasks](../.specify/specs/112-source-company-descript/tasks.md) | All phases done (T01..T05 run #322); spec complete — nineteenth clean re-spin (off Braze); 5th variant-10 plugin |
 
 ## 8. Templates
 
