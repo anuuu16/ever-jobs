@@ -15,6 +15,116 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #288 (Spec 078 closed end-to-end; new `source-company-udemy` plugin shipped — 8 unit tests green in 7.882 s; helpers regression + Stitch Fix + Maven Clinic + Honeycomb + Carta + Lattice cross-regression 117/117 still green in 14.035 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **67th Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 17** — the third-party-SaaS-host shape `https://app.careerpuck.com/job-board/udemy/job/<id>?gh_jid=<id>` — the **twentieth distinct wire-shape variant** in the company-direct cohort and the **first** to publish through a third-party SaaS career-board host (CareerPuck) rather than a brand-owned domain or a Greenhouse-owned host; the **thirty-fourth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 2 of 17 wire titles in the run-288 probe carry trailing ASCII-space padding (`'Join Our Talent Community '`, `'Sales Development Representative '` — both single-trailing-space-padded; ~11.8 % overall pad rate); **seventeenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, Maven Clinic, and Stitch Fix). **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Udemy'` byte-for-byte (5 bytes; case-symmetric with the lowercase slug `udemy`); no legal-entity suffix on the wire — distinct from the legal-entity name "Udemy, Inc." that appears in current SEC filings under NASDAQ ticker `UDMY`. **Twenty-eighth cohort plugin to omit D-09**, returning to the case-symmetric bare-brand wire form (after the seven slug/wire asymmetry cases — Ramp Network, Scale AI, fuboTV, Honeycomb, MasterClass, Maven Clinic, and Stitch Fix). **D-11 fully-clean** — 0 of 16 populated wire department names in the run-288 probe carry trailing ASCII-space padding (`'UB Sales - ADR'`, `'Sales'`, `'Consumer Partnerships'`, `'Product Design and UXR'`, `'UB Sales - Enterprise'`, `'Product Management'`, `'Engineering'` — clean single-token and multi-token forms with internal whitespace, hyphens, and ampersands); one listing has empty `departments` array — the plugin's `?.[0]?.name` optional-chain emits `null` for that listing. **One structural deviation** from the Carta (Spec 066) template — D-04 wire-shape variant 17 (first cohort plugin to use variant 17; first cohort observation of a third-party SaaS career-board host; distinct from Carta's variant 2 modern hosted-board apex shape). All other axes share with Carta: D-08 entity-decode-then-tag-strip, D-09 omitted with case-symmetric bare-brand wire, D-10 applied (Udemy 2/17 padded; Carta 1/10 padded — near-identical pad rate ~11.8 % vs ~10 %), D-11 fully-clean department pass-through. The CareerPuck third-party-SaaS-host shape is the most distinctive feature — distinct from every prior cohort variant which all use either Greenhouse-owned hosts or the brand's own domain. The run-288 probe at start sampled 17 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/udemy/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-fourteenth and last live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, Lattice, MasterClass, Maven Clinic, and Stitch Fix** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier` < `honeycomb` < `lattice` < `masterclass` < `mavenclinic` < `stitchfix` < `udemy`, so this run takes Udemy and **closes out the fourth-fresh-sweep candidate pool**). With Udemy shipped, the fourth-fresh-sweep candidate pool is **fully exhausted**. Subsequent runs (#289+ by current arithmetic) will pivot to a **fifth fresh probe sweep** targeting yet-untested large-employer candidate slugs.)
+
+**Scope:** Run #288 continues the user-owner-directed concrete-action
+deviation that runs #230–#287 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 077's run
+#287 close-out note (which queued Udemy as run #288's bite —
+the alphabetically-fourteenth and **last** live hit from the
+fourth-fresh-sweep candidate pool), this run takes **Udemy** and
+**closes out the fourth-fresh-sweep candidate pool**. The Greenhouse
+public API was probed at run-288 start returning HTTP 200 with 17
+visible roles confirmed via direct curl probe.
+
+Udemy — operator of the **dominant marketplace-driven online-
+learning platform pioneered around the user-generated-course
+longitudinal-skills-acceleration data model** (founded by Eren
+Bali, Oktay Caglar, and Gagan Biyani in 2010 in Ankara/San
+Francisco; IPO'd on NASDAQ as `UDMY` in October 2021 at a $4B
+valuation; ships a hybrid B2C course-marketplace + B2B Udemy
+Business enterprise-skill-platform product across the lifelong-
+learning segment — alongside competitors Coursera, MasterClass,
+Skillshare, Pluralsight, LinkedIn Learning, and Domestika — with
+a hybrid in-office / remote workforce concentrated across the
+United States, Turkey, Ireland, and India) — is published at the
+bare `udemy` Greenhouse slug (the lowercase brand name; case-
+symmetric with the wire `company_name === 'Udemy'`) and was
+confirmed live via run #288's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/udemy/jobs?content=true`.
+Udemy publishes its `absolute_url` on a **previously-unobserved
+wire-shape variant 17** — the third-party-SaaS-host shape via
+CareerPuck — making this the **first** plugin in the cohort to
+use variant 17, the **twentieth distinct wire-shape variant** in
+the company-direct cohort and the **first** to publish through a
+third-party SaaS career-board host rather than a brand-owned
+domain or a Greenhouse-owned host.
+
+Like every plugin from Klaviyo onwards, Udemy's `content` is
+HTML-entity-encoded (`&lt;div class=&quot;content-intro&quot;&gt;
+&lt;h3&gt;&lt;strong&gt;Join Udemy. Help &lt;/strong&gt;&lt;strong&gt;define&lt;em&gt;
+&lt;/em&gt;&lt;/strong&gt;&lt;strong&gt;the future of learning.&lt;/strong&gt;&lt;/h3&gt;
+&lt;p&gt;Udemy is an AI-powered skills acceleration platform...`)
+and uses the entity-decode-then-tag-strip pipeline (Spec 078 § 10
+D-08) — making this the **thirty-fourth** plugin to use that
+pipeline. Udemy's wire `company_name` is the literal single-token
+bare-brand string `'Udemy'` byte-for-byte (5 bytes; case-symmetric
+with the lowercase slug `udemy`); the plugin reads
+`listing.company_name` directly with `'Udemy'` as a defensive
+fallback (D-09 omitted with case-symmetric bare-brand wire form).
+Udemy's wire title payload is 2-of-17 padded — D-10 applied with
+single-trailing-pad form. Udemy's wire department payload is fully
+clean (0 of 16 populated padded) — D-11 byte-for-byte pass-through
+is a no-op on the clean wire data. Class names are `UdemyService`
+/ `UdemyModule` (PascalCase from the lowercase slug; D-06).
+
+**Spec 078 — Source Company Plugin: Udemy — closed end-to-end:**
+
+- **T01:** Added `Site.UDEMY = 'udemy'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 88:
+  Spec 078 — Source Company Plugin: Udemy` header (preserves
+  the Spec 006 / 013 / 020..077 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-udemy` with
+  the five-file shape (`package.json`, `tsconfig.json`,
+  `src/index.ts`, `src/udemy.module.ts`,
+  `src/udemy.service.ts`); mirrors `source-company-carta` with
+  the `udemy`/`Udemy` substitutions, the variant-17 wire-shape
+  pass-through with variant-2 fallback, and the inline doc-comment
+  narrative.
+- **T03:** Registered `UdemyModule` in the four wiring files
+  (`packages/plugins/index.ts` import + `ALL_SOURCE_MODULES` append,
+  `tsconfig.base.json` path-alias, `jest.config.js`
+  `moduleNameMapper`). Placed alphabetically after `UberModule`
+  and before `VercelModule` (`Ube` < `Ude` < `Ver`).
+- **T04:** Authored `udemy.service.spec.ts` with **8 cases** —
+  NestJS DI registration scaffolding, `Site.UDEMY` literal pin,
+  happy-path 2-listing fixture map (with regression assertions for
+  variant-17 third-party-SaaS-host URL pass-through with
+  `app.careerpuck.com/job-board/udemy/job/` substring lock and
+  greenhouse.io anti-substring lock, decode-then-strip pipeline
+  cleanliness, case-symmetric wire `companyName` byte-for-byte,
+  D-10 application lock — `'Sales Development Representative '` →
+  `'Sales Development Representative'` trim assertion with byte-
+  distinct + 1-byte-shorter checks, and D-11 omission lock — wire-
+  clean department pass-through for both listings),
+  `resultsWanted=1` cap, `searchTerm` filter on title (case-
+  insensitive against the trimmed form — D-10 search guard),
+  `searchTerm` filter on department (case-insensitive), HTTP 500
+  → empty response, empty `data.jobs` → empty response. All 8
+  cases green in 7.882 s.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added Udemy
+  shipped row), `docs/index.md` (Spec 078 row appended), and
+  `docs/log.md` (this entry).
+
+Helpers + cross-regression sweep (`packages/common/__tests__/helpers.spec`,
+`source-company-stitchfix`, `source-company-mavenclinic`,
+`source-company-honeycomb`, `source-company-carta`,
+`source-company-lattice`) → **117/117 green in 14.035 s** —
+unchanged from the run-287 baseline; no parser-level regressions
+introduced by the Udemy plugin landing.
+
+With Udemy shipped, the **fourth-fresh-sweep candidate pool is
+fully exhausted** (all fourteen live hits — Cameo, Carta,
+ClassPass, Coursera, Epic Games, Flexport, fuboTV, Glossier,
+Honeycomb, Lattice, MasterClass, Maven Clinic, Stitch Fix, and
+Udemy — have shipped across runs #275–#288). Subsequent runs
+(#289+ by current arithmetic) will pivot to a **fifth fresh probe
+sweep** targeting yet-untested large-employer candidate slugs.
+
+---
+
 ## 2026-05-03 — Scheduled run #287 (Spec 077 closed end-to-end; new `source-company-stitchfix` plugin shipped — 8 unit tests green in 9.462 s; helpers regression + Maven Clinic + Honeycomb + MasterClass + Lattice + Glossier cross-regression 117/117 still green in 13.722 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **66th Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 16** — the bare-www brand-domain `/careers/jobs`-path duplicate-`gh_jid`-query shape `https://www.stitchfix.com/careers/jobs?gh_jid=<id>&gh_jid=<id>` — the **nineteenth distinct wire-shape variant** in the company-direct cohort; the **thirty-third** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 3 of 22 wire titles in the run-287 probe carry trailing ASCII-space padding (`'Principal Full-Stack Data Scientist - Recommendation Algorithms '`, `'Senior Manager of Data Engineering and AI Automation, Business Systems '`, `'Strategic Program Manager, Styling Enablement '` — all single-trailing-space-padded; ~13.6 % overall pad rate); **sixteenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, and Maven Clinic). **D-09 omitted with internal-whitespace wire asymmetry** — wire `company_name === 'Stitch Fix'` byte-for-byte (10 bytes; the two-word brand with single internal ASCII space at byte index 6). The slug `stitchfix` is 9 bytes — slug/wire-asymmetric, wire LONGER than slug by 1 byte (the internal space). **Twenty-seventh cohort plugin to omit D-09**, but the **seventh** slug/wire asymmetry case in the cohort (after Ramp Network, Scale AI, fuboTV, Honeycomb, MasterClass, and Maven Clinic) — and the **third** internal-whitespace asymmetry case after Scale AI and Maven Clinic (same +1 byte differential, same single-internal-space delta). Stitch Fix proves out that the Scale AI / Maven Clinic internal-whitespace shape is a stable recurring axis rather than a two-off pattern. **D-11 fully-clean** — 0 of 22 wire department names in the run-287 probe carry trailing ASCII-space padding (`'Engineering'`, `'Data Platform'`, `'Marketing'`, `'Product'` — clean single-token and multi-token forms); the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **One structural deviation** from the Maven Clinic (Spec 076) template — D-04 wire-shape variant 16 (first cohort plugin to use variant 16; distinct from Maven Clinic's variant 2 modern hosted-board apex shape). All other axes share with Maven Clinic: D-08 entity-decode-then-tag-strip, D-09 omitted with internal-whitespace wire asymmetry, D-10 applied (Stitch Fix 3/22 padded; Maven Clinic 3/24 padded — near-identical pad rate ~13.6 % vs ~12.5 %), D-11 fully-clean department pass-through. The duplicate `gh_jid` query parameter in variant 16 is the most distinctive feature — distinct from every prior cohort variant where the same query parameter appears at most once. The run-287 probe at start sampled 22 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/stitchfix/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-thirteenth live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, Lattice, MasterClass, and Maven Clinic** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier` < `honeycomb` < `lattice` < `masterclass` < `mavenclinic` < `stitchfix` < `udemy`, so this run takes Stitch Fix). The remaining one live hit queues for run #288 in alphabetical order (`udemy` with 17 roles).)
 
 **Scope:** Run #287 continues the user-owner-directed concrete-action

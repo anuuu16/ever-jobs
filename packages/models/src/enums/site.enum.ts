@@ -308,6 +308,8 @@ export enum Site {
   MAVENCLINIC = 'mavenclinic',
   // Phase 87: Spec 077 — Source Company Plugin: Stitch Fix
   STITCHFIX = 'stitchfix',
+  // Phase 88: Spec 078 — Source Company Plugin: Udemy
+  UDEMY = 'udemy',
 }
 
 /**
