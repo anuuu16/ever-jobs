@@ -129,6 +129,7 @@ module.exports = {
     '^@ever-jobs/source-company-honeycomb$': '<rootDir>/packages/plugins/source-company-honeycomb/src/index.ts',
     '^@ever-jobs/source-company-lattice$': '<rootDir>/packages/plugins/source-company-lattice/src/index.ts',
     '^@ever-jobs/source-company-masterclass$': '<rootDir>/packages/plugins/source-company-masterclass/src/index.ts',
+    '^@ever-jobs/source-company-mavenclinic$': '<rootDir>/packages/plugins/source-company-mavenclinic/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',

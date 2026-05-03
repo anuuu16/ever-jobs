@@ -110,6 +110,7 @@ import { KlaviyoModule } from './source-company-klaviyo';
 import { LatticeModule } from './source-company-lattice';
 import { LyftModule } from './source-company-lyft';
 import { MasterclassModule } from './source-company-masterclass';
+import { MavenclinicModule } from './source-company-mavenclinic';
 import { MercuryModule } from './source-company-mercury';
 import { MetaModule } from './source-company-meta';
 import { MicrosoftModule } from './source-company-microsoft';
@@ -333,6 +334,7 @@ export const ALL_SOURCE_MODULES = [
   LatticeModule,
   LyftModule,
   MasterclassModule,
+  MavenclinicModule,
   MercuryModule,
   MetaModule,
   MicrosoftModule,

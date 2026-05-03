@@ -140,6 +140,7 @@
 | 073 | [Source Company Plugin: Honeycomb](../.specify/specs/073-source-company-honeycomb/spec.md) — [plan](../.specify/specs/073-source-company-honeycomb/plan.md) — [tasks](../.specify/specs/073-source-company-honeycomb/tasks.md) | All phases done (T01..T05 run #283); spec complete |
 | 074 | [Source Company Plugin: Lattice](../.specify/specs/074-source-company-lattice/spec.md) — [plan](../.specify/specs/074-source-company-lattice/plan.md) — [tasks](../.specify/specs/074-source-company-lattice/tasks.md) | All phases done (T01..T05 run #284); spec complete |
 | 075 | [Source Company Plugin: MasterClass](../.specify/specs/075-source-company-masterclass/spec.md) — [plan](../.specify/specs/075-source-company-masterclass/plan.md) — [tasks](../.specify/specs/075-source-company-masterclass/tasks.md) | All phases done (T01..T05 run #285); spec complete |
+| 076 | [Source Company Plugin: Maven Clinic](../.specify/specs/076-source-company-mavenclinic/spec.md) — [plan](../.specify/specs/076-source-company-mavenclinic/plan.md) — [tasks](../.specify/specs/076-source-company-mavenclinic/tasks.md) | All phases done (T01..T05 run #286); spec complete |
 
 ## 8. Templates
 

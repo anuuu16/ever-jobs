@@ -304,6 +304,8 @@ export enum Site {
   LATTICE = 'lattice',
   // Phase 85: Spec 075 — Source Company Plugin: MasterClass
   MASTERCLASS = 'masterclass',
+  // Phase 86: Spec 076 — Source Company Plugin: Maven Clinic
+  MAVENCLINIC = 'mavenclinic',
 }
 
 /**

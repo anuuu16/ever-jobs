@@ -15,6 +15,120 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #286 (Spec 076 closed end-to-end; new `source-company-mavenclinic` plugin shipped — 8 unit tests green in 9.472 s; helpers regression + Honeycomb + MasterClass + Lattice + Glossier + Carta cross-regression 117/117 still green in 13.781 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **65th Greenhouse-backed company-direct plugin** in the catalogue and the **seventeenth** to use **wire-shape variant 2** — the modern hosted-board apex `https://job-boards.greenhouse.io/mavenclinic/jobs/<id>` shape (after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, Scale AI, Cameo, Carta, Honeycomb, and MasterClass); the **thirty-second** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 3 of 24 wire titles in the run-286 probe carry trailing ASCII-space padding (`'Clinical Outcomes Analyst '`, `'Director, Employer Sales '`, `'Manager, Member Services '` — all single-trailing-space-padded; ~12.5 % overall pad rate); **fifteenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, Flexport, fuboTV, Glossier, and Honeycomb). **D-09 omitted with internal-whitespace wire asymmetry** — wire `company_name === 'Maven Clinic'` byte-for-byte (12 bytes; the two-word brand with single internal ASCII space at byte index 5). The slug `mavenclinic` is 11 bytes — slug/wire-asymmetric, wire LONGER than slug by 1 byte (the internal space). **Twenty-sixth cohort plugin to omit D-09**, but the **sixth** slug/wire asymmetry case in the cohort (after Ramp Network, Scale AI, fuboTV, Honeycomb, and MasterClass) — and the **second** internal-whitespace asymmetry case after Scale AI (same +1 byte differential, same single-internal-space delta). Maven Clinic proves out that Scale AI's internal-whitespace shape was not a one-off but rather a recurring asymmetry-axis case in the cohort. **D-11 fully-clean** — 0 of 24 wire department names in the run-286 probe carry trailing ASCII-space padding (`'Brand & Communications'`, `'Clinical Outcomes'`, `'Employer Sales'`, `'Member Services'`, `'Engineering'` — clean single-token and multi-token forms with internal ampersands and whitespace); the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **One structural deviation** from the Honeycomb (Spec 073) template — D-09 omitted with internal-whitespace wire asymmetry as noted above (Maven Clinic wire 12 bytes vs. slug 11 bytes — wire 1 byte longer with internal space at index 5; Honeycomb wire 12 bytes vs. slug 9 bytes — wire 3 bytes longer with TLD suffix). The run-286 probe at start sampled 24 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/mavenclinic/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-twelfth live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, Lattice, and MasterClass** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier` < `honeycomb` < `lattice` < `masterclass` < `mavenclinic` < `stitchfix`, so this run takes Maven Clinic). The remaining two live hits queue for runs #287+ in alphabetical order (`stitchfix` next at run #287 with 22 roles).)
+
+**Scope:** Run #286 continues the user-owner-directed concrete-action
+deviation that runs #230–#285 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 075's run
+#285 close-out note (which queued Maven Clinic as run #286's bite —
+the alphabetically-twelfth live hit from the fourth-fresh-sweep
+candidate pool), this run takes **Maven Clinic**. The Greenhouse
+public API was probed at run-286 start returning HTTP 200 with 24
+visible roles confirmed via direct curl probe.
+
+Maven Clinic — operator of the **dominant virtual women's-and-
+family-health clinic platform pioneered around the digital-first
+maternity / fertility / parenting longitudinal-care data model**
+(founded by Kate Ryder in 2014 in New York City; raised $300M+
+across rounds led by General Catalyst, Sequoia Capital, Oak
+HC/FT, Dragoneer Investment Group, and Lux Capital at a peak
+$1.35B valuation in 2022 — the first women's-and-family-health
+unicorn in the United States; ships an employer-and-payor-funded
+virtual-care product across maternity, fertility, menopause,
+parenting, and pediatric segments — alongside competitors
+Progyny, Carrot Fertility, Kindbody, Tia, and Origin — with a
+hybrid in-office / remote workforce concentrated across the
+United States) — is published at the bare `mavenclinic` Greenhouse
+slug (the lowercase concatenated two-word brand-words; case-
+asymmetric AND length-asymmetric with the wire `company_name ===
+'Maven Clinic'` which carries the brand's two-word internal-
+whitespace form) and was confirmed live via run #286's HTTP 200
+probe of `https://api.greenhouse.io/v1/boards/mavenclinic/jobs?content=true`.
+Maven Clinic publishes its `absolute_url` on **wire-shape variant
+2** — the modern `https://job-boards.greenhouse.io/mavenclinic/jobs/<id>`
+shape — making this the **seventeenth** plugin in the cohort to
+use variant 2.
+
+Like every plugin from Klaviyo onwards, Maven Clinic's `content`
+is HTML-entity-encoded (`&lt;div class=&quot;content-intro&quot;&gt;
+&lt;p&gt;Maven is the world&#39;s largest virtual clinic for women
+and families...`) and uses the entity-decode-then-tag-strip
+pipeline (Spec 076 § 10 D-08) — making this the **thirty-second**
+plugin to use that pipeline. Maven Clinic's wire `company_name`
+is the literal two-word brand string `'Maven Clinic'` byte-for-
+byte (12 bytes; slug `mavenclinic` is 11 bytes — slug/wire-
+asymmetric, wire LONGER than slug by 1 byte via the internal
+ASCII space at index 5 between `Maven` and `Clinic`); the plugin
+reads `listing.company_name` directly with `'Maven Clinic'` as a
+defensive fallback (D-09 omitted with internal-whitespace
+asymmetry — the **second** cohort case where wire and slug differ
+by an internal whitespace byte after Scale AI). Maven Clinic's
+wire title payload is 3-of-24 padded — D-10 applied with single-
+trailing-pad form. Maven Clinic's wire department payload is
+fully clean (0 of 24 padded) — D-11 byte-for-byte pass-through is
+a no-op on the clean wire data. Class names are
+`MavenclinicService` / `MavenclinicModule` (PascalCase from the
+lowercase concatenated slug rather than the two-word wire `Maven
+Clinic` to keep class names slug-derived for grep symmetry across
+the cohort and avoid TypeScript class names containing internal
+whitespace; D-06).
+
+**Spec 076 — Source Company Plugin: Maven Clinic — closed end-to-end:**
+
+- **T01:** Added `Site.MAVENCLINIC = 'mavenclinic'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 86:
+  Spec 076 — Source Company Plugin: Maven Clinic` header (preserves
+  the Spec 006 / 013 / 020..075 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-mavenclinic` with
+  the five-file shape (`package.json`, `tsconfig.json`,
+  `src/index.ts`, `src/mavenclinic.module.ts`,
+  `src/mavenclinic.service.ts`); mirrors `source-company-honeycomb`
+  with the `mavenclinic`/`Mavenclinic`/`Maven Clinic` substitutions,
+  the internal-whitespace-asymmetric wire `'Maven Clinic'` defensive
+  fallback, and the inline doc-comment narrative.
+- **T03:** Registered `MavenclinicModule` in the four wiring files
+  (`packages/plugins/index.ts` import + `ALL_SOURCE_MODULES` append,
+  `tsconfig.base.json` path-alias, `jest.config.js`
+  `moduleNameMapper`). Placed alphabetically after `MasterclassModule`
+  and before `MercuryModule` (`Mas` < `Mav` < `Mer`).
+- **T04:** Authored `mavenclinic.service.spec.ts` with **8 cases** —
+  NestJS DI registration scaffolding, `Site.MAVENCLINIC` literal
+  pin, happy-path 2-listing fixture map (with regression assertions
+  for variant-2 URL pass-through, decode-then-strip pipeline
+  cleanliness, internal-whitespace-asymmetric wire `companyName`
+  byte-for-byte, D-10 application lock — `'Clinical Outcomes
+  Analyst '` → `'Clinical Outcomes Analyst'` trim assertion with
+  byte-distinct + 1-byte-shorter checks, D-11 omission lock — wire-
+  clean department pass-through for both listings, and the
+  internal-whitespace asymmetry lock via byte-distinct + +1-byte-
+  length + case-insensitively-with-space-collapsed-equal
+  assertions), `resultsWanted=1` cap, `searchTerm` filter on title
+  (case-insensitive against the trimmed form — D-10 search guard),
+  `searchTerm` filter on department (case-insensitive), HTTP 500 →
+  empty response, empty `data.jobs` → empty response. All 8 cases
+  green in 9.472 s.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added Maven
+  Clinic shipped row), `docs/index.md` (Spec 076 row appended), and
+  `docs/log.md` (this entry).
+
+Helpers + cross-regression sweep (`packages/common/__tests__/helpers.spec`,
+`source-company-honeycomb`, `source-company-masterclass`,
+`source-company-lattice`, `source-company-glossier`,
+`source-company-carta`) → **117/117 green in 13.781 s** —
+unchanged from the run-285 baseline; no parser-level regressions
+introduced by the Maven Clinic plugin landing.
+
+The remaining two live hits from the fourth-fresh-sweep candidate
+pool queue for runs #287+ in alphabetical order: `stitchfix` (22
+roles, run #287 next bite), `udemy` (17). Subsequent runs after the
+pool is exhausted (#288+ by current arithmetic) will pivot to a
+**fifth fresh probe sweep** targeting yet-untested large-employer
+candidate slugs.
+
+---
+
 ## 2026-05-03 — Scheduled run #285 (Spec 075 closed end-to-end; new `source-company-masterclass` plugin shipped — 8 unit tests green in 9.369 s; helpers regression + Honeycomb + Lattice + Glossier + Carta + Flexport cross-regression 117/117 still green in 13.701 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **64th Greenhouse-backed company-direct plugin** in the catalogue and the **sixteenth** to use **wire-shape variant 2** — the modern hosted-board apex `https://job-boards.greenhouse.io/masterclass/jobs/<id>` shape (after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, Scale AI, Cameo, Carta, and Honeycomb); the **thirty-first** to use the entity-decode-then-tag-strip description pipeline; **D-10 omitted** — 0 of 6 wire titles in the run-285 probe carry whitespace padding (the wire is fully clean); **twelfth cohort plugin to omit D-10**. **D-09 omitted with equal-length-case-only wire asymmetry** — wire `company_name === 'MasterClass'` byte-for-byte (11 bytes; the CamelCase brand form). The slug `masterclass` is also 11 bytes — slug/wire EQUAL-byte-length but byte-distinct via case at byte index 6 (`c` vs `C`). **Twenty-fifth cohort plugin to omit D-09**, and the **fifth** slug/wire asymmetry case overall (after Ramp Network slug `rampnetwork` / wire `'Ramp'`, Scale AI slug `scaleai` / wire `'Scale AI'`, fuboTV slug `fubotv` / wire `'Fubo'`, and Honeycomb slug `honeycomb` / wire `'Honeycomb.io'`) — and the **first** asymmetry case where slug and wire have the **same byte length but differ via case alone**. MasterClass extends the asymmetry-axis taxonomy from length-only differences (Honeycomb +3, Scale AI +1, fuboTV -2, Ramp Network -7) to **case-only differences with no length difference**. **D-11 fully-clean** — 0 of 6 wire department names in the run-285 probe carry trailing ASCII-space padding (`'Content Production'`, `'Marketing'` × 2, `'Content'`, `'Engineering'` × 2 — clean single-token and multi-token forms); the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **Two structural deviations** from the Honeycomb (Spec 073) template — D-09 case-only asymmetry (vs. Honeycomb's TLD-suffix length asymmetry) and D-10 omitted (vs. Honeycomb's D-10 applied with 2/10 padded). The run-285 probe at start sampled 6 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/masterclass/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-eleventh live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, and Lattice** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier` < `honeycomb` < `lattice` < `masterclass` < `mavenclinic`, so this run takes MasterClass). The remaining three live hits queue for runs #286+ in alphabetical order (`mavenclinic` next at run #286 with 24 roles).)
 
 **Scope:** Run #285 continues the user-owner-directed concrete-action
