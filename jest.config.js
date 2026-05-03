@@ -100,6 +100,7 @@ module.exports = {
     '^@ever-jobs/source-company-adyen$': '<rootDir>/packages/plugins/source-company-adyen/src/index.ts',
     '^@ever-jobs/source-company-benevity$': '<rootDir>/packages/plugins/source-company-benevity/src/index.ts',
     '^@ever-jobs/source-company-billcom$': '<rootDir>/packages/plugins/source-company-billcom/src/index.ts',
+    '^@ever-jobs/source-company-bobbie$': '<rootDir>/packages/plugins/source-company-bobbie/src/index.ts',
     '^@ever-jobs/source-company-affirm$': '<rootDir>/packages/plugins/source-company-affirm/src/index.ts',
     '^@ever-jobs/source-company-klaviyo$': '<rootDir>/packages/plugins/source-company-klaviyo/src/index.ts',
     '^@ever-jobs/source-company-duolingo$': '<rootDir>/packages/plugins/source-company-duolingo/src/index.ts',

@@ -78,6 +78,7 @@ import { BenevityModule } from './source-company-benevity';
 import { BillcomModule } from './source-company-billcom';
 import { BitwardenModule } from './source-company-bitwarden';
 import { BlockModule } from './source-company-block';
+import { BobbieModule } from './source-company-bobbie';
 import { BoeingModule } from './source-company-boeing';
 import { BrexModule } from './source-company-brex';
 import { BuildkiteModule } from './source-company-buildkite';
@@ -318,6 +319,7 @@ export const ALL_SOURCE_MODULES = [
   BillcomModule,
   BitwardenModule,
   BlockModule,
+  BobbieModule,
   BoeingModule,
   BrexModule,
   BuildkiteModule,

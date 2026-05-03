@@ -338,6 +338,8 @@ export enum Site {
   BENEVITY = 'benevity',
   // Phase 102: Spec 092 — Source Company Plugin: BILL (billcom)
   BILLCOM = 'billcom',
+  // Phase 103: Spec 093 — Source Company Plugin: Bobbie
+  BOBBIE = 'bobbie',
 }
 
 /**
