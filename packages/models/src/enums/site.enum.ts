@@ -370,6 +370,8 @@ export enum Site {
   AMPLITUDE = 'amplitude',
   // Phase 118: Spec 108 — Source Company Plugin: AssemblyAI
   ASSEMBLYAI = 'assemblyai',
+  // Phase 119: Spec 109 — Source Company Plugin: Bandwidth
+  BANDWIDTH = 'bandwidth',
 }
 
 /**

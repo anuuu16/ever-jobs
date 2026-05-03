@@ -77,6 +77,7 @@ import { AppleModule } from './source-company-apple';
 import { AsanaModule } from './source-company-asana';
 import { AssemblyAIModule } from './source-company-assemblyai';
 import { AttentiveModule } from './source-company-attentive';
+import { BandwidthModule } from './source-company-bandwidth';
 import { BenevityModule } from './source-company-benevity';
 import { BillcomModule } from './source-company-billcom';
 import { BitwardenModule } from './source-company-bitwarden';
@@ -333,6 +334,7 @@ export const ALL_SOURCE_MODULES = [
   AsanaModule,
   AssemblyAIModule,
   AttentiveModule,
+  BandwidthModule,
   BenevityModule,
   BillcomModule,
   BitwardenModule,
