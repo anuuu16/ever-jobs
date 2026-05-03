@@ -374,6 +374,8 @@ export enum Site {
   BANDWIDTH = 'bandwidth',
   // Phase 120: Spec 110 — Source Company Plugin: Braze
   BRAZE = 'braze',
+  // Phase 121: Spec 111 — Source Company Plugin: Constant Contact
+  CONSTANTCONTACT = 'constantcontact',
 }
 
 /**
