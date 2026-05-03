@@ -15,6 +15,117 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #285 (Spec 075 closed end-to-end; new `source-company-masterclass` plugin shipped — 8 unit tests green in 9.369 s; helpers regression + Honeycomb + Lattice + Glossier + Carta + Flexport cross-regression 117/117 still green in 13.701 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **64th Greenhouse-backed company-direct plugin** in the catalogue and the **sixteenth** to use **wire-shape variant 2** — the modern hosted-board apex `https://job-boards.greenhouse.io/masterclass/jobs/<id>` shape (after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, Scale AI, Cameo, Carta, and Honeycomb); the **thirty-first** to use the entity-decode-then-tag-strip description pipeline; **D-10 omitted** — 0 of 6 wire titles in the run-285 probe carry whitespace padding (the wire is fully clean); **twelfth cohort plugin to omit D-10**. **D-09 omitted with equal-length-case-only wire asymmetry** — wire `company_name === 'MasterClass'` byte-for-byte (11 bytes; the CamelCase brand form). The slug `masterclass` is also 11 bytes — slug/wire EQUAL-byte-length but byte-distinct via case at byte index 6 (`c` vs `C`). **Twenty-fifth cohort plugin to omit D-09**, and the **fifth** slug/wire asymmetry case overall (after Ramp Network slug `rampnetwork` / wire `'Ramp'`, Scale AI slug `scaleai` / wire `'Scale AI'`, fuboTV slug `fubotv` / wire `'Fubo'`, and Honeycomb slug `honeycomb` / wire `'Honeycomb.io'`) — and the **first** asymmetry case where slug and wire have the **same byte length but differ via case alone**. MasterClass extends the asymmetry-axis taxonomy from length-only differences (Honeycomb +3, Scale AI +1, fuboTV -2, Ramp Network -7) to **case-only differences with no length difference**. **D-11 fully-clean** — 0 of 6 wire department names in the run-285 probe carry trailing ASCII-space padding (`'Content Production'`, `'Marketing'` × 2, `'Content'`, `'Engineering'` × 2 — clean single-token and multi-token forms); the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **Two structural deviations** from the Honeycomb (Spec 073) template — D-09 case-only asymmetry (vs. Honeycomb's TLD-suffix length asymmetry) and D-10 omitted (vs. Honeycomb's D-10 applied with 2/10 padded). The run-285 probe at start sampled 6 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/masterclass/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-eleventh live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, Flexport, fuboTV, Glossier, Honeycomb, and Lattice** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier` < `honeycomb` < `lattice` < `masterclass` < `mavenclinic`, so this run takes MasterClass). The remaining three live hits queue for runs #286+ in alphabetical order (`mavenclinic` next at run #286 with 24 roles).)
+
+**Scope:** Run #285 continues the user-owner-directed concrete-action
+deviation that runs #230–#284 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 074's run
+#284 close-out note (which queued MasterClass as run #285's bite —
+the alphabetically-eleventh live hit from the fourth-fresh-sweep
+candidate pool), this run takes **MasterClass**. The Greenhouse
+public API was probed at run-285 start returning HTTP 200 with 6
+visible roles confirmed via direct curl probe.
+
+MasterClass — operator of the **dominant celebrity-led streaming
+education platform pioneered around the premium video-class
+masterclass-by-instructor data model** (founded by David Rogier
+and Aaron Rasmussen in 2015 in San Francisco; raised $469M+
+across rounds led by Fidelity, Eldridge Industries, IVP, Javelin
+Venture Partners, NEA, and NewView Capital at a peak $2.75B
+valuation in 2021; ships an annual-subscription streaming
+product across 200+ classes taught by top-tier named instructors
+across cooking, writing, music, business, design, sports, and
+science segments — alongside competitors Skillshare, Udemy,
+Coursera, Domestika, and CreativeLive — with a hybrid in-office
+/ remote workforce concentrated across the United States) — is
+published at the bare `masterclass` Greenhouse slug (the
+lowercase brand name; case-asymmetric with the wire `company_name
+=== 'MasterClass'` which carries the brand's CamelCase form) and
+was confirmed live via run #285's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/masterclass/jobs?content=true`.
+MasterClass publishes its `absolute_url` on **wire-shape variant
+2** — the modern `https://job-boards.greenhouse.io/masterclass/jobs/<id>`
+shape — making this the **sixteenth** plugin in the cohort to
+use variant 2.
+
+Like every plugin from Klaviyo onwards, MasterClass's `content`
+is HTML-entity-encoded (`&lt;div class=&quot;content-intro&quot;&gt;
+&lt;div&gt;&lt;strong&gt;About the Role&lt;/strong&gt;&lt;/div&gt;...`)
+and uses the entity-decode-then-tag-strip pipeline (Spec 075 §
+10 D-08) — making this the **thirty-first** plugin to use that
+pipeline. MasterClass's wire `company_name` is the literal
+CamelCase brand string `'MasterClass'` byte-for-byte (11 bytes;
+slug `masterclass` is also 11 bytes — slug/wire EQUAL-byte-
+length but byte-distinct via case at byte index 6); the plugin
+reads `listing.company_name` directly with `'MasterClass'` as a
+defensive fallback (D-09 omitted with equal-length-case-only
+wire asymmetry — the **first** cohort case where slug and wire
+have the same byte length but differ via case alone).
+MasterClass's wire title payload is fully clean (0 of 6 titles
+padded) — D-10 omitted with byte-for-byte pass-through.
+MasterClass's wire department payload is fully clean (0 of 6
+departments padded) — D-11 byte-for-byte pass-through is a
+no-op on the clean wire data. Class names are
+`MasterclassService` / `MasterclassModule` (PascalCase from the
+lowercase slug — derived from the slug rather than the wire
+`MasterClass` to keep class names slug-derived for grep symmetry
+across the cohort; D-06).
+
+**Spec 075 — Source Company Plugin: MasterClass — closed end-to-end:**
+
+- **T01:** Added `Site.MASTERCLASS = 'masterclass'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 85:
+  Spec 075 — Source Company Plugin: MasterClass` header (preserves
+  the Spec 006 / 013 / 020..074 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-masterclass` with
+  the five-file shape (`package.json`, `tsconfig.json`,
+  `src/index.ts`, `src/masterclass.module.ts`,
+  `src/masterclass.service.ts`); mirrors `source-company-honeycomb`
+  with the `masterclass`/`Masterclass`/`MasterClass` substitutions,
+  the omitted title `.trim()` (D-10 omitted), the omitted department
+  `.trim()` (D-11 omitted — distinct from Lattice's applied D-11),
+  the case-asymmetric wire `'MasterClass'` defensive fallback, and
+  the inline doc-comment narrative.
+- **T03:** Registered `MasterclassModule` in the four wiring files
+  (`packages/plugins/index.ts` import + `ALL_SOURCE_MODULES` append,
+  `tsconfig.base.json` path-alias, `jest.config.js`
+  `moduleNameMapper`). Placed alphabetically after `LyftModule` and
+  before `MercuryModule` (`Lyf` < `Mas` < `Mer`).
+- **T04:** Authored `masterclass.service.spec.ts` with **8 cases** —
+  NestJS DI registration scaffolding, `Site.MASTERCLASS` literal
+  pin, happy-path 2-listing fixture map (with regression assertions
+  for variant-2 URL pass-through, decode-then-strip pipeline
+  cleanliness, case-asymmetric wire `companyName` byte-for-byte,
+  D-10 omission lock — wire-clean title pass-through for both
+  listings, D-11 omission lock — wire-clean department pass-through
+  for both listings, and the equal-length-case-only asymmetry lock
+  via byte-distinct + equal-length + case-insensitive-equal
+  assertions), `resultsWanted=1` cap, `searchTerm` filter on title
+  (case-insensitive), `searchTerm` filter on department (case-
+  insensitive), HTTP 500 → empty response, empty `data.jobs` →
+  empty response. All 8 cases green in 9.369 s.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added
+  MasterClass shipped row), `docs/index.md` (Spec 075 row appended),
+  and `docs/log.md` (this entry).
+
+Helpers + cross-regression sweep (`packages/common/__tests__/helpers.spec`,
+`source-company-honeycomb`, `source-company-lattice`,
+`source-company-glossier`, `source-company-carta`,
+`source-company-flexport`) → **117/117 green in 13.701 s** —
+unchanged from the run-284 baseline; no parser-level regressions
+introduced by the MasterClass plugin landing.
+
+The remaining three live hits from the fourth-fresh-sweep
+candidate pool queue for runs #286+ in alphabetical order:
+`mavenclinic` (24 roles, run #286 next bite), `stitchfix` (22),
+`udemy` (17). Subsequent runs after the pool is exhausted (#288+
+by current arithmetic) will pivot to a **fifth fresh probe
+sweep** targeting yet-untested large-employer candidate slugs.
+
+---
+
 ## 2026-05-03 — Scheduled run #284 (Spec 074 closed end-to-end; new `source-company-lattice` plugin shipped — 8 unit tests green in 9.476 s; helpers regression + Honeycomb + Glossier + Carta + Flexport + fuboTV cross-regression 117/117 still green in 13.903 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **63rd Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 15** — the bare brand-domain singular-`/job` query-only-id shape `https://lattice.com/job?gh_jid=<id>` — the **eighteenth distinct wire-shape variant** in the company-direct cohort; the **thirtieth** to use the entity-decode-then-tag-strip description pipeline; **D-10 omitted** — 0 of 11 wire titles in the run-284 probe carry whitespace padding (the wire is fully clean); **eleventh cohort plugin to omit D-10**. **D-09 omitted** — wire `company_name === 'Lattice'` byte-for-byte (the single-token bare brand name; case-symmetric with the lowercase slug `lattice`); **twenty-fourth cohort plugin to omit D-09**, returning to the case-symmetric bare-brand wire form. **D-11 APPLIED for the first time in cohort history** — 3 of 11 wire department names in the run-284 probe carry trailing ASCII-space padding (`'Customer Account Management '` × 1 — listing 8468904002, `'Product '` × 2 — listings 8523623002 and 8523624002; ~27 % pad rate; the wire-padded forms appear repeatedly across distinct department buckets — Customer Account Management vs. Product — so this is not a one-off Greenhouse-side typo but a systematic padding pattern in Lattice's tenant data); the plugin applies `.trim()` to `listing.departments?.[0]?.name` before downstream filters and emit; **first cohort plugin to apply D-11**, opening the deviation axis from "fully-clean pass-through" to "trim-on-emit" (twenty-three prior cohort plugins emitted department names byte-for-byte because their wire data was 0/N padded; Lattice is the first plugin where the wire pad rate is non-zero on the department axis). **Three structural deviations** from the Honeycomb (Spec 073) template — D-04 wire-shape variant 15 (first cohort plugin to use variant 15; distinct from Honeycomb's variant 2), D-10 omitted (Lattice 0/11 titles padded; Honeycomb 2/10 padded), and D-11 applied (Lattice 3/11 departments padded; Honeycomb 0/10 padded). The run-284 probe at start sampled 11 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/lattice/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-tenth live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, Flexport, fuboTV, Glossier, and Honeycomb** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier` < `honeycomb` < `lattice` < `masterclass`, so this run takes Lattice). The remaining four live hits queue for runs #285+ in alphabetical order (`masterclass` next at run #285 with 6 roles).)
 
 **Scope:** Run #284 continues the user-owner-directed concrete-action

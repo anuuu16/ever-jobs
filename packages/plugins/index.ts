@@ -109,6 +109,7 @@ import { IntercomModule } from './source-company-intercom';
 import { KlaviyoModule } from './source-company-klaviyo';
 import { LatticeModule } from './source-company-lattice';
 import { LyftModule } from './source-company-lyft';
+import { MasterclassModule } from './source-company-masterclass';
 import { MercuryModule } from './source-company-mercury';
 import { MetaModule } from './source-company-meta';
 import { MicrosoftModule } from './source-company-microsoft';
@@ -331,6 +332,7 @@ export const ALL_SOURCE_MODULES = [
   KlaviyoModule,
   LatticeModule,
   LyftModule,
+  MasterclassModule,
   MercuryModule,
   MetaModule,
   MicrosoftModule,

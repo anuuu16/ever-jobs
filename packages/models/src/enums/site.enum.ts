@@ -302,6 +302,8 @@ export enum Site {
   HONEYCOMB = 'honeycomb',
   // Phase 84: Spec 074 — Source Company Plugin: Lattice
   LATTICE = 'lattice',
+  // Phase 85: Spec 075 — Source Company Plugin: MasterClass
+  MASTERCLASS = 'masterclass',
 }
 
 /**

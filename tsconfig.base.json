@@ -143,6 +143,7 @@
       "@ever-jobs/source-company-glossier": ["packages/plugins/source-company-glossier/src/index.ts"],
       "@ever-jobs/source-company-honeycomb": ["packages/plugins/source-company-honeycomb/src/index.ts"],
       "@ever-jobs/source-company-lattice": ["packages/plugins/source-company-lattice/src/index.ts"],
+      "@ever-jobs/source-company-masterclass": ["packages/plugins/source-company-masterclass/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],
