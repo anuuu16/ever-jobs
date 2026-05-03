@@ -140,6 +140,7 @@
       "@ever-jobs/source-company-epicgames": ["packages/plugins/source-company-epicgames/src/index.ts"],
       "@ever-jobs/source-company-flexport": ["packages/plugins/source-company-flexport/src/index.ts"],
       "@ever-jobs/source-company-fubotv": ["packages/plugins/source-company-fubotv/src/index.ts"],
+      "@ever-jobs/source-company-glossier": ["packages/plugins/source-company-glossier/src/index.ts"],
       "@ever-jobs/source-ats-breezyhr": ["packages/plugins/source-ats-breezyhr/src/index.ts"],
       "@ever-jobs/source-ats-comeet": ["packages/plugins/source-ats-comeet/src/index.ts"],
       "@ever-jobs/source-ats-pinpoint": ["packages/plugins/source-ats-pinpoint/src/index.ts"],

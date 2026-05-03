@@ -136,6 +136,7 @@
 | 069 | [Source Company Plugin: Epic Games](../.specify/specs/069-source-company-epicgames/spec.md) — [plan](../.specify/specs/069-source-company-epicgames/plan.md) — [tasks](../.specify/specs/069-source-company-epicgames/tasks.md) | All phases done (T01..T05 run #279); spec complete |
 | 070 | [Source Company Plugin: Flexport](../.specify/specs/070-source-company-flexport/spec.md) — [plan](../.specify/specs/070-source-company-flexport/plan.md) — [tasks](../.specify/specs/070-source-company-flexport/tasks.md) | All phases done (T01..T05 run #280); spec complete |
 | 071 | [Source Company Plugin: fuboTV](../.specify/specs/071-source-company-fubotv/spec.md) — [plan](../.specify/specs/071-source-company-fubotv/plan.md) — [tasks](../.specify/specs/071-source-company-fubotv/tasks.md) | All phases done (T01..T05 run #281); spec complete |
+| 072 | [Source Company Plugin: Glossier](../.specify/specs/072-source-company-glossier/spec.md) — [plan](../.specify/specs/072-source-company-glossier/plan.md) — [tasks](../.specify/specs/072-source-company-glossier/tasks.md) | All phases done (T01..T05 run #282); spec complete |
 
 ## 8. Templates
 

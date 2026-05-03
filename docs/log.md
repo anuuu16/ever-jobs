@@ -15,6 +15,150 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #282 (Spec 072 closed end-to-end; new `source-company-glossier` plugin shipped — 8 unit tests green in 9.305 s; helpers regression + Flexport + fuboTV + Coursera + Faire cross-regression 110/110 still green in 12.39 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **61st Greenhouse-backed company-direct plugin** in the catalogue and the **fourth** to use **wire-shape variant 10** — the legacy hosted-board apex `https://boards.greenhouse.io/glossier/jobs/<id>?gh_jid=<id>` shape (after Chime, Faire, and Flexport); the **twenty-eighth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — 2 of 17 wire titles in the run-282 probe carry whitespace padding, with **a notable distribution wrinkle** — one title carries a **leading** ASCII-space (`' (Sales Associate, Part-Time) Editor, Los Angeles'`, listing 7723309) and one carries a **double trailing** ASCII-space (`'(Seasonal Sales Associate, Part-Time) Editor, Boston  '`, listing 7787412); ~11.8 % overall pad rate. **Glossier is the first cohort plugin where the observed pad-byte distribution includes a leading-pad case AND a multi-byte (double-space) trailing-pad case** — distinct from the trailing-single-pad uniform distributions of fuboTV (~91 % rate, all single trailing space), Flexport (~9.7 %, all single trailing space), and the prior D-10 cohort. Standard `String.prototype.trim()` handles both axes — the existing one-line `.trim()` semantics carry through unchanged; the deviation is observable but the implementation is byte-identical to the prior cohort. **Thirteenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, Flexport, and fuboTV). **D-09 omitted** (wire `company_name === 'Glossier'` byte-for-byte; the single-token bare brand name; no legal-entity suffix on the wire — distinct from the legal-entity name "Glossier, Inc." that may appear in corporate filings). **D-11 fully-clean** — 0 of 17 wire department names in the run-282 probe carry trailing ASCII-space padding (`'Retail (Stores)'`, `'Creative'`, `'Product Development'` — clean multi-token form with internal whitespace and parentheses); the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **Zero structural deviations** from the Flexport (Spec 070) template — making this the **third** Greenhouse-only company-direct plugin in run-history to ship as a clean re-spin of a prior cohort plugin with no per-axis deviations (after Coursera off Chime at run #278 and Flexport off Faire at run #280). **Twenty-second cohort plugin to omit D-09**, returning to the single-word bare-brand wire form. The run-282 probe at start sampled 17 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/glossier/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-eighth live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, Flexport, and fuboTV** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier` < `honeycomb`, so this run takes Glossier). The remaining six live hits queue for runs #283+ in alphabetical order (`honeycomb` next at run #283 with 10 roles). The HubSpot re-probe at run-282 start returned HTTP 200 with `meta.total === 0` — **twentieth-consecutive empty re-probe** across runs #262–#282.)
+
+**Scope:** Run #282 continues the user-owner-directed concrete-action
+deviation that runs #230–#281 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 071's run
+#281 close-out note (which queued Glossier as run #282's bite — the
+alphabetically-eighth live hit from the fourth-fresh-sweep candidate
+pool), this run takes **Glossier**. The Greenhouse public API was
+probed at run-282 start returning HTTP 200 with 17 visible roles
+confirmed via direct curl probe.
+
+Glossier, Inc. — operator of the **dominant
+direct-to-consumer beauty brand pioneered out of the Into the
+Gloss editorial blog** (founded by Emily Weiss in 2014 in
+New York City; raised $266M+ across rounds led by Forerunner
+Ventures, IVP, Sequoia Capital, and Tiger Global at a peak
+$1.8B valuation in 2019; operates an omnichannel retail
+footprint across freestanding flagship stores in New York
+City (Soho), Brooklyn, Boston, Chicago, Atlanta, Los Angeles,
+Las Vegas, Philadelphia, Washington DC, plus wholesale
+distribution into Sephora since 2023, alongside the
+Glossier.com direct site that launched the brand) — is
+published at the bare `glossier` Greenhouse slug (the lowercase
+brand name with no whitespace transform required since the
+brand is a single word) and was confirmed live via run #282's
+HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/glossier/jobs?content=true`.
+Glossier publishes its `absolute_url` on **wire-shape variant 10**
+— the legacy hosted-board apex
+`https://boards.greenhouse.io/glossier/jobs/<id>?gh_jid=<id>`
+shape — making this the **fourth** plugin in the cohort to use
+variant 10 (after Chime, Faire, and Flexport). The plugin emits
+`listing.absolute_url` byte-for-byte to preserve the canonical
+destination; the **fallback** `jobUrl` constructor (when
+Greenhouse omits `absolute_url`) defaults to the same canonical
+Greenhouse variant-10 form
+`https://boards.greenhouse.io/glossier/jobs/<id>?gh_jid=<id>`.
+
+Like every plugin from Klaviyo onwards, Glossier's `content` is
+HTML-entity-encoded (`&lt;h3&gt;&lt;strong&gt;Overview&lt;/strong&gt;&lt;/h3&gt;
+&lt;div&gt;...&amp;nbsp;...`) and uses the entity-decode-then-
+tag-strip pipeline (Spec 072 § 10 D-08) — making this the
+**twenty-eighth** plugin to use that pipeline. Glossier's wire
+`company_name` is the literal single-token string `'Glossier'`
+byte-for-byte (the single-token bare brand name; no legal-entity
+suffix on the wire — distinct from the legal-entity name
+"Glossier, Inc." that may appear in corporate filings); the
+plugin reads `listing.company_name` directly without a
+string-literal pin (D-09 omitted). Glossier's wire
+`departments[0].name` payload is **fully clean** — 0 of 17 wire
+department names in the run-282 probe carry trailing pad bytes
+(`'Retail (Stores)'`, `'Creative'`, `'Product Development'` —
+clean multi-token descriptive form, structurally permissive of
+internal whitespace and parentheses); D-11 byte-for-byte
+pass-through is a no-op on the clean wire data. Class names are
+`GlossierService` / `GlossierModule` (PascalCase from the
+lowercase slug — matches the convention `FlexportService` /
+`FaireService` / `ChimeService` / `CourseraService` use for
+slug-derived class names; D-06).
+
+**Spec 072 — Source Company Plugin: Glossier — closed end-to-end:**
+
+- **T01:** Added `Site.GLOSSIER = 'glossier'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 82:
+  Spec 072 — Source Company Plugin: Glossier` header (preserves the
+  Spec 006 / 013 / 020..071 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-glossier` with the
+  five-file shape (`package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/glossier.module.ts`, `src/glossier.service.ts`); mirrors
+  `source-company-flexport` byte-for-byte except for the
+  `glossier`/`Glossier` substitutions and the inline doc-comment
+  narrative.
+- **T03:** Registered `GlossierModule` in the four wiring files
+  (`packages/plugins/index.ts` import + `ALL_SOURCE_MODULES` append,
+  `tsconfig.base.json` path-alias, `jest.config.js` `moduleNameMapper`).
+  Placed alphabetically after `GitlabModule` and before
+  `GoogleCareersModule` (`Git` < `Glo` < `Goo`).
+- **T04:** Authored `glossier.service.spec.ts` with **8 cases** —
+  (1) NestJS DI resolves `GlossierService` through `GlossierModule`,
+  (2) `Site.GLOSSIER === 'glossier'` literal pin, (3) happy path —
+  fixture with two listings → two `JobPostDto` rows mapped with
+  expected fields including the **D-10 multi-byte trailing-pad lock**
+  (emitted second-listing `title === '(Seasonal Sales Associate,
+  Part-Time) Editor, Boston'` AND byte-distinct from wire form AND
+  exactly **2 bytes shorter**), the **D-04 variant-10 lock**
+  (`jobUrl` contains `boards.greenhouse.io/glossier/jobs/` AND
+  `?gh_jid=` AND must NOT contain `job-boards.greenhouse.io`), the
+  **D-08 decode-then-strip pipeline cleanliness** (no `&lt;`,
+  `&quot;`, `&amp;`, `<p>`, `<div>`, `<strong>`, `<em>`), the
+  **D-09 omission lock** (`companyName === 'Glossier'` byte-for-byte
+  AND matches wire `company_name`), and the **D-11 fully-clean
+  pass-through locks** (`'Retail (Stores)'` for first listing,
+  `'Creative'` for second), (4) `resultsWanted=1` cap, (5)
+  `searchTerm` filter on title (case-insensitive against trimmed
+  form, locking the D-10 search guard), (6) `searchTerm` filter on
+  department, (7) HTTP 500 → empty `JobResponseDto`, (8) empty
+  `data.jobs` → empty `JobResponseDto`. Fixture
+  `glossier-jobs.json` carries two listings with byte-faithful
+  payloads — first `'Associate Store Director, DC'` (clean title,
+  `'Retail (Stores)'` department), second
+  `'(Seasonal Sales Associate, Part-Time) Editor, Boston  '`
+  (wire-padded title with TWO trailing spaces, `'Creative'`
+  department).
+- **T05:** Doc updates — `docs/SOURCE_ADOPTION_BACKLOG.md` Glossier
+  shipped row, `docs/index.md` Spec 072 row, and this
+  `docs/log.md` run #282 entry at the top.
+
+**Test outcomes (executed in this run):**
+
+- `npx jest packages/plugins/source-company-glossier --colors=false`
+  → **8 passing in 9.305 s** (1 file, 0 failed).
+- `npx jest packages/common/__tests__/helpers.spec
+  packages/plugins/source-company-flexport
+  packages/plugins/source-company-fubotv
+  packages/plugins/source-company-coursera
+  packages/plugins/source-company-faire --colors=false`
+  → **110 passing in 12.39 s** (5 files, 0 failed) — confirms
+  registration in `tsconfig.base.json` and `jest.config.js` did not
+  perturb the parser regression suite or the closest-cousin cohort
+  plugins.
+
+**Q-042 reminder:** unchanged — pending review since run #84
+(~198 runs / ~198 hours of agent wall-clock); fourth-reminder
+window opened at run #250 per the run #200 forward-pointer
+convention; next reminder window opens at run #300; Default C
+continues.
+
+**Run-282 next steps queue (runs #283+):**
+
+1. **The fourth-fresh-sweep live-board pool has 6 unshipped live
+   hits remaining**, in alphabetical order: `honeycomb` (10
+   roles, run #283 next bite), `lattice` (11), `masterclass`
+   (6), `mavenclinic` (24), `stitchfix` (22), `udemy` (17).
+   Run #283 should take **Honeycomb**
+   (alphabetically next after Glossier).
+2. Re-probe `hubspot` at the start of run #283 to check if the
+   empty-board status has flipped (twenty-first consecutive
+   re-probe; if still empty, follow the documented "remains
+   deferred" pattern).
+
+---
+
 ## 2026-05-03 — Scheduled run #281 (Spec 071 closed end-to-end; new `source-company-fubotv` plugin shipped — 8 unit tests green in 9.197 s; helpers regression + Flexport + ClassPass + Coursera + Epic Games cross-regression 109/109 still green in 12.364 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **60th Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 14** — the **seventeenth distinct wire-shape variant** in the cohort: vanity-domain fixed-path query-only-id `https://careers.fubo.tv/fubotv-job-openings/?gh_jid=<id>` (vanity-domain `careers.fubo.tv` rather than the parent `fubotv.com`; `fubotv-job-openings/` fixed path; single `gh_jid` query parameter — the listing ID appears **only** in the query parameter, not in the path — distinct from variant 12's path-embedded `careers/opportunities/<id>?gh_jid=<id>` shape and variant 13's path-embedded `careers/jobs/<id>?gh_jid=<id>` shape); the **twenty-seventh** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — at least 10 of 11 wire titles in the run-281 probe carry trailing ASCII-space padding (~91 % pad rate, the **highest pad rate observed in the cohort to date**, edging out Flexport's run-280 ~9.7 % pad rate by an order of magnitude); the plugin applies `.trim()` to the wire `title` before downstream filters and emit. **Thirteenth cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, ClassPass, Epic Games, and Flexport). **D-09 omitted** (wire `company_name === 'Fubo'` byte-for-byte; the single-token bare brand name reflecting the 2023 rebrand from "fuboTV"; no legal-entity suffix on the wire — distinct from the legal-entity name "FuboTV Inc." that appears in current SEC filings under NYSE ticker `FUBO`). **D-11 fully-clean** — 0 of 11 wire department names in the run-281 probe carry trailing ASCII-space padding; the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **D-12 applied (new axis, first cohort application)** — 11 of 11 wire `location.name` values in the run-281 probe carry trailing ASCII-space padding (`'New York, NY '` and `'Denver, CO '` — 100 % pad-rate); the plugin applies `.trim()` to `listing.location?.name` before constructing the `LocationDto({ city })` so downstream consumers see clean `'New York, NY'`. **First cohort plugin to apply D-12.** **Two structural deviations** from the ClassPass (Spec 067) template — D-04 wire-shape variant 14 (vs. ClassPass's variant 12) and D-12 location-side `.trim()` (new axis). **Twenty-first cohort plugin to omit D-09**, but the **third** slug/wire asymmetry case in the cohort (after Ramp Network and Scale AI) — and the **first** asymmetry case where the wire is **shorter** than the slug (wire `'Fubo'` is 4 bytes; slug `fubotv` is 6 bytes), reflecting the brand's 2023 rename. The run-281 probe at start sampled 11 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/fubotv/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-seventh live-board hit after Cameo, Carta, ClassPass, Coursera, Epic Games, and Flexport** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport` < `fubotv` < `glossier`, so this run takes fuboTV). The remaining seven live hits queue for runs #282+ in alphabetical order (`glossier` next at run #282 with 17 roles). The HubSpot re-probe at run-281 start returned HTTP 200 with `meta.total === 0` — **nineteenth-consecutive empty re-probe** across runs #262–#281.)
 
 **Scope:** Run #281 continues the user-owner-directed concrete-action

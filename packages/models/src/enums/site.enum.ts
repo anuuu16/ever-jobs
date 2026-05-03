@@ -296,6 +296,8 @@ export enum Site {
   FLEXPORT = 'flexport',
   // Phase 81: Spec 071 — Source Company Plugin: fuboTV
   FUBOTV = 'fubotv',
+  // Phase 82: Spec 072 — Source Company Plugin: Glossier
+  GLOSSIER = 'glossier',
 }
 
 /**

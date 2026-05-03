@@ -99,6 +99,7 @@ import { FigmaModule } from './source-company-figma';
 import { FlexportModule } from './source-company-flexport';
 import { FubotvModule } from './source-company-fubotv';
 import { GitlabModule } from './source-company-gitlab';
+import { GlossierModule } from './source-company-glossier';
 import { GoogleCareersModule } from './source-company-google';
 import { GustoModule } from './source-company-gusto';
 import { IbmModule } from './source-company-ibm';
@@ -318,6 +319,7 @@ export const ALL_SOURCE_MODULES = [
   FlexportModule,
   FubotvModule,
   GitlabModule,
+  GlossierModule,
   GoogleCareersModule,
   GustoModule,
   IbmModule,
