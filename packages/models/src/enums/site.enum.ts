@@ -328,6 +328,8 @@ export enum Site {
   PELOTON = 'peloton',
   // Phase 97: Spec 087 — Source Company Plugin: Scopely
   SCOPELY = 'scopely',
+  // Phase 98: Spec 088 — Source Company Plugin: Squarespace
+  SQUARESPACE = 'squarespace',
 }
 
 /**
