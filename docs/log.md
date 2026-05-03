@@ -15,6 +15,210 @@
 
 ---
 
+## 2026-05-03 — Scheduled run #279 (Spec 069 closed end-to-end; new `source-company-epicgames` plugin shipped — 8 unit tests green in 9.781 s; helpers regression + Coursera + ClassPass + Carta + Cameo cross-regression 110/110 still green in 12.397 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **58th Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 13** — the **sixteenth distinct wire-shape variant** in the cohort: vanity-domain bare-brand `https://epicgames.com/careers/jobs/<id>?gh_jid=<id>` (bare brand-domain `epicgames.com` rather than the `www.epicgames.com` parent-domain or any `jobs.epicgames.com` subdomain; `careers/jobs` path; single `gh_jid` query parameter — distinct from ClassPass's variant-12 parent-domain `www.playlist.com/careers/opportunities/<id>?gh_jid=<id>` shape and Elastic's variant-11 duplicate-`gh_jid` shape; this is the **second** vanity-domain variant in the cohort after ClassPass's variant 12); the **twenty-fifth** to use the entity-decode-then-tag-strip description pipeline; **D-10 applied** — at least 2 of 74 wire titles in the run-279 probe carry trailing ASCII-space padding (`'Partnerships Director - Sports & Talent '` — twice on two distinct listing IDs targeting the Cary, North Carolina HQ; ~2.7 % pad rate); the plugin applies `.trim()` to the wire `title` before downstream filters and emit. **Eleventh cohort plugin to apply D-10** (after Brex, Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire, Carta, and ClassPass). **D-09 omitted** (wire `company_name === 'Epic Games'` byte-for-byte; the multi-token bare brand name with internal whitespace; no legal-entity suffix on the wire — distinct from the legal-entity name "Epic Games, Inc." that appears in current SEC filings and the prior "Epic MegaGames, Inc." legal name from before the 1999 rebrand). **D-11 fully-clean** — 0 of 74 wire department names in the run-279 probe carry trailing ASCII-space padding; the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **One structural deviation** from the ClassPass (Spec 067) template — **D-04 wire-shape variant 13** (ClassPass uses parent-domain variant 12; Epic Games uses the previously-unobserved bare-brand vanity-domain shape). **Nineteenth cohort plugin to omit D-09**, but the **second** cohort plugin (after Scale AI `'Scale AI'`) to ship with a multi-token bare-brand wire `company_name` — distinct from ClassPass's `'ClassPass'` and Coursera's `'Coursera'` single-token bare-brand wire forms. The run-279 probe at start sampled 74 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/epicgames/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-fifth live-board hit after Cameo, Carta, ClassPass, and Coursera** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames` < `flexport`, so this run takes Epic Games). The remaining nine live hits queue for runs #280+ in alphabetical order (`flexport` next at run #280 with 113 roles). The HubSpot re-probe at run-279 start returned HTTP 200 with `meta.total === 0` — **seventeenth-consecutive empty re-probe** across runs #262–#279.)
+
+**Scope:** Run #279 continues the user-owner-directed concrete-action
+deviation that runs #230–#278 carried under the explicit
+scheduled-task-brief instruction: *"Make sure every run you do
+something useful for the project, not just report that all is done and
+it's loop continuation without any changes etc."* Per Spec 068's run
+#278 close-out note (which queued Epic Games as run #279's bite — the
+alphabetically-fifth live hit from the fourth-fresh-sweep candidate
+pool), this run takes **Epic Games**. The Greenhouse public API was
+probed at run-279 start returning HTTP 200 with 74 visible roles
+confirmed via direct curl probe.
+
+Epic Games, Inc. — operator of the **dominant
+interactive-entertainment publisher and engine vendor** (founded by
+Tim Sweeney in 1991 in Cary, North Carolina, originally as Potomac
+Computer Systems / Epic MegaGames; rebranded to Epic Games in 1999;
+currently a private company majority-owned by Tencent and the Sweeney
+family; operating with anchor offices in Cary (HQ), Montreal,
+Vancouver, Bellevue, Helsinki, Stockholm, London, and Seoul; operator
+of **Fortnite** (the dominant free-to-play battle-royale and
+metaverse platform with 500M+ registered users since the 2017
+launch), **Unreal Engine** (the industry-leading real-time 3D engine
+used across games, film/TV, architecture, and automotive), the
+**Epic Games Store** (the PC-game-distribution storefront launched
+in 2018), **Bandcamp**, **Cubic Motion**, **3Lateral**, **Quixel**,
+and **Mediatonic**) — is published at the bare `epicgames` Greenhouse
+slug (the lowercase brand name with the inter-word space collapsed
+to a single token; structurally analogous to Scale AI's slug/wire
+asymmetry where the slug is `scaleai` and the wire `company_name ===
+'Scale AI'`) and was confirmed live via run #279's HTTP 200 probe of
+`https://api.greenhouse.io/v1/boards/epicgames/jobs?content=true`.
+Notably, Epic Games's tenant publishes its `absolute_url` on a
+**previously-unobserved wire-shape variant** — the **bare
+brand-domain vanity shape** `https://epicgames.com/careers/jobs/<id>?gh_jid=<id>`
+(bare `epicgames.com` rather than `www.epicgames.com`; `careers/jobs`
+path; single `gh_jid` query parameter). This is **wire-shape variant
+13** — the **sixteenth distinct wire-shape variant** in the
+company-direct cohort and the **second vanity-domain variant** with
+a non-`jobs.<brand>.<tld>` host pattern (after ClassPass's variant
+12). The plugin emits `listing.absolute_url` byte-for-byte to
+preserve the canonical destination; the **fallback** `jobUrl`
+constructor (when Greenhouse omits `absolute_url`) defaults to the
+canonical Greenhouse **variant-2** form
+`https://job-boards.greenhouse.io/epicgames/jobs/<id>` rather than
+reconstructing the vanity-domain shape, because the fallback can
+only produce a guaranteed-resolvable URL using the Greenhouse
+subdomain.
+
+Like every plugin from Klaviyo onwards, Epic Games's `content` is
+HTML-entity-encoded (`&lt;div class=&quot;content-intro&quot;&gt;
+&lt;h2&gt;WHAT MAKES US EPIC?&lt;/h2&gt;...`) and uses the entity-
+decode-then-tag-strip pipeline (Spec 069 § 10 D-08) — making this
+the **twenty-fifth** plugin to use that pipeline. Epic Games's wire
+titles are partly padded — at least 2 of 74 in the run-279 probe
+carry trailing ASCII-space padding (`'Partnerships Director - Sports
+& Talent '` — twice across two distinct listing IDs); the plugin
+applies `.trim()` to the wire `title` before downstream filters and
+emit (D-10 applied). Epic Games's wire `company_name` is the literal
+multi-token string `'Epic Games'` byte-for-byte (with internal ASCII
+space), byte-distinct from ClassPass's single-token `'ClassPass'`,
+Coursera's `'Coursera'`, and Carta's `'Carta'`, but byte-shape-
+equivalent to Scale AI's first-of-its-kind multi-token bare-brand
+wire `'Scale AI'`; the plugin reads `listing.company_name` directly
+without a string-literal pin (D-09 omitted). Epic Games's wire
+`departments[0].name` payload is **fully clean** — 0 of 74 wire
+department names in the run-279 probe carry trailing pad bytes (D-11
+byte-for-byte pass-through is a no-op on the clean wire data). Class
+names are `EpicgamesService` / `EpicgamesModule` (PascalCase from the
+lowercase slug — matches the convention `ScaleaiService` and
+`ClasspassService` use for slug-derived class names against
+multi-token brand wire forms; D-06).
+
+**Spec 069 — Source Company Plugin: Epic Games — closed end-to-end:**
+
+- **T01:** Added `Site.EPICGAMES = 'epicgames'` to
+  `packages/models/src/enums/site.enum.ts` under a new `// Phase 79:
+  Spec 069 — Source Company Plugin: Epic Games` header (preserves the
+  Spec 006 / 013 / 020..068 phase-ordering convention).
+- **T02:** Scaffolded `@ever-jobs/source-company-epicgames` with the
+  ClassPass-shape (single-file `service.ts`, 4-line `module.ts`,
+  2-line `index.ts`, 7-line `package.json`, 5-line `tsconfig.json`).
+  The scraper hits
+  `https://api.greenhouse.io/v1/boards/epicgames/jobs?content=true`
+  exactly once per call, applies `resultsWanted` cap (default 50),
+  applies `searchTerm` filter against `title ∪ departments[0].name`
+  (case-insensitive, with `.trim()` on `title` per D-10 application),
+  applies `location` filter against `location.name`, and swallows
+  transport errors. **One structural deviation** from the ClassPass
+  template — D-04 variant 13 (ClassPass uses parent-domain variant
+  12; Epic Games uses the previously-unobserved bare-brand
+  vanity-domain shape). The wire `absolute_url` flows through to
+  `jobUrl` byte-for-byte to preserve the variant-13 vanity-domain
+  shape; the **fallback** constructor uses the canonical Greenhouse
+  variant-2 form (Spec 069 § 10 D-04). Department pass-through
+  preserves Epic Games's clean single-token / multi-word descriptive
+  format (`'Art'`, `'Data Science'`, `'General Design'`,
+  `'Partnerships'`) byte-for-byte (Spec 069 § 10 D-11).
+- **T03:** Registered `EpicgamesModule` in the four wiring files —
+  `packages/plugins/index.ts` (alphabetised between `ElasticModule`
+  and `FaireModule` per the alphabetical ordering — `Ela` < `Epi` <
+  `Fai`), `tsconfig.base.json`, `jest.config.js`, preserving the
+  existing alphabetisation conventions.
+- **T04:** Authored 8 unit tests under
+  `packages/plugins/source-company-epicgames/__tests__/epicgames.service.spec.ts`
+  + 2-listing fixture (clean title `'Concept Outsource Lead'` /
+  `'Art'` department + wire-padded title `'Partnerships Director -
+  Sports & Talent '` (single trailing space) / `'Partnerships'`
+  department). Tests cover: NestJS DI resolution, `Site.EPICGAMES
+  === 'epicgames'` literal pin, happy-path 2-listing mapping (with
+  regression guards for D-04 variant-13 shape, D-08
+  decode-then-strip pipeline, D-09 multi-token bare-brand
+  `companyName === 'Epic Games'`, D-10 application — emitted `title`
+  for second listing equals trimmed form `'Partnerships Director -
+  Sports & Talent'` AND is byte-distinct from wire-padded form AND
+  is exactly 1 byte shorter, D-11 first-listing department `'Art'`
+  byte-for-byte, D-11 second-listing department `'Partnerships'`
+  byte-for-byte), `resultsWanted=1` cap, `searchTerm` filter on
+  title (case-insensitive `'CONCEPT'` → 1 match), `searchTerm`
+  filter on department (`'partnerships'` substring → 1 match), HTTP
+  500 → empty, empty `data.jobs` → empty.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added Epic
+  Games shipped row), `docs/index.md` (added Spec 069 row), and
+  this `docs/log.md` entry.
+
+**Local test verification:**
+- `npx jest packages/plugins/source-company-epicgames --colors=false`
+  → 8/8 green in 9.781 s.
+- `npx jest packages/plugins/source-company-coursera packages/plugins/source-company-classpass packages/plugins/source-company-carta packages/plugins/source-company-cameo packages/common/__tests__/helpers.spec --colors=false`
+  → 110/110 still green in 12.397 s (cross-regression unchanged).
+
+**Test count:** Repository jest suite gains 8 cases (Epic Games) for
+a new total of 118 assertions exercised under run-279's local
+pre-push verification (8 Epic Games + 110 cross-regression).
+
+**Cohort statistics after Spec 069:**
+
+- **58** Greenhouse-backed company-direct plugins shipped (Anthropic,
+  Databricks, Discord, Coinbase, DoorDash, Airbnb, Robinhood, Reddit,
+  Pinterest, Lyft, Plaid, Asana, Figma, Gitlab, Twitch, Twilio,
+  Cloudflare, MongoDB, Datadog, Instacart, Dropbox, Roblox, Block,
+  Vercel, Affirm, Klaviyo, Duolingo, Brex, Gusto, Mercury, Buildkite,
+  CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow, ZoomInfo,
+  Attentive, Chime, Elastic, Intercom, Mixpanel, Faire, Scale AI,
+  Cameo, Carta, ClassPass, Coursera, **Epic Games** — plus the
+  seven legacy company-direct plugins from before Spec 020).
+- **15** plugins on wire-shape variant 2 (US-region
+  `job-boards.greenhouse.io` permalink subdomain): Vercel, Affirm,
+  Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive,
+  Intercom, Mixpanel, Scale AI, Cameo, Carta, Coursera.
+- **2** plugins on wire-shape variant 10 (legacy hosted-board apex
+  `boards.greenhouse.io/<slug>/jobs/<id>?gh_jid=<id>`): Chime, Faire.
+- **1** plugin on wire-shape variant 11 (vanity-domain
+  `jobs.<brand>.<tld>/jobs?gh_jid=<id>&gh_jid=<id>` with duplicate
+  query parameter): Elastic.
+- **1** plugin on wire-shape variant 12 (vanity-domain
+  `www.<parent>.com/careers/opportunities/<id>?gh_jid=<id>` with
+  single query parameter and `careers/opportunities` path):
+  ClassPass.
+- **1** plugin on wire-shape variant 13 (vanity-domain bare-brand
+  `<brand>.com/careers/jobs/<id>?gh_jid=<id>` with single query
+  parameter and `careers/jobs` path): **Epic Games** — first cohort
+  plugin in this variant.
+- **25** plugins on the entity-decode-then-tag-strip description
+  pipeline (Klaviyo onwards): Klaviyo, Duolingo, Brex, Gusto, Mercury,
+  Buildkite, CircleCI, Ramp Network, Netlify, Postman, Toast, Webflow,
+  ZoomInfo, Attentive, Chime, Elastic, Intercom, Mixpanel, Faire,
+  Scale AI, Cameo, Carta, ClassPass, Coursera, **Epic Games**.
+- **11** plugins applying a wire-title `.trim()` (D-10): Brex,
+  Buildkite, ZoomInfo, Attentive, Elastic, Intercom, Mixpanel, Faire,
+  Carta, ClassPass, **Epic Games** — Cameo and Coursera do NOT
+  contribute (Cameo had 0 of 3 padded; Coursera had 0 of 8 padded).
+- **4** plugins applying a brand-name trim (D-09 string-literal pin
+  over a wire-suffixed `company_name`): Affirm, Gusto, ZoomInfo,
+  Chime — Epic Games does NOT contribute (wire `company_name === 'Epic Games'`
+  byte-for-byte; multi-token bare brand without legal-entity suffix;
+  **nineteenth cohort plugin to omit D-09**, **second cohort plugin
+  to ship with a multi-token bare-brand wire `company_name`** after
+  Scale AI `'Scale AI'`).
+- **1** plugin shipping a wire department-name with trailing
+  ASCII-space padding pass-through observability (D-11 partial-pad):
+  Cameo (Epic Games does NOT contribute — Epic Games's wire
+  department names are fully clean, 0 of 74 padded).
+
+**Q-042 reminder:** unchanged — pending review since run #84 (~195
+runs / ~195 hours of agent wall-clock); fourth-reminder window opened
+at run #250 per the run #200 forward-pointer convention; next reminder
+window opens at run #300; Default C continues.
+
+**Run-279 next steps queue (runs #280+):**
+
+1. **The fourth-fresh-sweep live-board pool has 9 unshipped live
+   hits remaining**, in alphabetical order: `flexport` (113 roles,
+   run #280 next bite), `fubotv` (11), `glossier` (17), `honeycomb`
+   (10), `lattice` (11), `masterclass` (6), `mavenclinic` (24),
+   `stitchfix` (22), `udemy` (17). Run #280 should take **Flexport**
+   (alphabetically next after Epic Games).
+2. Re-probe `hubspot` at the start of run #280 to check if the
+   empty-board status has flipped (eighteenth consecutive re-probe;
+   if still empty, follow the documented "remains deferred"
+   pattern).
+
+---
+
 ## 2026-05-03 — Scheduled run #278 (Spec 068 closed end-to-end; new `source-company-coursera` plugin shipped — 8 unit tests green in 9.694 s; helpers regression + ClassPass + Carta + Cameo + Chime cross-regression 110/110 still green in 12.301 s; concrete-action deviation continues per the user-owner "do something useful each run" directive; this is the **57th Greenhouse-backed company-direct plugin** in the catalogue and the **first** Greenhouse-only plugin to ship as a **clean re-spin** of a prior cohort plugin with **zero structural deviations** from its template (Chime — Spec 059 / run #269); the **fourteenth** plugin to use wire-shape variant 2 (`https://job-boards.greenhouse.io/coursera/jobs/<id>` — the canonical Greenhouse subdomain shape, after Vercel, Affirm, Gusto, Mercury, Buildkite, Netlify, Postman, Webflow, Attentive, Intercom, Mixpanel, Scale AI, Cameo, and Carta); the **twenty-fourth** to use the entity-decode-then-tag-strip description pipeline; **D-10 omitted** — 0 of 8 wire titles in the run-278 probe carry trailing ASCII-space padding; the plugin emits `listing.title` byte-for-byte without a `.trim()`. **Sixth cohort plugin to omit D-10** — structurally analogous to Chime (Spec 059), Scale AI (Spec 064), Cameo (Spec 065), and Webflow (Spec 056). **D-09 omitted** (wire `company_name === 'Coursera'` byte-for-byte; the single-token bare brand name; no legal-entity suffix on the wire — distinct from the legal-entity name "Coursera, Inc." that may appear in SEC filings or the NYSE ticker `COUR` since 2021). **D-11 fully-clean** — 0 of 8 wire department names in the run-278 probe carry trailing ASCII-space padding; the plugin emits `listing.departments[0].name` byte-for-byte without a `.trim()`. **Zero structural deviations** from the Chime (Spec 059) template — making this the **first** Greenhouse-only company-direct plugin in run-history to ship as a clean re-spin of a prior cohort plugin with no per-axis deviations. **Eighteenth cohort plugin to omit D-09**, returning to the single-word bare-brand wire form. The run-278 probe at start sampled 8 visible roles via direct curl probe of `https://api.greenhouse.io/v1/boards/coursera/jobs?content=true`. Selected from the **fourth-fresh-sweep live-board pool** as the **alphabetically-fourth live-board hit after Cameo, Carta, and ClassPass** (`cameo` < `carta` < `classpass` < `coursera` < `epicgames`, so this run takes Coursera). The remaining ten live hits queue for runs #279+ in alphabetical order (`epicgames` next at run #279 with 74 roles). The HubSpot re-probe at run-278 start returned HTTP 200 with `meta.total === 0` — **sixteenth-consecutive empty re-probe** across runs #262–#278.)
 
 **Scope:** Run #278 continues the user-owner-directed concrete-action

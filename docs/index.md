@@ -133,6 +133,7 @@
 | 066 | [Source Company Plugin: Carta](../.specify/specs/066-source-company-carta/spec.md) — [plan](../.specify/specs/066-source-company-carta/plan.md) — [tasks](../.specify/specs/066-source-company-carta/tasks.md) | All phases done (T01..T05 run #276); spec complete |
 | 067 | [Source Company Plugin: ClassPass](../.specify/specs/067-source-company-classpass/spec.md) — [plan](../.specify/specs/067-source-company-classpass/plan.md) — [tasks](../.specify/specs/067-source-company-classpass/tasks.md) | All phases done (T01..T05 run #277); spec complete |
 | 068 | [Source Company Plugin: Coursera](../.specify/specs/068-source-company-coursera/spec.md) — [plan](../.specify/specs/068-source-company-coursera/plan.md) — [tasks](../.specify/specs/068-source-company-coursera/tasks.md) | All phases done (T01..T05 run #278); spec complete |
+| 069 | [Source Company Plugin: Epic Games](../.specify/specs/069-source-company-epicgames/spec.md) — [plan](../.specify/specs/069-source-company-epicgames/plan.md) — [tasks](../.specify/specs/069-source-company-epicgames/tasks.md) | All phases done (T01..T05 run #279); spec complete |
 
 ## 8. Templates
 

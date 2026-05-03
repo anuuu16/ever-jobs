@@ -122,6 +122,7 @@ module.exports = {
     '^@ever-jobs/source-company-carta$': '<rootDir>/packages/plugins/source-company-carta/src/index.ts',
     '^@ever-jobs/source-company-classpass$': '<rootDir>/packages/plugins/source-company-classpass/src/index.ts',
     '^@ever-jobs/source-company-coursera$': '<rootDir>/packages/plugins/source-company-coursera/src/index.ts',
+    '^@ever-jobs/source-company-epicgames$': '<rootDir>/packages/plugins/source-company-epicgames/src/index.ts',
     '^@ever-jobs/source-ats-breezyhr$': '<rootDir>/packages/plugins/source-ats-breezyhr/src/index.ts',
     '^@ever-jobs/source-ats-comeet$': '<rootDir>/packages/plugins/source-ats-comeet/src/index.ts',
     '^@ever-jobs/source-ats-pinpoint$': '<rootDir>/packages/plugins/source-ats-pinpoint/src/index.ts',

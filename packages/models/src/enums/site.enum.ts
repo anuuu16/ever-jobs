@@ -290,6 +290,8 @@ export enum Site {
   CLASSPASS = 'classpass',
   // Phase 78: Spec 068 — Source Company Plugin: Coursera
   COURSERA = 'coursera',
+  // Phase 79: Spec 069 — Source Company Plugin: Epic Games
+  EPICGAMES = 'epicgames',
 }
 
 /**

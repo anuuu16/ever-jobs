@@ -93,6 +93,7 @@ import { DoorDashModule } from './source-company-doordash';
 import { DropboxModule } from './source-company-dropbox';
 import { DuolingoModule } from './source-company-duolingo';
 import { ElasticModule } from './source-company-elastic';
+import { EpicgamesModule } from './source-company-epicgames';
 import { FaireModule } from './source-company-faire';
 import { FigmaModule } from './source-company-figma';
 import { GitlabModule } from './source-company-gitlab';
@@ -309,6 +310,7 @@ export const ALL_SOURCE_MODULES = [
   DropboxModule,
   DuolingoModule,
   ElasticModule,
+  EpicgamesModule,
   FaireModule,
   FigmaModule,
   GitlabModule,
