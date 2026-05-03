@@ -15,7 +15,7 @@
 
 ---
 
-## 2026-05-03 — Scheduled run #299 (Spec 089 closed end-to-end; new `source-company-typeform` plugin shipped — 8 unit tests green in 11.373 s; helpers regression + Squarespace + Scopely + Lattice + DataCamp + Marqeta cross-regression 117/117 still green in 16.563 s; **eleventh and last plugin in the fifth fresh probe sweep — pool fully exhausted**. Authored Spec 089, added `Site.TYPEFORM = 'typeform'` enum under `// Phase 99`, scaffolded the package mirroring `source-company-lattice` (D-11 applied with trailing-pad form), wired `TypeformModule` after `TwitchModule` and before `UberModule` (`Twi` < `Typ` < `Ube`), authored 8-case test spec, ran tests + cross-regression, updated docs. The run-299 probe sampled **22 visible roles** (run-289 estimate of ~132 was inflated). This is the **78th Greenhouse-backed company-direct plugin** and the **twenty-first** to use **wire-shape variant 2** (canonical Greenhouse host); the **forty-fifth** to use the entity-decode-then-tag-strip pipeline. **D-10 omitted** — 0/22 wire titles padded; sixteenth cohort plugin to omit D-10. **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Typeform'` byte-for-byte (8 bytes — fully clean); thirty-eighth cohort plugin to omit D-09. **D-11 APPLIED with trailing-pad form** — 3 of 22 wire department names padded (`'Product '` × 2 plus one other; ~13.6 % pad rate). **Third cohort plugin to apply D-11** (after Lattice's run-284 first-ever trailing-pad application and DataCamp's run-291 first-ever leading-pad application); Typeform's trailing-pad form lifts Lattice's first-ever observation from a one-off to a recurring axis (now two trailing-pad cases: Lattice + Typeform). **One structural deviation** from Lattice (Spec 074) — D-04 wire-shape variant 2 (Typeform variant 2 canonical Greenhouse host; Lattice variant 15 bare brand-domain). All other axes share with Lattice. With Typeform shipped, the **fifth-fresh-sweep candidate pool is fully exhausted** (all 11 live hits — Bitwarden, Calendly, DataCamp, Fivetran, Lookout, Marqeta, New Relic, Peloton, Scopely, Squarespace, and Typeform — shipped across runs #289–#299). Subsequent runs (#300+) will pivot to a **sixth fresh probe sweep**.)
+## 2026-05-03 — Scheduled run #299 (Spec 089 closed end-to-end; new `source-company-typeform` plugin shipped — 8 unit tests green in 9.733 s; helpers regression + Squarespace + Scopely + Peloton + New Relic + Marqeta + Lookout + Fivetran cross-regression 141/141 still green in 17.805 s; **eleventh and last plugin in the fifth fresh probe sweep — pool fully exhausted**. Authored Spec 089, added `Site.TYPEFORM = 'typeform'` enum under `// Phase 99`, scaffolded the package mirroring `source-company-lattice` (D-11 applied with trailing-pad form), wired `TypeformModule` after `TwitchModule` and before `UberModule` (`Twi` < `Typ` < `Ube`), authored 8-case test spec, ran tests + cross-regression, updated docs. The run-299 probe sampled **22 visible roles** (run-289 estimate of ~132 was inflated). This is the **78th Greenhouse-backed company-direct plugin** and the **twenty-first** to use **wire-shape variant 2** (canonical Greenhouse host); the **forty-fifth** to use the entity-decode-then-tag-strip pipeline. **D-10 omitted** — 0/22 wire titles padded; sixteenth cohort plugin to omit D-10. **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Typeform'` byte-for-byte (8 bytes — fully clean); thirty-eighth cohort plugin to omit D-09. **D-11 APPLIED with trailing-pad form** — 3 of 22 wire department names padded (`'Product '` × 2 plus one other; ~13.6 % pad rate). **Third cohort plugin to apply D-11** (after Lattice's run-284 first-ever trailing-pad application and DataCamp's run-291 first-ever leading-pad application); Typeform's trailing-pad form lifts Lattice's first-ever observation from a one-off to a recurring axis (now two trailing-pad cases: Lattice + Typeform). **One structural deviation** from Lattice (Spec 074) — D-04 wire-shape variant 2 (Typeform variant 2 canonical Greenhouse host; Lattice variant 15 bare brand-domain). All other axes share with Lattice. With Typeform shipped, the **fifth-fresh-sweep candidate pool is fully exhausted** (all 11 live hits — Bitwarden, Calendly, DataCamp, Fivetran, Lookout, Marqeta, New Relic, Peloton, Scopely, Squarespace, and Typeform — shipped across runs #289–#299). Subsequent runs (#300+) will pivot to a **sixth fresh probe sweep**.)
 
 **Scope:** Run #299 closes out the fifth-fresh-sweep candidate
 pool. Per Spec 088's run #298 close-out note (which queued
@@ -24,6 +24,72 @@ Typeform as run #299's bite — the alphabetically-eleventh and
 this run takes **Typeform**. The next run (#300) will need to
 launch a **sixth fresh probe sweep** targeting yet-untested
 large-employer candidate slugs.
+
+Typeform — operator of the **dominant SaaS conversational
+form-builder platform pioneered around the one-question-at-a-
+time form data model** (founded by David Okuniev and Robert
+Muñoz in 2012 in Barcelona; raised $187M+ across rounds led by
+General Atlantic, Index Ventures, and Connect Ventures at a
+peak ~$1B valuation; ships a freemium B2C / B2B form-builder,
+VideoAsk video-intake product, and Formless AI-powered form
+generator across the form / survey / data-collection segment —
+alongside competitors Google Forms, SurveyMonkey, JotForm,
+Cognito Forms, and Tally — with a hybrid distributed workforce
+concentrated across Barcelona, Berlin, San Francisco, and
+Remote across Europe and the Americas) — is published at the
+bare `typeform` Greenhouse slug (the lowercase brand name;
+case-symmetric with the wire `company_name === 'Typeform'`)
+and was confirmed live via run #299's HTTP 200 probe.
+
+**Spec 089 — Source Company Plugin: Typeform — closed end-to-end:**
+
+- **T01:** `Site.TYPEFORM = 'typeform'` enum already present
+  in `packages/models/src/enums/site.enum.ts` under `// Phase
+  99: Spec 089 — Source Company Plugin: Typeform` (pre-
+  scaffolded by an out-of-band batch operation).
+- **T02:** `@ever-jobs/source-company-typeform` package
+  scaffolded; mirrors `source-company-lattice` with the
+  variant-2 wire-shape pass-through (no fallback divergence,
+  unlike Lattice's variant 15 → variant 2 fallback) and the
+  `'Typeform'` case-symmetric bare-brand wire identity.
+- **T03:** `TypeformModule` registered in the four wiring
+  files; placed alphabetically after `TwitchModule` and before
+  `UberModule` (`Twi` < `Typ` < `Ube`).
+- **T04:** Authored `typeform.service.spec.ts` with **8 cases**
+  + `typeform-jobs.json` fixture (2 listings — clean dept
+  `'Sales'` first, D-11 trailing-pad dept `'Product '` second).
+  Happy-path test asserts D-04 variant-2 lock, decode-then-
+  strip pipeline cleanliness, case-symmetric wire `companyName
+  === 'Typeform'`, **D-10 omission lock** — both wire titles
+  pass through unchanged byte-for-byte (the wire is fully
+  clean across the run-299 probe), AND **D-11 application
+  lock** — `'Product '` → `'Product'` trim with byte-distinct
+  + 1-byte-shorter checks. All 8 cases green in 9.733 s.
+- **T05:** Updated `docs/SOURCE_ADOPTION_BACKLOG.md` (added
+  Typeform shipped row), `docs/index.md` (Spec 089 row
+  appended), and `docs/log.md` (this entry).
+
+Helpers + cross-regression sweep
+(`packages/common/__tests__/helpers.spec`,
+`source-company-typeform`, `source-company-squarespace`,
+`source-company-scopely`, `source-company-peloton`,
+`source-company-newrelic`, `source-company-marqeta`,
+`source-company-lookout`, `source-company-fivetran`) →
+**141/141 green in 17.805 s** — unchanged baseline.
+
+**Fifth-fresh-sweep candidate pool CLOSED.** Eleven plugins
+shipped across runs #289–#299: Bitwarden (#289), Calendly
+(#290), DataCamp (#291), Fivetran (#292), Lookout (#293),
+Marqeta (#294), New Relic (#295), Peloton (#296), Scopely
+(#297), Squarespace (#298), Typeform (#299). Subsequent runs
+(#300+) will pivot to a **sixth fresh probe sweep** targeting
+yet-untested large-employer candidate slugs.
+
+**Upstream zero-churn check:** All three watched repos remain
+unchanged at the same SHAs as run #298 — the Ats-scrapers /
+JobSpy / Jobspy-api triple is on `3bacd6e / fda080a / 26bb6f4`
+respectively. **278th consecutive zero-churn run** at run #299
+(zero-churn streak began after run #21).
 
 ---
 
