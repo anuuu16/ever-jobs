@@ -131,6 +131,7 @@ import { EarnestModule } from './source-company-earnest';
 import { ElasticModule } from './source-company-elastic';
 import { EpicgamesModule } from './source-company-epicgames';
 import { ExpressvpnModule } from './source-company-expressvpn';
+import { FairmarkitModule } from './source-company-fairmarkit';
 import { FaireModule } from './source-company-faire';
 import { FastlyModule } from './source-company-fastly';
 import { FigmaModule } from './source-company-figma';
@@ -424,6 +425,7 @@ export const ALL_SOURCE_MODULES = [
   ElasticModule,
   EpicgamesModule,
   ExpressvpnModule,
+  FairmarkitModule,
   FaireModule,
   FastlyModule,
   FigmaModule,
