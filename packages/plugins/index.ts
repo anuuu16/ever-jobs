@@ -127,6 +127,7 @@ import { DoximityModule } from './source-company-doximity';
 import { DremioModule } from './source-company-dremio';
 import { DropboxModule } from './source-company-dropbox';
 import { DuolingoModule } from './source-company-duolingo';
+import { EarnestModule } from './source-company-earnest';
 import { ElasticModule } from './source-company-elastic';
 import { EpicgamesModule } from './source-company-epicgames';
 import { FaireModule } from './source-company-faire';
@@ -418,6 +419,7 @@ export const ALL_SOURCE_MODULES = [
   DremioModule,
   DropboxModule,
   DuolingoModule,
+  EarnestModule,
   ElasticModule,
   EpicgamesModule,
   FaireModule,

@@ -440,6 +440,8 @@ export enum Site {
   CONVIVA = 'conviva',
   // Phase 153: Spec 143 — Source Company Plugin: Cribl
   CRIBL = 'cribl',
+  // Phase 154: Spec 144 — Source Company Plugin: Earnest
+  EARNEST = 'earnest',
 }
 
 /**

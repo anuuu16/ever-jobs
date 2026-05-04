@@ -132,6 +132,7 @@
       "@ever-jobs/source-company-complyadvantage": ["packages/plugins/source-company-complyadvantage/src/index.ts"],
       "@ever-jobs/source-company-conviva": ["packages/plugins/source-company-conviva/src/index.ts"],
       "@ever-jobs/source-company-cribl": ["packages/plugins/source-company-cribl/src/index.ts"],
+      "@ever-jobs/source-company-earnest": ["packages/plugins/source-company-earnest/src/index.ts"],
       "@ever-jobs/source-company-robinhood": ["packages/plugins/source-company-robinhood/src/index.ts"],
       "@ever-jobs/source-company-reddit": ["packages/plugins/source-company-reddit/src/index.ts"],
       "@ever-jobs/source-company-pinterest": ["packages/plugins/source-company-pinterest/src/index.ts"],
