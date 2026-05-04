@@ -124,6 +124,7 @@
       "@ever-jobs/source-company-oscar": ["packages/plugins/source-company-oscar/src/index.ts"],
       "@ever-jobs/source-company-starburst": ["packages/plugins/source-company-starburst/src/index.ts"],
       "@ever-jobs/source-company-axon": ["packages/plugins/source-company-axon/src/index.ts"],
+      "@ever-jobs/source-company-beam": ["packages/plugins/source-company-beam/src/index.ts"],
       "@ever-jobs/source-company-robinhood": ["packages/plugins/source-company-robinhood/src/index.ts"],
       "@ever-jobs/source-company-reddit": ["packages/plugins/source-company-reddit/src/index.ts"],
       "@ever-jobs/source-company-pinterest": ["packages/plugins/source-company-pinterest/src/index.ts"],

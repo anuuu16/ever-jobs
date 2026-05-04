@@ -79,6 +79,7 @@ import { AssemblyAIModule } from './source-company-assemblyai';
 import { AttentiveModule } from './source-company-attentive';
 import { AxonModule } from './source-company-axon';
 import { BandwidthModule } from './source-company-bandwidth';
+import { BeamModule } from './source-company-beam';
 import { BenevityModule } from './source-company-benevity';
 import { BettermentModule } from './source-company-betterment';
 import { BillcomModule } from './source-company-billcom';
@@ -362,6 +363,7 @@ export const ALL_SOURCE_MODULES = [
   AttentiveModule,
   AxonModule,
   BandwidthModule,
+  BeamModule,
   BenevityModule,
   BettermentModule,
   BillcomModule,

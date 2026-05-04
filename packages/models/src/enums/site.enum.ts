@@ -424,6 +424,8 @@ export enum Site {
   STARBURST = 'starburst',
   // Phase 145: Spec 135 — Source Company Plugin: Axon
   AXON = 'axon',
+  // Phase 146: Spec 136 — Source Company Plugin: BEAM
+  BEAM = 'beam',
 }
 
 /**
