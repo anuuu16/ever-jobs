@@ -452,6 +452,8 @@ export enum Site {
   FOUNDERS = 'founders',
   // Phase 159: Spec 149 — Source Company Plugin: Fox
   FOX = 'fox',
+  // Phase 160: Spec 150 — Source Company Plugin: GoCardless
+  GOCARDLESS = 'gocardless',
 }
 
 /**
