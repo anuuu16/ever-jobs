@@ -446,6 +446,8 @@ export enum Site {
   EXPRESSVPN = 'expressvpn',
   // Phase 156: Spec 146 — Source Company Plugin: Fairmarkit
   FAIRMARKIT = 'fairmarkit',
+  // Phase 157: Spec 147 — Source Company Plugin: Formlabs
+  FORMLABS = 'formlabs',
 }
 
 /**
