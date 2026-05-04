@@ -1,7 +1,11 @@
-# Tasks — Spec 139 / source-company-bloomreach
+# Tasks: 139 — Source Company Plugin: Bloomreach
 
-* [x] T01 — Probe `https://api.greenhouse.io/v1/boards/bloomreach/jobs?content=true` and analyze axes.
-* [x] T02 — Author Spec 139 (spec / plan / tasks).
-* [x] T03 — Scaffold `packages/plugins/source-company-bloomreach/` (package.json, tsconfig, src/{index, module, service}).
-* [x] T04 — Author 8-case test spec with D-09 case-sym + D-10 trailing-pad (incl. mojibake-NBSP fixture) + D-11 clean dept locks.
-* [x] T05 — Wire 4 files (enum + plugins index + tsconfig + jest), run jest + cross-regression, update docs, commit + push, poll CI green.
+> Status legend: `[ ]` pending • `[~]` in-progress • `[x]` done • `[-]` dropped
+
+## Phase 1 — Scaffold + register + test
+
+- [x] T01 — Add `Site.BLOOMREACH = 'bloomreach'` enum value under Phase 149
+- [x] T02 — Scaffold the `@ever-jobs/source-company-bloomreach` package
+- [x] T03 — Register plugin in the four wiring files
+- [x] T04 — Unit tests with mocked HTTP fixture (≥ 8 cases)
+- [x] T05 — Cross-regression sweep + docs update + commit + push + CI green
