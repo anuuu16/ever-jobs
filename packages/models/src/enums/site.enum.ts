@@ -464,6 +464,8 @@ export enum Site {
   BITGO = 'bitgo',
   // Phase 165: Spec 155 — Source Company Plugin: Collective Health
   COLLECTIVEHEALTH = 'collectivehealth',
+  // Phase 166: Spec 156 — Source Company Plugin: DeepMind
+  DEEPMIND = 'deepmind',
 }
 
 /**

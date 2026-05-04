@@ -142,6 +142,7 @@ module.exports = {
     '^@ever-jobs/source-company-cloudflare$': '<rootDir>/packages/plugins/source-company-cloudflare/src/index.ts',
     '^@ever-jobs/source-company-mongodb$': '<rootDir>/packages/plugins/source-company-mongodb/src/index.ts',
     '^@ever-jobs/source-company-datadog$': '<rootDir>/packages/plugins/source-company-datadog/src/index.ts',
+    '^@ever-jobs/source-company-deepmind$': '<rootDir>/packages/plugins/source-company-deepmind/src/index.ts',
     '^@ever-jobs/source-company-instacart$': '<rootDir>/packages/plugins/source-company-instacart/src/index.ts',
     '^@ever-jobs/source-company-dropbox$': '<rootDir>/packages/plugins/source-company-dropbox/src/index.ts',
     '^@ever-jobs/source-company-roblox$': '<rootDir>/packages/plugins/source-company-roblox/src/index.ts',

@@ -121,6 +121,7 @@ import { CursorModule } from './source-company-cursor';
 import { DatabricksModule } from './source-company-databricks';
 import { DatacampModule } from './source-company-datacamp';
 import { DatadogModule } from './source-company-datadog';
+import { DeepmindModule } from './source-company-deepmind';
 import { DialpadModule } from './source-company-dialpad';
 import { DescopeModule } from './source-company-descope';
 import { DescriptModule } from './source-company-descript';
@@ -424,6 +425,7 @@ export const ALL_SOURCE_MODULES = [
   DatabricksModule,
   DatacampModule,
   DatadogModule,
+  DeepmindModule,
   DialpadModule,
   DescopeModule,
   DescriptModule,
