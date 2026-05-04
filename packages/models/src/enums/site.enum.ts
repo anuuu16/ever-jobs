@@ -406,6 +406,8 @@ export enum Site {
   DESCOPE = 'descope',
   // Phase 136: Spec 126 — Source Company Plugin: Dialpad
   DIALPAD = 'dialpad',
+  // Phase 137: Spec 127 — Source Company Plugin: Doximity
+  DOXIMITY = 'doximity',
 }
 
 /**

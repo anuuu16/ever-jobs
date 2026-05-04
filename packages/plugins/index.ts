@@ -114,6 +114,7 @@ import { DescriptModule } from './source-company-descript';
 import { DiscordModule } from './source-company-discord';
 import { DollarShaveClubModule } from './source-company-dollarshaveclub';
 import { DoorDashModule } from './source-company-doordash';
+import { DoximityModule } from './source-company-doximity';
 import { DropboxModule } from './source-company-dropbox';
 import { DuolingoModule } from './source-company-duolingo';
 import { ElasticModule } from './source-company-elastic';
@@ -388,6 +389,7 @@ export const ALL_SOURCE_MODULES = [
   DiscordModule,
   DollarShaveClubModule,
   DoorDashModule,
+  DoximityModule,
   DropboxModule,
   DuolingoModule,
   ElasticModule,

@@ -191,6 +191,7 @@
 | 124 | [Source Company Plugin: Contentful](../.specify/specs/124-source-company-contentful/spec.md) — [plan](../.specify/specs/124-source-company-contentful/plan.md) — [tasks](../.specify/specs/124-source-company-contentful/tasks.md) | All phases done (T01..T05 run #334); spec complete — twenty-seventh zero-deviation clean re-spin (off Checkr); 80-plugin D-08-application threshold |
 | 125 | [Source Company Plugin: Descope](../.specify/specs/125-source-company-descope/spec.md) — [plan](../.specify/specs/125-source-company-descope/plan.md) — [tasks](../.specify/specs/125-source-company-descope/tasks.md) | All phases done (T01..T05 run #335); spec complete — one structural deviation off Branch (D-11 applied with **highest 75% listing-level pad rate** observed in cohort) |
 | 126 | [Source Company Plugin: Dialpad](../.specify/specs/126-source-company-dialpad/spec.md) — [plan](../.specify/specs/126-source-company-dialpad/plan.md) — [tasks](../.specify/specs/126-source-company-dialpad/tasks.md) | All phases done (T01..T05 run #336); spec complete — twenty-eighth zero-deviation clean re-spin (off Branch); first-cohort D-11 numeric-prefix-with-hyphen dept naming (`120 - Product Operations`) |
+| 127 | [Source Company Plugin: Doximity](../.specify/specs/127-source-company-doximity/spec.md) — [plan](../.specify/specs/127-source-company-doximity/plan.md) — [tasks](../.specify/specs/127-source-company-doximity/tasks.md) | All phases done (T01..T05 run #337); spec complete — twenty-ninth zero-deviation clean re-spin (off Contentful) |
 
 ## 8. Templates
 
