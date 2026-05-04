@@ -482,6 +482,8 @@ export enum Site {
   NETSKOPE = 'netskope',
   // Phase 174: Spec 164 — Source Company Plugin: Postscript
   POSTSCRIPT = 'postscript',
+  // Phase 175: Spec 165 — Source Company Plugin: Cresta
+  CRESTA = 'cresta',
 }
 
 /**

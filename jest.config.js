@@ -152,6 +152,7 @@ module.exports = {
     '^@ever-jobs/source-company-maven$': '<rootDir>/packages/plugins/source-company-maven/src/index.ts',
     '^@ever-jobs/source-company-netskope$': '<rootDir>/packages/plugins/source-company-netskope/src/index.ts',
     '^@ever-jobs/source-company-postscript$': '<rootDir>/packages/plugins/source-company-postscript/src/index.ts',
+    '^@ever-jobs/source-company-cresta$': '<rootDir>/packages/plugins/source-company-cresta/src/index.ts',
     '^@ever-jobs/source-company-dropbox$': '<rootDir>/packages/plugins/source-company-dropbox/src/index.ts',
     '^@ever-jobs/source-company-roblox$': '<rootDir>/packages/plugins/source-company-roblox/src/index.ts',
     '^@ever-jobs/source-company-block$': '<rootDir>/packages/plugins/source-company-block/src/index.ts',

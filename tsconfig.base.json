@@ -167,6 +167,7 @@
       "@ever-jobs/source-company-maven": ["packages/plugins/source-company-maven/src/index.ts"],
       "@ever-jobs/source-company-netskope": ["packages/plugins/source-company-netskope/src/index.ts"],
       "@ever-jobs/source-company-postscript": ["packages/plugins/source-company-postscript/src/index.ts"],
+      "@ever-jobs/source-company-cresta": ["packages/plugins/source-company-cresta/src/index.ts"],
       "@ever-jobs/source-company-dropbox": ["packages/plugins/source-company-dropbox/src/index.ts"],
       "@ever-jobs/source-company-roblox": ["packages/plugins/source-company-roblox/src/index.ts"],
       "@ever-jobs/source-company-block": ["packages/plugins/source-company-block/src/index.ts"],

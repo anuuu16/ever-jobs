@@ -15,6 +15,42 @@
 
 ---
 
+## 2026-05-04 — Scheduled run #375 (Spec 165 closed end-to-end; new `source-company-cresta` plugin shipped — 8 unit tests authored against a 3-listing fixture covering all five decoration axes including the leading-pad D-10 sub-axis. Authored Spec 165 (spec.md / plan.md / tasks.md), added `Site.CRESTA = 'cresta'` enum under `// Phase 175`, scaffolded the package modeled on the `source-company-postscript` template (one D-10 sub-axis observation off Postscript: 1/114 wire titles carry leading-only-pad in addition to the dominant 30/114 trailing-only-pad form — `.trim()` covers both byte-for-byte), wired `CrestaModule` between `CourseraModule` and `CriblModule` (alphabetical block — `'cresta'` sorts between `'coursera'` and `'cribl'`), authored 8-case test spec with variant-2 URL lock + case-symmetric bare-brand wire pin (`'Cresta'` 6 bytes) + D-10 trailing-pad title-trim lock + D-10 leading-pad sub-axis lock + D-11 clean dept pass-through lock, updated docs. The run-375 probe sampled **114 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/cresta/jobs?content=true`. This is the **154th Greenhouse-backed company-direct plugin** in the catalogue and the **sixty-ninth** to use **wire-shape variant 2**; the **one-hundred-and-twenty-first** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Cresta'` byte-for-byte (6 bytes — fully clean; case-symmetric with the lowercase 6-byte slug `cresta` after casefold); 0 of 114 padded; **one-hundred-and-twelfth cohort plugin to omit D-09**. **D-10 APPLIED with trailing-pad-dominant + leading-pad sub-axis form** — 30 of 114 wire titles padded with single-trailing-ASCII-space form (~26.3 % trail-pad rate) AND 1 of 114 padded with leading-only-ASCII-space form (~0.88 % lead-pad rate — `' Senior Product Manager'` form). **Seventy-fifth cohort plugin to apply D-10**. **D-11 omitted** — 0 of 114 wire department names padded across 8 unique department names (`'Customer Success'`, `'Engineering'`, `'Finance'`, `'HR'`, `'Marketing'`, `'Product'`, `'Sales'`, `'Technical Operations'`); **ninety-seventh cohort plugin** with fully-clean department pass-through. **One D-10 sub-axis observation** off Postscript (Spec 164) — making this the **forty-seventh near-clean re-spin** in run-history (cohort tracks "near-clean" re-spins separately from zero-deviation clean re-spins; this one is "near-clean" because of the single leading-pad sub-axis observation, with the implementation byte-for-byte identical to Postscript because `.trim()` is symmetric). Selected from a **fresh probe sweep** of unmapped Greenhouse boards as the alphabetically-first hit (`cresta` before `figment`, `rapidsos`, `samsara`, etc., in the run-375 candidate pool). **Upstream zero-churn check:** All three watched repos remain unchanged at the same SHAs as run #374. **352nd consecutive zero-churn run** at run #375 (zero-churn streak began after run #21).)
+
+**Scope:** Run #375 takes **Cresta** — a fresh probe-sweep
+hit from the live-board candidate pool. Run #375 marks the
+**forty-seventh near-clean re-spin** in run-history with the
+first leading-pad D-10 sub-axis observation off the
+Postscript clean-template. The implementation is byte-for-
+byte identical to Postscript at the `.trim()` boundary
+because `.trim()` is symmetric, so the leading-pad sub-axis
+collapses to the same trimmed output.
+
+**Changes:**
+
+- `.specify/specs/165-source-company-cresta/{spec,plan,tasks}.md`
+  — new spec defining axes / cohort thresholds / FRs /
+  acceptance.
+- `packages/plugins/source-company-cresta/{package.json,
+  tsconfig.json,src/index.ts,src/cresta.module.ts,
+  src/cresta.service.ts,__tests__/cresta.service.spec.ts,
+  __tests__/fixtures/cresta-jobs.json}` — new plugin
+  package.
+- `packages/models/src/enums/site.enum.ts` — append
+  `CRESTA = 'cresta'` under `// Phase 175`.
+- `packages/plugins/index.ts` — register `CrestaModule`
+  between `CourseraModule` and `CriblModule` (alphabetical
+  block).
+- `tsconfig.base.json` / `jest.config.js` — path-alias /
+  `moduleNameMapper` entries appended.
+- `docs/index.md` — Spec 165 row appended.
+- `docs/log.md` — this entry.
+- `docs/COMPANY_SLUG_DIRECTORY.md` — `Cresta / cresta /
+  AI Contact Center` row added under Greenhouse table.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — Cresta marked shipped.
+
+---
+
 ## 2026-05-04 — Scheduled run #374 (Spec 164 closed end-to-end; new `source-company-postscript` plugin shipped — 8 unit tests green; 2-suite cross-regression (Alma + Netskope) 16/16 still green in 11.091 s; **thirteenth plugin in the tenth fresh probe sweep**. Authored Spec 164 (spec.md / plan.md / tasks.md), added `Site.POSTSCRIPT = 'postscript'` enum under `// Phase 174`, scaffolded the package modeled on the `source-company-alma` template (zero structural deviations — Alma is the closest behavioural cousin sharing all five primary axes: D-04 variant 2 + D-08 + D-09 case-symmetric + D-10 trailing-pad applied + D-11 omitted), wired `PostscriptModule` between `PostmanModule` and `RampNetworkModule` (alphabetical block — `'postscript'` sorts after `'postman'`), authored 8-case test spec with variant-2 URL lock + case-symmetric bare-brand wire pin (`'Postscript'` 10 bytes) + D-10 trailing-pad title-trim lock + D-11 clean dept pass-through lock, ran tests + cross-regression, updated docs. The run-374 probe sampled **9 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/postscript/jobs?content=true` (matched the tenth-sweep estimate of ~9 keys exactly — **1× exact match**). This is the **153rd Greenhouse-backed company-direct plugin** in the catalogue and the **sixty-eighth** to use **wire-shape variant 2**; the **one-hundred-and-twentieth** cohort plugin to use the entity-decode-then-tag-strip description pipeline — **the cohort crosses the 120-plugin D-08-application threshold at this run.** **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Postscript'` byte-for-byte (10 bytes — fully clean; case-symmetric with the lowercase 10-byte slug `postscript` after casefold); 0 of 9 padded; **one-hundred-and-eleventh cohort plugin to omit D-09**. **D-10 APPLIED with trailing-pad form** — 2 of 9 wire titles padded with single-trailing-ASCII-space form (~22.2 % pad rate, all trailing-only — `'Senior Customer Success Manager '`, `'Senior Engineering Manager, AI '`). **Seventy-fourth cohort plugin to apply D-10**. **D-11 omitted** — 0 of 9 wire department names padded across 4 unique department names (`'Business Development'`, `'Customer Success'`, `'Engineering'`, `'Product'` — clean multi-token internal-whitespace forms permitted); **ninety-sixth cohort plugin** with fully-clean department pass-through. **Zero structural deviations** from Alma (Spec 152) — making this the **forty-sixth** Greenhouse-only company-direct plugin in run-history to ship as a clean re-spin of a prior cohort plugin with no per-axis deviations. Selected from the **tenth-fresh-sweep live-board pool** as the **alphabetically-thirteenth live-board hit** after Alma, Bird, BitGo, Collective Health, DeepMind, Indigo, Instabase, Iterable, Labelbox, Markforged, Maven, and Netskope. The remaining 9 live hits queue for runs #375+ in alphabetical order (`quanata` next at run #375 with ~10 keys). **Upstream zero-churn check:** All three watched repos remain unchanged at the same SHAs as run #373 — the Ats-scrapers / JobSpy / Jobspy-api triple is on `3bacd6e / fda080a / 26bb6f4` respectively. **351st consecutive zero-churn run** at run #374 (zero-churn streak began after run #21).)
 
 **Scope:** Run #374 continues the tenth fresh probe sweep.

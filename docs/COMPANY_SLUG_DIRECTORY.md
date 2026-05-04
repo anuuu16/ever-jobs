@@ -86,6 +86,7 @@ Greenhouse slugs are the subdomain used in `boards.greenhouse.io/{slug}`.
 | Thatlot | `thatlot` | — |
 | Twitch | `twitch` | — |
 | Vulcanelements | `vulcanelements` | — |
+| Cresta | `cresta` | AI Contact Center |
 
 ---
 
