@@ -380,6 +380,8 @@ export enum Site {
   DESCRIPT = 'descript',
   // Phase 123: Spec 113 — Source Company Plugin: Fastly
   FASTLY = 'fastly',
+  // Phase 124: Spec 114 — Source Company Plugin: LaunchDarkly
+  LAUNCHDARKLY = 'launchdarkly',
 }
 
 /**

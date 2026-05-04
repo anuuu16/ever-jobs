@@ -128,6 +128,7 @@ import { InstacartModule } from './source-company-instacart';
 import { IntercomModule } from './source-company-intercom';
 import { KlaviyoModule } from './source-company-klaviyo';
 import { LatticeModule } from './source-company-lattice';
+import { LaunchdarklyModule } from './source-company-launchdarkly';
 import { LookoutModule } from './source-company-lookout';
 import { LyftModule } from './source-company-lyft';
 import { MarqetaModule } from './source-company-marqeta';
@@ -389,6 +390,7 @@ export const ALL_SOURCE_MODULES = [
   IntercomModule,
   KlaviyoModule,
   LatticeModule,
+  LaunchdarklyModule,
   LookoutModule,
   LyftModule,
   MarqetaModule,
