@@ -112,6 +112,7 @@ module.exports = {
     '^@ever-jobs/source-company-beam$': '<rootDir>/packages/plugins/source-company-beam/src/index.ts',
     '^@ever-jobs/source-company-bigid$': '<rootDir>/packages/plugins/source-company-bigid/src/index.ts',
     '^@ever-jobs/source-company-blend$': '<rootDir>/packages/plugins/source-company-blend/src/index.ts',
+    '^@ever-jobs/source-company-bloomreach$': '<rootDir>/packages/plugins/source-company-bloomreach/src/index.ts',
     '^@ever-jobs/source-company-robinhood$': '<rootDir>/packages/plugins/source-company-robinhood/src/index.ts',
     '^@ever-jobs/source-company-reddit$': '<rootDir>/packages/plugins/source-company-reddit/src/index.ts',
     '^@ever-jobs/source-company-pinterest$': '<rootDir>/packages/plugins/source-company-pinterest/src/index.ts',

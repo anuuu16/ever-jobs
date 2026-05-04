@@ -430,6 +430,8 @@ export enum Site {
   BIGID = 'bigid',
   // Phase 148: Spec 138 — Source Company Plugin: Blend
   BLEND = 'blend',
+  // Phase 149: Spec 139 — Source Company Plugin: Bloomreach
+  BLOOMREACH = 'bloomreach',
 }
 
 /**
