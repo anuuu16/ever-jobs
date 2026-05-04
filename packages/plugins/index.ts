@@ -150,6 +150,7 @@ import { MetaModule } from './source-company-meta';
 import { MicrosoftModule } from './source-company-microsoft';
 import { MisfitsMarketModule } from './source-company-misfitsmarket';
 import { MixpanelModule } from './source-company-mixpanel';
+import { ModernHealthModule } from './source-company-modernhealth';
 import { MongoDbModule } from './source-company-mongodb';
 import { MonzoModule } from './source-company-monzo';
 import { N26Module } from './source-company-n26';
@@ -428,6 +429,7 @@ export const ALL_SOURCE_MODULES = [
   MicrosoftModule,
   MisfitsMarketModule,
   MixpanelModule,
+  ModernHealthModule,
   MongoDbModule,
   MonzoModule,
   N26Module,

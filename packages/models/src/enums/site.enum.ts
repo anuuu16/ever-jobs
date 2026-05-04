@@ -414,6 +414,8 @@ export enum Site {
   JUSTWORKS = 'justworks',
   // Phase 140: Spec 130 — Source Company Plugin: Melio
   MELIO = 'melio',
+  // Phase 141: Spec 131 — Source Company Plugin: Modern Health
+  MODERNHEALTH = 'modernhealth',
 }
 
 /**
