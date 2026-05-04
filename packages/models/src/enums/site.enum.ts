@@ -466,6 +466,8 @@ export enum Site {
   COLLECTIVEHEALTH = 'collectivehealth',
   // Phase 166: Spec 156 — Source Company Plugin: DeepMind
   DEEPMIND = 'deepmind',
+  // Phase 167: Spec 157 — Source Company Plugin: Indigo
+  INDIGO = 'indigo',
 }
 
 /**
