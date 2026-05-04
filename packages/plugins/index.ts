@@ -94,6 +94,7 @@ import { CameoModule } from './source-company-cameo';
 import { CartaModule } from './source-company-carta';
 import { CerebralModule } from './source-company-cerebral';
 import { ChainguardModule } from './source-company-chainguard';
+import { CheckrModule } from './source-company-checkr';
 import { ChimeModule } from './source-company-chime';
 import { CircleCIModule } from './source-company-circleci';
 import { ClasspassModule } from './source-company-classpass';
@@ -364,6 +365,7 @@ export const ALL_SOURCE_MODULES = [
   CartaModule,
   CerebralModule,
   ChainguardModule,
+  CheckrModule,
   ChimeModule,
   CircleCIModule,
   ClasspassModule,

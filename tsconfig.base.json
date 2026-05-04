@@ -111,6 +111,7 @@
       "@ever-jobs/source-company-betterment": ["packages/plugins/source-company-betterment/src/index.ts"],
       "@ever-jobs/source-company-branch": ["packages/plugins/source-company-branch/src/index.ts"],
       "@ever-jobs/source-company-chainguard": ["packages/plugins/source-company-chainguard/src/index.ts"],
+      "@ever-jobs/source-company-checkr": ["packages/plugins/source-company-checkr/src/index.ts"],
       "@ever-jobs/source-company-robinhood": ["packages/plugins/source-company-robinhood/src/index.ts"],
       "@ever-jobs/source-company-reddit": ["packages/plugins/source-company-reddit/src/index.ts"],
       "@ever-jobs/source-company-pinterest": ["packages/plugins/source-company-pinterest/src/index.ts"],

@@ -398,6 +398,8 @@ export enum Site {
   BRANCH = 'branch',
   // Phase 132: Spec 122 — Source Company Plugin: Chainguard
   CHAINGUARD = 'chainguard',
+  // Phase 133: Spec 123 — Source Company Plugin: Checkr
+  CHECKR = 'checkr',
 }
 
 /**
