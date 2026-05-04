@@ -448,6 +448,8 @@ export enum Site {
   FAIRMARKIT = 'fairmarkit',
   // Phase 157: Spec 147 — Source Company Plugin: Formlabs
   FORMLABS = 'formlabs',
+  // Phase 158: Spec 148 — Source Company Plugin: Founders
+  FOUNDERS = 'founders',
 }
 
 /**

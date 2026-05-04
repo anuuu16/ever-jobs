@@ -136,6 +136,7 @@
       "@ever-jobs/source-company-expressvpn": ["packages/plugins/source-company-expressvpn/src/index.ts"],
       "@ever-jobs/source-company-fairmarkit": ["packages/plugins/source-company-fairmarkit/src/index.ts"],
       "@ever-jobs/source-company-formlabs": ["packages/plugins/source-company-formlabs/src/index.ts"],
+      "@ever-jobs/source-company-founders": ["packages/plugins/source-company-founders/src/index.ts"],
       "@ever-jobs/source-company-robinhood": ["packages/plugins/source-company-robinhood/src/index.ts"],
       "@ever-jobs/source-company-reddit": ["packages/plugins/source-company-reddit/src/index.ts"],
       "@ever-jobs/source-company-pinterest": ["packages/plugins/source-company-pinterest/src/index.ts"],
