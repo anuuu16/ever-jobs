@@ -438,6 +438,8 @@ export enum Site {
   COMPLYADVANTAGE = 'complyadvantage',
   // Phase 152: Spec 142 — Source Company Plugin: Conviva
   CONVIVA = 'conviva',
+  // Phase 153: Spec 143 — Source Company Plugin: Cribl
+  CRIBL = 'cribl',
 }
 
 /**

@@ -116,6 +116,7 @@ module.exports = {
     '^@ever-jobs/source-company-celonis$': '<rootDir>/packages/plugins/source-company-celonis/src/index.ts',
     '^@ever-jobs/source-company-complyadvantage$': '<rootDir>/packages/plugins/source-company-complyadvantage/src/index.ts',
     '^@ever-jobs/source-company-conviva$': '<rootDir>/packages/plugins/source-company-conviva/src/index.ts',
+    '^@ever-jobs/source-company-cribl$': '<rootDir>/packages/plugins/source-company-cribl/src/index.ts',
     '^@ever-jobs/source-company-robinhood$': '<rootDir>/packages/plugins/source-company-robinhood/src/index.ts',
     '^@ever-jobs/source-company-reddit$': '<rootDir>/packages/plugins/source-company-reddit/src/index.ts',
     '^@ever-jobs/source-company-pinterest$': '<rootDir>/packages/plugins/source-company-pinterest/src/index.ts',

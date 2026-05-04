@@ -112,6 +112,7 @@ import { ConstantContactModule } from './source-company-constantcontact';
 import { ContentfulModule } from './source-company-contentful';
 import { ConvivaModule } from './source-company-conviva';
 import { CourseraModule } from './source-company-coursera';
+import { CriblModule } from './source-company-cribl';
 import { CursorModule } from './source-company-cursor';
 import { DatabricksModule } from './source-company-databricks';
 import { DatacampModule } from './source-company-datacamp';
@@ -402,6 +403,7 @@ export const ALL_SOURCE_MODULES = [
   ContentfulModule,
   ConvivaModule,
   CourseraModule,
+  CriblModule,
   CursorModule,
   DatabricksModule,
   DatacampModule,
