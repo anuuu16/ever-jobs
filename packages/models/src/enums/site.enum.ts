@@ -442,6 +442,8 @@ export enum Site {
   CRIBL = 'cribl',
   // Phase 154: Spec 144 — Source Company Plugin: Earnest
   EARNEST = 'earnest',
+  // Phase 155: Spec 145 — Source Company Plugin: ExpressVPN
+  EXPRESSVPN = 'expressvpn',
 }
 
 /**
