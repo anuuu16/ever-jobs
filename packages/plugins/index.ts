@@ -97,6 +97,7 @@ import { BuildkiteModule } from './source-company-buildkite';
 import { CalendlyModule } from './source-company-calendly';
 import { CameoModule } from './source-company-cameo';
 import { CartaModule } from './source-company-carta';
+import { CelonisModule } from './source-company-celonis';
 import { CerebralModule } from './source-company-cerebral';
 import { ChainguardModule } from './source-company-chainguard';
 import { CheckrModule } from './source-company-checkr';
@@ -384,6 +385,7 @@ export const ALL_SOURCE_MODULES = [
   CalendlyModule,
   CameoModule,
   CartaModule,
+  CelonisModule,
   CerebralModule,
   ChainguardModule,
   CheckrModule,

@@ -432,6 +432,8 @@ export enum Site {
   BLEND = 'blend',
   // Phase 149: Spec 139 — Source Company Plugin: Bloomreach
   BLOOMREACH = 'bloomreach',
+  // Phase 150: Spec 140 — Source Company Plugin: Celonis
+  CELONIS = 'celonis',
 }
 
 /**
