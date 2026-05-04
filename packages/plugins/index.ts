@@ -207,6 +207,7 @@ import { RechargeModule } from './source-company-recharge';
 import { RedditModule } from './source-company-reddit';
 import { RobinhoodModule } from './source-company-robinhood';
 import { RobloxModule } from './source-company-roblox';
+import { SamsaraModule } from './source-company-samsara';
 import { ScaleaiModule } from './source-company-scaleai';
 import { ScopelyModule } from './source-company-scopely';
 import { SoFiModule } from './source-company-sofi';
@@ -522,6 +523,7 @@ export const ALL_SOURCE_MODULES = [
   RedditModule,
   RobinhoodModule,
   RobloxModule,
+  SamsaraModule,
   ScaleaiModule,
   ScopelyModule,
   SoFiModule,

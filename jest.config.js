@@ -155,6 +155,7 @@ module.exports = {
     '^@ever-jobs/source-company-cresta$': '<rootDir>/packages/plugins/source-company-cresta/src/index.ts',
     '^@ever-jobs/source-company-quanata$': '<rootDir>/packages/plugins/source-company-quanata/src/index.ts',
     '^@ever-jobs/source-company-recharge$': '<rootDir>/packages/plugins/source-company-recharge/src/index.ts',
+    '^@ever-jobs/source-company-samsara$': '<rootDir>/packages/plugins/source-company-samsara/src/index.ts',
     '^@ever-jobs/source-company-dropbox$': '<rootDir>/packages/plugins/source-company-dropbox/src/index.ts',
     '^@ever-jobs/source-company-roblox$': '<rootDir>/packages/plugins/source-company-roblox/src/index.ts',
     '^@ever-jobs/source-company-block$': '<rootDir>/packages/plugins/source-company-block/src/index.ts',
