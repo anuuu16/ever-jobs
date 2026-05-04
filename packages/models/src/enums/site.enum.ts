@@ -486,6 +486,8 @@ export enum Site {
   CRESTA = 'cresta',
   // Phase 176: Spec 166 — Source Company Plugin: Quanata
   QUANATA = 'quanata',
+  // Phase 177: Spec 167 — Source Company Plugin: Recharge
+  RECHARGE = 'recharge',
 }
 
 /**

@@ -169,6 +169,7 @@
       "@ever-jobs/source-company-postscript": ["packages/plugins/source-company-postscript/src/index.ts"],
       "@ever-jobs/source-company-cresta": ["packages/plugins/source-company-cresta/src/index.ts"],
       "@ever-jobs/source-company-quanata": ["packages/plugins/source-company-quanata/src/index.ts"],
+      "@ever-jobs/source-company-recharge": ["packages/plugins/source-company-recharge/src/index.ts"],
       "@ever-jobs/source-company-dropbox": ["packages/plugins/source-company-dropbox/src/index.ts"],
       "@ever-jobs/source-company-roblox": ["packages/plugins/source-company-roblox/src/index.ts"],
       "@ever-jobs/source-company-block": ["packages/plugins/source-company-block/src/index.ts"],

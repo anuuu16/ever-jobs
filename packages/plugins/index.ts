@@ -203,6 +203,7 @@ import { PostmanModule } from './source-company-postman';
 import { PostscriptModule } from './source-company-postscript';
 import { QuanataModule } from './source-company-quanata';
 import { RampNetworkModule } from './source-company-rampnetwork';
+import { RechargeModule } from './source-company-recharge';
 import { RedditModule } from './source-company-reddit';
 import { RobinhoodModule } from './source-company-robinhood';
 import { RobloxModule } from './source-company-roblox';
@@ -517,6 +518,7 @@ export const ALL_SOURCE_MODULES = [
   PostscriptModule,
   QuanataModule,
   RampNetworkModule,
+  RechargeModule,
   RedditModule,
   RobinhoodModule,
   RobloxModule,
