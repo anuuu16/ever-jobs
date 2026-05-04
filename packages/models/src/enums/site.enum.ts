@@ -404,6 +404,8 @@ export enum Site {
   CONTENTFUL = 'contentful',
   // Phase 135: Spec 125 — Source Company Plugin: Descope
   DESCOPE = 'descope',
+  // Phase 136: Spec 126 — Source Company Plugin: Dialpad
+  DIALPAD = 'dialpad',
 }
 
 /**
