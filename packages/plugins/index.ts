@@ -82,6 +82,7 @@ import { BandwidthModule } from './source-company-bandwidth';
 import { BeamModule } from './source-company-beam';
 import { BenevityModule } from './source-company-benevity';
 import { BettermentModule } from './source-company-betterment';
+import { BigIdModule } from './source-company-bigid';
 import { BillcomModule } from './source-company-billcom';
 import { BitwardenModule } from './source-company-bitwarden';
 import { BlockModule } from './source-company-block';
@@ -366,6 +367,7 @@ export const ALL_SOURCE_MODULES = [
   BeamModule,
   BenevityModule,
   BettermentModule,
+  BigIdModule,
   BillcomModule,
   BitwardenModule,
   BlockModule,

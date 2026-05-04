@@ -426,6 +426,8 @@ export enum Site {
   AXON = 'axon',
   // Phase 146: Spec 136 — Source Company Plugin: BEAM
   BEAM = 'beam',
+  // Phase 147: Spec 137 — Source Company Plugin: BigID
+  BIGID = 'bigid',
 }
 
 /**
