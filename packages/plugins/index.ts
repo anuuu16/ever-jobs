@@ -112,6 +112,7 @@ import { DuolingoModule } from './source-company-duolingo';
 import { ElasticModule } from './source-company-elastic';
 import { EpicgamesModule } from './source-company-epicgames';
 import { FaireModule } from './source-company-faire';
+import { FastlyModule } from './source-company-fastly';
 import { FigmaModule } from './source-company-figma';
 import { FivetranModule } from './source-company-fivetran';
 import { FlexportModule } from './source-company-flexport';
@@ -372,6 +373,7 @@ export const ALL_SOURCE_MODULES = [
   ElasticModule,
   EpicgamesModule,
   FaireModule,
+  FastlyModule,
   FigmaModule,
   FivetranModule,
   FlexportModule,

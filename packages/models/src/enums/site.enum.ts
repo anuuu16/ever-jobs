@@ -378,6 +378,8 @@ export enum Site {
   CONSTANTCONTACT = 'constantcontact',
   // Phase 122: Spec 112 — Source Company Plugin: Descript
   DESCRIPT = 'descript',
+  // Phase 123: Spec 113 — Source Company Plugin: Fastly
+  FASTLY = 'fastly',
 }
 
 /**

@@ -177,6 +177,7 @@
 | 110 | [Source Company Plugin: Braze](../.specify/specs/110-source-company-braze/spec.md) — [plan](../.specify/specs/110-source-company-braze/plan.md) — [tasks](../.specify/specs/110-source-company-braze/tasks.md) | All phases done (T01..T05 run #320); spec complete — seventeenth clean re-spin (off Flexport); 4th variant-10 plugin (legacy hosted-board apex) |
 | 111 | [Source Company Plugin: Constant Contact](../.specify/specs/111-source-company-constantcontact/spec.md) — [plan](../.specify/specs/111-source-company-constantcontact/plan.md) — [tasks](../.specify/specs/111-source-company-constantcontact/tasks.md) | All phases done (T01..T05 run #321); spec complete — eighteenth clean re-spin (off Misfits Market); 7th internal-whitespace D-09 asymmetry; first cohort numeric-prefix dept names |
 | 112 | [Source Company Plugin: Descript](../.specify/specs/112-source-company-descript/spec.md) — [plan](../.specify/specs/112-source-company-descript/plan.md) — [tasks](../.specify/specs/112-source-company-descript/tasks.md) | All phases done (T01..T05 run #322); spec complete — nineteenth clean re-spin (off Braze); 5th variant-10 plugin |
+| 113 | [Source Company Plugin: Fastly](../.specify/specs/113-source-company-fastly/spec.md) — [plan](../.specify/specs/113-source-company-fastly/plan.md) — [tasks](../.specify/specs/113-source-company-fastly/tasks.md) | All phases done (T01..T05 run #323); spec complete — one structural deviation (D-04 variant 30 HTTPS `/about/jobs/apply` — first cohort observation); 60-plugin D-09-omission threshold |
 
 ## 8. Templates
 
