@@ -146,6 +146,7 @@ import { NetflixModule } from './source-company-netflix';
 import { NetlifyModule } from './source-company-netlify';
 import { NewRelicModule } from './source-company-newrelic';
 import { NvidiaModule } from './source-company-nvidia';
+import { OktaModule } from './source-company-okta';
 import { OpenAIModule } from './source-company-openai';
 import { PelotonModule } from './source-company-peloton';
 import { PinterestModule } from './source-company-pinterest';
@@ -408,6 +409,7 @@ export const ALL_SOURCE_MODULES = [
   NetlifyModule,
   NewRelicModule,
   NvidiaModule,
+  OktaModule,
   OpenAIModule,
   PelotonModule,
   PinterestModule,
