@@ -120,6 +120,7 @@
       "@ever-jobs/source-company-justworks": ["packages/plugins/source-company-justworks/src/index.ts"],
       "@ever-jobs/source-company-melio": ["packages/plugins/source-company-melio/src/index.ts"],
       "@ever-jobs/source-company-modernhealth": ["packages/plugins/source-company-modernhealth/src/index.ts"],
+      "@ever-jobs/source-company-opendoor": ["packages/plugins/source-company-opendoor/src/index.ts"],
       "@ever-jobs/source-company-robinhood": ["packages/plugins/source-company-robinhood/src/index.ts"],
       "@ever-jobs/source-company-reddit": ["packages/plugins/source-company-reddit/src/index.ts"],
       "@ever-jobs/source-company-pinterest": ["packages/plugins/source-company-pinterest/src/index.ts"],

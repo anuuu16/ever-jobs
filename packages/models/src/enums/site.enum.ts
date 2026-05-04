@@ -416,6 +416,8 @@ export enum Site {
   MELIO = 'melio',
   // Phase 141: Spec 131 — Source Company Plugin: Modern Health
   MODERNHEALTH = 'modernhealth',
+  // Phase 142: Spec 132 — Source Company Plugin: Opendoor
+  OPENDOOR = 'opendoor',
 }
 
 /**
