@@ -159,6 +159,7 @@
       "@ever-jobs/source-company-datadog": ["packages/plugins/source-company-datadog/src/index.ts"],
       "@ever-jobs/source-company-deepmind": ["packages/plugins/source-company-deepmind/src/index.ts"],
       "@ever-jobs/source-company-indigo": ["packages/plugins/source-company-indigo/src/index.ts"],
+      "@ever-jobs/source-company-instabase": ["packages/plugins/source-company-instabase/src/index.ts"],
       "@ever-jobs/source-company-instacart": ["packages/plugins/source-company-instacart/src/index.ts"],
       "@ever-jobs/source-company-dropbox": ["packages/plugins/source-company-dropbox/src/index.ts"],
       "@ever-jobs/source-company-roblox": ["packages/plugins/source-company-roblox/src/index.ts"],

@@ -468,6 +468,8 @@ export enum Site {
   DEEPMIND = 'deepmind',
   // Phase 167: Spec 157 — Source Company Plugin: Indigo
   INDIGO = 'indigo',
+  // Phase 168: Spec 158 — Source Company Plugin: Instabase
+  INSTABASE = 'instabase',
 }
 
 /**

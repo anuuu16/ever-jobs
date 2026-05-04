@@ -156,6 +156,7 @@ import { HelloFreshModule } from './source-company-hellofresh';
 import { HoneycombModule } from './source-company-honeycomb';
 import { IbmModule } from './source-company-ibm';
 import { IndigoModule } from './source-company-indigo';
+import { InstabaseModule } from './source-company-instabase';
 import { InstacartModule } from './source-company-instacart';
 import { IntercomModule } from './source-company-intercom';
 import { JustworksModule } from './source-company-justworks';
@@ -461,6 +462,7 @@ export const ALL_SOURCE_MODULES = [
   HoneycombModule,
   IbmModule,
   IndigoModule,
+  InstabaseModule,
   InstacartModule,
   IntercomModule,
   JustworksModule,
