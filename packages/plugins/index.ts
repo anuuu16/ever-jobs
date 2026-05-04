@@ -149,6 +149,7 @@ import { NvidiaModule } from './source-company-nvidia';
 import { OktaModule } from './source-company-okta';
 import { OpenAIModule } from './source-company-openai';
 import { OtterModule } from './source-company-otter';
+import { PagerdutyModule } from './source-company-pagerduty';
 import { PelotonModule } from './source-company-peloton';
 import { PinterestModule } from './source-company-pinterest';
 import { PlaidModule } from './source-company-plaid';
@@ -413,6 +414,7 @@ export const ALL_SOURCE_MODULES = [
   OktaModule,
   OpenAIModule,
   OtterModule,
+  PagerdutyModule,
   PelotonModule,
   PinterestModule,
   PlaidModule,

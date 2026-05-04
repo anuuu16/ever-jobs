@@ -386,6 +386,8 @@ export enum Site {
   OKTA = 'okta',
   // Phase 126: Spec 116 — Source Company Plugin: Otter
   OTTER = 'otter',
+  // Phase 127: Spec 117 — Source Company Plugin: PagerDuty
+  PAGERDUTY = 'pagerduty',
 }
 
 /**
