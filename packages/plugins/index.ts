@@ -159,6 +159,7 @@ import { IndigoModule } from './source-company-indigo';
 import { InstabaseModule } from './source-company-instabase';
 import { InstacartModule } from './source-company-instacart';
 import { IntercomModule } from './source-company-intercom';
+import { IterableModule } from './source-company-iterable';
 import { JustworksModule } from './source-company-justworks';
 import { KlaviyoModule } from './source-company-klaviyo';
 import { LatticeModule } from './source-company-lattice';
@@ -465,6 +466,7 @@ export const ALL_SOURCE_MODULES = [
   InstabaseModule,
   InstacartModule,
   IntercomModule,
+  IterableModule,
   JustworksModule,
   KlaviyoModule,
   LatticeModule,

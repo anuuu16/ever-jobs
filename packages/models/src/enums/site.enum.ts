@@ -470,6 +470,8 @@ export enum Site {
   INDIGO = 'indigo',
   // Phase 168: Spec 158 — Source Company Plugin: Instabase
   INSTABASE = 'instabase',
+  // Phase 169: Spec 159 — Source Company Plugin: Iterable
+  ITERABLE = 'iterable',
 }
 
 /**

@@ -146,6 +146,7 @@ module.exports = {
     '^@ever-jobs/source-company-indigo$': '<rootDir>/packages/plugins/source-company-indigo/src/index.ts',
     '^@ever-jobs/source-company-instabase$': '<rootDir>/packages/plugins/source-company-instabase/src/index.ts',
     '^@ever-jobs/source-company-instacart$': '<rootDir>/packages/plugins/source-company-instacart/src/index.ts',
+    '^@ever-jobs/source-company-iterable$': '<rootDir>/packages/plugins/source-company-iterable/src/index.ts',
     '^@ever-jobs/source-company-dropbox$': '<rootDir>/packages/plugins/source-company-dropbox/src/index.ts',
     '^@ever-jobs/source-company-roblox$': '<rootDir>/packages/plugins/source-company-roblox/src/index.ts',
     '^@ever-jobs/source-company-block$': '<rootDir>/packages/plugins/source-company-block/src/index.ts',
