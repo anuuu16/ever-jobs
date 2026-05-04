@@ -176,6 +176,7 @@ import { TypeformModule } from './source-company-typeform';
 import { UberModule } from './source-company-uber';
 import { UdemyModule } from './source-company-udemy';
 import { VercelModule } from './source-company-vercel';
+import { VonageModule } from './source-company-vonage';
 import { WebflowModule } from './source-company-webflow';
 import { XaiModule } from './source-company-xai';
 import { ZoomModule } from './source-company-zoom';
@@ -442,6 +443,7 @@ export const ALL_SOURCE_MODULES = [
   UberModule,
   UdemyModule,
   VercelModule,
+  VonageModule,
   WebflowModule,
   XaiModule,
   ZoomModule,

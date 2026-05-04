@@ -390,6 +390,8 @@ export enum Site {
   PAGERDUTY = 'pagerduty',
   // Phase 128: Spec 118 — Source Company Plugin: Pendo
   PENDO = 'pendo',
+  // Phase 129: Spec 119 — Source Company Plugin: Vonage
+  VONAGE = 'vonage',
 }
 
 /**

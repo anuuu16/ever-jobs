@@ -92,6 +92,7 @@ module.exports = {
     '^@ever-jobs/source-company-otter$': '<rootDir>/packages/plugins/source-company-otter/src/index.ts',
     '^@ever-jobs/source-company-pagerduty$': '<rootDir>/packages/plugins/source-company-pagerduty/src/index.ts',
     '^@ever-jobs/source-company-pendo$': '<rootDir>/packages/plugins/source-company-pendo/src/index.ts',
+    '^@ever-jobs/source-company-vonage$': '<rootDir>/packages/plugins/source-company-vonage/src/index.ts',
     '^@ever-jobs/source-company-robinhood$': '<rootDir>/packages/plugins/source-company-robinhood/src/index.ts',
     '^@ever-jobs/source-company-reddit$': '<rootDir>/packages/plugins/source-company-reddit/src/index.ts',
     '^@ever-jobs/source-company-pinterest$': '<rootDir>/packages/plugins/source-company-pinterest/src/index.ts',
