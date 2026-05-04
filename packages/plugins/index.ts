@@ -167,6 +167,7 @@ import { LatticeModule } from './source-company-lattice';
 import { LaunchdarklyModule } from './source-company-launchdarkly';
 import { LookoutModule } from './source-company-lookout';
 import { LyftModule } from './source-company-lyft';
+import { MarkforgedModule } from './source-company-markforged';
 import { MarqetaModule } from './source-company-marqeta';
 import { MasterclassModule } from './source-company-masterclass';
 import { MavenclinicModule } from './source-company-mavenclinic';
@@ -475,6 +476,7 @@ export const ALL_SOURCE_MODULES = [
   LaunchdarklyModule,
   LookoutModule,
   LyftModule,
+  MarkforgedModule,
   MarqetaModule,
   MasterclassModule,
   MavenclinicModule,

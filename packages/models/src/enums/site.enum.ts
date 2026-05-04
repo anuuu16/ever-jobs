@@ -474,6 +474,8 @@ export enum Site {
   ITERABLE = 'iterable',
   // Phase 170: Spec 160 — Source Company Plugin: Labelbox
   LABELBOX = 'labelbox',
+  // Phase 171: Spec 161 — Source Company Plugin: Markforged
+  MARKFORGED = 'markforged',
 }
 
 /**
