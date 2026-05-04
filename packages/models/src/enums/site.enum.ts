@@ -476,6 +476,8 @@ export enum Site {
   LABELBOX = 'labelbox',
   // Phase 171: Spec 161 — Source Company Plugin: Markforged
   MARKFORGED = 'markforged',
+  // Phase 172: Spec 162 — Source Company Plugin: Maven
+  MAVEN = 'maven',
 }
 
 /**

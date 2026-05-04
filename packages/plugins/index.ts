@@ -170,6 +170,7 @@ import { LyftModule } from './source-company-lyft';
 import { MarkforgedModule } from './source-company-markforged';
 import { MarqetaModule } from './source-company-marqeta';
 import { MasterclassModule } from './source-company-masterclass';
+import { MavenModule } from './source-company-maven';
 import { MavenclinicModule } from './source-company-mavenclinic';
 import { MelioModule } from './source-company-melio';
 import { MercuryModule } from './source-company-mercury';
@@ -479,6 +480,7 @@ export const ALL_SOURCE_MODULES = [
   MarkforgedModule,
   MarqetaModule,
   MasterclassModule,
+  MavenModule,
   MavenclinicModule,
   MelioModule,
   MercuryModule,
