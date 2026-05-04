@@ -113,6 +113,7 @@
       "@ever-jobs/source-company-chainguard": ["packages/plugins/source-company-chainguard/src/index.ts"],
       "@ever-jobs/source-company-checkr": ["packages/plugins/source-company-checkr/src/index.ts"],
       "@ever-jobs/source-company-contentful": ["packages/plugins/source-company-contentful/src/index.ts"],
+      "@ever-jobs/source-company-descope": ["packages/plugins/source-company-descope/src/index.ts"],
       "@ever-jobs/source-company-robinhood": ["packages/plugins/source-company-robinhood/src/index.ts"],
       "@ever-jobs/source-company-reddit": ["packages/plugins/source-company-reddit/src/index.ts"],
       "@ever-jobs/source-company-pinterest": ["packages/plugins/source-company-pinterest/src/index.ts"],

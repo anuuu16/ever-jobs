@@ -402,6 +402,8 @@ export enum Site {
   CHECKR = 'checkr',
   // Phase 134: Spec 124 — Source Company Plugin: Contentful
   CONTENTFUL = 'contentful',
+  // Phase 135: Spec 125 — Source Company Plugin: Descope
+  DESCOPE = 'descope',
 }
 
 /**

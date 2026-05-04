@@ -108,6 +108,7 @@ import { CursorModule } from './source-company-cursor';
 import { DatabricksModule } from './source-company-databricks';
 import { DatacampModule } from './source-company-datacamp';
 import { DatadogModule } from './source-company-datadog';
+import { DescopeModule } from './source-company-descope';
 import { DescriptModule } from './source-company-descript';
 import { DiscordModule } from './source-company-discord';
 import { DollarShaveClubModule } from './source-company-dollarshaveclub';
@@ -380,6 +381,7 @@ export const ALL_SOURCE_MODULES = [
   DatabricksModule,
   DatacampModule,
   DatadogModule,
+  DescopeModule,
   DescriptModule,
   DiscordModule,
   DollarShaveClubModule,
