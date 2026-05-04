@@ -436,6 +436,8 @@ export enum Site {
   CELONIS = 'celonis',
   // Phase 151: Spec 141 — Source Company Plugin: ComplyAdvantage
   COMPLYADVANTAGE = 'complyadvantage',
+  // Phase 152: Spec 142 — Source Company Plugin: Conviva
+  CONVIVA = 'conviva',
 }
 
 /**

@@ -110,6 +110,7 @@ import { CoinbaseModule } from './source-company-coinbase';
 import { ComplyAdvantageModule } from './source-company-complyadvantage';
 import { ConstantContactModule } from './source-company-constantcontact';
 import { ContentfulModule } from './source-company-contentful';
+import { ConvivaModule } from './source-company-conviva';
 import { CourseraModule } from './source-company-coursera';
 import { CursorModule } from './source-company-cursor';
 import { DatabricksModule } from './source-company-databricks';
@@ -399,6 +400,7 @@ export const ALL_SOURCE_MODULES = [
   ComplyAdvantageModule,
   ConstantContactModule,
   ContentfulModule,
+  ConvivaModule,
   CourseraModule,
   CursorModule,
   DatabricksModule,
