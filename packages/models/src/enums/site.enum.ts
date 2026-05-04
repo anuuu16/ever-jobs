@@ -418,6 +418,8 @@ export enum Site {
   MODERNHEALTH = 'modernhealth',
   // Phase 142: Spec 132 — Source Company Plugin: Opendoor
   OPENDOOR = 'opendoor',
+  // Phase 143: Spec 133 — Source Company Plugin: Oscar
+  OSCAR = 'oscar',
 }
 
 /**

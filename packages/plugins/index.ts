@@ -161,6 +161,7 @@ import { NvidiaModule } from './source-company-nvidia';
 import { OktaModule } from './source-company-okta';
 import { OpenAIModule } from './source-company-openai';
 import { OpendoorModule } from './source-company-opendoor';
+import { OscarModule } from './source-company-oscar';
 import { OtterModule } from './source-company-otter';
 import { PagerdutyModule } from './source-company-pagerduty';
 import { PelotonModule } from './source-company-peloton';
@@ -441,6 +442,7 @@ export const ALL_SOURCE_MODULES = [
   OktaModule,
   OpenAIModule,
   OpendoorModule,
+  OscarModule,
   OtterModule,
   PagerdutyModule,
   PelotonModule,

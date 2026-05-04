@@ -106,6 +106,7 @@ module.exports = {
     '^@ever-jobs/source-company-melio$': '<rootDir>/packages/plugins/source-company-melio/src/index.ts',
     '^@ever-jobs/source-company-modernhealth$': '<rootDir>/packages/plugins/source-company-modernhealth/src/index.ts',
     '^@ever-jobs/source-company-opendoor$': '<rootDir>/packages/plugins/source-company-opendoor/src/index.ts',
+    '^@ever-jobs/source-company-oscar$': '<rootDir>/packages/plugins/source-company-oscar/src/index.ts',
     '^@ever-jobs/source-company-robinhood$': '<rootDir>/packages/plugins/source-company-robinhood/src/index.ts',
     '^@ever-jobs/source-company-reddit$': '<rootDir>/packages/plugins/source-company-reddit/src/index.ts',
     '^@ever-jobs/source-company-pinterest$': '<rootDir>/packages/plugins/source-company-pinterest/src/index.ts',
