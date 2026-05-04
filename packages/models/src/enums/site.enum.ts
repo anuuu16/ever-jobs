@@ -484,6 +484,8 @@ export enum Site {
   POSTSCRIPT = 'postscript',
   // Phase 175: Spec 165 — Source Company Plugin: Cresta
   CRESTA = 'cresta',
+  // Phase 176: Spec 166 — Source Company Plugin: Quanata
+  QUANATA = 'quanata',
 }
 
 /**
