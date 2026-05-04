@@ -199,6 +199,7 @@ import { PinterestModule } from './source-company-pinterest';
 import { PlaidModule } from './source-company-plaid';
 import { PlanetScaleModule } from './source-company-planetscale';
 import { PostmanModule } from './source-company-postman';
+import { PostscriptModule } from './source-company-postscript';
 import { RampNetworkModule } from './source-company-rampnetwork';
 import { RedditModule } from './source-company-reddit';
 import { RobinhoodModule } from './source-company-robinhood';
@@ -510,6 +511,7 @@ export const ALL_SOURCE_MODULES = [
   PlaidModule,
   PlanetScaleModule,
   PostmanModule,
+  PostscriptModule,
   RampNetworkModule,
   RedditModule,
   RobinhoodModule,

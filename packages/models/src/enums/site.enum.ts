@@ -480,6 +480,8 @@ export enum Site {
   MAVEN = 'maven',
   // Phase 173: Spec 163 — Source Company Plugin: Netskope
   NETSKOPE = 'netskope',
+  // Phase 174: Spec 164 — Source Company Plugin: Postscript
+  POSTSCRIPT = 'postscript',
 }
 
 /**
