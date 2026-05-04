@@ -458,6 +458,8 @@ export enum Site {
   GOFUNDME = 'gofundme',
   // Phase 162: Spec 152 — Source Company Plugin: Alma
   ALMA = 'alma',
+  // Phase 163: Spec 153 — Source Company Plugin: Bird
+  BIRD = 'bird',
 }
 
 /**

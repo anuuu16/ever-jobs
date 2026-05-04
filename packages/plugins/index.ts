@@ -85,6 +85,7 @@ import { BenevityModule } from './source-company-benevity';
 import { BettermentModule } from './source-company-betterment';
 import { BigIdModule } from './source-company-bigid';
 import { BillcomModule } from './source-company-billcom';
+import { BirdModule } from './source-company-bird';
 import { BitwardenModule } from './source-company-bitwarden';
 import { BlendModule } from './source-company-blend';
 import { BloomreachModule } from './source-company-bloomreach';
@@ -385,6 +386,7 @@ export const ALL_SOURCE_MODULES = [
   BettermentModule,
   BigIdModule,
   BillcomModule,
+  BirdModule,
   BitwardenModule,
   BlendModule,
   BloomreachModule,
