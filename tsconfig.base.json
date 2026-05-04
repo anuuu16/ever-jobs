@@ -104,6 +104,7 @@
       "@ever-jobs/source-company-fastly": ["packages/plugins/source-company-fastly/src/index.ts"],
       "@ever-jobs/source-company-launchdarkly": ["packages/plugins/source-company-launchdarkly/src/index.ts"],
       "@ever-jobs/source-company-okta": ["packages/plugins/source-company-okta/src/index.ts"],
+      "@ever-jobs/source-company-otter": ["packages/plugins/source-company-otter/src/index.ts"],
       "@ever-jobs/source-company-robinhood": ["packages/plugins/source-company-robinhood/src/index.ts"],
       "@ever-jobs/source-company-reddit": ["packages/plugins/source-company-reddit/src/index.ts"],
       "@ever-jobs/source-company-pinterest": ["packages/plugins/source-company-pinterest/src/index.ts"],

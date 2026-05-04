@@ -384,6 +384,8 @@ export enum Site {
   LAUNCHDARKLY = 'launchdarkly',
   // Phase 125: Spec 115 — Source Company Plugin: Okta
   OKTA = 'okta',
+  // Phase 126: Spec 116 — Source Company Plugin: Otter
+  OTTER = 'otter',
 }
 
 /**

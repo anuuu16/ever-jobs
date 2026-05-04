@@ -89,6 +89,7 @@ module.exports = {
     '^@ever-jobs/source-company-fastly$': '<rootDir>/packages/plugins/source-company-fastly/src/index.ts',
     '^@ever-jobs/source-company-launchdarkly$': '<rootDir>/packages/plugins/source-company-launchdarkly/src/index.ts',
     '^@ever-jobs/source-company-okta$': '<rootDir>/packages/plugins/source-company-okta/src/index.ts',
+    '^@ever-jobs/source-company-otter$': '<rootDir>/packages/plugins/source-company-otter/src/index.ts',
     '^@ever-jobs/source-company-robinhood$': '<rootDir>/packages/plugins/source-company-robinhood/src/index.ts',
     '^@ever-jobs/source-company-reddit$': '<rootDir>/packages/plugins/source-company-reddit/src/index.ts',
     '^@ever-jobs/source-company-pinterest$': '<rootDir>/packages/plugins/source-company-pinterest/src/index.ts',
