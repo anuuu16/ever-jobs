@@ -92,6 +92,7 @@
       "@ever-jobs/source-company-databricks": ["packages/plugins/source-company-databricks/src/index.ts"],
       "@ever-jobs/source-company-discord": ["packages/plugins/source-company-discord/src/index.ts"],
       "@ever-jobs/source-company-coinbase": ["packages/plugins/source-company-coinbase/src/index.ts"],
+      "@ever-jobs/source-company-collectivehealth": ["packages/plugins/source-company-collectivehealth/src/index.ts"],
       "@ever-jobs/source-company-doordash": ["packages/plugins/source-company-doordash/src/index.ts"],
       "@ever-jobs/source-company-airbnb": ["packages/plugins/source-company-airbnb/src/index.ts"],
       "@ever-jobs/source-company-airtable": ["packages/plugins/source-company-airtable/src/index.ts"],

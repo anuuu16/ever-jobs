@@ -110,6 +110,7 @@ import { ClasspassModule } from './source-company-classpass';
 import { CloudflareModule } from './source-company-cloudflare';
 import { CoalitionModule } from './source-company-coalition';
 import { CoinbaseModule } from './source-company-coinbase';
+import { CollectiveHealthModule } from './source-company-collectivehealth';
 import { ComplyAdvantageModule } from './source-company-complyadvantage';
 import { ConstantContactModule } from './source-company-constantcontact';
 import { ContentfulModule } from './source-company-contentful';
@@ -412,6 +413,7 @@ export const ALL_SOURCE_MODULES = [
   CloudflareModule,
   CoalitionModule,
   CoinbaseModule,
+  CollectiveHealthModule,
   ComplyAdvantageModule,
   ConstantContactModule,
   ContentfulModule,

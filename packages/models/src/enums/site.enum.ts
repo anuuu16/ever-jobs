@@ -462,6 +462,8 @@ export enum Site {
   BIRD = 'bird',
   // Phase 164: Spec 154 — Source Company Plugin: BitGo
   BITGO = 'bitgo',
+  // Phase 165: Spec 155 — Source Company Plugin: Collective Health
+  COLLECTIVEHEALTH = 'collectivehealth',
 }
 
 /**
