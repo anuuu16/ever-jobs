@@ -472,6 +472,8 @@ export enum Site {
   INSTABASE = 'instabase',
   // Phase 169: Spec 159 — Source Company Plugin: Iterable
   ITERABLE = 'iterable',
+  // Phase 170: Spec 160 — Source Company Plugin: Labelbox
+  LABELBOX = 'labelbox',
 }
 
 /**

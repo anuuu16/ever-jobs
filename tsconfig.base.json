@@ -162,6 +162,7 @@
       "@ever-jobs/source-company-instabase": ["packages/plugins/source-company-instabase/src/index.ts"],
       "@ever-jobs/source-company-instacart": ["packages/plugins/source-company-instacart/src/index.ts"],
       "@ever-jobs/source-company-iterable": ["packages/plugins/source-company-iterable/src/index.ts"],
+      "@ever-jobs/source-company-labelbox": ["packages/plugins/source-company-labelbox/src/index.ts"],
       "@ever-jobs/source-company-dropbox": ["packages/plugins/source-company-dropbox/src/index.ts"],
       "@ever-jobs/source-company-roblox": ["packages/plugins/source-company-roblox/src/index.ts"],
       "@ever-jobs/source-company-block": ["packages/plugins/source-company-block/src/index.ts"],

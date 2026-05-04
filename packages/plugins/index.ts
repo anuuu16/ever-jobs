@@ -162,6 +162,7 @@ import { IntercomModule } from './source-company-intercom';
 import { IterableModule } from './source-company-iterable';
 import { JustworksModule } from './source-company-justworks';
 import { KlaviyoModule } from './source-company-klaviyo';
+import { LabelboxModule } from './source-company-labelbox';
 import { LatticeModule } from './source-company-lattice';
 import { LaunchdarklyModule } from './source-company-launchdarkly';
 import { LookoutModule } from './source-company-lookout';
@@ -469,6 +470,7 @@ export const ALL_SOURCE_MODULES = [
   IterableModule,
   JustworksModule,
   KlaviyoModule,
+  LabelboxModule,
   LatticeModule,
   LaunchdarklyModule,
   LookoutModule,
