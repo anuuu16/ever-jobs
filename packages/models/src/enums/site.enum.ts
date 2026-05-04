@@ -434,6 +434,8 @@ export enum Site {
   BLOOMREACH = 'bloomreach',
   // Phase 150: Spec 140 — Source Company Plugin: Celonis
   CELONIS = 'celonis',
+  // Phase 151: Spec 141 — Source Company Plugin: ComplyAdvantage
+  COMPLYADVANTAGE = 'complyadvantage',
 }
 
 /**
