@@ -184,6 +184,7 @@ import { MonzoModule } from './source-company-monzo';
 import { N26Module } from './source-company-n26';
 import { NetflixModule } from './source-company-netflix';
 import { NetlifyModule } from './source-company-netlify';
+import { NetskopeModule } from './source-company-netskope';
 import { NewRelicModule } from './source-company-newrelic';
 import { NvidiaModule } from './source-company-nvidia';
 import { OktaModule } from './source-company-okta';
@@ -494,6 +495,7 @@ export const ALL_SOURCE_MODULES = [
   N26Module,
   NetflixModule,
   NetlifyModule,
+  NetskopeModule,
   NewRelicModule,
   NvidiaModule,
   OktaModule,

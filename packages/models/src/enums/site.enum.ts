@@ -478,6 +478,8 @@ export enum Site {
   MARKFORGED = 'markforged',
   // Phase 172: Spec 162 — Source Company Plugin: Maven
   MAVEN = 'maven',
+  // Phase 173: Spec 163 — Source Company Plugin: Netskope
+  NETSKOPE = 'netskope',
 }
 
 /**
