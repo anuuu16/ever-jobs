@@ -408,6 +408,8 @@ export enum Site {
   DIALPAD = 'dialpad',
   // Phase 137: Spec 127 — Source Company Plugin: Doximity
   DOXIMITY = 'doximity',
+  // Phase 138: Spec 128 — Source Company Plugin: Dremio
+  DREMIO = 'dremio',
 }
 
 /**
