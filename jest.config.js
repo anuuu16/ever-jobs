@@ -97,6 +97,7 @@ module.exports = {
     '^@ever-jobs/source-company-branch$': '<rootDir>/packages/plugins/source-company-branch/src/index.ts',
     '^@ever-jobs/source-company-chainguard$': '<rootDir>/packages/plugins/source-company-chainguard/src/index.ts',
     '^@ever-jobs/source-company-checkr$': '<rootDir>/packages/plugins/source-company-checkr/src/index.ts',
+    '^@ever-jobs/source-company-contentful$': '<rootDir>/packages/plugins/source-company-contentful/src/index.ts',
     '^@ever-jobs/source-company-robinhood$': '<rootDir>/packages/plugins/source-company-robinhood/src/index.ts',
     '^@ever-jobs/source-company-reddit$': '<rootDir>/packages/plugins/source-company-reddit/src/index.ts',
     '^@ever-jobs/source-company-pinterest$': '<rootDir>/packages/plugins/source-company-pinterest/src/index.ts',

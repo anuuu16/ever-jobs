@@ -400,6 +400,8 @@ export enum Site {
   CHAINGUARD = 'chainguard',
   // Phase 133: Spec 123 — Source Company Plugin: Checkr
   CHECKR = 'checkr',
+  // Phase 134: Spec 124 — Source Company Plugin: Contentful
+  CONTENTFUL = 'contentful',
 }
 
 /**

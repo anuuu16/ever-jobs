@@ -102,6 +102,7 @@ import { CloudflareModule } from './source-company-cloudflare';
 import { CoalitionModule } from './source-company-coalition';
 import { CoinbaseModule } from './source-company-coinbase';
 import { ConstantContactModule } from './source-company-constantcontact';
+import { ContentfulModule } from './source-company-contentful';
 import { CourseraModule } from './source-company-coursera';
 import { CursorModule } from './source-company-cursor';
 import { DatabricksModule } from './source-company-databricks';
@@ -373,6 +374,7 @@ export const ALL_SOURCE_MODULES = [
   CoalitionModule,
   CoinbaseModule,
   ConstantContactModule,
+  ContentfulModule,
   CourseraModule,
   CursorModule,
   DatabricksModule,
