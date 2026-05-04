@@ -144,6 +144,7 @@ import { FubotvModule } from './source-company-fubotv';
 import { GitlabModule } from './source-company-gitlab';
 import { GlossierModule } from './source-company-glossier';
 import { GocardlessModule } from './source-company-gocardless';
+import { GofundmeModule } from './source-company-gofundme';
 import { GoogleCareersModule } from './source-company-google';
 import { GustoModule } from './source-company-gusto';
 import { HelloFreshModule } from './source-company-hellofresh';
@@ -442,6 +443,7 @@ export const ALL_SOURCE_MODULES = [
   GitlabModule,
   GlossierModule,
   GocardlessModule,
+  GofundmeModule,
   GoogleCareersModule,
   GustoModule,
   HelloFreshModule,

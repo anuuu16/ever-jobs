@@ -124,6 +124,7 @@ module.exports = {
     '^@ever-jobs/source-company-founders$': '<rootDir>/packages/plugins/source-company-founders/src/index.ts',
     '^@ever-jobs/source-company-fox$': '<rootDir>/packages/plugins/source-company-fox/src/index.ts',
     '^@ever-jobs/source-company-gocardless$': '<rootDir>/packages/plugins/source-company-gocardless/src/index.ts',
+    '^@ever-jobs/source-company-gofundme$': '<rootDir>/packages/plugins/source-company-gofundme/src/index.ts',
     '^@ever-jobs/source-company-robinhood$': '<rootDir>/packages/plugins/source-company-robinhood/src/index.ts',
     '^@ever-jobs/source-company-reddit$': '<rootDir>/packages/plugins/source-company-reddit/src/index.ts',
     '^@ever-jobs/source-company-pinterest$': '<rootDir>/packages/plugins/source-company-pinterest/src/index.ts',
