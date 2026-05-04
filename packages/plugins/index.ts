@@ -135,6 +135,7 @@ import { HoneycombModule } from './source-company-honeycomb';
 import { IbmModule } from './source-company-ibm';
 import { InstacartModule } from './source-company-instacart';
 import { IntercomModule } from './source-company-intercom';
+import { JustworksModule } from './source-company-justworks';
 import { KlaviyoModule } from './source-company-klaviyo';
 import { LatticeModule } from './source-company-lattice';
 import { LaunchdarklyModule } from './source-company-launchdarkly';
@@ -411,6 +412,7 @@ export const ALL_SOURCE_MODULES = [
   IbmModule,
   InstacartModule,
   IntercomModule,
+  JustworksModule,
   KlaviyoModule,
   LatticeModule,
   LaunchdarklyModule,

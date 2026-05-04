@@ -410,6 +410,8 @@ export enum Site {
   DOXIMITY = 'doximity',
   // Phase 138: Spec 128 — Source Company Plugin: Dremio
   DREMIO = 'dremio',
+  // Phase 139: Spec 129 — Source Company Plugin: Justworks
+  JUSTWORKS = 'justworks',
 }
 
 /**

@@ -102,6 +102,7 @@ module.exports = {
     '^@ever-jobs/source-company-dialpad$': '<rootDir>/packages/plugins/source-company-dialpad/src/index.ts',
     '^@ever-jobs/source-company-doximity$': '<rootDir>/packages/plugins/source-company-doximity/src/index.ts',
     '^@ever-jobs/source-company-dremio$': '<rootDir>/packages/plugins/source-company-dremio/src/index.ts',
+    '^@ever-jobs/source-company-justworks$': '<rootDir>/packages/plugins/source-company-justworks/src/index.ts',
     '^@ever-jobs/source-company-robinhood$': '<rootDir>/packages/plugins/source-company-robinhood/src/index.ts',
     '^@ever-jobs/source-company-reddit$': '<rootDir>/packages/plugins/source-company-reddit/src/index.ts',
     '^@ever-jobs/source-company-pinterest$': '<rootDir>/packages/plugins/source-company-pinterest/src/index.ts',
