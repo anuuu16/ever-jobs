@@ -456,6 +456,8 @@ export enum Site {
   GOCARDLESS = 'gocardless',
   // Phase 161: Spec 151 — Source Company Plugin: GoFundMe
   GOFUNDME = 'gofundme',
+  // Phase 162: Spec 152 — Source Company Plugin: Alma
+  ALMA = 'alma',
 }
 
 /**

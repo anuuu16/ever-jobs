@@ -80,6 +80,7 @@ module.exports = {
     '^@ever-jobs/source-company-doordash$': '<rootDir>/packages/plugins/source-company-doordash/src/index.ts',
     '^@ever-jobs/source-company-airbnb$': '<rootDir>/packages/plugins/source-company-airbnb/src/index.ts',
     '^@ever-jobs/source-company-airtable$': '<rootDir>/packages/plugins/source-company-airtable/src/index.ts',
+    '^@ever-jobs/source-company-alma$': '<rootDir>/packages/plugins/source-company-alma/src/index.ts',
     '^@ever-jobs/source-company-amplitude$': '<rootDir>/packages/plugins/source-company-amplitude/src/index.ts',
     '^@ever-jobs/source-company-assemblyai$': '<rootDir>/packages/plugins/source-company-assemblyai/src/index.ts',
     '^@ever-jobs/source-company-bandwidth$': '<rootDir>/packages/plugins/source-company-bandwidth/src/index.ts',

@@ -70,6 +70,7 @@ import { AdyenModule } from './source-company-adyen';
 import { AffirmModule } from './source-company-affirm';
 import { AirbnbModule } from './source-company-airbnb';
 import { AirtableModule } from './source-company-airtable';
+import { AlmaModule } from './source-company-alma';
 import { AmazonModule } from './source-company-amazon';
 import { AmplitudeModule } from './source-company-amplitude';
 import { AnthropicModule } from './source-company-anthropic';
@@ -369,6 +370,7 @@ export const ALL_SOURCE_MODULES = [
   AffirmModule,
   AirbnbModule,
   AirtableModule,
+  AlmaModule,
   AmazonModule,
   AmplitudeModule,
   AnthropicModule,
