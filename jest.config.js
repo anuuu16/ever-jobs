@@ -122,6 +122,7 @@ module.exports = {
     '^@ever-jobs/source-company-fairmarkit$': '<rootDir>/packages/plugins/source-company-fairmarkit/src/index.ts',
     '^@ever-jobs/source-company-formlabs$': '<rootDir>/packages/plugins/source-company-formlabs/src/index.ts',
     '^@ever-jobs/source-company-founders$': '<rootDir>/packages/plugins/source-company-founders/src/index.ts',
+    '^@ever-jobs/source-company-fox$': '<rootDir>/packages/plugins/source-company-fox/src/index.ts',
     '^@ever-jobs/source-company-robinhood$': '<rootDir>/packages/plugins/source-company-robinhood/src/index.ts',
     '^@ever-jobs/source-company-reddit$': '<rootDir>/packages/plugins/source-company-reddit/src/index.ts',
     '^@ever-jobs/source-company-pinterest$': '<rootDir>/packages/plugins/source-company-pinterest/src/index.ts',

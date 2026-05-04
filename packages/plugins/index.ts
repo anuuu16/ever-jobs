@@ -139,6 +139,7 @@ import { FivetranModule } from './source-company-fivetran';
 import { FlexportModule } from './source-company-flexport';
 import { FormlabsModule } from './source-company-formlabs';
 import { FoundersModule } from './source-company-founders';
+import { FoxModule } from './source-company-fox';
 import { FubotvModule } from './source-company-fubotv';
 import { GitlabModule } from './source-company-gitlab';
 import { GlossierModule } from './source-company-glossier';
@@ -435,6 +436,7 @@ export const ALL_SOURCE_MODULES = [
   FlexportModule,
   FormlabsModule,
   FoundersModule,
+  FoxModule,
   FubotvModule,
   GitlabModule,
   GlossierModule,

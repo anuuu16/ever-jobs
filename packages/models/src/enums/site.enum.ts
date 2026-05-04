@@ -450,6 +450,8 @@ export enum Site {
   FORMLABS = 'formlabs',
   // Phase 158: Spec 148 — Source Company Plugin: Founders
   FOUNDERS = 'founders',
+  // Phase 159: Spec 149 — Source Company Plugin: Fox
+  FOX = 'fox',
 }
 
 /**
