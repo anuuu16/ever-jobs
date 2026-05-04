@@ -128,6 +128,7 @@
       "@ever-jobs/source-company-beam": ["packages/plugins/source-company-beam/src/index.ts"],
       "@ever-jobs/source-company-bigid": ["packages/plugins/source-company-bigid/src/index.ts"],
       "@ever-jobs/source-company-bird": ["packages/plugins/source-company-bird/src/index.ts"],
+      "@ever-jobs/source-company-bitgo": ["packages/plugins/source-company-bitgo/src/index.ts"],
       "@ever-jobs/source-company-blend": ["packages/plugins/source-company-blend/src/index.ts"],
       "@ever-jobs/source-company-bloomreach": ["packages/plugins/source-company-bloomreach/src/index.ts"],
       "@ever-jobs/source-company-celonis": ["packages/plugins/source-company-celonis/src/index.ts"],
