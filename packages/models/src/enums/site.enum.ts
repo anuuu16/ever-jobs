@@ -428,6 +428,8 @@ export enum Site {
   BEAM = 'beam',
   // Phase 147: Spec 137 — Source Company Plugin: BigID
   BIGID = 'bigid',
+  // Phase 148: Spec 138 — Source Company Plugin: Blend
+  BLEND = 'blend',
 }
 
 /**

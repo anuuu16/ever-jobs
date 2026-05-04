@@ -126,6 +126,7 @@
       "@ever-jobs/source-company-axon": ["packages/plugins/source-company-axon/src/index.ts"],
       "@ever-jobs/source-company-beam": ["packages/plugins/source-company-beam/src/index.ts"],
       "@ever-jobs/source-company-bigid": ["packages/plugins/source-company-bigid/src/index.ts"],
+      "@ever-jobs/source-company-blend": ["packages/plugins/source-company-blend/src/index.ts"],
       "@ever-jobs/source-company-robinhood": ["packages/plugins/source-company-robinhood/src/index.ts"],
       "@ever-jobs/source-company-reddit": ["packages/plugins/source-company-reddit/src/index.ts"],
       "@ever-jobs/source-company-pinterest": ["packages/plugins/source-company-pinterest/src/index.ts"],
