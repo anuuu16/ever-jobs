@@ -151,6 +151,7 @@ import { OpenAIModule } from './source-company-openai';
 import { OtterModule } from './source-company-otter';
 import { PagerdutyModule } from './source-company-pagerduty';
 import { PelotonModule } from './source-company-peloton';
+import { PendoModule } from './source-company-pendo';
 import { PinterestModule } from './source-company-pinterest';
 import { PlaidModule } from './source-company-plaid';
 import { PlanetScaleModule } from './source-company-planetscale';
@@ -416,6 +417,7 @@ export const ALL_SOURCE_MODULES = [
   OtterModule,
   PagerdutyModule,
   PelotonModule,
+  PendoModule,
   PinterestModule,
   PlaidModule,
   PlanetScaleModule,

@@ -388,6 +388,8 @@ export enum Site {
   OTTER = 'otter',
   // Phase 127: Spec 117 — Source Company Plugin: PagerDuty
   PAGERDUTY = 'pagerduty',
+  // Phase 128: Spec 118 — Source Company Plugin: Pendo
+  PENDO = 'pendo',
 }
 
 /**
