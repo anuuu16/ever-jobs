@@ -178,6 +178,7 @@ import { ScaleaiModule } from './source-company-scaleai';
 import { ScopelyModule } from './source-company-scopely';
 import { SoFiModule } from './source-company-sofi';
 import { SquarespaceModule } from './source-company-squarespace';
+import { StarburstModule } from './source-company-starburst';
 import { StitchfixModule } from './source-company-stitchfix';
 import { StockXModule } from './source-company-stockx';
 import { StripeModule } from './source-company-stripe';
@@ -459,6 +460,7 @@ export const ALL_SOURCE_MODULES = [
   ScopelyModule,
   SoFiModule,
   SquarespaceModule,
+  StarburstModule,
   StitchfixModule,
   StockXModule,
   StripeModule,
