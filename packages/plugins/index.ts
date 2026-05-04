@@ -144,6 +144,7 @@ import { LyftModule } from './source-company-lyft';
 import { MarqetaModule } from './source-company-marqeta';
 import { MasterclassModule } from './source-company-masterclass';
 import { MavenclinicModule } from './source-company-mavenclinic';
+import { MelioModule } from './source-company-melio';
 import { MercuryModule } from './source-company-mercury';
 import { MetaModule } from './source-company-meta';
 import { MicrosoftModule } from './source-company-microsoft';
@@ -421,6 +422,7 @@ export const ALL_SOURCE_MODULES = [
   MarqetaModule,
   MasterclassModule,
   MavenclinicModule,
+  MelioModule,
   MercuryModule,
   MetaModule,
   MicrosoftModule,

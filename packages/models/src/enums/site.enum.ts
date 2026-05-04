@@ -412,6 +412,8 @@ export enum Site {
   DREMIO = 'dremio',
   // Phase 139: Spec 129 — Source Company Plugin: Justworks
   JUSTWORKS = 'justworks',
+  // Phase 140: Spec 130 — Source Company Plugin: Melio
+  MELIO = 'melio',
 }
 
 /**
