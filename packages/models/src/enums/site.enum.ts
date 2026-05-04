@@ -392,6 +392,8 @@ export enum Site {
   PENDO = 'pendo',
   // Phase 129: Spec 119 — Source Company Plugin: Vonage
   VONAGE = 'vonage',
+  // Phase 130: Spec 120 — Source Company Plugin: Betterment
+  BETTERMENT = 'betterment',
 }
 
 /**
