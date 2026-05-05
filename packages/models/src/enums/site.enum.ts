@@ -490,6 +490,8 @@ export enum Site {
   RECHARGE = 'recharge',
   // Phase 178: Spec 168 — Source Company Plugin: Samsara
   SAMSARA = 'samsara',
+  // Phase 179: Spec 169 — Source Company Plugin: Sezzle
+  SEZZLE = 'sezzle',
 }
 
 /**

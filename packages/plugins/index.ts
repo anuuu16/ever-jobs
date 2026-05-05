@@ -210,6 +210,7 @@ import { RobloxModule } from './source-company-roblox';
 import { SamsaraModule } from './source-company-samsara';
 import { ScaleaiModule } from './source-company-scaleai';
 import { ScopelyModule } from './source-company-scopely';
+import { SezzleModule } from './source-company-sezzle';
 import { SoFiModule } from './source-company-sofi';
 import { SquarespaceModule } from './source-company-squarespace';
 import { StarburstModule } from './source-company-starburst';
@@ -526,6 +527,7 @@ export const ALL_SOURCE_MODULES = [
   SamsaraModule,
   ScaleaiModule,
   ScopelyModule,
+  SezzleModule,
   SoFiModule,
   SquarespaceModule,
   StarburstModule,
