@@ -89,6 +89,7 @@ Greenhouse slugs are the subdomain used in `boards.greenhouse.io/{slug}`.
 | Cresta | `cresta` | AI Contact Center |
 | Samsara | `samsara` | Connected Operations / IoT |
 | Sezzle | `sezzle` | BNPL Payments / Fintech |
+| Shopmonkey | `shopmonkey` | Vertical-SaaS Auto-Repair-Shop POS |
 
 ---
 

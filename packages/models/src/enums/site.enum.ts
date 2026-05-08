@@ -492,6 +492,8 @@ export enum Site {
   SAMSARA = 'samsara',
   // Phase 179: Spec 169 — Source Company Plugin: Sezzle
   SEZZLE = 'sezzle',
+  // Phase 180: Spec 170 — Source Company Plugin: Shopmonkey
+  SHOPMONKEY = 'shopmonkey',
 }
 
 /**
