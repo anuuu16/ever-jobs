@@ -15,6 +15,74 @@
 
 ---
 
+## 2026-05-09 — Scheduled run #382 (Spec 172 closed end-to-end; new `source-company-symphony` plugin shipped — 8 unit tests green; 4-suite cross-regression (Shopmonkey + SimpliSafe + Symphony + Descope) 32/32 still green in 11.172 s; **twentieth plugin in the tenth fresh probe sweep**. Authored Spec 172 (spec.md / plan.md / tasks.md), added `Site.SYMPHONY = 'symphony'` enum under `// Phase 182`, scaffolded the package modeled on the `source-company-descope` template for the trim-axis profile (D-10 omitted + D-11 applied) and the `source-company-samsara` pattern for the vanity-domain wire URL pass-through with **two structural deviations** (D-04 sub-axis variant 2 → NEW variant 45 first cohort observation: HTTPS + bare brand-domain `.com` (no `www.`) + 2-segment `/company/apply` apply-page path + query-only `?gh_jid=<id>` form; D-09 sub-axis case-symmetric bare brand → fifth-cohort slug-truncation multi-token corp-suffix descriptive entity wire form), wired `SymphonyModule` between `SweetgreenModule` and `TikTokModule` (alphabetical block — `'symphony'` sorts between `'sweetgreen'` and `'tiktok'`), authored 8-case test spec with **NEW variant-45 vanity-domain URL byte-for-byte lock** (`https://symphony.com/company/apply?gh_jid=<id>`) + variant-2 fallback test (when wire absent) + **D-09 fifth-cohort slug-truncation multi-token corp-suffix wire pin** (`'Symphony Communication Services'` 31 bytes; slug `symphony` 8 bytes — first wire token only) + **D-10 OMITTED title byte-for-byte pass-through lock** (no `.trim()` operation) + **D-11 trailing-pad dept-trim lock** (`'Customer Experience '` → `'Customer Experience'`), ran tests + cross-regression, updated docs. The run-382 probe sampled **16 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/symphony/jobs?content=true` (closely matched the tenth-sweep estimate of ~18 — 2-key under-count, 0.89× ratio). This is the **161st Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 45** — the **forty-eighth distinct wire-shape variant** in the company-direct cohort (after Samsara variant 44 at Spec 168). **Variant 45 is structurally distinct from all four `/company/`-path-prefix prior variants**: distinct from variant 13 (ComplyAdvantage) by absence of path-id leaf and absence of duplicating query-id; distinct from variant 32 (Betterment) by absence of `www.` prefix and absence of duplicating query-id; distinct from variant 43 (Netskope) by absence of `www.` prefix and the apply-page path leaf; distinct from variant 44 (Samsara) by absence of `www.` prefix and absence of path-id leaf. The **one-hundred-and-twenty-eighth** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted with FIFTH-COHORT slug-truncation multi-token corp-suffix descriptive entity wire form** — wire `company_name === 'Symphony Communication Services'` byte-for-byte (31 bytes — three-token corp-suffix descriptive entity name with two internal ASCII whitespace bytes); slug `symphony` is 8 bytes lowercase — matches the first wire token only; **drops 2 trailing tokens** (`Communication Services`). **Fifth cohort observation of slug-truncation D-09 sub-axis** after Oscar (Spec 133 — slug-extra-word, 1 token added), BEAM (Spec 136 — slug-acronym-expansion), Founders (Spec 148 — 4 tokens dropped), and Fox (Spec 149 — 5 tokens dropped). **Symphony drops 2 trailing tokens — the shortest non-zero token-truncation factor in the cohort to date.** **One-hundred-and-nineteenth cohort plugin to omit D-09**. **D-10 OMITTED** — 0 of 16 wire titles padded; the plugin emits `listing.title` byte-for-byte without a `.trim()`. **Thirty-eighth cohort plugin to omit D-10**. **D-11 APPLIED with trailing-pad form** — 1 of 6 unique wire department names padded (`'Customer Experience '`); the plugin applies `.trim()` to the wire `departments[0].name` byte-for-byte before downstream emit. **Twentieth cohort plugin to apply D-11** — the cohort crosses the 20-plugin D-11-application threshold at this run. The remaining 5 unique department names are clean (`'Business Operations'`, `'Engineering'`, `'Human Resources'`, `'Product Management'`, `'Sales and Account Management'`). **Two structural deviations** from Descope (Spec 125) — D-04 sub-axis (variant 2 → NEW variant 45) AND D-09 sub-axis (case-symmetric bare brand → fifth-cohort slug-truncation multi-token corp-suffix descriptive entity wire form). The trim semantics remain unchanged at the `.trim()` boundary. Selected from the **tenth-fresh-sweep live-board pool** as the **alphabetically-twentieth live-board hit** after Alma, Bird, BitGo, Collective Health, DeepMind, Indigo, Instabase, Iterable, Labelbox, Markforged, Maven, Netskope, Postscript, Quanata, Recharge, Samsara, Sezzle, Shopmonkey, and SimpliSafe. The remaining 2 live hits queue for runs #383+ in alphabetical order (`tatari` next at run #383 with ~55 keys). **Upstream zero-churn check:** All three watched repos remain unchanged at the same SHAs as run #381 — the Ats-scrapers / JobSpy / Jobspy-api triple is on `ad5abd5 / fda080a / 26bb6f4` respectively. **Second consecutive zero-churn run** at run #382 (the new zero-churn streak that began after run #380's STREAK-BROKEN observation now stands at 2 runs).)
+
+**Scope:** Run #382 continues the tenth fresh probe sweep.
+Per Spec 171's run #381 close-out note, this run takes
+**Symphony** — the alphabetically-twentieth live hit
+from the tenth-fresh-sweep candidate pool, sampling 16
+visible roles. Run #382 marks the **first cohort observation
+of wire-shape variant 45** (HTTPS + bare brand-domain `.com`
++ 2-segment `/company/apply` apply-page path + query-only
+`?gh_jid=<id>` form — 48th distinct variant), the **fifth
+cohort observation of slug-truncation D-09 sub-axis** (with
+the shortest non-zero token-truncation factor in cohort to
+date — 2 tokens dropped), the **38th D-10 omission**, and
+the **20th D-11 application** (crossing the 20-plugin D-11-
+application threshold).
+
+**Changes:**
+
+- `.specify/specs/172-source-company-symphony/{spec,plan,tasks}.md`
+  — new spec defining axes / cohort thresholds / FRs /
+  acceptance.
+- `packages/plugins/source-company-symphony/{package.json,
+  tsconfig.json,src/{index.ts,symphony.module.ts,
+  symphony.service.ts},__tests__/{symphony.service.spec.ts,
+  fixtures/symphony-jobs.json}}` — new plugin scaffold +
+  8-case test spec + fixture.
+- `packages/models/src/enums/site.enum.ts` — append
+  `SYMPHONY = 'symphony'` under Phase 182.
+- `packages/plugins/index.ts` — import + register
+  `SymphonyModule` in `ALL_SOURCE_MODULES` (alphabetical
+  insertion between `SweetgreenModule` and `TikTokModule`).
+- `tsconfig.base.json` — path alias
+  `@ever-jobs/source-company-symphony`.
+- `jest.config.js` — matching `moduleNameMapper` entry.
+- `docs/index.md` — append row 172 to the Specs table.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — append a `shipped`
+  row for `source-company-symphony`.
+- `docs/COMPANY_SLUG_DIRECTORY.md` — append `Symphony
+  Communication Services` row to the Greenhouse table.
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- **Cohort thresholds touched at run #382:**
+  - **161st** Greenhouse-backed company-direct plugin
+    (160 → 161).
+  - **48th** distinct wire-shape variant in the company-
+    direct cohort (47 → 48; first cohort observation of
+    variant 45).
+  - **128th** D-08-application plugin (127 → 128).
+  - **5th** cohort observation of slug-truncation D-09 sub-
+    axis (4 → 5).
+  - **119th** cohort plugin to omit D-09 (118 → 119).
+  - **38th** cohort plugin to omit D-10 (37 → 38).
+  - **20th** cohort plugin to apply D-11 (19 → 20). The
+    cohort **crosses the 20-plugin D-11-application
+    threshold** at this run.
+- **Test stats:** 8/8 cases green for Symphony in 9.72 s;
+  4-suite cross-regression (Shopmonkey + SimpliSafe +
+  Symphony + Descope) 32/32 still green in 11.172 s.
+- **Upstream zero-churn check at run-382 start:** Ats-scrapers
+  remains on `ad5abd5` (last advanced at run #380). JobSpy on
+  `fda080a` and Jobspy-api on `26bb6f4`. **Second consecutive
+  zero-churn run** of the new streak that began after run
+  #380.
+
+---
+
 ## 2026-05-09 — Scheduled run #381 (Spec 171 closed end-to-end; new `source-company-simplisafe` plugin shipped — 8 unit tests green; 3-suite cross-regression (Sezzle + Shopmonkey + SimpliSafe) 24/24 still green in 9.833 s; **nineteenth plugin in the tenth fresh probe sweep**. Authored Spec 171 (spec.md / plan.md / tasks.md), added `Site.SIMPLISAFE = 'simplisafe'` enum under `// Phase 181`, scaffolded the package modeled on the `source-company-gocardless` template with **one D-09 sub-axis deviation** (GoCardless D-09 carries TWO-cap PascalCase caps-at-0/2 (`'GoCardless'` 10 bytes), whereas SimpliSafe D-09 carries TWO-cap PascalCase caps-at-0/6 (`'SimpliSafe'` 10 bytes — caps at byte indices 0 (`S` vs `s`) and 6 (`S` vs `s`)); the TWO-cap PascalCase shape is preserved, only the byte index of the second capital shifts), wired `SimplisafeModule` between `ShopmonkeyModule` and `SoFiModule` (alphabetical block — `'simplisafe'` sorts between `'shopmonkey'` and `'sofi'`), authored 8-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/simplisafe/jobs/<id>` canonical Greenhouse host) + **D-09 TWO-cap PascalCase case-asymmetric wire pin** (`'SimpliSafe'` 10 bytes; caps at 0/6 — third caps-at-0/6 sub-pattern after LaunchDarkly Spec 102 and ComplyAdvantage Spec 141) + D-10 trailing-pad title-trim lock (`'Customer Analytics Manager, Activations & Adoption '` → `'Customer Analytics Manager, Activations & Adoption'`; `'Senior Automation Engineer (Firmware) '` → `'Senior Automation Engineer (Firmware)'`) + D-11 clean dept pass-through lock, ran tests + cross-regression, updated docs. The run-381 probe sampled **42 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/simplisafe/jobs?content=true` (closely matched the tenth-sweep estimate of ~38 — 4-key inflation, 1.105× ratio). This is the **160th Greenhouse-backed company-direct plugin** in the catalogue and the **seventy-third** to use **wire-shape variant 2**; the **one-hundred-and-twenty-seventh** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted with TWO-cap PascalCase case-asymmetric wire form** — wire `company_name === 'SimpliSafe'` byte-for-byte (10 bytes; case-asymmetric vs the lowercase 10-byte slug `simplisafe` at TWO byte indices: 0 (`S` vs `s`) and 6 (`S` vs `s`)); 0 of 42 padded; **one-hundred-and-eighteenth cohort plugin to omit D-09**. **8th cohort plugin with TWO-cap PascalCase D-09 sub-axis** after SoFi (caps 0/2), StockX (caps 0/5), xAI (caps 0/2 lowercase first), LaunchDarkly (caps 0/6), PagerDuty (caps 0/5), ComplyAdvantage (caps 0/6), and GoCardless (caps 0/2). **Caps-at-0/6 matches LaunchDarkly (Spec 102) and ComplyAdvantage (Spec 141) exactly** — third cohort plugin with caps-at-0/6 sub-pattern. **D-10 APPLIED with trailing-pad form** — 6 of 42 wire titles padded with single-trailing-ASCII-space form (~14.3 % pad rate, all trailing-only — `'Customer Analytics Manager, Activations & Adoption '` (twice across two listings), `'ECommerce Growth Manager '`, `'Product Compliance Specialist '`, `'Senior Automation Engineer (Firmware) '`, `'Staff IAM Engineer '`). **Seventy-eighth cohort plugin to apply D-10**. **D-11 omitted** — 0 of 42 wire titles padded across 8 unique department names (`'Customer Experience & Monitoring'`, `'Engineering'`, `'Enterprise Info Systems'`, `'Finance'`, `'IT & InfoSec'`, `'Manufacturing Operations & Logistics'`, `'Marketing'`, `'Product'` — clean multi-token forms with internal whitespace, ampersands, and slashes); **one-hundred-and-second cohort plugin** with fully-clean department pass-through. **One structural deviation** from GoCardless (Spec 150) — D-09 sub-axis: caps-at-0/2 → caps-at-0/6 (TWO-cap PascalCase shape preserved; only the byte index of the second capital shifts). The trim semantics are unchanged. **Fiftieth near-clean re-spin** in run-history. Selected from the **tenth-fresh-sweep live-board pool** as the **alphabetically-nineteenth live-board hit** after Alma, Bird, BitGo, Collective Health, DeepMind, Indigo, Instabase, Iterable, Labelbox, Markforged, Maven, Netskope, Postscript, Quanata, Recharge, Samsara, Sezzle, and Shopmonkey. The remaining 3 live hits queue for runs #382+ in alphabetical order (`symphony` next at run #382 with ~18 keys). **Upstream zero-churn check:** All three watched repos remain unchanged at the same SHAs as run #380 — the Ats-scrapers / JobSpy / Jobspy-api triple is on `ad5abd5 / fda080a / 26bb6f4` respectively. **First consecutive zero-churn run** at run #381 (a new zero-churn streak begins after run #380's STREAK-BROKEN observation).)
 
 **Scope:** Run #381 continues the tenth fresh probe sweep.

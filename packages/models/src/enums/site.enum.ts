@@ -496,6 +496,8 @@ export enum Site {
   SHOPMONKEY = 'shopmonkey',
   // Phase 181: Spec 171 — Source Company Plugin: SimpliSafe
   SIMPLISAFE = 'simplisafe',
+  // Phase 182: Spec 172 — Source Company Plugin: Symphony
+  SYMPHONY = 'symphony',
 }
 
 /**

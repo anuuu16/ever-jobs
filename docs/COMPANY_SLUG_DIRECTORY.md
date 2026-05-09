@@ -91,6 +91,7 @@ Greenhouse slugs are the subdomain used in `boards.greenhouse.io/{slug}`.
 | Sezzle | `sezzle` | BNPL Payments / Fintech |
 | Shopmonkey | `shopmonkey` | Vertical-SaaS Auto-Repair-Shop POS |
 | SimpliSafe | `simplisafe` | DIY Wireless Home Security |
+| Symphony Communication Services | `symphony` | Institutional Encrypted Collaboration |
 
 ---
 
