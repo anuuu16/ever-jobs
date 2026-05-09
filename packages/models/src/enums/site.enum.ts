@@ -494,6 +494,8 @@ export enum Site {
   SEZZLE = 'sezzle',
   // Phase 180: Spec 170 — Source Company Plugin: Shopmonkey
   SHOPMONKEY = 'shopmonkey',
+  // Phase 181: Spec 171 — Source Company Plugin: SimpliSafe
+  SIMPLISAFE = 'simplisafe',
 }
 
 /**

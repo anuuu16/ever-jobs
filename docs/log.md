@@ -15,6 +15,73 @@
 
 ---
 
+## 2026-05-09 — Scheduled run #381 (Spec 171 closed end-to-end; new `source-company-simplisafe` plugin shipped — 8 unit tests green; 3-suite cross-regression (Sezzle + Shopmonkey + SimpliSafe) 24/24 still green in 9.833 s; **nineteenth plugin in the tenth fresh probe sweep**. Authored Spec 171 (spec.md / plan.md / tasks.md), added `Site.SIMPLISAFE = 'simplisafe'` enum under `// Phase 181`, scaffolded the package modeled on the `source-company-gocardless` template with **one D-09 sub-axis deviation** (GoCardless D-09 carries TWO-cap PascalCase caps-at-0/2 (`'GoCardless'` 10 bytes), whereas SimpliSafe D-09 carries TWO-cap PascalCase caps-at-0/6 (`'SimpliSafe'` 10 bytes — caps at byte indices 0 (`S` vs `s`) and 6 (`S` vs `s`)); the TWO-cap PascalCase shape is preserved, only the byte index of the second capital shifts), wired `SimplisafeModule` between `ShopmonkeyModule` and `SoFiModule` (alphabetical block — `'simplisafe'` sorts between `'shopmonkey'` and `'sofi'`), authored 8-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/simplisafe/jobs/<id>` canonical Greenhouse host) + **D-09 TWO-cap PascalCase case-asymmetric wire pin** (`'SimpliSafe'` 10 bytes; caps at 0/6 — third caps-at-0/6 sub-pattern after LaunchDarkly Spec 102 and ComplyAdvantage Spec 141) + D-10 trailing-pad title-trim lock (`'Customer Analytics Manager, Activations & Adoption '` → `'Customer Analytics Manager, Activations & Adoption'`; `'Senior Automation Engineer (Firmware) '` → `'Senior Automation Engineer (Firmware)'`) + D-11 clean dept pass-through lock, ran tests + cross-regression, updated docs. The run-381 probe sampled **42 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/simplisafe/jobs?content=true` (closely matched the tenth-sweep estimate of ~38 — 4-key inflation, 1.105× ratio). This is the **160th Greenhouse-backed company-direct plugin** in the catalogue and the **seventy-third** to use **wire-shape variant 2**; the **one-hundred-and-twenty-seventh** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted with TWO-cap PascalCase case-asymmetric wire form** — wire `company_name === 'SimpliSafe'` byte-for-byte (10 bytes; case-asymmetric vs the lowercase 10-byte slug `simplisafe` at TWO byte indices: 0 (`S` vs `s`) and 6 (`S` vs `s`)); 0 of 42 padded; **one-hundred-and-eighteenth cohort plugin to omit D-09**. **8th cohort plugin with TWO-cap PascalCase D-09 sub-axis** after SoFi (caps 0/2), StockX (caps 0/5), xAI (caps 0/2 lowercase first), LaunchDarkly (caps 0/6), PagerDuty (caps 0/5), ComplyAdvantage (caps 0/6), and GoCardless (caps 0/2). **Caps-at-0/6 matches LaunchDarkly (Spec 102) and ComplyAdvantage (Spec 141) exactly** — third cohort plugin with caps-at-0/6 sub-pattern. **D-10 APPLIED with trailing-pad form** — 6 of 42 wire titles padded with single-trailing-ASCII-space form (~14.3 % pad rate, all trailing-only — `'Customer Analytics Manager, Activations & Adoption '` (twice across two listings), `'ECommerce Growth Manager '`, `'Product Compliance Specialist '`, `'Senior Automation Engineer (Firmware) '`, `'Staff IAM Engineer '`). **Seventy-eighth cohort plugin to apply D-10**. **D-11 omitted** — 0 of 42 wire titles padded across 8 unique department names (`'Customer Experience & Monitoring'`, `'Engineering'`, `'Enterprise Info Systems'`, `'Finance'`, `'IT & InfoSec'`, `'Manufacturing Operations & Logistics'`, `'Marketing'`, `'Product'` — clean multi-token forms with internal whitespace, ampersands, and slashes); **one-hundred-and-second cohort plugin** with fully-clean department pass-through. **One structural deviation** from GoCardless (Spec 150) — D-09 sub-axis: caps-at-0/2 → caps-at-0/6 (TWO-cap PascalCase shape preserved; only the byte index of the second capital shifts). The trim semantics are unchanged. **Fiftieth near-clean re-spin** in run-history. Selected from the **tenth-fresh-sweep live-board pool** as the **alphabetically-nineteenth live-board hit** after Alma, Bird, BitGo, Collective Health, DeepMind, Indigo, Instabase, Iterable, Labelbox, Markforged, Maven, Netskope, Postscript, Quanata, Recharge, Samsara, Sezzle, and Shopmonkey. The remaining 3 live hits queue for runs #382+ in alphabetical order (`symphony` next at run #382 with ~18 keys). **Upstream zero-churn check:** All three watched repos remain unchanged at the same SHAs as run #380 — the Ats-scrapers / JobSpy / Jobspy-api triple is on `ad5abd5 / fda080a / 26bb6f4` respectively. **First consecutive zero-churn run** at run #381 (a new zero-churn streak begins after run #380's STREAK-BROKEN observation).)
+
+**Scope:** Run #381 continues the tenth fresh probe sweep.
+Per Spec 170's run #380 close-out note, this run takes
+**SimpliSafe** — the alphabetically-nineteenth live hit
+from the tenth-fresh-sweep candidate pool, sampling 42
+visible roles. Run #381 marks the **8th cohort plugin with
+TWO-cap PascalCase D-09 sub-axis** and the **third caps-
+at-0/6 sub-pattern** after LaunchDarkly and ComplyAdvantage,
+the **73rd variant-2 plugin**, the **78th D-10 application**,
+the **102nd cohort plugin with fully-clean department pass-
+through**, and the **fiftieth near-clean re-spin** in run
+history. Run #381 is also the **first consecutive zero-churn
+run** after the streak-broken observation in run #380.
+
+**Changes:**
+
+- `.specify/specs/171-source-company-simplisafe/{spec,plan,tasks}.md`
+  — new spec defining axes / cohort thresholds / FRs /
+  acceptance.
+- `packages/plugins/source-company-simplisafe/{package.json,
+  tsconfig.json,src/{index.ts,simplisafe.module.ts,
+  simplisafe.service.ts},__tests__/{simplisafe.service.spec.ts,
+  fixtures/simplisafe-jobs.json}}` — new plugin scaffold +
+  8-case test spec + fixture.
+- `packages/models/src/enums/site.enum.ts` — append
+  `SIMPLISAFE = 'simplisafe'` under Phase 181.
+- `packages/plugins/index.ts` — import + register
+  `SimplisafeModule` in `ALL_SOURCE_MODULES` (alphabetical
+  insertion between `ShopmonkeyModule` and `SoFiModule`).
+- `tsconfig.base.json` — path alias
+  `@ever-jobs/source-company-simplisafe`.
+- `jest.config.js` — matching `moduleNameMapper` entry.
+- `docs/index.md` — append row 171 to the Specs table.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — append a `shipped`
+  row for `source-company-simplisafe`.
+- `docs/COMPANY_SLUG_DIRECTORY.md` — append `SimpliSafe`
+  row to the Greenhouse table.
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- **Cohort thresholds touched at run #381:**
+  - **160th** Greenhouse-backed company-direct plugin
+    (159 → 160).
+  - **73rd** variant-2 plugin (72 → 73).
+  - **127th** D-08-application plugin (126 → 127).
+  - **8th** cohort plugin with TWO-cap PascalCase D-09
+    sub-axis (7 → 8).
+  - **3rd** cohort plugin with caps-at-0/6 sub-pattern
+    (2 → 3).
+  - **118th** cohort plugin to omit D-09 (117 → 118).
+  - **78th** D-10 application (77 → 78).
+  - **102nd** cohort plugin with fully-clean D-11 dept
+    pass-through (101 → 102).
+  - **50th** near-clean re-spin in run-history (49 → 50).
+- **Test stats:** 8/8 cases green for SimpliSafe in 9.913 s;
+  3-suite cross-regression (Sezzle + Shopmonkey +
+  SimpliSafe) 24/24 still green in 9.833 s.
+- **Upstream zero-churn check at run-381 start:** Ats-scrapers
+  remains on `ad5abd5` (last advanced at run #380). JobSpy on
+  `fda080a` and Jobspy-api on `26bb6f4`. **First consecutive
+  zero-churn run** after run #380 broke the prior 356-run
+  streak.
+
+---
+
 ## 2026-05-08 — Scheduled run #380 (Spec 170 closed end-to-end; new `source-company-shopmonkey` plugin shipped — 8 unit tests green; 3-suite cross-regression (Sezzle + Recharge + Shopmonkey) 24/24 still green in 13.373 s; **eighteenth plugin in the tenth fresh probe sweep**. Authored Spec 170 (spec.md / plan.md / tasks.md), added `Site.SHOPMONKEY = 'shopmonkey'` enum under `// Phase 180`, scaffolded the package modeled on the `source-company-justworks` template with **one D-10 sub-axis deviation** (Justworks D-10 was applied with first-cohort double-trailing-space pad form, 5 of 82 padded, whereas Shopmonkey D-10 is OMITTED — 0 of 9 wire titles padded, fully-clean title set; the plugin emits `listing.title` byte-for-byte without a `.trim()`), wired `ShopmonkeyModule` between `SezzleModule` and `SoFiModule` (alphabetical block — `'shopmonkey'` sorts between `'sezzle'` and `'sofi'`), authored 8-case test spec with **variant-10 URL byte-for-byte lock** (`https://boards.greenhouse.io/shopmonkey/jobs/<id>?gh_jid=<id>` legacy hosted-board apex) + case-symmetric bare-brand wire pin (`'Shopmonkey'` 10 bytes) + **D-10 OMITTED title byte-for-byte pass-through lock** (no `.trim()` operation; emitted title === wire title byte-for-byte) + D-11 clean dept pass-through lock, ran tests + cross-regression, updated docs. The run-380 probe sampled **9 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/shopmonkey/jobs?content=true` (closely matched the tenth-sweep estimate of ~12 — 3-key under-count, 0.75× ratio). This is the **159th Greenhouse-backed company-direct plugin** in the catalogue and the **eighth** to use **wire-shape variant 10** (legacy hosted-board apex `boards.greenhouse.io/<slug>/jobs/<id>?gh_jid=<id>`) after Chime, Faire, Flexport, Braze, Descript, Justworks, and Founders; the **one-hundred-and-twenty-sixth** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Shopmonkey'` byte-for-byte (10 bytes — fully clean; case-symmetric with the lowercase 10-byte slug `shopmonkey` after casefold); 0 of 9 padded; **one-hundred-and-seventeenth cohort plugin to omit D-09**. **D-10 OMITTED** — 0 of 9 wire titles padded; the plugin emits `listing.title` byte-for-byte without a `.trim()`. **Thirty-seventh cohort plugin to omit D-10**. Distinct from Justworks (D-10 applied) by sub-axis only — the wire surface here observes a fully-clean title set. **D-11 omitted** — 0 of 9 wire titles padded across 6 unique department names (`'Business Development'`, `'Engineering'`, `'General- DNU'`, `'Implementation'`, `'Product Management'`, `'Sales Development'` — clean multi-token forms with internal whitespace, internal hyphenation, and a `'General- DNU'` archive marker carried byte-for-byte); **one-hundred-and-first cohort plugin** with fully-clean department pass-through — **the cohort crosses the 101-plugin D-11-omission threshold at this run.** **One structural deviation** from Justworks (Spec 129) — D-10 sub-axis: applied with first-cohort double-trailing-space pad form → omitted (0 of 9 padded; fully-clean title set on the wire). **Forty-ninth near-clean re-spin** in run-history. Selected from the **tenth-fresh-sweep live-board pool** as the **alphabetically-eighteenth live-board hit** after Alma, Bird, BitGo, Collective Health, DeepMind, Indigo, Instabase, Iterable, Labelbox, Markforged, Maven, Netskope, Postscript, Quanata, Recharge, Samsara, and Sezzle. The remaining 4 live hits queue for runs #381+ in alphabetical order. **Upstream churn check at run-380 start: STREAK BROKEN.** The 356-run zero-churn streak (begun after run #21) ended at run #379. The `stapply-ai/ats-scrapers` upstream advanced from `3bacd6e` to `ad5abd5` — **89 new commits** between run #282 and run #380. The churn is dominated by repository restructuring (flatten library to repo root, drop legacy scrapers/helpers/viewer, slim to library-only) plus a sweep of per-ATS detail-enrichment additions (Ashby / Avature / BambooHR / BreezyHR / Cornerstone / Eightfold / Gem / Google / iCIMS / JazzHR detail enrichment; Apple / Amazon / Bundesagentur / EURES / Meta / Tesla canonicalization). The **Greenhouse: pull description from ?content=true listing endpoint** commit `a456258` aligns byte-for-byte with Ever Jobs' established `?content=true` pattern across all 159 Greenhouse-backed company-direct plugins. JobSpy at `fda080a` and Jobspy-api at `26bb6f4` remain unchanged. Logged to `competitor-watch.md`; tracked for follow-up parity on Ashby / Avature / BambooHR / BreezyHR / Cornerstone / Eightfold / Gem / iCIMS / JazzHR adaptors when those ATS families enter the cohort. The 1042 verified tenants in `OTHERS/Ats-scrapers/ats-companies/greenhouse.csv` are queued as a candidate-pool expansion source for runs #381+.)
 
 **Scope:** Run #380 continues the tenth fresh probe sweep.

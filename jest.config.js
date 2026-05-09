@@ -158,6 +158,7 @@ module.exports = {
     '^@ever-jobs/source-company-samsara$': '<rootDir>/packages/plugins/source-company-samsara/src/index.ts',
     '^@ever-jobs/source-company-sezzle$': '<rootDir>/packages/plugins/source-company-sezzle/src/index.ts',
     '^@ever-jobs/source-company-shopmonkey$': '<rootDir>/packages/plugins/source-company-shopmonkey/src/index.ts',
+    '^@ever-jobs/source-company-simplisafe$': '<rootDir>/packages/plugins/source-company-simplisafe/src/index.ts',
     '^@ever-jobs/source-company-dropbox$': '<rootDir>/packages/plugins/source-company-dropbox/src/index.ts',
     '^@ever-jobs/source-company-roblox$': '<rootDir>/packages/plugins/source-company-roblox/src/index.ts',
     '^@ever-jobs/source-company-block$': '<rootDir>/packages/plugins/source-company-block/src/index.ts',
