@@ -15,6 +15,68 @@
 
 ---
 
+## 2026-05-10 — Scheduled run #383 (Spec 173 closed end-to-end; new `source-company-tatari` plugin shipped — 8 unit tests green; 4-suite cross-regression (Tatari + Symphony + SimpliSafe + Shopmonkey) 32/32 still green in 11.342 s; **twenty-first plugin in the tenth fresh probe sweep**. Authored Spec 173 (spec.md / plan.md / tasks.md), added `Site.TATARI = 'tatari'` enum under `// Phase 183`, scaffolded the package modeled on the `source-company-simplisafe` template with **one D-09 sub-axis deviation** (SimpliSafe D-09 carries TWO-cap PascalCase caps-at-0/6 (`'SimpliSafe'` 10 bytes), whereas Tatari D-09 carries case-symmetric bare brand (`'Tatari'` 6 bytes — fully clean, case-symmetric with the lowercase 6-byte slug `tatari`)), wired `TatariModule` between `SymphonyModule` and `TikTokModule` (alphabetical block — `'tatari'` sorts between `'symphony'` and `'tiktok'`), authored 8-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/tatari/jobs/<id>` canonical Greenhouse host) + **D-09 case-symmetric bare-brand wire pin** (`'Tatari'` 6 bytes; case-symmetric with slug `tatari`) + **D-10 trailing-pad title-trim lock** (`'Data Science Analyst '` → `'Data Science Analyst'`) + **D-11 clean dept pass-through lock** (`'Data Science'`, `'Engineering'`), ran tests + cross-regression, updated docs. The run-383 probe sampled **52 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/tatari/jobs?content=true` (closely matched the tenth-sweep estimate of ~55 — 3-key under-count, 0.945× ratio). This is the **162nd Greenhouse-backed company-direct plugin** in the catalogue and the **seventy-fourth** to use **wire-shape variant 2**; the **one-hundred-and-twenty-ninth** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Tatari'` byte-for-byte (6 bytes; case-symmetric with the lowercase 6-byte slug `tatari`); 0 of 52 padded; **one-hundred-and-twentieth cohort plugin to omit D-09**. **D-10 APPLIED with trailing-pad form** — 3 of 52 wire titles padded with single-trailing-ASCII-space form (~5.8 % pad rate, all trailing-only — `'Data Science Analyst '` repeated across three listings — **same wire-title trailing-padded three times** within a single board, a rare repeated-title pad pattern). **Seventy-ninth cohort plugin to apply D-10**. **D-11 omitted** — 0 of 52 wire titles padded across 7 unique department names (`'Client Development'`, `'Client Services'`, `'Data Science'`, `'Engineering'`, `'Marketing'`, `'Media Buying'`, `'Product Management'` — clean multi-token forms with internal whitespace); **one-hundred-and-third cohort plugin** with fully-clean department pass-through. **One structural deviation** from SimpliSafe (Spec 171) — D-09 sub-axis: TWO-cap PascalCase case-asymmetric caps-at-0/6 → case-symmetric bare brand. The trim semantics are unchanged. **Fifty-first near-clean re-spin** in run-history. Selected from the **tenth-fresh-sweep live-board pool** as the **alphabetically-twenty-first live-board hit** after Alma, Bird, BitGo, Collective Health, DeepMind, Indigo, Instabase, Iterable, Labelbox, Markforged, Maven, Netskope, Postscript, Quanata, Recharge, Samsara, Sezzle, Shopmonkey, SimpliSafe, and Symphony. The remaining 1 live hit queues for run #384 in alphabetical order (`textio` next at run #384 with ~3 keys). **Upstream zero-churn check:** All three watched repos remain unchanged at the same SHAs as run #382 — the Ats-scrapers / JobSpy / Jobspy-api triple is on `ad5abd5 / fda080a / 26bb6f4` respectively. **Third consecutive zero-churn run** at run #383 (the new zero-churn streak that began after run #380's STREAK-BROKEN observation now stands at 3 runs).)
+
+**Scope:** Run #383 continues the tenth fresh probe sweep.
+Per Spec 172's run #382 close-out note, this run takes
+**Tatari** — the alphabetically-twenty-first live hit
+from the tenth-fresh-sweep candidate pool, sampling 52
+visible roles. Run #383 marks the **74th variant-2 plugin**,
+the **120th D-09 omission**, the **79th D-10 application**
+(trailing-pad form, with a rare same-title-three-times
+repeated-pad observation), the **103rd cohort plugin with
+fully-clean department pass-through**, and the **fifty-first
+near-clean re-spin** in run history. Run #383 is also the
+**third consecutive zero-churn run** of the upstream-watched
+streak that began after run #380.
+
+**Changes:**
+
+- `.specify/specs/173-source-company-tatari/{spec,plan,tasks}.md`
+  — new spec defining axes / cohort thresholds / FRs /
+  acceptance.
+- `packages/plugins/source-company-tatari/{package.json,
+  tsconfig.json,src/{index.ts,tatari.module.ts,
+  tatari.service.ts},__tests__/{tatari.service.spec.ts,
+  fixtures/tatari-jobs.json}}` — new plugin scaffold +
+  8-case test spec + fixture.
+- `packages/models/src/enums/site.enum.ts` — append
+  `TATARI = 'tatari'` under Phase 183.
+- `packages/plugins/index.ts` — import + register
+  `TatariModule` in `ALL_SOURCE_MODULES` (alphabetical
+  insertion between `SymphonyModule` and `TikTokModule`).
+- `tsconfig.base.json` — path alias
+  `@ever-jobs/source-company-tatari`.
+- `jest.config.js` — matching `moduleNameMapper` entry.
+- `docs/index.md` — append row 173 to the Specs table.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — prepend a `shipped`
+  row for `source-company-tatari` above Symphony.
+- `docs/COMPANY_SLUG_DIRECTORY.md` — append `Tatari`
+  row to the Greenhouse table.
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- **Cohort thresholds touched at run #383:**
+  - **162nd** Greenhouse-backed company-direct plugin
+    (161 → 162).
+  - **74th** variant-2 plugin in the cohort (73 → 74).
+  - **129th** D-08-application plugin (128 → 129).
+  - **120th** cohort plugin to omit D-09 (119 → 120).
+  - **79th** cohort plugin to apply D-10 (78 → 79).
+  - **103rd** cohort plugin with fully-clean department
+    pass-through (102 → 103).
+- **Test stats:** 8/8 cases green for Tatari in 10.028 s;
+  4-suite cross-regression (Tatari + Symphony + SimpliSafe +
+  Shopmonkey) 32/32 still green in 11.342 s.
+- **Upstream zero-churn check at run-383 start:** Ats-scrapers
+  remains on `ad5abd5` (last advanced at run #380). JobSpy on
+  `fda080a` and Jobspy-api on `26bb6f4`. **Third consecutive
+  zero-churn run** of the new streak that began after run
+  #380.
+
+---
+
 ## 2026-05-09 — Scheduled run #382 (Spec 172 closed end-to-end; new `source-company-symphony` plugin shipped — 8 unit tests green; 4-suite cross-regression (Shopmonkey + SimpliSafe + Symphony + Descope) 32/32 still green in 11.172 s; **twentieth plugin in the tenth fresh probe sweep**. Authored Spec 172 (spec.md / plan.md / tasks.md), added `Site.SYMPHONY = 'symphony'` enum under `// Phase 182`, scaffolded the package modeled on the `source-company-descope` template for the trim-axis profile (D-10 omitted + D-11 applied) and the `source-company-samsara` pattern for the vanity-domain wire URL pass-through with **two structural deviations** (D-04 sub-axis variant 2 → NEW variant 45 first cohort observation: HTTPS + bare brand-domain `.com` (no `www.`) + 2-segment `/company/apply` apply-page path + query-only `?gh_jid=<id>` form; D-09 sub-axis case-symmetric bare brand → fifth-cohort slug-truncation multi-token corp-suffix descriptive entity wire form), wired `SymphonyModule` between `SweetgreenModule` and `TikTokModule` (alphabetical block — `'symphony'` sorts between `'sweetgreen'` and `'tiktok'`), authored 8-case test spec with **NEW variant-45 vanity-domain URL byte-for-byte lock** (`https://symphony.com/company/apply?gh_jid=<id>`) + variant-2 fallback test (when wire absent) + **D-09 fifth-cohort slug-truncation multi-token corp-suffix wire pin** (`'Symphony Communication Services'` 31 bytes; slug `symphony` 8 bytes — first wire token only) + **D-10 OMITTED title byte-for-byte pass-through lock** (no `.trim()` operation) + **D-11 trailing-pad dept-trim lock** (`'Customer Experience '` → `'Customer Experience'`), ran tests + cross-regression, updated docs. The run-382 probe sampled **16 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/symphony/jobs?content=true` (closely matched the tenth-sweep estimate of ~18 — 2-key under-count, 0.89× ratio). This is the **161st Greenhouse-backed company-direct plugin** in the catalogue and the **first** to use **wire-shape variant 45** — the **forty-eighth distinct wire-shape variant** in the company-direct cohort (after Samsara variant 44 at Spec 168). **Variant 45 is structurally distinct from all four `/company/`-path-prefix prior variants**: distinct from variant 13 (ComplyAdvantage) by absence of path-id leaf and absence of duplicating query-id; distinct from variant 32 (Betterment) by absence of `www.` prefix and absence of duplicating query-id; distinct from variant 43 (Netskope) by absence of `www.` prefix and the apply-page path leaf; distinct from variant 44 (Samsara) by absence of `www.` prefix and absence of path-id leaf. The **one-hundred-and-twenty-eighth** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted with FIFTH-COHORT slug-truncation multi-token corp-suffix descriptive entity wire form** — wire `company_name === 'Symphony Communication Services'` byte-for-byte (31 bytes — three-token corp-suffix descriptive entity name with two internal ASCII whitespace bytes); slug `symphony` is 8 bytes lowercase — matches the first wire token only; **drops 2 trailing tokens** (`Communication Services`). **Fifth cohort observation of slug-truncation D-09 sub-axis** after Oscar (Spec 133 — slug-extra-word, 1 token added), BEAM (Spec 136 — slug-acronym-expansion), Founders (Spec 148 — 4 tokens dropped), and Fox (Spec 149 — 5 tokens dropped). **Symphony drops 2 trailing tokens — the shortest non-zero token-truncation factor in the cohort to date.** **One-hundred-and-nineteenth cohort plugin to omit D-09**. **D-10 OMITTED** — 0 of 16 wire titles padded; the plugin emits `listing.title` byte-for-byte without a `.trim()`. **Thirty-eighth cohort plugin to omit D-10**. **D-11 APPLIED with trailing-pad form** — 1 of 6 unique wire department names padded (`'Customer Experience '`); the plugin applies `.trim()` to the wire `departments[0].name` byte-for-byte before downstream emit. **Twentieth cohort plugin to apply D-11** — the cohort crosses the 20-plugin D-11-application threshold at this run. The remaining 5 unique department names are clean (`'Business Operations'`, `'Engineering'`, `'Human Resources'`, `'Product Management'`, `'Sales and Account Management'`). **Two structural deviations** from Descope (Spec 125) — D-04 sub-axis (variant 2 → NEW variant 45) AND D-09 sub-axis (case-symmetric bare brand → fifth-cohort slug-truncation multi-token corp-suffix descriptive entity wire form). The trim semantics remain unchanged at the `.trim()` boundary. Selected from the **tenth-fresh-sweep live-board pool** as the **alphabetically-twentieth live-board hit** after Alma, Bird, BitGo, Collective Health, DeepMind, Indigo, Instabase, Iterable, Labelbox, Markforged, Maven, Netskope, Postscript, Quanata, Recharge, Samsara, Sezzle, Shopmonkey, and SimpliSafe. The remaining 2 live hits queue for runs #383+ in alphabetical order (`tatari` next at run #383 with ~55 keys). **Upstream zero-churn check:** All three watched repos remain unchanged at the same SHAs as run #381 — the Ats-scrapers / JobSpy / Jobspy-api triple is on `ad5abd5 / fda080a / 26bb6f4` respectively. **Second consecutive zero-churn run** at run #382 (the new zero-churn streak that began after run #380's STREAK-BROKEN observation now stands at 2 runs).)
 
 **Scope:** Run #382 continues the tenth fresh probe sweep.

@@ -175,6 +175,7 @@
       "@ever-jobs/source-company-shopmonkey": ["packages/plugins/source-company-shopmonkey/src/index.ts"],
       "@ever-jobs/source-company-simplisafe": ["packages/plugins/source-company-simplisafe/src/index.ts"],
       "@ever-jobs/source-company-symphony": ["packages/plugins/source-company-symphony/src/index.ts"],
+      "@ever-jobs/source-company-tatari": ["packages/plugins/source-company-tatari/src/index.ts"],
       "@ever-jobs/source-company-dropbox": ["packages/plugins/source-company-dropbox/src/index.ts"],
       "@ever-jobs/source-company-roblox": ["packages/plugins/source-company-roblox/src/index.ts"],
       "@ever-jobs/source-company-block": ["packages/plugins/source-company-block/src/index.ts"],

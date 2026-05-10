@@ -498,6 +498,8 @@ export enum Site {
   SIMPLISAFE = 'simplisafe',
   // Phase 182: Spec 172 — Source Company Plugin: Symphony
   SYMPHONY = 'symphony',
+  // Phase 183: Spec 173 — Source Company Plugin: Tatari
+  TATARI = 'tatari',
 }
 
 /**

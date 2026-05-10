@@ -92,6 +92,7 @@ Greenhouse slugs are the subdomain used in `boards.greenhouse.io/{slug}`.
 | Shopmonkey | `shopmonkey` | Vertical-SaaS Auto-Repair-Shop POS |
 | SimpliSafe | `simplisafe` | DIY Wireless Home Security |
 | Symphony Communication Services | `symphony` | Institutional Encrypted Collaboration |
+| Tatari | `tatari` | Streaming-and-Linear-TV Connected Attribution |
 
 ---
 
