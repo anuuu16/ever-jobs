@@ -222,6 +222,7 @@ import { StripeModule } from './source-company-stripe';
 import { SweetgreenModule } from './source-company-sweetgreen';
 import { SymphonyModule } from './source-company-symphony';
 import { TatariModule } from './source-company-tatari';
+import { TextioModule } from './source-company-textio';
 import { TikTokModule } from './source-company-tiktok';
 import { ToastModule } from './source-company-toast';
 import { TwilioModule } from './source-company-twilio';
@@ -543,6 +544,7 @@ export const ALL_SOURCE_MODULES = [
   SweetgreenModule,
   SymphonyModule,
   TatariModule,
+  TextioModule,
   TikTokModule,
   ToastModule,
   TwilioModule,

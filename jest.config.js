@@ -161,6 +161,7 @@ module.exports = {
     '^@ever-jobs/source-company-simplisafe$': '<rootDir>/packages/plugins/source-company-simplisafe/src/index.ts',
     '^@ever-jobs/source-company-symphony$': '<rootDir>/packages/plugins/source-company-symphony/src/index.ts',
     '^@ever-jobs/source-company-tatari$': '<rootDir>/packages/plugins/source-company-tatari/src/index.ts',
+    '^@ever-jobs/source-company-textio$': '<rootDir>/packages/plugins/source-company-textio/src/index.ts',
     '^@ever-jobs/source-company-dropbox$': '<rootDir>/packages/plugins/source-company-dropbox/src/index.ts',
     '^@ever-jobs/source-company-roblox$': '<rootDir>/packages/plugins/source-company-roblox/src/index.ts',
     '^@ever-jobs/source-company-block$': '<rootDir>/packages/plugins/source-company-block/src/index.ts',

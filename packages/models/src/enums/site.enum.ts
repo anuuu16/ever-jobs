@@ -500,6 +500,8 @@ export enum Site {
   SYMPHONY = 'symphony',
   // Phase 183: Spec 173 — Source Company Plugin: Tatari
   TATARI = 'tatari',
+  // Phase 184: Spec 174 — Source Company Plugin: Textio
+  TEXTIO = 'textio',
 }
 
 /**
