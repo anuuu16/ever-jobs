@@ -15,6 +15,87 @@
 
 ---
 
+## 2026-05-15 — Scheduled run #385 (Spec 175 closed end-to-end; new `source-company-accuweather` plugin shipped — 9 unit tests green; 5-suite cross-regression (AccuWeather + Tatari + Symphony + SimpliSafe + Textio) 42/42 green in 17.229 s; **first plugin in the eleventh fresh probe sweep — launches the eleventh fresh probe sweep**. Authored Spec 175 (spec.md / plan.md / tasks.md), added `Site.ACCUWEATHER = 'accuweather'` enum under `// Phase 185`, scaffolded the package modeled on the `source-company-tatari` template with **two structural deviations**: (a) **D-09 sub-axis**: case-symmetric bare-brand `'Tatari'` 6 bytes → **simultaneous TWO-cap PascalCase + slug-truncation co-pattern** `'AccuWeather Careers'` 19 bytes (first wire token `AccuWeather` 11 bytes carries PascalCase asymmetry at byte indices 0/4 vs lowercase 11-byte slug `accuweather`, AND wire drops 1 trailing token `Careers` — **first cohort observation of TWO-cap PascalCase + slug-truncation co-occurring in the same wire `company_name`**); (b) **D-11 sub-axis**: clean pass-through → **APPLIED with trailing-pad form** (2 of 15 unique departments padded — `'Facilities '`, `'Information Systems '`). Wired `AccuWeatherModule` between `ClojurejobsModule` and `AdyenModule` (alphabetical insertion — `'accuweather'` sorts after non-`company-` slug `'clojurejobs'` since the import section groups `source-company-*` alphabetically beneath the rest), authored 9-case test spec with **D-09 PascalCase + slug-truncation byte-for-byte lock** (`'AccuWeather Careers'` 19 bytes; caps at 0/4 of first wire token; slug-truncated; 1 trailing token `Careers` dropped) + **D-10 trailing-pad title-trim lock** (`'Account Executive '` → `'Account Executive'`) + **D-11 trailing-pad dept-trim lock** (`'Facilities '` → `'Facilities'`) + **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/accuweather/jobs/<id>`), ran tests + 5-suite cross-regression, updated docs. The run-385 probe sampled **30 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/accuweather/jobs?content=true`. This is the **164th Greenhouse-backed company-direct plugin** in the catalogue; the **131st** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **9th cohort plugin with TWO-cap PascalCase D-09 sub-axis** (after SoFi caps 0/2, StockX caps 0/5, xAI caps 0/2 lowercase-first, LaunchDarkly caps 0/6, PagerDuty caps 0/5, ComplyAdvantage caps 0/6, GoCardless caps 0/2, SimpliSafe caps 0/6) — caps-at-0/4 is **a new caps sub-pattern** in the cohort. **6th cohort observation of slug-truncation D-09 sub-axis** (after Oscar +1, BEAM acronym-expansion, Founders -4, Fox -5, Symphony -2) — AccuWeather drops 1 trailing token, the **new shortest non-zero token-truncation factor in the cohort**, displacing Symphony's prior record. **122nd cohort plugin to omit D-09**. **D-10 APPLIED with trailing-pad form** — 7 of 30 wire titles padded with single-trailing-ASCII-space form (~23.3 % pad rate — **new cohort-wide high-watermark pad rate**, displacing SimpliSafe's prior ~14.3 % record; all trailing-only: `'Account Executive '`, `'Business Development Leader, Forensic Services '`, `'Chief of Staff, Founder & Executive Chairman's Office '`, `'Creative Writer Intern (Summer 2026) '`, `'Director, Advertising Sales '`, `'Human Resources Intern '`, `'National Multimedia Journalist '`). **80th cohort plugin to apply D-10**. **D-11 APPLIED with trailing-pad form** — 2 of 15 unique wire department names padded (`'Facilities '`, `'Information Systems '`); the plugin applies `.trim()` to the wire `departments[0].name` byte-for-byte before downstream emit. Remaining 13 unique departments clean. **21st cohort plugin to apply D-11**. **Two structural deviations** from Tatari (Spec 173) — D-09 sub-axis AND D-11 sub-axis. The trim semantics shift at D-11 (no-op → trailing-pad trim). **Not a re-spin** (structural deviation pair). Selected from the upstream `OTHERS/Ats-scrapers/ats-companies/greenhouse.csv` corpus (5 004 verified Greenhouse tenants post-PR-#34 cleanup, advanced from `57e2bf5` → `6dbb622` since run #384) as the **alphabetically-first** clean non-numeric-slug entry not already represented in `packages/plugins/source-company-*` after a deterministic-index pull of candidates. **Upstream churn at run #385:** Ats-scrapers advanced **41 commits** from `57e2bf5` → `6dbb622` (separate provider description fetching, derived country ISO values published, fill job descriptions across providers, cron scrape guards for empty provider outputs, ats-companies +890 verified tenants from Tranco 100k-1M, eures + bundesagentur streaming variant for memory-bound singletons, eures anonymous-employer row retention, +14 vendor slug additions across ashby/bamboohr/breezy/cornerstone/eightfold/gem/greenhouse/icims/jazzhr/join_com/lever/mercor/personio/pinpoint/recruitee/recruiterbox/rippling/smartrecruiters/successfactors/taleo/teamtailor/workable/workday plus oracle/avature, publisher preserves slug column, phenom docstring update, tesla per-job description endpoint, themuse scraper removal, apple retry/exhaustion improvements, eures HTTP 307 retry, eures partial sub-query tolerance). JobSpy unchanged on `fda080a`; Jobspy-api unchanged on `26bb6f4`. **Churn streak from run #384 continues at run #385**.)
+
+**Scope:** Run #385 launches the **eleventh fresh probe
+sweep** with AccuWeather — the alphabetically-first clean
+non-numeric-slug entry from the upstream
+`OTHERS/Ats-scrapers/ats-companies/greenhouse.csv` corpus
+not already represented in `packages/plugins/source-company-*`
+— sampling 30 visible roles. Run #385 marks the **first
+cohort observation of TWO-cap PascalCase + slug-truncation
+co-occurring in the same wire `company_name`** (a structurally
+novel D-09 sub-pattern), the **9th** TWO-cap PascalCase
+D-09 plugin (caps-at-0/4 — new caps sub-pattern), the **6th**
+slug-truncation D-09 plugin (1 token dropped — new shortest
+non-zero truncation factor), the **80th D-10 application**
+(trailing-pad form, ~23.3 % pad rate — new cohort-wide high-
+watermark), the **21st D-11 application** (trailing-pad
+form), and the **164th** Greenhouse-backed company-direct
+plugin. The **eleventh fresh probe sweep** formally launches
+with this run.
+
+**Changes:**
+
+- `.specify/specs/175-source-company-accuweather/{spec,plan,tasks}.md`
+  — new spec defining axes / cohort thresholds / FRs /
+  acceptance.
+- `packages/plugins/source-company-accuweather/{package.json,
+  tsconfig.json,src/{index.ts,accuweather.module.ts,
+  accuweather.service.ts},__tests__/{accuweather.service.spec.ts,
+  fixtures/accuweather-jobs.json}}` — new plugin scaffold +
+  9-case test spec + fixture.
+- `packages/models/src/enums/site.enum.ts` — append
+  `ACCUWEATHER = 'accuweather'` under Phase 185.
+- `packages/plugins/index.ts` — import + register
+  `AccuWeatherModule` in `ALL_SOURCE_MODULES` (alphabetical
+  insertion between `ClojurejobsModule` and `AdyenModule`).
+- `tsconfig.base.json` — path alias
+  `@ever-jobs/source-company-accuweather`.
+- `jest.config.js` — matching `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — AccuWeather row above
+  Textio with full axis-deviation note.
+- `docs/COMPANY_SLUG_DIRECTORY.md` — AccuWeather row in
+  Greenhouse company-direct slug section.
+- `docs/index.md` — AccuWeather row 175 in spec index.
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- **Cohort thresholds touched at run #385:**
+  - **164th** Greenhouse-backed company-direct plugin
+    (163 → 164).
+  - **75th** variant-2 plugin in the cohort (74 → 75).
+  - **131st** D-08-application plugin (130 → 131).
+  - **9th** cohort plugin with TWO-cap PascalCase D-09 sub-
+    axis (8 → 9; new caps-at-0/4 sub-pattern).
+  - **6th** cohort observation of slug-truncation D-09 sub-
+    axis (5 → 6; new shortest non-zero truncation factor —
+    1 token dropped, displacing Symphony's prior 2-token
+    record).
+  - **First cohort observation of TWO-cap PascalCase +
+    slug-truncation co-occurring in the same wire
+    `company_name`** — structurally novel.
+  - **122nd** cohort plugin to omit D-09 (121 → 122).
+  - **80th** cohort plugin to apply D-10 (79 → 80; ~23.3 %
+    pad rate — new cohort-wide high-watermark, displacing
+    SimpliSafe's prior ~14.3 % record).
+  - **21st** cohort plugin to apply D-11 (20 → 21).
+- **Test stats:** 9/9 cases green for AccuWeather in 15.875 s;
+  5-suite cross-regression (AccuWeather + Tatari + Symphony +
+  SimpliSafe + Textio) 42/42 green in 17.229 s.
+- **Upstream churn check at run-385 start:** Ats-scrapers
+  advanced **41 commits** from `57e2bf5` → `6dbb622` since
+  run #384 (separate provider description fetching, country
+  ISO publishing, fill job descriptions across providers,
+  +20 vendor slug seed additions, eures + apple resilience
+  improvements). JobSpy unchanged on `fda080a` (142 zero-
+  churn runs). Jobspy-api unchanged on `26bb6f4` (142 zero-
+  churn runs). **Churn streak from run #384 continues at
+  run #385.**
+
+---
+
 ## 2026-05-11 — Scheduled run #384 (Spec 174 closed end-to-end; new `source-company-textio` plugin shipped — 9 unit tests green; 4-suite cross-regression (Textio + Tatari + Symphony + SimpliSafe) 33/33 still green in 11.269 s; **final (twenty-second) plugin in the tenth fresh probe sweep — sweep closes with this run**. Authored Spec 174 (spec.md / plan.md / tasks.md), added `Site.TEXTIO = 'textio'` enum under `// Phase 184`, scaffolded the package modeled on the `source-company-recharge` template with **one structural deviation** — D-04 sub-axis: variant 2 → **NEW variant 46 (first cohort observation)** — HTTPS + `www.`-prefixed bare brand-domain `.com` + 2-segment `/careers/apply/` apply-page path **with a trailing slash** + **dual-id query** `?job=<id>&gh_jid=<id>` (vendor-side hand-off shim — Textio's careers front-end reads `job` while Greenhouse forwards `gh_jid`). The **forty-ninth distinct wire-shape variant** in the company-direct cohort (after Symphony variant 45 at Spec 172). The plugin emits `listing.absolute_url` byte-for-byte; the fallback constructor defaults to canonical variant-2 Greenhouse form `https://job-boards.greenhouse.io/textio/jobs/<id>` (same fallback strategy as Symphony / Samsara / Klaviyo / Bird / Collective Health / Netskope). Wired `TextioModule` between `TatariModule` and `TikTokModule` (alphabetical block — `'textio'` sorts between `'tatari'` and `'tiktok'`), authored 9-case test spec with **NEW variant-46 dual-id-query URL byte-for-byte lock** (`https://www.textio.com/careers/apply/?job=<id>&gh_jid=<id>`) + **variant-2 fallback case** (asserts `https://job-boards.greenhouse.io/textio/jobs/<id>` form when wire omits `absolute_url`) + **D-09 case-symmetric bare-brand wire pin** (`'Textio'` 6 bytes; case-symmetric with slug `textio`) + **D-10 clean title pass-through lock** + **D-11 clean dept pass-through lock**, ran tests + cross-regression, updated docs. The run-384 probe sampled **2 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/textio/jobs?content=true` (closely matched the tenth-sweep estimate of ~3 — 1-key under-count, 0.667× ratio). This is the **163rd Greenhouse-backed company-direct plugin** in the catalogue and introduces the **forty-ninth distinct wire-shape variant**; the **one-hundred-and-thirtieth** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted with case-symmetric bare-brand wire form** — wire `company_name === 'Textio'` byte-for-byte (6 bytes; case-symmetric with the lowercase 6-byte slug `textio`); 0 of 2 padded; **one-hundred-and-twenty-first cohort plugin to omit D-09**. **D-10 omitted** — 0 of 2 wire titles padded (`'Growth Marketing Manager'`, `'Textio\'s General Application'`); defensive `.trim()` is a safe no-op. **Thirty-ninth cohort plugin to omit D-10**. **D-11 omitted** — 0 of 2 wire titles padded across 2 unique department names (`'Marketing'`, `'General Application'`); **one-hundred-and-fourth cohort plugin** with fully-clean department pass-through. **One structural deviation** from Recharge (Spec 167) — D-04 sub-axis (variant 2 → NEW variant 46). The trim semantics are unchanged. **Not a re-spin** (structural NEW variant). Selected from the **tenth-fresh-sweep live-board pool** as the **alphabetically-twenty-second (final) live-board hit** after Alma, Bird, BitGo, Collective Health, DeepMind, Indigo, Instabase, Iterable, Labelbox, Markforged, Maven, Netskope, Postscript, Quanata, Recharge, Samsara, Sezzle, Shopmonkey, SimpliSafe, Symphony, and Tatari. **Tenth-sweep candidate pool exhausted with run #384** — next run launches the eleventh fresh probe sweep. **Upstream churn at run #384:** Ats-scrapers advanced **13 commits** from `ad5abd5` → `57e2bf5` (publisher PR-#33 reviewer feedback, cross-source fuzzy dedup with rapidfuzz + normalised keys, Greenhouse Tranco 100k-1M minus numeric-slug noise +N tenants, Tesla + Meta switch from Browserbase to cloakbrowser, +1766 verified Tranco 10k-100k tenants via httpx-retry, +6904 verified tenants from continuous-discovery loop, publisher all.csv alongside all.parquet, route is_remote inference through title not location, Job model country_iso / region / language fields + narrow is_remote, Job model global_id + JOB_SCHEMA.md + remove seniority drift, ci floor manifest version monotonically, publisher streams uploads through temp files to fit corpus in RAM, builtin + jobs.ch fall back to httpcloak / Evomi proxy on 403). JobSpy unchanged on `fda080a`; Jobspy-api unchanged on `26bb6f4`. **Zero-churn streak (3 runs since run #380's STREAK-BROKEN) broken at run #384** — new churn streak begins.)
 
 **Scope:** Run #384 closes the tenth fresh probe sweep with

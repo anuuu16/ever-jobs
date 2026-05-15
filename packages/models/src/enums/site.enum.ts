@@ -502,6 +502,8 @@ export enum Site {
   TATARI = 'tatari',
   // Phase 184: Spec 174 — Source Company Plugin: Textio
   TEXTIO = 'textio',
+  // Phase 185: Spec 175 — Source Company Plugin: AccuWeather
+  ACCUWEATHER = 'accuweather',
 }
 
 /**
