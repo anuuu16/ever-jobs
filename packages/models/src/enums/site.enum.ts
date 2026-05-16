@@ -504,6 +504,8 @@ export enum Site {
   TEXTIO = 'textio',
   // Phase 185: Spec 175 — Source Company Plugin: AccuWeather
   ACCUWEATHER = 'accuweather',
+  // Phase 186: Spec 176 — Source Company Plugin: ACI Learning
+  ACILEARNING = 'acilearning',
 }
 
 /**

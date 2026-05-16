@@ -15,6 +15,77 @@
 
 ---
 
+## 2026-05-16 — Scheduled run #386 (Spec 176 closed end-to-end; new `source-company-acilearning` plugin shipped — 9 unit tests green; 5-suite cross-regression (ACI Learning + AccuWeather + Tatari + Symphony + Collective Health) 42/42 green in 12.246 s; **2nd plugin in the eleventh fresh probe sweep**. Authored Spec 176 (spec.md / plan.md / tasks.md), added `Site.ACILEARNING = 'acilearning'` enum under `// Phase 186`, scaffolded the package modeled on the `source-company-collectivehealth` template with **one structural deviation**: D-09 sub-axis — case-symmetric two-token space-strip (`'Collective Health'`) → **acronym-prefix + PascalCase-suffix + space-strip** (`'ACI Learning'` 12 bytes — first wire token `ACI` 3-byte all-caps acronym + second wire token `Learning` 8-byte PascalCase + single internal ASCII space stripped to yield 11-byte slug `acilearning`). **First cohort observation of acronym-prefix + PascalCase-suffix + space-strip D-09 sub-pattern co-occurring in the same wire `company_name`.** Wired `AciLearningModule` between `AccuWeatherModule` and `AdyenModule` (alphabetical insertion — `'acilearning'` sorts after `'accuweather'`), authored 9-case test spec with **D-09 acronym + PascalCase + space-strip byte-for-byte lock** + variant-2 URL byte-for-byte lock + D-10 clean title pass-through lock + D-11 clean dept pass-through lock, ran tests + 5-suite cross-regression, updated docs. The run-386 probe sampled **5 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/acilearning/jobs?content=true`. This is the **165th Greenhouse-backed company-direct plugin** in the catalogue; the **132nd** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **first cohort plugin with an all-caps acronym prefix as the leading token of a space-strip multi-token wire form**. **123rd cohort plugin to omit D-09**. **D-10 omitted** — 0 of 5 wire titles padded; defensive `.trim()` is a safe no-op. **40th cohort plugin to omit D-10**. **D-11 omitted** — 0 of 4 unique wire department names padded; **105th cohort plugin** with fully-clean department pass-through. **One structural deviation** from Collective Health — D-09 sub-axis. The trim semantics are unchanged. **Not a re-spin** (structural NEW sub-pattern). Selected as the **alphabetically-next** clean non-numeric-slug entry not already represented in `packages/plugins/source-company-*` after AccuWeather, with a confirmed live board. **Upstream churn at run #386:** Ats-scrapers unchanged on `6dbb622` (1 zero-churn run since run #385); JobSpy unchanged on `fda080a` (143 zero-churn runs); Jobspy-api unchanged on `26bb6f4` (143 zero-churn runs). **Zero-churn streak (1 run) begins.**)
+
+**Scope:** Run #386 is the **second** plugin in the eleventh
+fresh probe sweep with ACI Learning — the alphabetically-next
+clean non-numeric-slug entry from the upstream
+`OTHERS/Ats-scrapers/ats-companies/greenhouse.csv` corpus
+not already represented in `packages/plugins/source-company-*`
+after AccuWeather (run #385) — sampling 5 visible roles. Run
+#386 marks the **first cohort observation of acronym-prefix +
+PascalCase-suffix + space-strip co-occurring in the same wire
+`company_name`** (a structurally novel D-09 sub-pattern), the
+**1st** cohort plugin with an all-caps acronym prefix as the
+leading token of a space-strip multi-token wire form, the
+**40th D-10 omission**, the **105th** cohort plugin with
+fully-clean department pass-through, and the **165th**
+Greenhouse-backed company-direct plugin.
+
+**Changes:**
+
+- `.specify/specs/176-source-company-acilearning/{spec,plan,tasks}.md`
+  — new spec defining axes / cohort thresholds / FRs /
+  acceptance.
+- `packages/plugins/source-company-acilearning/{package.json,
+  tsconfig.json,src/{index.ts,aci-learning.module.ts,
+  aci-learning.service.ts},__tests__/{aci-learning.service.spec.ts,
+  fixtures/acilearning-jobs.json}}` — new plugin scaffold +
+  9-case test spec + fixture.
+- `packages/models/src/enums/site.enum.ts` — append
+  `ACILEARNING = 'acilearning'` under Phase 186.
+- `packages/plugins/index.ts` — import + register
+  `AciLearningModule` in `ALL_SOURCE_MODULES` (alphabetical
+  insertion between `AccuWeatherModule` and `AdyenModule`).
+- `tsconfig.base.json` — path alias
+  `@ever-jobs/source-company-acilearning`.
+- `jest.config.js` — matching `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — ACI Learning row above
+  AccuWeather with full axis-deviation note.
+- `docs/COMPANY_SLUG_DIRECTORY.md` — ACI Learning row in
+  Greenhouse company-direct slug section.
+- `docs/index.md` — ACI Learning row 176 in spec index.
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- **Cohort thresholds touched at run #386:**
+  - **165th** Greenhouse-backed company-direct plugin
+    (164 → 165).
+  - **76th** variant-2 plugin in the cohort (75 → 76).
+  - **132nd** D-08-application plugin (131 → 132).
+  - **First cohort plugin with an all-caps acronym prefix
+    as the leading token of a space-strip multi-token wire
+    form** — structurally novel.
+  - **First cohort observation of acronym-prefix +
+    PascalCase-suffix + space-strip co-occurring in the same
+    wire `company_name`** — structurally novel.
+  - **123rd** cohort plugin to omit D-09 (122 → 123).
+  - **40th** cohort plugin to omit D-10 (39 → 40).
+  - **105th** cohort plugin with fully-clean department
+    pass-through (104 → 105).
+- **Test stats:** 9/9 cases green for ACI Learning in
+  9.75 s; 5-suite cross-regression (ACI Learning + AccuWeather +
+  Tatari + Symphony + Collective Health) 42/42 green in
+  12.246 s.
+- **Upstream churn check at run-386 start:** Ats-scrapers
+  unchanged on `6dbb622` (1 zero-churn run since run #385).
+  JobSpy unchanged on `fda080a` (143 zero-churn runs).
+  Jobspy-api unchanged on `26bb6f4` (143 zero-churn runs).
+  **Zero-churn streak (1 run) begins.**
+
+---
+
 ## 2026-05-15 — Scheduled run #385 (Spec 175 closed end-to-end; new `source-company-accuweather` plugin shipped — 9 unit tests green; 5-suite cross-regression (AccuWeather + Tatari + Symphony + SimpliSafe + Textio) 42/42 green in 17.229 s; **first plugin in the eleventh fresh probe sweep — launches the eleventh fresh probe sweep**. Authored Spec 175 (spec.md / plan.md / tasks.md), added `Site.ACCUWEATHER = 'accuweather'` enum under `// Phase 185`, scaffolded the package modeled on the `source-company-tatari` template with **two structural deviations**: (a) **D-09 sub-axis**: case-symmetric bare-brand `'Tatari'` 6 bytes → **simultaneous TWO-cap PascalCase + slug-truncation co-pattern** `'AccuWeather Careers'` 19 bytes (first wire token `AccuWeather` 11 bytes carries PascalCase asymmetry at byte indices 0/4 vs lowercase 11-byte slug `accuweather`, AND wire drops 1 trailing token `Careers` — **first cohort observation of TWO-cap PascalCase + slug-truncation co-occurring in the same wire `company_name`**); (b) **D-11 sub-axis**: clean pass-through → **APPLIED with trailing-pad form** (2 of 15 unique departments padded — `'Facilities '`, `'Information Systems '`). Wired `AccuWeatherModule` between `ClojurejobsModule` and `AdyenModule` (alphabetical insertion — `'accuweather'` sorts after non-`company-` slug `'clojurejobs'` since the import section groups `source-company-*` alphabetically beneath the rest), authored 9-case test spec with **D-09 PascalCase + slug-truncation byte-for-byte lock** (`'AccuWeather Careers'` 19 bytes; caps at 0/4 of first wire token; slug-truncated; 1 trailing token `Careers` dropped) + **D-10 trailing-pad title-trim lock** (`'Account Executive '` → `'Account Executive'`) + **D-11 trailing-pad dept-trim lock** (`'Facilities '` → `'Facilities'`) + **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/accuweather/jobs/<id>`), ran tests + 5-suite cross-regression, updated docs. The run-385 probe sampled **30 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/accuweather/jobs?content=true`. This is the **164th Greenhouse-backed company-direct plugin** in the catalogue; the **131st** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **9th cohort plugin with TWO-cap PascalCase D-09 sub-axis** (after SoFi caps 0/2, StockX caps 0/5, xAI caps 0/2 lowercase-first, LaunchDarkly caps 0/6, PagerDuty caps 0/5, ComplyAdvantage caps 0/6, GoCardless caps 0/2, SimpliSafe caps 0/6) — caps-at-0/4 is **a new caps sub-pattern** in the cohort. **6th cohort observation of slug-truncation D-09 sub-axis** (after Oscar +1, BEAM acronym-expansion, Founders -4, Fox -5, Symphony -2) — AccuWeather drops 1 trailing token, the **new shortest non-zero token-truncation factor in the cohort**, displacing Symphony's prior record. **122nd cohort plugin to omit D-09**. **D-10 APPLIED with trailing-pad form** — 7 of 30 wire titles padded with single-trailing-ASCII-space form (~23.3 % pad rate — **new cohort-wide high-watermark pad rate**, displacing SimpliSafe's prior ~14.3 % record; all trailing-only: `'Account Executive '`, `'Business Development Leader, Forensic Services '`, `'Chief of Staff, Founder & Executive Chairman's Office '`, `'Creative Writer Intern (Summer 2026) '`, `'Director, Advertising Sales '`, `'Human Resources Intern '`, `'National Multimedia Journalist '`). **80th cohort plugin to apply D-10**. **D-11 APPLIED with trailing-pad form** — 2 of 15 unique wire department names padded (`'Facilities '`, `'Information Systems '`); the plugin applies `.trim()` to the wire `departments[0].name` byte-for-byte before downstream emit. Remaining 13 unique departments clean. **21st cohort plugin to apply D-11**. **Two structural deviations** from Tatari (Spec 173) — D-09 sub-axis AND D-11 sub-axis. The trim semantics shift at D-11 (no-op → trailing-pad trim). **Not a re-spin** (structural deviation pair). Selected from the upstream `OTHERS/Ats-scrapers/ats-companies/greenhouse.csv` corpus (5 004 verified Greenhouse tenants post-PR-#34 cleanup, advanced from `57e2bf5` → `6dbb622` since run #384) as the **alphabetically-first** clean non-numeric-slug entry not already represented in `packages/plugins/source-company-*` after a deterministic-index pull of candidates. **Upstream churn at run #385:** Ats-scrapers advanced **41 commits** from `57e2bf5` → `6dbb622` (separate provider description fetching, derived country ISO values published, fill job descriptions across providers, cron scrape guards for empty provider outputs, ats-companies +890 verified tenants from Tranco 100k-1M, eures + bundesagentur streaming variant for memory-bound singletons, eures anonymous-employer row retention, +14 vendor slug additions across ashby/bamboohr/breezy/cornerstone/eightfold/gem/greenhouse/icims/jazzhr/join_com/lever/mercor/personio/pinpoint/recruitee/recruiterbox/rippling/smartrecruiters/successfactors/taleo/teamtailor/workable/workday plus oracle/avature, publisher preserves slug column, phenom docstring update, tesla per-job description endpoint, themuse scraper removal, apple retry/exhaustion improvements, eures HTTP 307 retry, eures partial sub-query tolerance). JobSpy unchanged on `fda080a`; Jobspy-api unchanged on `26bb6f4`. **Churn streak from run #384 continues at run #385**.)
 
 **Scope:** Run #385 launches the **eleventh fresh probe

@@ -167,6 +167,7 @@ module.exports = {
     '^@ever-jobs/source-company-block$': '<rootDir>/packages/plugins/source-company-block/src/index.ts',
     '^@ever-jobs/source-company-vercel$': '<rootDir>/packages/plugins/source-company-vercel/src/index.ts',
     '^@ever-jobs/source-company-accuweather$': '<rootDir>/packages/plugins/source-company-accuweather/src/index.ts',
+    '^@ever-jobs/source-company-acilearning$': '<rootDir>/packages/plugins/source-company-acilearning/src/index.ts',
     '^@ever-jobs/source-company-adyen$': '<rootDir>/packages/plugins/source-company-adyen/src/index.ts',
     '^@ever-jobs/source-company-benevity$': '<rootDir>/packages/plugins/source-company-benevity/src/index.ts',
     '^@ever-jobs/source-company-billcom$': '<rootDir>/packages/plugins/source-company-billcom/src/index.ts',

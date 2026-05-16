@@ -67,6 +67,7 @@ import { CareerJetModule } from './source-careerjet';
 import { CareerOneStopModule } from './source-careeronestop';
 import { ClojurejobsModule } from './source-clojurejobs';
 import { AccuWeatherModule } from './source-company-accuweather';
+import { AciLearningModule } from './source-company-acilearning';
 import { AdyenModule } from './source-company-adyen';
 import { AffirmModule } from './source-company-affirm';
 import { AirbnbModule } from './source-company-airbnb';
@@ -390,6 +391,7 @@ export const ALL_SOURCE_MODULES = [
   CareerOneStopModule,
   ClojurejobsModule,
   AccuWeatherModule,
+  AciLearningModule,
   AdyenModule,
   AffirmModule,
   AirbnbModule,

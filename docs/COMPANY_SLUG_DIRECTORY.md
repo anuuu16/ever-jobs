@@ -34,6 +34,7 @@ Greenhouse slugs are the subdomain used in `boards.greenhouse.io/{slug}`.
 | Company | Slug | Industry |
 | ------- | ---- | -------- |
 | AccuWeather Careers | `accuweather` | Private-Sector Weather Forecasting |
+| ACI Learning | `acilearning` | IT Certification Training / Audit Education |
 | Airbnb | `airbnb` | Travel / Tech |
 | Spotify | `spotify` | Music / Tech |
 | Discord | `discord` | Social / Tech |
