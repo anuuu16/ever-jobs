@@ -506,6 +506,8 @@ export enum Site {
   ACCUWEATHER = 'accuweather',
   // Phase 186: Spec 176 — Source Company Plugin: ACI Learning
   ACILEARNING = 'acilearning',
+  // Phase 187: Spec 177 — Source Company Plugin: Ackermann Group
+  ACKERMANNGROUP = 'ackermanngroup',
 }
 
 /**
