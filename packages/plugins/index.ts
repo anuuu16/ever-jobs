@@ -69,6 +69,7 @@ import { ClojurejobsModule } from './source-clojurejobs';
 import { AccuWeatherModule } from './source-company-accuweather';
 import { AciLearningModule } from './source-company-acilearning';
 import { AckermannGroupModule } from './source-company-ackermanngroup';
+import { AcluModule } from './source-company-aclu';
 import { AdyenModule } from './source-company-adyen';
 import { AffirmModule } from './source-company-affirm';
 import { AirbnbModule } from './source-company-airbnb';
@@ -394,6 +395,7 @@ export const ALL_SOURCE_MODULES = [
   AccuWeatherModule,
   AciLearningModule,
   AckermannGroupModule,
+  AcluModule,
   AdyenModule,
   AffirmModule,
   AirbnbModule,

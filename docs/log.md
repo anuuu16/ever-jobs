@@ -15,6 +15,77 @@
 
 ---
 
+## 2026-05-18 — Scheduled run #388 (Spec 178 closed end-to-end; new `source-company-aclu` plugin shipped — 9 unit tests green; 5-suite cross-regression (ACLU + AccuWeather + ACI Learning + Ackermann Group + Shopmonkey) 44/44 green in 11.796 s; **4th plugin in the eleventh fresh probe sweep**. Authored Spec 178 (spec.md / plan.md / tasks.md), added `Site.ACLU = 'aclu'` enum under `// Phase 188`, scaffolded the package modeled on the `source-company-accuweather` template (closest variant-2 + D-10-applied + D-11-applied cousin) with **one structural deviation**: **D-09 sub-axis** — TWO-cap PascalCase + slug-truncation (`'AccuWeather Careers'` 19 bytes — 2 tokens, caps at byte indices 0/4 of the first token, 1 trailing PascalCase token dropped) → **all-caps acronym + space-hyphen-space separator + multi-token suffix → first-token-only-lowercase slug-truncation** (`'ACLU - National Office'` 22 bytes — 4 wire-tokens split by ASCII spaces: first wire-token `ACLU` 4-byte all-caps acronym with caps at every byte index 0/1/2/3, wire-token at index 1 = `-` 1-byte ASCII hyphen separator, wire-token at index 2 = `National` 8-byte PascalCase cap-at-0, wire-token at index 3 = `Office` 6-byte PascalCase cap-at-0; 3 wire-tokens dropped including the ASCII-hyphen separator; yielding 4-byte lowercase slug `aclu`). **First cohort observation of (a) an ASCII-hyphen wire-token being dropped in a slug-truncation D-09 sub-form** (prior slug-truncation observations — Oscar / BEAM / Founders / Fox / Symphony / AccuWeather / Tatari — dropped pure PascalCase or descriptive-corp-suffix tokens only) **AND (b) an all-caps acronym as the first wire-token of a slug-truncation D-09 sub-form** (prior all-caps-acronym D-09 observation at ACI Learning — Spec 176 — was a space-strip form, not slug-truncation; the ACI prefix was preserved into the slug, not dropped). Wired `AcluModule` between `AckermannGroupModule` and `AdyenModule` (alphabetical insertion — `'aclu'` sorts after `'ackermanngroup'` and before `'adyen'`), authored 9-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/aclu/jobs/<id>`) + **D-09 acronym + hyphen-separator + slug-truncation byte-for-byte lock** + **D-10 trailing-pad title-trim lock** (`'DevOps Engineering Manager '` 27 bytes → `'DevOps Engineering Manager'` 26 bytes) + **D-11 trailing-pad dept-trim lock** (`'National Political & Advocacy '` 30 bytes → `'National Political & Advocacy'` 29 bytes), ran tests + 5-suite cross-regression, updated docs. The run-388 probe sampled **40 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/aclu/jobs?content=true`. This is the **167th Greenhouse-backed company-direct plugin** in the catalogue and the **77th** to use **wire-shape variant 2** (canonical Greenhouse host `job-boards.greenhouse.io/<slug>/jobs/<id>`); the **134th** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **125th cohort plugin to omit D-09**. **D-10 applied** with trailing-pad form — 2 of 40 wire titles padded (~5.0 % pad rate); the plugin applies `.trim()` to wire `title` before downstream filters and emit. **81st cohort plugin to apply D-10**. **D-11 applied** with trailing-pad form — 1 of 14 unique wire department names padded (`'National Political & Advocacy '` 30 bytes, on 3 of 40 listings). **22nd cohort plugin to apply D-11**. **One structural deviation** from AccuWeather — D-09 sub-axis only. **Not a re-spin** (structural NEW sub-pattern). Selected as the **alphabetically-next** clean non-numeric-slug entry not already represented in `packages/plugins/source-company-*` after Ackermann Group, with a confirmed live board. **Upstream churn at run #388:** Ats-scrapers unchanged on `6dbb622` (3 zero-churn runs since run #385); JobSpy unchanged on `fda080a` (145 zero-churn runs); Jobspy-api unchanged on `26bb6f4` (145 zero-churn runs). **Zero-churn streak (3 runs) continues.**)
+
+**Scope:** Run #388 is the **fourth** plugin in the eleventh
+fresh probe sweep with ACLU — the alphabetically-next clean
+non-numeric-slug entry from the upstream
+`OTHERS/Ats-scrapers/ats-companies/greenhouse.csv` corpus
+not already represented in `packages/plugins/source-company-*`
+after Ackermann Group (run #387) — sampling 40 visible roles.
+Run #388 marks the **first cohort observation of (a) an
+ASCII-hyphen wire-token being dropped in a slug-truncation
+D-09 sub-form AND (b) an all-caps acronym as the first wire-
+token of a slug-truncation D-09 sub-form** (two structurally
+novel D-09 sub-pattern threads), the **77th** variant-2
+plugin, the **81st D-10 application**, the **22nd D-11
+application**, the **125th** cohort plugin to omit D-09, and
+the **167th** Greenhouse-backed company-direct plugin.
+
+**Changes:**
+
+- `.specify/specs/178-source-company-aclu/{spec,plan,tasks}.md`
+  — new spec defining axes / cohort thresholds / FRs /
+  acceptance.
+- `packages/plugins/source-company-aclu/{package.json,
+  tsconfig.json,src/{index.ts,aclu.module.ts,aclu.service.ts},
+  __tests__/{aclu.service.spec.ts,fixtures/aclu-jobs.json}}` —
+  new plugin scaffold + 9-case test spec + fixture.
+- `packages/models/src/enums/site.enum.ts` — append
+  `ACLU = 'aclu'` under Phase 188.
+- `packages/plugins/index.ts` — import + register `AcluModule`
+  in `ALL_SOURCE_MODULES` (alphabetical insertion between
+  `AckermannGroupModule` and `AdyenModule`).
+- `tsconfig.base.json` — path alias
+  `@ever-jobs/source-company-aclu`.
+- `jest.config.js` — matching `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — ACLU row above
+  Ackermann Group with full axis-deviation note.
+- `docs/COMPANY_SLUG_DIRECTORY.md` — ACLU row in Greenhouse
+  company-direct slug section.
+- `docs/index.md` — ACLU row 178 in spec index.
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- **Cohort thresholds touched at run #388:**
+  - **167th** Greenhouse-backed company-direct plugin
+    (166 → 167).
+  - **77th** variant-2 plugin in the cohort (76 → 77).
+  - **134th** D-08-application plugin (133 → 134).
+  - **First cohort observation of (a) an ASCII-hyphen wire-
+    token being dropped in a slug-truncation D-09 sub-form
+    AND (b) an all-caps acronym as the first wire-token of a
+    slug-truncation D-09 sub-form** — two structurally novel
+    D-09 sub-pattern threads.
+  - **125th** cohort plugin to omit D-09 (124 → 125).
+  - **81st** cohort plugin to apply D-10 (80 → 81).
+  - **22nd** cohort plugin to apply D-11 (21 → 22).
+- **Test stats:** 9/9 cases green for ACLU in 9.336 s;
+  5-suite cross-regression (ACLU + AccuWeather + ACI Learning
+  + Ackermann Group + Shopmonkey) 44/44 green in 11.796 s.
+- **Upstream churn check at run-388 start:** Ats-scrapers
+  unchanged on `6dbb622` (3 zero-churn runs since run #385).
+  JobSpy unchanged on `fda080a` (145 zero-churn runs).
+  Jobspy-api unchanged on `26bb6f4` (145 zero-churn runs;
+  remote fetch returned a connection-timeout at run-388 start
+  but local HEAD matches the last successfully-fetched SHA
+  `26bb6f4` from run #387 — no observable churn from the
+  monitoring perspective).
+  **Zero-churn streak (3 runs) continues.**
+
+---
+
 ## 2026-05-17 — Scheduled run #387 (Spec 177 closed end-to-end; new `source-company-ackermanngroup` plugin shipped — 9 unit tests green; 5-suite cross-regression (Ackermann Group + ACI Learning + AccuWeather + Shopmonkey + Collective Health) 43/43 green in 11.872 s; **3rd plugin in the eleventh fresh probe sweep**. Authored Spec 177 (spec.md / plan.md / tasks.md), added `Site.ACKERMANNGROUP = 'ackermanngroup'` enum under `// Phase 187`, scaffolded the package modeled on the `source-company-shopmonkey` template (closest variant-10 cousin) with **two structural deviations**: (a) **D-09 sub-axis** — case-symmetric bare-brand (`'Shopmonkey'` 10 bytes — 1 token) → **two-token PascalCase + space-strip** (`'Ackermann Group'` 15 bytes — 2 tokens, both PascalCase with caps at byte index 0 of each token; single internal ASCII space stripped to yield 14-byte slug `ackermanngroup`); (b) **D-11 sub-axis** — clean pass-through-with-depts (0 of 6 unique populated Shopmonkey depts padded) → **completely-absent departments form** (0 of 12 listings carry a department; wire `departments[]` array empty for every listing). **First cohort observation of the completely-absent-departments D-11 sub-axis.** Wired `AckermannGroupModule` between `AciLearningModule` and `AdyenModule` (alphabetical insertion — `'ackermanngroup'` sorts after `'acilearning'` and before `'adyen'`), authored 9-case test spec with **variant-10 URL byte-for-byte lock** (`https://boards.greenhouse.io/ackermanngroup/jobs/<id>?gh_jid=<id>`) + **D-09 two-token PascalCase + space-strip byte-for-byte lock** + **D-10 omitted byte-for-byte title pass-through lock** + **D-11 completely-absent-departments lock** (`department === null` for every emitted JobPostDto), ran tests + 5-suite cross-regression, updated docs. The run-387 probe sampled **12 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/ackermanngroup/jobs?content=true`. This is the **166th Greenhouse-backed company-direct plugin** in the catalogue and the **9th** to use **wire-shape variant 10** (legacy hosted-board apex `boards.greenhouse.io/<slug>/jobs/<id>?gh_jid=<id>`) after Chime, Faire, Flexport, Braze, Descript, Justworks, Founders, Shopmonkey; the **133rd** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); 124th cohort plugin to omit D-09. **D-10 omitted** — 0 of 12 wire titles padded; the plugin emits `listing.title` byte-for-byte without a `.trim()`. **41st cohort plugin to omit D-10**. **D-11 completely-absent-departments form** — 0 of 12 listings carry a department; wire `departments[]` array empty across every listing; emitted `department === null`. **First cohort observation of the completely-absent-departments D-11 sub-axis** — structurally distinct from the prior fully-clean department-pass-through observations (which all carried a populated `departments[]` array byte-for-byte clean). **Two structural deviations** from Shopmonkey — D-09 sub-axis AND D-11 sub-axis. The trim semantics are unchanged. **Not a re-spin** (structural NEW sub-pattern). Selected as the **alphabetically-next** clean non-numeric-slug entry not already represented in `packages/plugins/source-company-*` after ACI Learning, with a confirmed live board. **Upstream churn at run #387:** Ats-scrapers unchanged on `6dbb622` (2 zero-churn runs since run #385); JobSpy unchanged on `fda080a` (144 zero-churn runs); Jobspy-api unchanged on `26bb6f4` (144 zero-churn runs). **Zero-churn streak (2 runs) continues.**)
 
 **Scope:** Run #387 is the **third** plugin in the eleventh

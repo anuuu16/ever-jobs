@@ -508,6 +508,8 @@ export enum Site {
   ACILEARNING = 'acilearning',
   // Phase 187: Spec 177 — Source Company Plugin: Ackermann Group
   ACKERMANNGROUP = 'ackermanngroup',
+  // Phase 188: Spec 178 — Source Company Plugin: ACLU
+  ACLU = 'aclu',
 }
 
 /**
