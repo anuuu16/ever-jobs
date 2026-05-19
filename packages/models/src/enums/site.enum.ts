@@ -510,6 +510,8 @@ export enum Site {
   ACKERMANNGROUP = 'ackermanngroup',
   // Phase 188: Spec 178 — Source Company Plugin: ACLU
   ACLU = 'aclu',
+  // Phase 189: Spec 179 — Source Company Plugin: ACOG
+  ACOG = 'acog',
 }
 
 /**

@@ -170,6 +170,7 @@ module.exports = {
     '^@ever-jobs/source-company-acilearning$': '<rootDir>/packages/plugins/source-company-acilearning/src/index.ts',
     '^@ever-jobs/source-company-ackermanngroup$': '<rootDir>/packages/plugins/source-company-ackermanngroup/src/index.ts',
     '^@ever-jobs/source-company-aclu$': '<rootDir>/packages/plugins/source-company-aclu/src/index.ts',
+    '^@ever-jobs/source-company-acog$': '<rootDir>/packages/plugins/source-company-acog/src/index.ts',
     '^@ever-jobs/source-company-adyen$': '<rootDir>/packages/plugins/source-company-adyen/src/index.ts',
     '^@ever-jobs/source-company-benevity$': '<rootDir>/packages/plugins/source-company-benevity/src/index.ts',
     '^@ever-jobs/source-company-billcom$': '<rootDir>/packages/plugins/source-company-billcom/src/index.ts',
