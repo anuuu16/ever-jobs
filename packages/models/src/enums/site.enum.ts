@@ -516,6 +516,8 @@ export enum Site {
   ACOMMERCE = 'acommerce',
   // Phase 191: Spec 181 — Source Company Plugin: ACP
   ACP = 'acp',
+  // Phase 192: Spec 182 — Source Company Plugin: Acquia
+  ACQUIA = 'acquia',
 }
 
 /**

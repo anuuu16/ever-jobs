@@ -15,6 +15,59 @@
 
 ---
 
+## 2026-05-20 — Scheduled run #392 (Spec 182 closed end-to-end; new `source-company-acquia` plugin shipped — 10 unit tests green; 5-suite cross-regression (Acquia + ACP + aCommerce + ACOG + ACLU) 49/49 green in 11.94 s; **8th plugin in the eleventh fresh probe sweep**. Authored Spec 182, added `Site.ACQUIA = 'acquia'` enum under `// Phase 192`, scaffolded the package modeled on the `source-company-coursera` template with **zero structural deviations** — clean re-spin of canonical variant-2 + D-08 + D-09/D-10/D-11 all-omitted profile. Wire `company_name === 'Acquia'` 6 bytes case-symmetric PascalCase single-token (cap at byte 0 only). Wired `AcquiaModule` between `AcpModule` and `AdyenModule` (alphabetical), authored 10-case test spec, ran tests + cross-regression, updated docs. The run-392 probe sampled **17 visible roles**. **171st** Greenhouse-backed company-direct plugin; **81st** variant-2; **138th** D-08; **129th** D-09 omission; **43rd** D-10 omission; **109th** fully-clean department pass-through. Drupal-based enterprise DXP vendor founded in 2007 by Drupal creator Dries Buytaert; Vista Equity Partners portfolio since 2019.)
+
+**Scope:** Run #392 is the **eighth** plugin in the eleventh
+fresh probe sweep with Acquia — the alphabetically-next
+clean non-numeric-slug entry from the upstream
+`OTHERS/Ats-scrapers/ats-companies/greenhouse.csv` corpus
+not already represented in `packages/plugins/source-company-*`
+after ACP (run #391) — sampling 17 visible roles. Clean
+re-spin (zero structural deviations off Coursera).
+
+**Changes:**
+
+- `.specify/specs/182-source-company-acquia/{spec,plan,tasks}.md`
+  — new spec.
+- `packages/plugins/source-company-acquia/{package.json,
+  tsconfig.json,src/{index.ts,acquia.module.ts,
+  acquia.service.ts},__tests__/{acquia.service.spec.ts,
+  fixtures/acquia-jobs.json}}` — new plugin scaffold + 10-
+  case test spec + fixture.
+- `packages/models/src/enums/site.enum.ts` — append
+  `ACQUIA = 'acquia'` under Phase 192.
+- `packages/plugins/index.ts` — import + register
+  `AcquiaModule` in `ALL_SOURCE_MODULES` (alphabetical
+  insertion between `AcpModule` and `AdyenModule`).
+- `tsconfig.base.json` — path alias
+  `@ever-jobs/source-company-acquia`.
+- `jest.config.js` — matching `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — Acquia row above ACP.
+- `docs/COMPANY_SLUG_DIRECTORY.md` — Acquia row.
+- `docs/index.md` — Acquia row 182 in spec index.
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- **Cohort thresholds touched at run #392:**
+  - **171st** Greenhouse-backed company-direct plugin
+    (170 → 171).
+  - **81st** variant-2 plugin in the cohort (80 → 81).
+  - **138th** D-08-application plugin (137 → 138).
+  - **129th** cohort plugin to omit D-09 (128 → 129).
+  - **43rd** cohort plugin to omit D-10 (42 → 43).
+  - **109th** cohort plugin with fully-clean department
+    pass-through (108 → 109).
+  - Clean re-spin (zero structural deviations off Coursera).
+- **Test stats:** 10/10 cases green for Acquia in 9.247 s;
+  5-suite cross-regression (Acquia + ACP + aCommerce + ACOG
+  + ACLU) 49/49 green in 11.94 s.
+- **Upstream churn check at run-392 start:** unchanged from
+  run-391 (Ats-scrapers `71d9a56`, JobSpy `fda080a`, Jobspy-
+  api `26bb6f4`).
+
+---
+
 ## 2026-05-20 — Scheduled run #391 (Spec 181 closed end-to-end; new `source-company-acp` plugin shipped — 10 unit tests green; 5-suite cross-regression (ACP + aCommerce + ACOG + ACLU + ACI Learning) 48/48 green in 11.84 s; **7th plugin in the eleventh fresh probe sweep**. Authored Spec 181 (spec.md / plan.md / tasks.md), added `Site.ACP = 'acp'` enum under `// Phase 191`, scaffolded the package modeled on the `source-company-acog` template (closest D-09 acronym-by-initials cousin) with **two structural deviations**: (a) **D-10 sub-axis** — trailing-pad applied (1/6 padded ~16.7 %) → **omitted (clean pass-through)** (0/3 padded — defensive `.trim()` safe no-op); (b) **D-09 sub-axis cardinality variant** — 4 PascalCase + 2 connectors (`'American College of Obstetricians and Gynecologists'` 51 bytes → 4-byte slug `acog`) → **3 PascalCase + 1 connector** (`'Academy with Community Partners'` 31 bytes — 4 wire-tokens, 3 PascalCase + 1 lowercase-connector; slug `acp` formed by sampling first letter of each PascalCase wire-token with connector-skip; A from Academy, C from Community, P from Partners; 1 connector `with` skipped). **Second cohort observation of acronym-by-initials slug derivation with connector-skip** — validates the ACOG sub-pattern at lower cardinality (3 PascalCase + 1 connector vs ACOG's 4 PascalCase + 2 connectors); confirms the sub-pattern is **not a one-off** observation but a recurring D-09 transformation pattern. Wired `AcpModule` between `AcommerceModule` and `AdyenModule` (alphabetical insertion — `'acp'` sorts after `'acommerce'` and before `'adyen'`), authored 10-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/acp/jobs/<id>`) + **D-09 acronym-by-initials byte-for-byte lock** (4 wire-tokens, 3 PascalCase + 1 lowercase-connector classification, first-letter-sampling-with-connector-skip slug derivation) + **D-10 clean-pass-through title lock** (every emitted `title` byte-equals wire `title`) + **D-11 clean-pass-through dept lock** (every emitted `department` byte-equals wire `departments[0].name`), ran tests + 5-suite cross-regression, updated docs. The run-391 probe sampled **3 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/acp/jobs?content=true`. This is the **170th Greenhouse-backed company-direct plugin** in the catalogue and the **80th** to use **wire-shape variant 2**; the **137th** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **128th cohort plugin to omit D-09**. **D-10 omitted** (clean pass-through) — 0 of 3 wire titles padded. **42nd cohort plugin to omit D-10**. **D-11 omitted** (clean pass-through) — 0 of 2 unique wire department names padded. **108th cohort plugin with fully-clean department pass-through.** **Two structural deviations** from ACOG — D-10 sub-axis AND D-09 sub-axis cardinality variant. **Not a re-spin** (D-09 cardinality variant of a NEW sub-pattern). Selected as the **alphabetically-next** clean non-numeric-slug entry not already represented in `packages/plugins/source-company-*` after aCommerce, with a confirmed live board.)
 
 **Scope:** Run #391 is the **seventh** plugin in the eleventh
