@@ -512,6 +512,8 @@ export enum Site {
   ACLU = 'aclu',
   // Phase 189: Spec 179 — Source Company Plugin: ACOG
   ACOG = 'acog',
+  // Phase 190: Spec 180 — Source Company Plugin: aCommerce
+  ACOMMERCE = 'acommerce',
 }
 
 /**

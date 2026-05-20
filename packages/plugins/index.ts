@@ -71,6 +71,7 @@ import { AciLearningModule } from './source-company-acilearning';
 import { AckermannGroupModule } from './source-company-ackermanngroup';
 import { AcluModule } from './source-company-aclu';
 import { AcogModule } from './source-company-acog';
+import { AcommerceModule } from './source-company-acommerce';
 import { AdyenModule } from './source-company-adyen';
 import { AffirmModule } from './source-company-affirm';
 import { AirbnbModule } from './source-company-airbnb';
@@ -398,6 +399,7 @@ export const ALL_SOURCE_MODULES = [
   AckermannGroupModule,
   AcluModule,
   AcogModule,
+  AcommerceModule,
   AdyenModule,
   AffirmModule,
   AirbnbModule,
