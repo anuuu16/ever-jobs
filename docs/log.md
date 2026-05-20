@@ -15,6 +15,69 @@
 
 ---
 
+## 2026-05-20 — Scheduled run #391 (Spec 181 closed end-to-end; new `source-company-acp` plugin shipped — 10 unit tests green; 5-suite cross-regression (ACP + aCommerce + ACOG + ACLU + ACI Learning) 48/48 green in 11.84 s; **7th plugin in the eleventh fresh probe sweep**. Authored Spec 181 (spec.md / plan.md / tasks.md), added `Site.ACP = 'acp'` enum under `// Phase 191`, scaffolded the package modeled on the `source-company-acog` template (closest D-09 acronym-by-initials cousin) with **two structural deviations**: (a) **D-10 sub-axis** — trailing-pad applied (1/6 padded ~16.7 %) → **omitted (clean pass-through)** (0/3 padded — defensive `.trim()` safe no-op); (b) **D-09 sub-axis cardinality variant** — 4 PascalCase + 2 connectors (`'American College of Obstetricians and Gynecologists'` 51 bytes → 4-byte slug `acog`) → **3 PascalCase + 1 connector** (`'Academy with Community Partners'` 31 bytes — 4 wire-tokens, 3 PascalCase + 1 lowercase-connector; slug `acp` formed by sampling first letter of each PascalCase wire-token with connector-skip; A from Academy, C from Community, P from Partners; 1 connector `with` skipped). **Second cohort observation of acronym-by-initials slug derivation with connector-skip** — validates the ACOG sub-pattern at lower cardinality (3 PascalCase + 1 connector vs ACOG's 4 PascalCase + 2 connectors); confirms the sub-pattern is **not a one-off** observation but a recurring D-09 transformation pattern. Wired `AcpModule` between `AcommerceModule` and `AdyenModule` (alphabetical insertion — `'acp'` sorts after `'acommerce'` and before `'adyen'`), authored 10-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/acp/jobs/<id>`) + **D-09 acronym-by-initials byte-for-byte lock** (4 wire-tokens, 3 PascalCase + 1 lowercase-connector classification, first-letter-sampling-with-connector-skip slug derivation) + **D-10 clean-pass-through title lock** (every emitted `title` byte-equals wire `title`) + **D-11 clean-pass-through dept lock** (every emitted `department` byte-equals wire `departments[0].name`), ran tests + 5-suite cross-regression, updated docs. The run-391 probe sampled **3 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/acp/jobs?content=true`. This is the **170th Greenhouse-backed company-direct plugin** in the catalogue and the **80th** to use **wire-shape variant 2**; the **137th** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **128th cohort plugin to omit D-09**. **D-10 omitted** (clean pass-through) — 0 of 3 wire titles padded. **42nd cohort plugin to omit D-10**. **D-11 omitted** (clean pass-through) — 0 of 2 unique wire department names padded. **108th cohort plugin with fully-clean department pass-through.** **Two structural deviations** from ACOG — D-10 sub-axis AND D-09 sub-axis cardinality variant. **Not a re-spin** (D-09 cardinality variant of a NEW sub-pattern). Selected as the **alphabetically-next** clean non-numeric-slug entry not already represented in `packages/plugins/source-company-*` after aCommerce, with a confirmed live board.)
+
+**Scope:** Run #391 is the **seventh** plugin in the eleventh
+fresh probe sweep with ACP — the alphabetically-next clean
+non-numeric-slug entry from the upstream
+`OTHERS/Ats-scrapers/ats-companies/greenhouse.csv` corpus
+not already represented in `packages/plugins/source-company-*`
+after aCommerce (run #390) — sampling 3 visible roles. Run
+#391 marks the **second cohort observation of acronym-by-
+initials slug derivation with connector-skip** (validates the
+ACOG sub-pattern at lower cardinality, confirming the sub-
+pattern is a recurring D-09 transformation pattern), the
+**80th** variant-2 plugin, the **42nd D-10 omission**, the
+**108th** cohort plugin with fully-clean department pass-
+through, the **128th** cohort plugin to omit D-09, and the
+**170th** Greenhouse-backed company-direct plugin.
+
+**Changes:**
+
+- `.specify/specs/181-source-company-acp/{spec,plan,tasks}.md`
+  — new spec.
+- `packages/plugins/source-company-acp/{package.json,
+  tsconfig.json,src/{index.ts,acp.module.ts,acp.service.ts},
+  __tests__/{acp.service.spec.ts,fixtures/acp-jobs.json}}` —
+  new plugin scaffold + 10-case test spec + fixture.
+- `packages/models/src/enums/site.enum.ts` — append
+  `ACP = 'acp'` under Phase 191.
+- `packages/plugins/index.ts` — import + register `AcpModule`
+  in `ALL_SOURCE_MODULES` (alphabetical insertion between
+  `AcommerceModule` and `AdyenModule`).
+- `tsconfig.base.json` — path alias
+  `@ever-jobs/source-company-acp`.
+- `jest.config.js` — matching `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — ACP row above aCommerce.
+- `docs/COMPANY_SLUG_DIRECTORY.md` — ACP row in Greenhouse
+  company-direct slug section.
+- `docs/index.md` — ACP row 181 in spec index.
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- **Cohort thresholds touched at run #391:**
+  - **170th** Greenhouse-backed company-direct plugin
+    (169 → 170).
+  - **80th** variant-2 plugin in the cohort (79 → 80).
+  - **137th** D-08-application plugin (136 → 137).
+  - **Second cohort observation of acronym-by-initials slug
+    derivation with connector-skip** — validates the ACOG
+    sub-pattern at lower cardinality.
+  - **128th** cohort plugin to omit D-09 (127 → 128).
+  - **42nd** cohort plugin to omit D-10 (41 → 42).
+  - **108th** cohort plugin with fully-clean department
+    pass-through (D-11 omitted) (107 → 108).
+- **Test stats:** 10/10 cases green for ACP in 9.149 s;
+  5-suite cross-regression (ACP + aCommerce + ACOG + ACLU +
+  ACI Learning) 48/48 green in 11.84 s.
+- **Upstream churn check at run-391 start:** Ats-scrapers
+  unchanged on `71d9a56` (1 zero-churn run since run #390).
+  JobSpy unchanged on `fda080a` (148 zero-churn runs).
+  Jobspy-api unchanged on `26bb6f4` (148 zero-churn runs).
+
+---
+
 ## 2026-05-20 — Scheduled run #390 (Spec 180 closed end-to-end; new `source-company-acommerce` plugin shipped — 10 unit tests green; 5-suite cross-regression (aCommerce + ACOG + ACLU + Ackermann Group + ACI Learning) 47/47 green in 11.874 s; **6th plugin in the eleventh fresh probe sweep**. Authored Spec 180 (spec.md / plan.md / tasks.md), added `Site.ACOMMERCE = 'acommerce'` enum under `// Phase 190`, scaffolded the package modeled on the `source-company-acog` template (closest variant-2 + D-08 + D-10-trailing-pad-applied + D-11-omitted cousin) with **one structural deviation**: **D-09 sub-axis** — acronym-by-initials slug derivation from a multi-token PascalCase + lowercase-connector wire form (`'American College of Obstetricians and Gynecologists'` 51 bytes — 6 wire-tokens, 4 PascalCase + 2 lowercase-connector; slug `acog` formed by sampling first letter of each PascalCase wire-token with connector-skip) → **single-token camelCase ONE-cap-at-byte-1 wire form** (`'aCommerce'` 9 bytes — single wire-token; byte 0 `'a'` lowercase, byte 1 `'C'` UPPERCASE (sole cap), bytes 2-8 `'ommerce'` all lowercase; slug `acommerce` byte-for-byte lowercase of wire). **First cohort observation of (a) single-token camelCase classical wire form (lowercase-prefix + single-cap + lowercase-tail) AND (b) cap-at-byte-1-only D-09 sub-pattern** — prior ONE-cap observations all carried cap at byte 0 (PascalCase classical); prior lowercase-first observation at xAI (Spec 103) carried TWO caps at bytes 1/2 (`'xAI'`), not a single cap with lowercase tail. Wired `AcommerceModule` between `AcogModule` and `AdyenModule` (alphabetical insertion — `'acommerce'` sorts after `'acog'` and before `'adyen'`), authored 10-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/acommerce/jobs/<id>`) + **D-09 camelCase ONE-cap-at-byte-1 byte-for-byte lock** (single wire-token; cap-at-byte-1-only invariant via uppercase-index scan; lowercase tail invariant; slug byte-for-byte lowercase of wire) + **D-10 trailing-pad title-trim lock** (`'Key Account Manager '` 20 bytes → `'Key Account Manager'` 19 bytes) + **D-11 clean-pass-through dept lock** (every emitted `department` byte-equals wire `departments[0].name`), ran tests + 5-suite cross-regression, updated docs. The run-390 probe sampled **60 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/acommerce/jobs?content=true`. This is the **169th Greenhouse-backed company-direct plugin** in the catalogue and the **79th** to use **wire-shape variant 2** (canonical Greenhouse host `job-boards.greenhouse.io/<slug>/jobs/<id>`); the **136th** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **127th cohort plugin to omit D-09**. **D-10 applied** with trailing-pad form — 9 of 60 wire titles padded (~15.0 % pad rate); the plugin applies `.trim()` to wire `title` before downstream filters and emit. **83rd cohort plugin to apply D-10**. **D-11 omitted** (clean pass-through) — 0 of 13 unique wire department names padded. **107th cohort plugin with fully-clean department pass-through.** **One structural deviation** from ACOG — D-09 sub-axis only. **Not a re-spin** (structural NEW sub-pattern). Selected as the **alphabetically-next** clean non-numeric-slug entry not already represented in `packages/plugins/source-company-*` after ACOG, with a confirmed live board. **Upstream churn at run #390:** Ats-scrapers updated `6dbb622 → 71d9a56` (2 new commits: `[codex] Add EURES description fallback (#138)` + `Fix public package defaults and docs` — confined to EURES scraper / pipeline guards / CLI / Workday guards; **zero corpus churn** on the `ats-companies/` directory — all 5 004 verified Greenhouse tenants preserved byte-for-byte); JobSpy unchanged on `fda080a` (147 zero-churn runs); Jobspy-api unchanged on `26bb6f4` (147 zero-churn runs). **Zero corpus-churn streak (5 runs) continues.**)
 
 **Scope:** Run #390 is the **sixth** plugin in the eleventh

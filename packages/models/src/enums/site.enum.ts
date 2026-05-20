@@ -514,6 +514,8 @@ export enum Site {
   ACOG = 'acog',
   // Phase 190: Spec 180 — Source Company Plugin: aCommerce
   ACOMMERCE = 'acommerce',
+  // Phase 191: Spec 181 — Source Company Plugin: ACP
+  ACP = 'acp',
 }
 
 /**

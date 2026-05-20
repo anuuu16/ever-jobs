@@ -187,6 +187,7 @@
       "@ever-jobs/source-company-aclu": ["packages/plugins/source-company-aclu/src/index.ts"],
       "@ever-jobs/source-company-acog": ["packages/plugins/source-company-acog/src/index.ts"],
       "@ever-jobs/source-company-acommerce": ["packages/plugins/source-company-acommerce/src/index.ts"],
+      "@ever-jobs/source-company-acp": ["packages/plugins/source-company-acp/src/index.ts"],
       "@ever-jobs/source-company-adyen": ["packages/plugins/source-company-adyen/src/index.ts"],
       "@ever-jobs/source-company-benevity": ["packages/plugins/source-company-benevity/src/index.ts"],
       "@ever-jobs/source-company-billcom": ["packages/plugins/source-company-billcom/src/index.ts"],
