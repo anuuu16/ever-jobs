@@ -74,6 +74,7 @@ import { AcogModule } from './source-company-acog';
 import { AcommerceModule } from './source-company-acommerce';
 import { AcpModule } from './source-company-acp';
 import { AcquiaModule } from './source-company-acquia';
+import { AcrisureInnovationModule } from './source-company-acrisureinnovation';
 import { AdyenModule } from './source-company-adyen';
 import { AffirmModule } from './source-company-affirm';
 import { AirbnbModule } from './source-company-airbnb';
@@ -404,6 +405,7 @@ export const ALL_SOURCE_MODULES = [
   AcommerceModule,
   AcpModule,
   AcquiaModule,
+  AcrisureInnovationModule,
   AdyenModule,
   AffirmModule,
   AirbnbModule,

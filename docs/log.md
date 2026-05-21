@@ -15,6 +15,71 @@
 
 ---
 
+## 2026-05-21 — Scheduled run #393 (Spec 183 closed end-to-end; new `source-company-acrisureinnovation` plugin shipped — 11 unit tests green; 5-suite cross-regression (Acrisure Innovation + Acquia + ACP + aCommerce + ACOG) 51/51 green in 11.89 s; **9th plugin in the eleventh fresh probe sweep**. Authored Spec 183, added `Site.ACRISUREINNOVATION = 'acrisureinnovation'` enum under `// Phase 193`, scaffolded the package modeled on the `source-company-accuweather` template with **one structural deviation** off AccuWeather: **D-11 sub-axis** (AccuWeather applied D-11 — 2/15 unique departments padded — `'Facilities '`, `'Information Systems '` → **omitted (clean pass-through)** with 0/4 unique departments padded — `'Data'`, `'Engineering'`, `'Marketing'`, `'Product'`). The **D-10 sub-axis** further differs in **pad-position sub-form**: AccuWeather's trailing-only → Acrisure Innovation's **leading-AND-trailing-mixed** sub-form (1 leading-only-pad observation `' Forward Deployed (Echo)- Atlanta, GA'` + 1 leading-AND-trailing-pad observation `' Forward Deployed (Echo) - Austin, TX '` on the same fixture). **First cohort observation of the leading-AND-trailing (both-sides) ASCII-space pad sub-form on a single listing.** Wire `company_name === 'Acrisure Innovation'` 19 bytes case-symmetric two-token PascalCase + ASCII-space + space-strip (first token `Acrisure` 8 bytes PascalCase cap-at-0 + 1 internal ASCII space + second token `Innovation` 10 bytes PascalCase cap-at-0 → 18-byte lowercase slug `acrisureinnovation`; caps at byte indices 0 and 9 in wire, no caps in slug). Wired `AcrisureInnovationModule` between `AcquiaModule` and `AdyenModule` (alphabetical insertion — `'acrisureinnovation'` sorts after `'acquia'` and before `'adyen'`), authored 11-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/acrisureinnovation/jobs/<id>`) + **D-09 case-symmetric two-token PascalCase + space-strip byte-for-byte lock** + **D-10 leading-AND-trailing-pad applied title lock** (asserts both the leading-only and leading-AND-trailing pad sub-forms get trimmed uniformly) + **D-11 clean-pass-through dept lock**, ran tests + 5-suite cross-regression, updated docs. The run-393 probe sampled **15 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/acrisureinnovation/jobs?content=true`. This is the **172nd Greenhouse-backed company-direct plugin** in the catalogue and the **82nd** to use **wire-shape variant 2**; the **139th** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **130th cohort plugin to omit D-09**. **D-10 applied** (`.trim()` overlay) — 2 of 15 wire titles padded (~13.3 %); **84th cohort plugin to apply D-10**. **D-11 omitted** (clean pass-through) — 0 of 4 unique wire department names padded; **110th cohort plugin with fully-clean department pass-through.** Innovation unit of Acrisure LLC — Grand Rapids–HQ global insurance-brokerage and fintech platform; ~$4.3B FY2024 revenue; backed by Blackstone / BDT Capital / Guggenheim / Fidelity National Financial.)
+
+**Scope:** Run #393 is the **ninth** plugin in the eleventh
+fresh probe sweep with Acrisure Innovation — the
+alphabetically-next clean non-numeric-slug entry from the
+upstream `OTHERS/Ats-scrapers/ats-companies/greenhouse.csv`
+corpus not already represented in `packages/plugins/source-
+company-*` after Acquia (run #392) — sampling 15 visible
+roles. Run #393 marks the **first cohort observation of the
+leading-AND-trailing (both-sides) ASCII-space pad sub-form
+on a single listing** (D-10 pad-position sub-form), the
+**84th** D-10 application, the **82nd** variant-2 plugin,
+the **110th** cohort plugin with fully-clean department
+pass-through (D-11 omitted), the **130th** cohort plugin to
+omit D-09, and the **172nd** Greenhouse-backed company-direct
+plugin.
+
+**Changes:**
+
+- `.specify/specs/183-source-company-acrisureinnovation/{spec,plan,tasks}.md`
+  — new spec.
+- `packages/plugins/source-company-acrisureinnovation/{package.json,
+  tsconfig.json,src/{index.ts,acrisure-innovation.module.ts,
+  acrisure-innovation.service.ts},__tests__/{acrisure-
+  innovation.service.spec.ts,fixtures/acrisureinnovation-jobs.json}}`
+  — new plugin scaffold + 11-case test spec + 4-listing fixture.
+- `packages/models/src/enums/site.enum.ts` — append
+  `ACRISUREINNOVATION = 'acrisureinnovation'` under Phase 193.
+- `packages/plugins/index.ts` — import + register
+  `AcrisureInnovationModule` in `ALL_SOURCE_MODULES`
+  (alphabetical insertion between `AcquiaModule` and
+  `AdyenModule`).
+- `tsconfig.base.json` — path alias
+  `@ever-jobs/source-company-acrisureinnovation`.
+- `jest.config.js` — matching `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — Acrisure Innovation row
+  above Acquia.
+- `docs/COMPANY_SLUG_DIRECTORY.md` — Acrisure Innovation row.
+- `docs/index.md` — Acrisure Innovation row 183 in spec
+  index.
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- **Cohort thresholds touched at run #393:**
+  - **172nd** Greenhouse-backed company-direct plugin
+    (171 → 172).
+  - **82nd** variant-2 plugin in the cohort (81 → 82).
+  - **139th** D-08-application plugin (138 → 139).
+  - **130th** cohort plugin to omit D-09 (129 → 130).
+  - **84th** cohort plugin to apply D-10 (83 → 84).
+  - **110th** cohort plugin with fully-clean department
+    pass-through (109 → 110).
+  - **First cohort observation of the leading-AND-trailing
+    (both-sides) ASCII-space pad sub-form on a single
+    listing.**
+- **Test stats:** 11/11 cases green for Acrisure Innovation in
+  9.29 s; 5-suite cross-regression (Acrisure Innovation +
+  Acquia + ACP + aCommerce + ACOG) 51/51 green in 11.89 s.
+- **Upstream churn check at run-393 start:** unchanged from
+  run-392 (Ats-scrapers `71d9a56`, JobSpy `fda080a`,
+  Jobspy-api `26bb6f4`).
+
+---
+
 ## 2026-05-20 — Scheduled run #392 (Spec 182 closed end-to-end; new `source-company-acquia` plugin shipped — 10 unit tests green; 5-suite cross-regression (Acquia + ACP + aCommerce + ACOG + ACLU) 49/49 green in 11.94 s; **8th plugin in the eleventh fresh probe sweep**. Authored Spec 182, added `Site.ACQUIA = 'acquia'` enum under `// Phase 192`, scaffolded the package modeled on the `source-company-coursera` template with **zero structural deviations** — clean re-spin of canonical variant-2 + D-08 + D-09/D-10/D-11 all-omitted profile. Wire `company_name === 'Acquia'` 6 bytes case-symmetric PascalCase single-token (cap at byte 0 only). Wired `AcquiaModule` between `AcpModule` and `AdyenModule` (alphabetical), authored 10-case test spec, ran tests + cross-regression, updated docs. The run-392 probe sampled **17 visible roles**. **171st** Greenhouse-backed company-direct plugin; **81st** variant-2; **138th** D-08; **129th** D-09 omission; **43rd** D-10 omission; **109th** fully-clean department pass-through. Drupal-based enterprise DXP vendor founded in 2007 by Drupal creator Dries Buytaert; Vista Equity Partners portfolio since 2019.)
 
 **Scope:** Run #392 is the **eighth** plugin in the eleventh

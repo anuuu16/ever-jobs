@@ -518,6 +518,8 @@ export enum Site {
   ACP = 'acp',
   // Phase 192: Spec 182 — Source Company Plugin: Acquia
   ACQUIA = 'acquia',
+  // Phase 193: Spec 183 — Source Company Plugin: Acrisure Innovation
+  ACRISUREINNOVATION = 'acrisureinnovation',
 }
 
 /**
