@@ -15,6 +15,70 @@
 
 ---
 
+## 2026-05-22 — Scheduled run #394 (Spec 184 closed end-to-end; new `source-company-acryldata` plugin shipped — 11 unit tests green; 5-suite cross-regression (Acryl Data + Acrisure Innovation + Acquia + ACP + aCommerce) 52/52 green in 11.96 s; **10th plugin in the eleventh fresh probe sweep**. Authored Spec 184, added `Site.ACRYLDATA = 'acryldata'` enum under `// Phase 194`, scaffolded the package modeled on the `source-company-acquia` template with **one structural deviation** off Acquia: **D-09 sub-axis** (Acquia: case-symmetric bare-brand single-token PascalCase with slug = lowercase-of-wire `'Acquia'` 6 bytes → `acquia` → **first cohort observation of a slug-not-derived-from-wire-company_name sub-form**: wire `company_name === 'DataHub'` 7 bytes TWO-cap PascalCase single-token (caps at byte 0 `'D'` and byte 4 `'H'`); but the slug `acryldata` 9 bytes is **NOT** lowercase-of-wire — the slug derives from the **corporate name** `'Acryl Data'` (10-byte case-symmetric two-token PascalCase + ASCII-space; first token `'Acryl'` 5 bytes PascalCase cap-at-0 + 1 internal ASCII space + second token `'Data'` 4 bytes PascalCase cap-at-0 → space-strip + lowercase → 9-byte slug `acryldata`), while the wire emits the **product-line brand name** `'DataHub'`). Wired `AcryldataModule` between `AcrisureInnovationModule` and `AdyenModule` (alphabetical insertion — `'acryldata'` sorts after `'acrisureinnovation'` and before `'adyen'`), authored 11-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/acryldata/jobs/<id>`) + **D-09 byte-for-byte wire lock** (`'DataHub'` 7 bytes) + **slug-vs-wire mismatch lock** (slug `acryldata` is NOT lowercase-of-wire; assert it derives from `'Acryl Data'` corporate name via space-strip + lowercase) + **D-10 clean-pass-through title lock** + **D-11 clean-pass-through dept lock**, ran tests + 5-suite cross-regression, updated docs. The run-394 probe sampled **9 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/acryldata/jobs?content=true`. This is the **173rd Greenhouse-backed company-direct plugin** in the catalogue and the **83rd** to use **wire-shape variant 2**; the **140th** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **131st cohort plugin to omit D-09**. **D-10 omitted** (clean pass-through, 0/9 padded — defensive `.trim()` safe no-op); **44th cohort plugin to omit D-10**. **D-11 omitted** (clean pass-through) — 0 of 3 unique wire department names padded (`'Marketing & Sales'`, `'Engineering'`, `'Customer Success'`); **111th cohort plugin with fully-clean department pass-through.** Acryl Data, Inc. — Palo Alto–HQ managed metadata-platform vendor; corporate steward of the open-source DataHub project; founded 2020; backed by 8VC / LinkedIn / Insight Partners / DBC Venture Partners.)
+
+**Scope:** Run #394 is the **tenth** plugin in the eleventh
+fresh probe sweep with Acryl Data — the alphabetically-next
+clean non-numeric-slug entry from the upstream
+`OTHERS/Ats-scrapers/ats-companies/greenhouse.csv` corpus
+not already represented in `packages/plugins/source-company-*`
+after Acrisure Innovation (run #393) — sampling 9 visible
+roles. Run #394 marks the **first cohort observation of a
+slug-not-derived-from-wire-company_name sub-form** (D-09
+sub-form), the **44th** D-10 omission, the **83rd** variant-2
+plugin, the **111th** cohort plugin with fully-clean
+department pass-through (D-11 omitted), the **131st** cohort
+plugin to omit D-09, and the **173rd** Greenhouse-backed
+company-direct plugin.
+
+**Changes:**
+
+- `.specify/specs/184-source-company-acryldata/{spec,plan,tasks}.md`
+  — new spec.
+- `packages/plugins/source-company-acryldata/{package.json,
+  tsconfig.json,src/{index.ts,acryldata.module.ts,
+  acryldata.service.ts},__tests__/{acryldata.service.spec.ts,
+  fixtures/acryldata-jobs.json}}`
+  — new plugin scaffold + 11-case test spec + 3-listing fixture.
+- `packages/models/src/enums/site.enum.ts` — append
+  `ACRYLDATA = 'acryldata'` under Phase 194.
+- `packages/plugins/index.ts` — import + register
+  `AcryldataModule` in `ALL_SOURCE_MODULES`
+  (alphabetical insertion between `AcrisureInnovationModule`
+  and `AdyenModule`).
+- `tsconfig.base.json` — path alias
+  `@ever-jobs/source-company-acryldata`.
+- `jest.config.js` — matching `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — Acryl Data row above
+  Acrisure Innovation.
+- `docs/COMPANY_SLUG_DIRECTORY.md` — Acryl Data row.
+- `docs/index.md` — Acryl Data row 184 in spec index.
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- **Cohort thresholds touched at run #394:**
+  - **173rd** Greenhouse-backed company-direct plugin
+    (172 → 173).
+  - **83rd** variant-2 plugin in the cohort (82 → 83).
+  - **140th** D-08-application plugin (139 → 140).
+  - **131st** cohort plugin to omit D-09 (130 → 131).
+  - **44th** cohort plugin to omit D-10 (43 → 44).
+  - **111th** cohort plugin with fully-clean department
+    pass-through (110 → 111).
+  - **First cohort observation of slug-not-derived-from-
+    wire-company_name D-09 sub-form** — slug derives from
+    the corporate name; wire emits the product-line brand.
+- **Test stats:** 11/11 cases green for Acryl Data in
+  9.33 s; 5-suite cross-regression (Acryl Data + Acrisure
+  Innovation + Acquia + ACP + aCommerce) 52/52 green in
+  11.96 s.
+- **Upstream churn check at run-394 start:** unchanged from
+  run-393 (Ats-scrapers `71d9a56`, JobSpy `fda080a`,
+  Jobspy-api `26bb6f4`).
+
+---
+
 ## 2026-05-21 — Scheduled run #393 (Spec 183 closed end-to-end; new `source-company-acrisureinnovation` plugin shipped — 11 unit tests green; 5-suite cross-regression (Acrisure Innovation + Acquia + ACP + aCommerce + ACOG) 51/51 green in 11.89 s; **9th plugin in the eleventh fresh probe sweep**. Authored Spec 183, added `Site.ACRISUREINNOVATION = 'acrisureinnovation'` enum under `// Phase 193`, scaffolded the package modeled on the `source-company-accuweather` template with **one structural deviation** off AccuWeather: **D-11 sub-axis** (AccuWeather applied D-11 — 2/15 unique departments padded — `'Facilities '`, `'Information Systems '` → **omitted (clean pass-through)** with 0/4 unique departments padded — `'Data'`, `'Engineering'`, `'Marketing'`, `'Product'`). The **D-10 sub-axis** further differs in **pad-position sub-form**: AccuWeather's trailing-only → Acrisure Innovation's **leading-AND-trailing-mixed** sub-form (1 leading-only-pad observation `' Forward Deployed (Echo)- Atlanta, GA'` + 1 leading-AND-trailing-pad observation `' Forward Deployed (Echo) - Austin, TX '` on the same fixture). **First cohort observation of the leading-AND-trailing (both-sides) ASCII-space pad sub-form on a single listing.** Wire `company_name === 'Acrisure Innovation'` 19 bytes case-symmetric two-token PascalCase + ASCII-space + space-strip (first token `Acrisure` 8 bytes PascalCase cap-at-0 + 1 internal ASCII space + second token `Innovation` 10 bytes PascalCase cap-at-0 → 18-byte lowercase slug `acrisureinnovation`; caps at byte indices 0 and 9 in wire, no caps in slug). Wired `AcrisureInnovationModule` between `AcquiaModule` and `AdyenModule` (alphabetical insertion — `'acrisureinnovation'` sorts after `'acquia'` and before `'adyen'`), authored 11-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/acrisureinnovation/jobs/<id>`) + **D-09 case-symmetric two-token PascalCase + space-strip byte-for-byte lock** + **D-10 leading-AND-trailing-pad applied title lock** (asserts both the leading-only and leading-AND-trailing pad sub-forms get trimmed uniformly) + **D-11 clean-pass-through dept lock**, ran tests + 5-suite cross-regression, updated docs. The run-393 probe sampled **15 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/acrisureinnovation/jobs?content=true`. This is the **172nd Greenhouse-backed company-direct plugin** in the catalogue and the **82nd** to use **wire-shape variant 2**; the **139th** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **130th cohort plugin to omit D-09**. **D-10 applied** (`.trim()` overlay) — 2 of 15 wire titles padded (~13.3 %); **84th cohort plugin to apply D-10**. **D-11 omitted** (clean pass-through) — 0 of 4 unique wire department names padded; **110th cohort plugin with fully-clean department pass-through.** Innovation unit of Acrisure LLC — Grand Rapids–HQ global insurance-brokerage and fintech platform; ~$4.3B FY2024 revenue; backed by Blackstone / BDT Capital / Guggenheim / Fidelity National Financial.)
 
 **Scope:** Run #393 is the **ninth** plugin in the eleventh

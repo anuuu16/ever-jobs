@@ -520,6 +520,8 @@ export enum Site {
   ACQUIA = 'acquia',
   // Phase 193: Spec 183 — Source Company Plugin: Acrisure Innovation
   ACRISUREINNOVATION = 'acrisureinnovation',
+  // Phase 194: Spec 184 — Source Company Plugin: Acryl Data
+  ACRYLDATA = 'acryldata',
 }
 
 /**
