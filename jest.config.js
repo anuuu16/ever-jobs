@@ -176,6 +176,7 @@ module.exports = {
     '^@ever-jobs/source-company-acquia$': '<rootDir>/packages/plugins/source-company-acquia/src/index.ts',
     '^@ever-jobs/source-company-acrisureinnovation$': '<rootDir>/packages/plugins/source-company-acrisureinnovation/src/index.ts',
     '^@ever-jobs/source-company-acryldata$': '<rootDir>/packages/plugins/source-company-acryldata/src/index.ts',
+    '^@ever-jobs/source-company-acumen$': '<rootDir>/packages/plugins/source-company-acumen/src/index.ts',
     '^@ever-jobs/source-company-adyen$': '<rootDir>/packages/plugins/source-company-adyen/src/index.ts',
     '^@ever-jobs/source-company-benevity$': '<rootDir>/packages/plugins/source-company-benevity/src/index.ts',
     '^@ever-jobs/source-company-billcom$': '<rootDir>/packages/plugins/source-company-billcom/src/index.ts',

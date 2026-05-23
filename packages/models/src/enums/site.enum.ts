@@ -522,6 +522,8 @@ export enum Site {
   ACRISUREINNOVATION = 'acrisureinnovation',
   // Phase 194: Spec 184 — Source Company Plugin: Acryl Data
   ACRYLDATA = 'acryldata',
+  // Phase 195: Spec 185 — Source Company Plugin: Acumen
+  ACUMEN = 'acumen',
 }
 
 /**

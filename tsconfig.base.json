@@ -191,6 +191,7 @@
       "@ever-jobs/source-company-acquia": ["packages/plugins/source-company-acquia/src/index.ts"],
       "@ever-jobs/source-company-acrisureinnovation": ["packages/plugins/source-company-acrisureinnovation/src/index.ts"],
       "@ever-jobs/source-company-acryldata": ["packages/plugins/source-company-acryldata/src/index.ts"],
+      "@ever-jobs/source-company-acumen": ["packages/plugins/source-company-acumen/src/index.ts"],
       "@ever-jobs/source-company-adyen": ["packages/plugins/source-company-adyen/src/index.ts"],
       "@ever-jobs/source-company-benevity": ["packages/plugins/source-company-benevity/src/index.ts"],
       "@ever-jobs/source-company-billcom": ["packages/plugins/source-company-billcom/src/index.ts"],

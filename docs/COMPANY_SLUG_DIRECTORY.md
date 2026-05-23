@@ -43,6 +43,7 @@ Greenhouse slugs are the subdomain used in `boards.greenhouse.io/{slug}`.
 | Acquia | `acquia` | Drupal-based Enterprise DXP / Open-Source-Cloud Digital Experience Platform |
 | Acrisure Innovation | `acrisureinnovation` | Insurance-Brokerage Innovation Unit / AI- and Data-Driven Broker Products |
 | Acryl Data (DataHub) | `acryldata` | Enterprise Metadata-Platform / Steward of Open-Source DataHub |
+| Acumen | `acumen` | Impact-Investing Nonprofit / Patient-Capital Social-Enterprise Fund + Acumen Academy Leadership Development |
 | Airbnb | `airbnb` | Travel / Tech |
 | Spotify | `spotify` | Music / Tech |
 | Discord | `discord` | Social / Tech |

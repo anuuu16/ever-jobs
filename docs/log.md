@@ -15,6 +15,75 @@
 
 ---
 
+## 2026-05-23 — Scheduled run #395 (Spec 185 closed end-to-end; new `source-company-acumen` plugin shipped — 11 unit tests green; 5-suite cross-regression (Acumen + Acryl Data + Acrisure Innovation + Acquia + Tatari) 51/51 green in 12.23 s; **11th plugin in the eleventh fresh probe sweep**. Authored Spec 185, added `Site.ACUMEN = 'acumen'` enum under `// Phase 195`, scaffolded the package modeled on the `source-company-tatari` template with **zero structural deviations** — clean re-spin of the canonical variant-2 + D-08 + D-09 omitted (case-symmetric bare-brand single-token PascalCase 6-byte sub-form, slug = byte-for-byte lowercase of wire) + D-10 applied (trailing-pad form) + D-11 omitted profile. Wire `company_name === 'Acumen'` 6 bytes case-symmetric PascalCase single-token (cap at byte 0 only); slug `acumen` is byte-for-byte lowercase of wire — **third near-clean re-spin on this exact D-09 sub-form across the cohort** (after Tatari Spec 173 `'Tatari'` 6 bytes and Acquia Spec 182 `'Acquia'` 6 bytes). Wired `AcumenModule` between `AcryldataModule` and `AdyenModule` (alphabetical insertion — `'acumen'` sorts after `'acryldata'` and before `'adyen'`), authored 11-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/acumen/jobs/<id>`) + **D-09 case-symmetric bare-brand byte-for-byte wire lock** (`'Acumen'` 6 bytes; cap at byte 0 only; slug = byte-for-byte lowercase of wire) + **D-10 trailing-pad title-trim lock** (asserts the padded form `'Compensation Consultant '` gets trimmed to `'Compensation Consultant'` 22 bytes and no emitted title ends in whitespace) + **D-11 clean-pass-through dept lock**, ran tests + 5-suite cross-regression, updated docs. The run-395 probe sampled **9 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/acumen/jobs?content=true`. This is the **174th Greenhouse-backed company-direct plugin** in the catalogue and the **84th** to use **wire-shape variant 2**; the **141st** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **132nd cohort plugin to omit D-09**. **D-10 applied** (`.trim()` overlay) — 1 of 9 wire titles padded (~11.1 %, trailing-only sub-form: `'Compensation Consultant '`); **85th cohort plugin to apply D-10**. **D-11 omitted** (clean pass-through) — 0 of 4 unique wire department names padded (`'Acumen Academy'`, `'Executive Office'`, `'Investing'`, `'Talent'`); **112th cohort plugin with fully-clean department pass-through.** Acumen, Inc. — NYC-HQ 501(c)(3) patient-capital impact-investing nonprofit founded by Jacqueline Novogratz in 2001; operates the Acumen Fund (catalytic equity/debt vehicle), Acumen Academy (leadership-development arm with Foundry incubator), and regional Acumen East Africa / West Africa / Latin America / South Asia investment teams across emerging-market agriculture / clean-energy / education / financial-inclusion / healthcare / workforce-development verticals.)
+
+**Scope:** Run #395 is the **eleventh** plugin in the
+eleventh fresh probe sweep with Acumen — the alphabetically-
+next clean non-numeric-slug entry from the upstream
+`OTHERS/Ats-scrapers/ats-companies/greenhouse.csv` corpus
+not already represented in `packages/plugins/source-company-*`
+after Acryl Data (run #394) — sampling 9 visible roles. Run
+#395 marks the **third near-clean re-spin on the case-
+symmetric bare-brand single-token PascalCase 6-byte D-09
+sub-form** (after Tatari and Acquia), the **85th** D-10
+application, the **84th** variant-2 plugin, the **112th**
+cohort plugin with fully-clean department pass-through (D-11
+omitted), the **132nd** cohort plugin to omit D-09, and the
+**174th** Greenhouse-backed company-direct plugin.
+
+**Changes:**
+
+- `.specify/specs/185-source-company-acumen/{spec,plan,tasks}.md`
+  — new spec.
+- `packages/plugins/source-company-acumen/{package.json,
+  tsconfig.json,src/{index.ts,acumen.module.ts,
+  acumen.service.ts},__tests__/{acumen.service.spec.ts,
+  fixtures/acumen-jobs.json}}`
+  — new plugin scaffold + 11-case test spec + 3-listing fixture.
+- `packages/models/src/enums/site.enum.ts` — append
+  `ACUMEN = 'acumen'` under Phase 195.
+- `packages/plugins/index.ts` — import + register
+  `AcumenModule` in `ALL_SOURCE_MODULES`
+  (alphabetical insertion between `AcryldataModule`
+  and `AdyenModule`).
+- `tsconfig.base.json` — path alias
+  `@ever-jobs/source-company-acumen`.
+- `jest.config.js` — matching `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — Acumen row above
+  Acryl Data.
+- `docs/COMPANY_SLUG_DIRECTORY.md` — Acumen row.
+- `docs/index.md` — Acumen row 185 in spec index.
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- **Cohort thresholds touched at run #395:**
+  - **174th** Greenhouse-backed company-direct plugin
+    (173 → 174).
+  - **84th** variant-2 plugin in the cohort (83 → 84).
+  - **141st** D-08-application plugin (140 → 141).
+  - **132nd** cohort plugin to omit D-09 (131 → 132).
+  - **85th** cohort plugin to apply D-10 (84 → 85).
+  - **112th** cohort plugin with fully-clean department
+    pass-through (111 → 112).
+  - **Third near-clean re-spin on the case-symmetric bare-
+    brand single-token PascalCase 6-byte D-09 sub-form**
+    (after Tatari Spec 173 `'Tatari'` and Acquia Spec 182
+    `'Acquia'`).
+- **Test stats:** 11/11 cases green for Acumen in 9.59 s;
+  5-suite cross-regression (Acumen + Acryl Data + Acrisure
+  Innovation + Acquia + Tatari) 51/51 green in 12.23 s.
+- **Upstream churn check at run-395 start:** Ats-scrapers
+  advanced `71d9a56..76cbe6b` (4 commits — Pinpoint, Lever,
+  Ashby, Greenhouse company-entry CSV fixes; `73d9ed3`
+  refreshed `ats-companies/greenhouse.csv` with 2 938 row
+  edits / 2 976 row drops; **no Acumen row change** —
+  same `Acumen,acumen,https://job-boards.greenhouse.io/acumen`
+  line as prior run). JobSpy `fda080a`, Jobspy-api
+  `26bb6f4` — both unchanged.
+
+---
+
 ## 2026-05-22 — Scheduled run #394 (Spec 184 closed end-to-end; new `source-company-acryldata` plugin shipped — 11 unit tests green; 5-suite cross-regression (Acryl Data + Acrisure Innovation + Acquia + ACP + aCommerce) 52/52 green in 11.96 s; **10th plugin in the eleventh fresh probe sweep**. Authored Spec 184, added `Site.ACRYLDATA = 'acryldata'` enum under `// Phase 194`, scaffolded the package modeled on the `source-company-acquia` template with **one structural deviation** off Acquia: **D-09 sub-axis** (Acquia: case-symmetric bare-brand single-token PascalCase with slug = lowercase-of-wire `'Acquia'` 6 bytes → `acquia` → **first cohort observation of a slug-not-derived-from-wire-company_name sub-form**: wire `company_name === 'DataHub'` 7 bytes TWO-cap PascalCase single-token (caps at byte 0 `'D'` and byte 4 `'H'`); but the slug `acryldata` 9 bytes is **NOT** lowercase-of-wire — the slug derives from the **corporate name** `'Acryl Data'` (10-byte case-symmetric two-token PascalCase + ASCII-space; first token `'Acryl'` 5 bytes PascalCase cap-at-0 + 1 internal ASCII space + second token `'Data'` 4 bytes PascalCase cap-at-0 → space-strip + lowercase → 9-byte slug `acryldata`), while the wire emits the **product-line brand name** `'DataHub'`). Wired `AcryldataModule` between `AcrisureInnovationModule` and `AdyenModule` (alphabetical insertion — `'acryldata'` sorts after `'acrisureinnovation'` and before `'adyen'`), authored 11-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/acryldata/jobs/<id>`) + **D-09 byte-for-byte wire lock** (`'DataHub'` 7 bytes) + **slug-vs-wire mismatch lock** (slug `acryldata` is NOT lowercase-of-wire; assert it derives from `'Acryl Data'` corporate name via space-strip + lowercase) + **D-10 clean-pass-through title lock** + **D-11 clean-pass-through dept lock**, ran tests + 5-suite cross-regression, updated docs. The run-394 probe sampled **9 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/acryldata/jobs?content=true`. This is the **173rd Greenhouse-backed company-direct plugin** in the catalogue and the **83rd** to use **wire-shape variant 2**; the **140th** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **131st cohort plugin to omit D-09**. **D-10 omitted** (clean pass-through, 0/9 padded — defensive `.trim()` safe no-op); **44th cohort plugin to omit D-10**. **D-11 omitted** (clean pass-through) — 0 of 3 unique wire department names padded (`'Marketing & Sales'`, `'Engineering'`, `'Customer Success'`); **111th cohort plugin with fully-clean department pass-through.** Acryl Data, Inc. — Palo Alto–HQ managed metadata-platform vendor; corporate steward of the open-source DataHub project; founded 2020; backed by 8VC / LinkedIn / Insight Partners / DBC Venture Partners.)
 
 **Scope:** Run #394 is the **tenth** plugin in the eleventh
