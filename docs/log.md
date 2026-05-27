@@ -15,6 +15,88 @@
 
 ---
 
+## 2026-05-27 — Scheduled run #396 (Spec 186 closed end-to-end; new `source-company-acurussolutions` plugin shipped — 11 unit tests green; 5-suite cross-regression (Acurus Solutions + Acumen + Acryl Data + AccuWeather + ACLU) 51/51 green in 21.89 s; **12th plugin in the eleventh fresh probe sweep**. Authored Spec 186, added `Site.ACURUSSOLUTIONS = 'acurussolutions'` enum under `// Phase 196`, scaffolded the package modeled on the `source-company-acumen` template with **one structural deviation**: **D-09 sub-axis** (Acumen: case-symmetric bare-brand single-token PascalCase 6-byte form with slug = byte-for-byte lowercase of wire `'Acumen'` → `acumen` → **first cohort observation of 2-token-prefix PascalCase slug-truncation from 4-token all-PascalCase wire form with corporate-legal-suffix-drop**: wire `company_name === 'Acurus Solutions Private Limited'` 32 bytes (4 wire tokens, every token PascalCase cap-at-byte-0-only: `'Acurus'` 6 bytes + `'Solutions'` 9 bytes + `'Private'` 7 bytes + `'Limited'` 7 bytes); slug `acurussolutions` 15 bytes derives from first-2-tokens `'Acurus Solutions'` 16 bytes (drop last-2-tokens `'Private Limited'` Indian-private-limited-company legal-entity suffix), then space-strip + lowercase → 15-byte slug; **first cohort observation of 4-token all-PascalCase wire form with slug-truncation D-09 sub-form**; **first cohort observation of drop-2-tokens slug-truncation factor** (between AccuWeather drop-1 and ACLU drop-3); **first cohort observation of corporate-legal-suffix-drop slug-truncation**; **fourth cohort observation of slug-truncation D-09 sub-form overall** — after AccuWeather drop-1, ACLU drop-3, ACOG initials-derivation). Wired `AcurussolutionsModule` between `AcumenModule` and `AdyenModule` (alphabetical insertion — `'acurussolutions'` sorts after `'acumen'` and before `'adyen'`), authored 11-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/acurussolutions/jobs/<id>`) + **D-09 4-token PascalCase byte-for-byte wire lock** (`'Acurus Solutions Private Limited'` 32 bytes; 4 wire tokens all PascalCase cap-at-byte-0-only; 3 ASCII spaces) + **D-09 slug-truncation derivation lock** (slug `acurussolutions` 15 bytes derives from first-2-tokens `'Acurus Solutions'` 16 bytes → space-strip + lowercase → 15-byte slug; drop last-2-tokens `'Private Limited'` corporate-legal-entity suffix) + **D-10 trailing-pad title-trim lock** + **D-11 clean-pass-through dept lock**, ran tests + 5-suite cross-regression, updated docs. The run-396 probe sampled **12 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/acurussolutions/jobs?content=true`. This is the **175th Greenhouse-backed company-direct plugin** in the catalogue and the **85th** to use **wire-shape variant 2**; the **142nd** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **133rd cohort plugin to omit D-09**. **D-10 applied** (`.trim()` overlay) — 1 of 12 wire titles padded (~8.3 %, trailing-only sub-form); **86th cohort plugin to apply D-10**. **D-11 omitted** (clean pass-through) — 0 of 5 unique wire department names padded (`'Central Billing Office'`, `'Health Information Management'`, `'People'`, `'Revenue Cycle Management'`, `'Scribe'`); **113th cohort plugin with fully-clean department pass-through.** Acurus Solutions Private Limited — Bengaluru-HQ (Karnataka, India) full-service healthcare revenue-cycle-management (RCM) outsourcing vendor serving U.S. hospital and physician-group clients across the AR-analysis / charge-posting / coding / denial-management / payment-posting / pre-authorization / scribe-services verticals; operates the Central Billing Office, Health Information Management, People, Revenue Cycle Management, and Scribe delivery divisions.)
+
+**Scope:** Run #396 is the **twelfth** plugin in the
+eleventh fresh probe sweep with Acurus Solutions — the
+alphabetically-next clean non-numeric-slug entry from the
+upstream `OTHERS/Ats-scrapers/ats-companies/greenhouse.csv`
+corpus not already represented in `packages/plugins/source-
+company-*` after Acumen (run #395) — sampling 12 visible
+roles. Run #396 marks the **first cohort observation of
+2-token-prefix PascalCase slug-truncation from 4-token
+all-PascalCase wire form with corporate-legal-suffix-drop**
+(drop `'Private Limited'` Indian-private-limited-company
+legal-entity suffix), the **86th** D-10 application, the
+**85th** variant-2 plugin, the **113th** cohort plugin with
+fully-clean department pass-through (D-11 omitted), the
+**133rd** cohort plugin to omit D-09, and the **175th**
+Greenhouse-backed company-direct plugin.
+
+**Changes:**
+
+- `.specify/specs/186-source-company-acurussolutions/{spec,plan,tasks}.md`
+  — new spec.
+- `packages/plugins/source-company-acurussolutions/{package.json,
+  tsconfig.json,src/{index.ts,acurussolutions.module.ts,
+  acurussolutions.service.ts},__tests__/{acurussolutions.service.spec.ts,
+  fixtures/acurussolutions-jobs.json}}`
+  — new plugin scaffold + 11-case test spec + 3-listing fixture.
+- `packages/models/src/enums/site.enum.ts` — append
+  `ACURUSSOLUTIONS = 'acurussolutions'` under Phase 196.
+- `packages/plugins/index.ts` — import + register
+  `AcurussolutionsModule` in `ALL_SOURCE_MODULES`
+  (alphabetical insertion between `AcumenModule`
+  and `AdyenModule`).
+- `tsconfig.base.json` — path alias
+  `@ever-jobs/source-company-acurussolutions`.
+- `jest.config.js` — matching `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — Acurus Solutions row
+  above Acumen.
+- `docs/COMPANY_SLUG_DIRECTORY.md` — Acurus Solutions row.
+- `docs/index.md` — Acurus Solutions row 186 in spec index.
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- **Cohort thresholds touched at run #396:**
+  - **175th** Greenhouse-backed company-direct plugin
+    (174 → 175).
+  - **85th** variant-2 plugin in the cohort (84 → 85).
+  - **142nd** D-08-application plugin (141 → 142).
+  - **133rd** cohort plugin to omit D-09 (132 → 133).
+  - **86th** cohort plugin to apply D-10 (85 → 86).
+  - **113th** cohort plugin with fully-clean department
+    pass-through (112 → 113).
+  - **First cohort observation of 2-token-prefix
+    PascalCase slug-truncation from 4-token all-PascalCase
+    wire form with corporate-legal-suffix-drop** (drop
+    `'Private Limited'` Indian-private-limited-company
+    legal-entity suffix).
+  - **First cohort observation of 4-token all-PascalCase
+    wire form with slug-truncation D-09 sub-form**.
+  - **First cohort observation of drop-2-tokens slug-
+    truncation factor** (between AccuWeather drop-1 at
+    Spec 175 and ACLU drop-3 at Spec 178).
+  - **First cohort observation of corporate-legal-suffix-
+    drop slug-truncation** (drop `'Private Limited'`).
+  - **Fourth cohort observation of slug-truncation D-09
+    sub-form overall** (after AccuWeather drop-1, ACLU
+    drop-3, ACOG initials-derivation).
+- **Test stats:** 11/11 cases green for Acurus Solutions in
+  17.53 s; 5-suite cross-regression (Acurus Solutions +
+  Acumen + Acryl Data + AccuWeather + ACLU) 51/51 green in
+  21.89 s.
+- **Upstream churn check at run-396 start:** Ats-scrapers
+  unchanged; JobSpy advanced to `fda080a` (LinkedIn date
+  parsing fallback); Jobspy-api unchanged. No Acurus
+  Solutions row change in upstream `greenhouse.csv` — same
+  `Acurus Solutions Private Limited,acurussolutions,
+  https://job-boards.greenhouse.io/acurussolutions` line as
+  prior runs.
+
+---
+
 ## 2026-05-23 — Scheduled run #395 (Spec 185 closed end-to-end; new `source-company-acumen` plugin shipped — 11 unit tests green; 5-suite cross-regression (Acumen + Acryl Data + Acrisure Innovation + Acquia + Tatari) 51/51 green in 12.23 s; **11th plugin in the eleventh fresh probe sweep**. Authored Spec 185, added `Site.ACUMEN = 'acumen'` enum under `// Phase 195`, scaffolded the package modeled on the `source-company-tatari` template with **zero structural deviations** — clean re-spin of the canonical variant-2 + D-08 + D-09 omitted (case-symmetric bare-brand single-token PascalCase 6-byte sub-form, slug = byte-for-byte lowercase of wire) + D-10 applied (trailing-pad form) + D-11 omitted profile. Wire `company_name === 'Acumen'` 6 bytes case-symmetric PascalCase single-token (cap at byte 0 only); slug `acumen` is byte-for-byte lowercase of wire — **third near-clean re-spin on this exact D-09 sub-form across the cohort** (after Tatari Spec 173 `'Tatari'` 6 bytes and Acquia Spec 182 `'Acquia'` 6 bytes). Wired `AcumenModule` between `AcryldataModule` and `AdyenModule` (alphabetical insertion — `'acumen'` sorts after `'acryldata'` and before `'adyen'`), authored 11-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/acumen/jobs/<id>`) + **D-09 case-symmetric bare-brand byte-for-byte wire lock** (`'Acumen'` 6 bytes; cap at byte 0 only; slug = byte-for-byte lowercase of wire) + **D-10 trailing-pad title-trim lock** (asserts the padded form `'Compensation Consultant '` gets trimmed to `'Compensation Consultant'` 22 bytes and no emitted title ends in whitespace) + **D-11 clean-pass-through dept lock**, ran tests + 5-suite cross-regression, updated docs. The run-395 probe sampled **9 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/acumen/jobs?content=true`. This is the **174th Greenhouse-backed company-direct plugin** in the catalogue and the **84th** to use **wire-shape variant 2**; the **141st** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **132nd cohort plugin to omit D-09**. **D-10 applied** (`.trim()` overlay) — 1 of 9 wire titles padded (~11.1 %, trailing-only sub-form: `'Compensation Consultant '`); **85th cohort plugin to apply D-10**. **D-11 omitted** (clean pass-through) — 0 of 4 unique wire department names padded (`'Acumen Academy'`, `'Executive Office'`, `'Investing'`, `'Talent'`); **112th cohort plugin with fully-clean department pass-through.** Acumen, Inc. — NYC-HQ 501(c)(3) patient-capital impact-investing nonprofit founded by Jacqueline Novogratz in 2001; operates the Acumen Fund (catalytic equity/debt vehicle), Acumen Academy (leadership-development arm with Foundry incubator), and regional Acumen East Africa / West Africa / Latin America / South Asia investment teams across emerging-market agriculture / clean-energy / education / financial-inclusion / healthcare / workforce-development verticals.)
 
 **Scope:** Run #395 is the **eleventh** plugin in the
