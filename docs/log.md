@@ -15,6 +15,74 @@
 
 ---
 
+## 2026-05-27 — Scheduled run #397 (Spec 187 closed end-to-end; new `source-company-adaptivebiotechnologies` plugin shipped — 10-case test spec authored against a 3-listing fixture; **13th plugin in the eleventh fresh probe sweep**. Authored Spec 187, added `Site.ADAPTIVEBIOTECHNOLOGIES = 'adaptivebiotechnologies'` enum under `// Phase 197`, scaffolded the package modeled on the `source-company-acurussolutions` template with **one structural deviation**: **D-04 sub-axis** (Acurus Solutions's variant 2 canonical Greenhouse host `https://job-boards.greenhouse.io/<slug>/jobs/<id>` → **NEW wire-shape variant 47** (first cohort observation): `https://www.adaptivebiotech.com/career-listings/listing?gh_jid=<id>` — HTTPS + `www.`-prefixed truncated-bare-brand `.com` (drop `nologies` from `biotechnologies` → 19-byte domain `adaptivebiotech.com`) + 2-segment `/career-listings/listing` apply-page path **without a trailing slash** + **single-id query** `?gh_jid=<id>`; the **fiftieth distinct wire-shape variant** in the company-direct cohort; **first cohort observation of brand-domain-token-truncation** — slug retains full `biotechnologies` while domain drops `nologies`; **first cohort observation of no-trailing-slash 2-segment apply-page path within a NEW-variant D-04 observation** (Textio variant 46 at Spec 174 carried a *trailing-slash* `/careers/apply/` path); **first cohort observation of single-id `?gh_jid=`-only query within a NEW-variant D-04 observation** (Textio variant 46 carried dual-id `?job=<id>&gh_jid=<id>`)). Wired `AdaptiveBiotechnologiesModule` between `AcurussolutionsModule` and `AdyenModule` (alphabetical insertion — `'adaptivebiotechnologies'` sorts after `'acurussolutions'` and before `'adyen'`), authored 10-case test spec with **D-04 NEW variant-47 URL byte-for-byte lock** (regex `^https://www\.adaptivebiotech\.com/career-listings/listing\?gh_jid=\d+$` + negative pins against variant-2 and Textio's variant-46 dual-id form) + **D-09 2-token PascalCase byte-for-byte wire lock** (`'Adaptive Biotechnologies'` 24 bytes; 2 wire tokens PascalCase cap-at-byte-0-only; 1 ASCII space) + **D-09 case-symmetric slug derivation lock** (slug `adaptivebiotechnologies` 23 bytes is byte-for-byte the space-strip + lowercase of the wire) + **D-10 trailing-pad title-trim lock** + **D-11 clean-pass-through dept lock**, updated docs. The run-397 probe sampled **13 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/adaptivebiotechnologies/jobs?content=true`. This is the **176th Greenhouse-backed company-direct plugin** in the catalogue; the **143rd** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **134th cohort plugin to omit D-09**. **D-10 applied** (`.trim()` overlay) — 1 of 13 wire titles padded (~7.7 %, trailing-only sub-form); **87th cohort plugin to apply D-10**. **D-11 omitted** (clean pass-through) — 0 of 10 unique wire department names padded (`'Commercial Operations'`, `'Diagnostics Clinical Services'`, `'Diagnostics Sales'`, `'Digital Health'`, `'Executive'`, `'IT Systems & Infrastructure'`, `'Laboratory Operations'`, `'Legal'`, `'Research and Innovation'`, `'Sales & Business Development'`); **114th cohort plugin with fully-clean department pass-through.** Adaptive Biotechnologies Corporation — Seattle, WA HQ commercial immunosequencing platform (NASDAQ: ADPT; founded by Harlan & Chad Robins in 2009; built around the immunoSEQ T-cell / B-cell receptor repertoire assay, the FDA-cleared clonoSEQ minimal-residual-disease blood test for lymphoid malignancies, and the T-Detect COVID/Lyme/CMV antigen-mapping diagnostic line; competes with Natera, Guardant Health, Exact Sciences, and Veracyte across the blood-cancer MRD segment).)
+
+**Scope:** Run #397 is the **thirteenth** plugin in the
+eleventh fresh probe sweep with Adaptive Biotechnologies —
+the alphabetically-next clean non-numeric-slug entry from
+the upstream `OTHERS/Ats-scrapers/ats-companies/greenhouse.csv`
+corpus not already represented in `packages/plugins/source-
+company-*` after Acurus Solutions (run #396) — sampling 13
+visible roles. Run #397 marks the **first cohort observation
+of D-04 wire-shape variant 47** (the **fiftieth distinct
+wire-shape variant** overall), the **first cohort observation
+of brand-domain-token-truncation** (slug retains full
+`biotechnologies` while domain drops `nologies`), the **87th**
+D-10 application, the **134th** cohort plugin to omit D-09,
+the **114th** cohort plugin with fully-clean department
+pass-through (D-11 omitted), and the **176th** Greenhouse-
+backed company-direct plugin.
+
+**Changes:**
+
+- `.specify/specs/187-source-company-adaptivebiotechnologies/{spec,plan,tasks}.md`
+  — new spec.
+- `packages/plugins/source-company-adaptivebiotechnologies/{package.json,
+  tsconfig.json,src/{index.ts,adaptivebiotechnologies.module.ts,
+  adaptivebiotechnologies.service.ts},__tests__/{adaptivebiotechnologies.service.spec.ts,
+  fixtures/adaptivebiotechnologies-jobs.json}}`
+  — new plugin scaffold + 10-case test spec + 3-listing fixture.
+- `packages/models/src/enums/site.enum.ts` — append
+  `ADAPTIVEBIOTECHNOLOGIES = 'adaptivebiotechnologies'` under
+  Phase 197.
+- `packages/plugins/index.ts` — import + register
+  `AdaptiveBiotechnologiesModule` in `ALL_SOURCE_MODULES`
+  (alphabetical insertion between `AcurussolutionsModule`
+  and `AdyenModule`).
+- `tsconfig.base.json` — path alias
+  `@ever-jobs/source-company-adaptivebiotechnologies`.
+- `jest.config.js` — matching `moduleNameMapper` entry.
+- `docs/SOURCE_ADOPTION_BACKLOG.md` — Adaptive
+  Biotechnologies row above Acurus Solutions.
+- `docs/COMPANY_SLUG_DIRECTORY.md` — Adaptive Biotechnologies
+  row.
+- `docs/index.md` — Adaptive Biotechnologies row 187 in spec
+  index.
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- Sampled the live Greenhouse board at run-397 start via
+  direct curl probe of
+  `https://api.greenhouse.io/v1/boards/adaptivebiotechnologies/jobs?content=true`
+  — 13 visible roles confirmed (Accessioning Specialist II,
+  Account Operations Manager - Southeast, Clinical Lab
+  Technologist II , and 10 others across Seattle / Minneapolis
+  / Remote (WFH)).
+- **D-04 NEW variant 47 observation**: wire `absolute_url`
+  is `https://www.adaptivebiotech.com/career-listings/listing?gh_jid=<id>`
+  — a truncated-brand-domain (`adaptivebiotech.com` drops the
+  9-byte `nologies` suffix from `biotechnologies` while the
+  slug retains the full token) + 2-segment apply-page path
+  without trailing slash + single-id query form. Plugin emits
+  `absolute_url` byte-for-byte; variant-2 fallback retained
+  as a defensive code path for hypothetical wire emissions
+  with no `absolute_url`.
+- Q-042 follow-up: no further escalation this run; defaults
+  remain in place. Next reminder window opens at run #400.
+
+---
+
 ## 2026-05-27 — Scheduled run #396 (Spec 186 closed end-to-end; new `source-company-acurussolutions` plugin shipped — 11 unit tests green; 5-suite cross-regression (Acurus Solutions + Acumen + Acryl Data + AccuWeather + ACLU) 51/51 green in 21.89 s; **12th plugin in the eleventh fresh probe sweep**. Authored Spec 186, added `Site.ACURUSSOLUTIONS = 'acurussolutions'` enum under `// Phase 196`, scaffolded the package modeled on the `source-company-acumen` template with **one structural deviation**: **D-09 sub-axis** (Acumen: case-symmetric bare-brand single-token PascalCase 6-byte form with slug = byte-for-byte lowercase of wire `'Acumen'` → `acumen` → **first cohort observation of 2-token-prefix PascalCase slug-truncation from 4-token all-PascalCase wire form with corporate-legal-suffix-drop**: wire `company_name === 'Acurus Solutions Private Limited'` 32 bytes (4 wire tokens, every token PascalCase cap-at-byte-0-only: `'Acurus'` 6 bytes + `'Solutions'` 9 bytes + `'Private'` 7 bytes + `'Limited'` 7 bytes); slug `acurussolutions` 15 bytes derives from first-2-tokens `'Acurus Solutions'` 16 bytes (drop last-2-tokens `'Private Limited'` Indian-private-limited-company legal-entity suffix), then space-strip + lowercase → 15-byte slug; **first cohort observation of 4-token all-PascalCase wire form with slug-truncation D-09 sub-form**; **first cohort observation of drop-2-tokens slug-truncation factor** (between AccuWeather drop-1 and ACLU drop-3); **first cohort observation of corporate-legal-suffix-drop slug-truncation**; **fourth cohort observation of slug-truncation D-09 sub-form overall** — after AccuWeather drop-1, ACLU drop-3, ACOG initials-derivation). Wired `AcurussolutionsModule` between `AcumenModule` and `AdyenModule` (alphabetical insertion — `'acurussolutions'` sorts after `'acumen'` and before `'adyen'`), authored 11-case test spec with **variant-2 URL byte-for-byte lock** (`https://job-boards.greenhouse.io/acurussolutions/jobs/<id>`) + **D-09 4-token PascalCase byte-for-byte wire lock** (`'Acurus Solutions Private Limited'` 32 bytes; 4 wire tokens all PascalCase cap-at-byte-0-only; 3 ASCII spaces) + **D-09 slug-truncation derivation lock** (slug `acurussolutions` 15 bytes derives from first-2-tokens `'Acurus Solutions'` 16 bytes → space-strip + lowercase → 15-byte slug; drop last-2-tokens `'Private Limited'` corporate-legal-entity suffix) + **D-10 trailing-pad title-trim lock** + **D-11 clean-pass-through dept lock**, ran tests + 5-suite cross-regression, updated docs. The run-396 probe sampled **12 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/acurussolutions/jobs?content=true`. This is the **175th Greenhouse-backed company-direct plugin** in the catalogue and the **85th** to use **wire-shape variant 2**; the **142nd** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **133rd cohort plugin to omit D-09**. **D-10 applied** (`.trim()` overlay) — 1 of 12 wire titles padded (~8.3 %, trailing-only sub-form); **86th cohort plugin to apply D-10**. **D-11 omitted** (clean pass-through) — 0 of 5 unique wire department names padded (`'Central Billing Office'`, `'Health Information Management'`, `'People'`, `'Revenue Cycle Management'`, `'Scribe'`); **113th cohort plugin with fully-clean department pass-through.** Acurus Solutions Private Limited — Bengaluru-HQ (Karnataka, India) full-service healthcare revenue-cycle-management (RCM) outsourcing vendor serving U.S. hospital and physician-group clients across the AR-analysis / charge-posting / coding / denial-management / payment-posting / pre-authorization / scribe-services verticals; operates the Central Billing Office, Health Information Management, People, Revenue Cycle Management, and Scribe delivery divisions.)
 
 **Scope:** Run #396 is the **twelfth** plugin in the

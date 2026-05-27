@@ -526,6 +526,8 @@ export enum Site {
   ACUMEN = 'acumen',
   // Phase 196: Spec 186 — Source Company Plugin: Acurus Solutions
   ACURUSSOLUTIONS = 'acurussolutions',
+  // Phase 197: Spec 187 — Source Company Plugin: Adaptive Biotechnologies
+  ADAPTIVEBIOTECHNOLOGIES = 'adaptivebiotechnologies',
 }
 
 /**
