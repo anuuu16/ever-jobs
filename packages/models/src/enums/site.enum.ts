@@ -528,6 +528,38 @@ export enum Site {
   ACURUSSOLUTIONS = 'acurussolutions',
   // Phase 197: Spec 187 — Source Company Plugin: Adaptive Biotechnologies
   ADAPTIVEBIOTECHNOLOGIES = 'adaptivebiotechnologies',
+  // Phase 198: Spec 188 — Source Company Plugin: Adaptive Financial Consulting
+  ADAPTIVEFINANCIALCONSULTING = 'adaptivefinancialconsulting',
+  // Phase 199: Spec 189 — Source Company Plugin: the Ad Council
+  ADCOUNCIL = 'adcouncil',
+  // Phase 200: Spec 190 — Source Company Plugin: Addepar
+  ADDEPAR1 = 'addepar1',
+  // Phase 201: Spec 191 — Source Company Plugin: Adelphi Research
+  ADELPHIRESEARCH = 'adelphiresearch',
+  // Phase 202: Spec 192 — Source Company Plugin: Advanced Space
+  ADVANCEDSPACE = 'advancedspace',
+  // Phase 203: Spec 193 — Source Company Plugin: Advanced Technology Services
+  ADVANCEDTECHNOLOGYSERVICES = 'advancedtechnologyservices',
+  // Phase 204: Spec 194 — Source Company Plugin: Advocate Construction
+  ADVOCATECONSTRUCTION = 'advocateconstruction',
+  // Phase 205: Spec 195 — Source Company Plugin: AEC
+  AEC = 'aec',
+  // Phase 206: Spec 196 — Source Company Plugin: Aechelon Technology
+  AECHELONTECHNOLOGY = 'aechelontechnology',
+  // Phase 207: Spec 197 — Source Company Plugin: Aegis Ventures
+  AEGISVENTURES = 'aegisventures',
+  // Phase 208: Spec 198 — Source Company Plugin: Aerospike
+  AEROSPIKE = 'aerospike',
+  // Phase 209: Spec 199 — Source Company Plugin: AE Studio
+  AESTUDIO = 'aestudio',
+  // Phase 210: Spec 200 — Source Company Plugin: Affinidi
+  AFFINIDI = 'affinidi',
+  // Phase 211: Spec 201 — Source Company Plugin: Affinity.co
+  AFFINITY = 'affinity',
+  // Phase 212: Spec 202 — Source Company Plugin: Afresh
+  AFRESH = 'afresh',
+  // Phase 213: Spec 203 — Source Company Plugin: AfterShip
+  AFTERSHIP = 'aftership',
 }
 
 /**

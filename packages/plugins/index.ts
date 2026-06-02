@@ -341,6 +341,22 @@ import { WordPressJobsModule } from './source-wordpressjobs';
 import { WorkingNomadsModule } from './source-workingnomads';
 import { ZipRecruiterModule } from './source-ziprecruiter';
 
+import { AdaptivefinancialconsultingModule } from './source-company-adaptivefinancialconsulting';
+import { AdcouncilModule } from './source-company-adcouncil';
+import { Addepar1Module } from './source-company-addepar1';
+import { AdelphiresearchModule } from './source-company-adelphiresearch';
+import { AdvancedspaceModule } from './source-company-advancedspace';
+import { AdvancedtechnologyservicesModule } from './source-company-advancedtechnologyservices';
+import { AdvocateconstructionModule } from './source-company-advocateconstruction';
+import { AecModule } from './source-company-aec';
+import { AechelontechnologyModule } from './source-company-aechelontechnology';
+import { AegisventuresModule } from './source-company-aegisventures';
+import { AerospikeModule } from './source-company-aerospike';
+import { AestudioModule } from './source-company-aestudio';
+import { AffinidiModule } from './source-company-affinidi';
+import { AffinityModule } from './source-company-affinity';
+import { AfreshModule } from './source-company-afresh';
+import { AftershipModule } from './source-company-aftership';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -675,4 +691,20 @@ export const ALL_SOURCE_MODULES = [
   WordPressJobsModule,
   WorkingNomadsModule,
   ZipRecruiterModule,
+  AdaptivefinancialconsultingModule,
+  AdcouncilModule,
+  Addepar1Module,
+  AdelphiresearchModule,
+  AdvancedspaceModule,
+  AdvancedtechnologyservicesModule,
+  AdvocateconstructionModule,
+  AecModule,
+  AechelontechnologyModule,
+  AegisventuresModule,
+  AerospikeModule,
+  AestudioModule,
+  AffinidiModule,
+  AffinityModule,
+  AfreshModule,
+  AftershipModule,
 ];

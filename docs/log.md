@@ -15,6 +15,90 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #398 (Specs 188–203 closed end-to-end; **16 new `source-company-*` Greenhouse plugins shipped in one batch** — first parallel-workflow batch run. Authored a reusable deterministic scaffolder `scripts/scaffold-company-source.ts` (+ a 4-case unit suite under `scripts/__tests__/scaffold-company-source.spec.ts`); ran a 16-agent research workflow to produce factual per-company business descriptions; live-probed 70 alphabetically-next clean-slug candidates from the upstream Greenhouse company corpus, confirmed 60 live, and selected 16 **canonical variant-2** boards (`https://job-boards.greenhouse.io/<slug>/jobs/<id>`) with real 3-listing fixtures. Each plugin uses the canonical variant-2 + D-08 company-direct template with **wire `company_name` pass-through (D-09 omitted)**, **defensive `.trim()` on titles (D-10)** and **defensive `.trim()` on department names (D-11, now applied uniformly across the batch rather than the historical clean-pass-through)**, and the entity-decode-then-tag-strip description pipeline. New plugins: `adaptivefinancialconsulting` (Adaptive Financial Consulting — Fintech), `adcouncil` (the Ad Council — Nonprofit/PSA), `addepar1` (Addepar — Fintech/WealthTech), `adelphiresearch` (Adelphi Research — Market Research), `advancedspace` (Advanced Space — Aerospace), `advancedtechnologyservices` (Advanced Technology Services — Industrial Maintenance), `advocateconstruction` (Advocate Construction — Construction), `aec` (AEC — HVAC), `aechelontechnology` (Aechelon Technology — Defense/Simulation), `aegisventures` (Aegis Ventures — Healthcare venture studio), `aerospike` (Aerospike — Database), `aestudio` (AE Studio — AI/Software), `affinidi` (Affinidi — Digital Identity), `affinity` (Affinity.co — B2B SaaS/CRM), `afresh` (Afresh — Retail AI), `aftership` (AfterShip — E-commerce SaaS). 192nd–207th Greenhouse-backed company-direct plugins in the catalogue.)
+
+**Scope:** Run #398 is the **first batch run** — instead of
+shipping one company-direct plugin, it ships **sixteen** at
+once via a reusable scaffolder + a parallel research workflow.
+The intent is twofold: (a) a real codebase improvement — the
+per-company plugin boilerplate is now generated deterministically
+by `scripts/scaffold-company-source.ts` from a self-contained
+batch descriptor, so future batches of arbitrary size are a
+single command; and (b) materially higher throughput on the
+sanctioned "add more job sources" backlog. The 16 companies are
+the alphabetically-next clean non-numeric-slug entries after
+`adaptivebiotechnologies` (Spec 187) in the upstream Greenhouse
+company corpus that resolve to live, **canonical variant-2**
+boards.
+
+**Changes:**
+
+- **NEW** `scripts/scaffold-company-source.ts` — reusable,
+  dependency-free, deterministic generator for Greenhouse
+  company-direct source plugins. Emits the 10-file package +
+  spec layout per descriptor; never mutates shared wiring files
+  (kept conflict-free so a batch can fan out safely).
+- **NEW** `scripts/__tests__/scaffold-company-source.spec.ts` —
+  4-case unit suite (file-set contract, service wiring, fixture
+  padding/empty-dept contract, spec frontmatter).
+- **NEW** 16 plugin packages
+  `packages/plugins/source-company-{adaptivefinancialconsulting,
+  adcouncil,addepar1,adelphiresearch,advancedspace,
+  advancedtechnologyservices,advocateconstruction,aec,
+  aechelontechnology,aegisventures,aerospike,aestudio,affinidi,
+  affinity,afresh,aftership}` — each with `package.json`,
+  `tsconfig.json`, `src/{index.ts,<slug>.module.ts,
+  <slug>.service.ts}`, `__tests__/<slug>.service.spec.ts`
+  (11-case suite), `__tests__/fixtures/<slug>-jobs.json`
+  (3-listing real-data fixture).
+- **NEW** 16 spec folders
+  `.specify/specs/{188..203}-source-company-<slug>/{spec,plan,tasks}.md`.
+- `packages/models/src/enums/site.enum.ts` — appended 16 enum
+  values under `// Phase 198`..`// Phase 213`.
+- `packages/plugins/index.ts` — imported + registered all 16
+  `*Module`s in `ALL_SOURCE_MODULES`.
+- `tsconfig.base.json` — 16 path aliases.
+- `jest.config.js` — 16 `moduleNameMapper` entries.
+- `docs/index.md` — 16 spec-index rows (188–203).
+- `docs/log.md` — this entry.
+
+**Tests:**
+
+- `jest` for the 16 new suites: **16 suites / 176 cases — all
+  green** (~48 s).
+- Registry/integration regression (`scripts/__tests__`,
+  `sources-health`, `sources-admin`): **4 suites / 58 cases —
+  all green** (full barrel boots with the 16 new modules).
+- New scaffolder suite: **4 cases — all green**.
+- `npm run lint:docs`: **passed** (every new spec/plan/tasks
+  reachable from `docs/index.md`; frontmatter present).
+
+**Notes:**
+
+- The 16 array entries in `ALL_SOURCE_MODULES` and the 16
+  imports were **appended** (not alphabetically inserted) for
+  batch-safety; ordering is functionally irrelevant (ES import
+  hoisting + array iteration order do not affect registry
+  behaviour). Enum values appended chronologically under new
+  `// Phase NNN` comments per existing convention.
+- D-11 is **applied** (defensive `.trim()` on department
+  names) for every plugin in this batch — a deliberate
+  uniform-template choice over the historical per-plugin
+  clean-pass-through vs. trim distinction, since real boards
+  emit padded department names (e.g. `'Engineering '`,
+  `'Research '`, `'Data & Analytics '`). Fixtures force a
+  trailing space on listing[0]'s title and department so the
+  D-10/D-11 trim is always exercised.
+- Per-company business descriptions were produced by a
+  16-agent research workflow (one agent per company) and
+  embedded verbatim (HTML-entity-decoded) into each service
+  doc-comment and spec § 1.
+- Scratch working files (`.batch-*.json`, `.probe-results.json`,
+  probe/registration helpers) were removed before commit; only
+  the reusable `scripts/scaffold-company-source.ts` is retained.
+
+---
+
 ## 2026-05-27 — Scheduled run #397 (Spec 187 closed end-to-end; new `source-company-adaptivebiotechnologies` plugin shipped — 10-case test spec authored against a 3-listing fixture; **13th plugin in the eleventh fresh probe sweep**. Authored Spec 187, added `Site.ADAPTIVEBIOTECHNOLOGIES = 'adaptivebiotechnologies'` enum under `// Phase 197`, scaffolded the package modeled on the `source-company-acurussolutions` template with **one structural deviation**: **D-04 sub-axis** (Acurus Solutions's variant 2 canonical Greenhouse host `https://job-boards.greenhouse.io/<slug>/jobs/<id>` → **NEW wire-shape variant 47** (first cohort observation): `https://www.adaptivebiotech.com/career-listings/listing?gh_jid=<id>` — HTTPS + `www.`-prefixed truncated-bare-brand `.com` (drop `nologies` from `biotechnologies` → 19-byte domain `adaptivebiotech.com`) + 2-segment `/career-listings/listing` apply-page path **without a trailing slash** + **single-id query** `?gh_jid=<id>`; the **fiftieth distinct wire-shape variant** in the company-direct cohort; **first cohort observation of brand-domain-token-truncation** — slug retains full `biotechnologies` while domain drops `nologies`; **first cohort observation of no-trailing-slash 2-segment apply-page path within a NEW-variant D-04 observation** (Textio variant 46 at Spec 174 carried a *trailing-slash* `/careers/apply/` path); **first cohort observation of single-id `?gh_jid=`-only query within a NEW-variant D-04 observation** (Textio variant 46 carried dual-id `?job=<id>&gh_jid=<id>`)). Wired `AdaptiveBiotechnologiesModule` between `AcurussolutionsModule` and `AdyenModule` (alphabetical insertion — `'adaptivebiotechnologies'` sorts after `'acurussolutions'` and before `'adyen'`), authored 10-case test spec with **D-04 NEW variant-47 URL byte-for-byte lock** (regex `^https://www\.adaptivebiotech\.com/career-listings/listing\?gh_jid=\d+$` + negative pins against variant-2 and Textio's variant-46 dual-id form) + **D-09 2-token PascalCase byte-for-byte wire lock** (`'Adaptive Biotechnologies'` 24 bytes; 2 wire tokens PascalCase cap-at-byte-0-only; 1 ASCII space) + **D-09 case-symmetric slug derivation lock** (slug `adaptivebiotechnologies` 23 bytes is byte-for-byte the space-strip + lowercase of the wire) + **D-10 trailing-pad title-trim lock** + **D-11 clean-pass-through dept lock**, updated docs. The run-397 probe sampled **13 visible roles** via direct curl probe of `https://api.greenhouse.io/v1/boards/adaptivebiotechnologies/jobs?content=true`. This is the **176th Greenhouse-backed company-direct plugin** in the catalogue; the **143rd** cohort plugin to use the entity-decode-then-tag-strip description pipeline. **D-09 omitted at runtime** (wire pass-through); **134th cohort plugin to omit D-09**. **D-10 applied** (`.trim()` overlay) — 1 of 13 wire titles padded (~7.7 %, trailing-only sub-form); **87th cohort plugin to apply D-10**. **D-11 omitted** (clean pass-through) — 0 of 10 unique wire department names padded (`'Commercial Operations'`, `'Diagnostics Clinical Services'`, `'Diagnostics Sales'`, `'Digital Health'`, `'Executive'`, `'IT Systems & Infrastructure'`, `'Laboratory Operations'`, `'Legal'`, `'Research and Innovation'`, `'Sales & Business Development'`); **114th cohort plugin with fully-clean department pass-through.** Adaptive Biotechnologies Corporation — Seattle, WA HQ commercial immunosequencing platform (NASDAQ: ADPT; founded by Harlan & Chad Robins in 2009; built around the immunoSEQ T-cell / B-cell receptor repertoire assay, the FDA-cleared clonoSEQ minimal-residual-disease blood test for lymphoid malignancies, and the T-Detect COVID/Lyme/CMV antigen-mapping diagnostic line; competes with Natera, Guardant Health, Exact Sciences, and Veracyte across the blood-cancer MRD segment).)
 
 **Scope:** Run #397 is the **thirteenth** plugin in the
