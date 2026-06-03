@@ -22,6 +22,7 @@ import {
   BEETWEEN_OFFER_LINK_REGEX,
   BEETWEEN_INLINE_STATE_REGEX,
   BEETWEEN_DEFAULT_RESULTS,
+  BEETWEEN_DEFAULT_TIMEOUT_SECONDS,
   BEETWEEN_HEADERS,
 } from './beetween.constants';
 import {
@@ -76,7 +77,9 @@ export class BeetweenService implements IScraper {
     const client = createHttpClient({
       proxies: input.proxies,
       caCert: input.caCert,
-      timeout: input.requestTimeout,
+      // Bound the timeout so an unresponsive Beetween portal host degrades
+      // gracefully fast rather than hanging on the shared client's 60s default.
+      timeout: input.requestTimeout ?? BEETWEEN_DEFAULT_TIMEOUT_SECONDS,
     });
     client.setHeaders(BEETWEEN_HEADERS);
 

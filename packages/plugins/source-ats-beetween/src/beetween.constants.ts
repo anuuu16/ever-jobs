@@ -99,6 +99,18 @@ export const BEETWEEN_OFFER_URL_TEMPLATE = '/poste/{publicId}-{slug}/';
  */
 export const BEETWEEN_DEFAULT_RESULTS = 100;
 
+/**
+ * Bounded per-request timeout (seconds) used when the caller does not pass an
+ * explicit `requestTimeout`. Beetween's portal host (`emploi.beetween.com`) can
+ * intermittently hang on unknown/slow tenants; the shared HTTP client otherwise
+ * defaults to 60s, which both blocks a batch run far too long and breaches the
+ * 30s e2e test budget. Capping at 15s keeps the graceful-degradation path fast
+ * (a single bad tenant degrades to an empty result well inside the budget)
+ * while leaving ample headroom for a responsive tenant's normal sub-second
+ * response. Callers can still override via `ScraperInputDto.requestTimeout`.
+ */
+export const BEETWEEN_DEFAULT_TIMEOUT_SECONDS = 15;
+
 /** Default request headers. The career page expects a browser-like UA. */
 export const BEETWEEN_HEADERS: Record<string, string> = {
   Accept: 'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8',
