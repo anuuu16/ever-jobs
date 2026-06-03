@@ -963,6 +963,26 @@ export enum Site {
   WORKFORCE = 'workforce',
   // Phase 413: Spec 404 — Source ATS Plugin: HR Partner (hrpartner.io)
   HRPARTNER = 'hrpartner',
+  // Phase 414: Spec 405 — Source ATS Plugin: Apploi (apploi.com)
+  APPLOI = 'apploi',
+  // Phase 415: Spec 406 — Source ATS Plugin: Kenjo (kenjo.io)
+  KENJO = 'kenjo',
+  // Phase 416: Spec 407 — Source ATS Plugin: Sesame HR (sesamehr.com)
+  SESAMEHR = 'sesamehr',
+  // Phase 417: Spec 408 — Source ATS Plugin: HROne (hrone.cloud) — distinct from HR-ON Recruit (HRON)
+  HRONE = 'hrone',
+  // Phase 418: Spec 409 — Source ATS Plugin: Workwise (workwise.io)
+  WORKWISE = 'workwise',
+  // Phase 419: Spec 410 — Source ATS Plugin: Recruiteze (recruiteze.com)
+  RECRUITEZE = 'recruiteze',
+  // Phase 420: Spec 411 — Source ATS Plugin: Sense (sensehq.com)
+  SENSE = 'sense',
+  // Phase 421: Spec 412 — Source ATS Plugin: Radancy (radancy.com)
+  RADANCY = 'radancy',
+  // Phase 422: Spec 413 — Source ATS Plugin: Beamery (beamery.com)
+  BEAMERY = 'beamery',
+  // Phase 423: Spec 414 — Source ATS Plugin: Symphony Talent (symphonytalent.com)
+  SYMPHONYTALENT = 'symphonytalent',
 }
 
 /**

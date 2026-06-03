@@ -152,6 +152,16 @@ import { SagePeopleModule } from './source-ats-sagepeople';
 import { CezanneModule } from './source-ats-cezanne';
 import { WorkforceModule } from './source-ats-workforce';
 import { HrPartnerModule } from './source-ats-hrpartner';
+import { ApploiModule } from './source-ats-apploi';
+import { KenjoModule } from './source-ats-kenjo';
+import { SesameHrModule } from './source-ats-sesamehr';
+import { HrOneModule } from './source-ats-hrone';
+import { WorkwiseModule } from './source-ats-workwise';
+import { RecruitezeModule } from './source-ats-recruiteze';
+import { SenseModule } from './source-ats-sense';
+import { RadancyModule } from './source-ats-radancy';
+import { BeameryModule } from './source-ats-beamery';
+import { SymphonyTalentModule } from './source-ats-symphonytalent';
 import { PinpointModule } from './source-ats-pinpoint';
 import { RecruiteeModule } from './source-ats-recruitee';
 import { RecruiterflowModule } from './source-ats-recruiterflow';
@@ -704,6 +714,16 @@ export const ALL_SOURCE_MODULES = [
   CezanneModule,
   WorkforceModule,
   HrPartnerModule,
+  ApploiModule,
+  KenjoModule,
+  SesameHrModule,
+  HrOneModule,
+  WorkwiseModule,
+  RecruitezeModule,
+  SenseModule,
+  RadancyModule,
+  BeameryModule,
+  SymphonyTalentModule,
   PinpointModule,
   RecruiteeModule,
   RecruiterflowModule,

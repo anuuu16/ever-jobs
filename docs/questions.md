@@ -10,6 +10,40 @@
 
 ---
 
+## Q-060 — Live re-confirmation pass for the 3 defensive ATS surfaces shipped in run #413 (HROne, Workwise, Beamery)
+
+**Context:** Run #413 shipped 10 new `source-ats-*` adapters (Specs 405–414). **7 were
+verified live 2026-06-04/03** (Apploi, Kenjo, Sesame HR, Recruiteze, Sense, Radancy,
+Symphony Talent). **3 are defensive (verified=false)** because the public anonymous job feed
+could not be confirmed live this run:
+  - `source-ats-hrone` (HROne, hrone.cloud, India HRMS) — per-tenant career site documented
+    from public evidence; anonymous JSON shape unconfirmed.
+  - `source-ats-workwise` (Workwise, workwise.io, German SMB recruiting) — public job
+    widget/board surface documented best-effort.
+  - `source-ats-beamery` (Beamery, beamery.com, enterprise talent CRM) — public career-site
+    surface documented best-effort.
+All three compile, register in all four shared points, and pass the tolerant 5-test e2e
+contract (empty results are acceptable), so they degrade gracefully today but may return 0
+roles against real tenants until the wire shape is confirmed.
+
+**Options:**
+
+- **A. Schedule a dedicated live re-confirmation pass** (a future run probes real tenants
+  with WebFetch, tightens the constants/types to the observed shape, and flips verified=true
+  where confirmed).
+- **B. Leave them defensive indefinitely** — they cost nothing when a tenant has no public
+  feed and self-correct if the documented shape happens to be right.
+- **C. Remove the unconfirmed adapters** — contradicts the "do not remove" rule and discards
+  useful scaffolding.
+
+**Default (proceeding):** **A** — track the three for a live re-confirmation pass on a future
+run; keep them shipped (degrade gracefully) in the meantime. Matches the run-#412 precedent
+for Sage People / Cezanne (flagged for live re-confirmation, kept shipped).
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-059 — Systemic fix for live-host e2e timeout flakiness (default `requestTimeout` 60s > 30s test budget)
 
 **Context:** Run #407 CI repeatedly red on the **Test (Source Scrapers)** job because

@@ -15,6 +15,94 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #413 (**TEN new generic ATS adapters: Apploi, Kenjo, Sesame HR, HROne, Workwise, Recruiteze, Sense, Radancy, Beamery, Symphony Talent** — Specs 405–414, built in parallel)
+
+**Scope:** Direct continuation of the run-#400→#412 generic-ATS-adapter direction. At run
+start the corpus held **152 `source-ats-*` adapters / 404 specs / 558 plugin packages** and
+no fresh `proposed` ATS rows remained in `SOURCE_ADOPTION_BACKLOG.md`. This run extends ATS
+coverage into **under-served niches**: US healthcare/hourly hiring (**Apploi**), DE/ES SMB
+HR & ATS (**Kenjo**), ES/LATAM HR (**Sesame HR**), India HRMS (**HROne** — distinct from the
+existing `source-ats-hron` HR-ON Recruit), German SMB recruiting (**Workwise**), US SMB ATS
+(**Recruiteze**), US recruiting CRM (**Sense**), and the **enterprise recruitment-marketing /
+career-site** tier (**Radancy** / TalentBrew, **Beamery**, **Symphony Talent** / SmashFly).
+All ten were researched, spec'd, implemented, and tested in **one pass via a 10-agent
+parallel workflow** (`new-ats-adapters-413`). Each agent owned one platform end-to-end
+(WebSearch + live WebFetch surface research → 8 plugin files + 3 spec docs → structured
+metadata). The orchestrator (main loop) then wired the **four** shared registration points
+sequentially (`site.enum.ts`, `plugins/index.ts`, `tsconfig.base.json`, `jest.config.js`) —
+agents did **not** touch shared files, avoiding parallel-edit races.
+
+**Surface confidence:** **7 verified live 2026-06-04/03** (Apploi, Kenjo, Sesame HR,
+Recruiteze, Sense, Radancy, Symphony Talent) and **3 defensive / flagged for live
+re-confirmation** (HROne, Workwise, Beamery — documented best-effort surfaces; verified=false).
+Every adapter degrades gracefully (unknown tenant / 4xx / DNS / malformed → empty/partial,
+never throws).
+
+**Changes:**
+
+- **10 new `source-ats-*` plugin packages** (Specs 405–414), each with the canonical
+  8-file layout (`package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/<id>.constants.ts`, `src/<id>.types.ts`, `src/<id>.module.ts`,
+  `src/<id>.service.ts`, `__tests__/<id>.e2e-spec.ts`) and a full
+  `.specify/specs/<NNN>-source-ats-<id>/` spec/plan/tasks triplet:
+  - **405 `source-ats-apploi`** — Apploi (apploi.com, US healthcare/hourly ATS, now part of
+    Viventium). Public anonymous JSON: `GET https://api.apploi.com/v1/company_profiles/{slug}`
+    → `teams_to_show` (CSV of team ids), then
+    `GET https://ats-integrations.apploi.com/search/jobs/?teams={csv}&page={n}&source=company_profile_page`
+    → `{ data: [...] }`; canonical `jobs.apploi.com/view/{id}`. **Verified live 2026-06-04.**
+  - **406 `source-ats-kenjo`** — Kenjo (kenjo.io, DE/ES SMB HR & ATS). Public anonymous
+    `GET https://{tenant}.kenjo.io/api/controller/career-site/public/{tenant}/positions`
+    (→ `activePositions[]`) + per-role detail by `customUrl`; canonical `/positions/{customUrl}`.
+    **Verified live 2026-06-03** (tenant `careers`).
+  - **407 `source-ats-sesamehr`** — Sesame HR (sesamehr.com, ES/LATAM HR suite with
+    recruiting). Public per-tenant careers/jobs portal feed. **Verified live 2026-06-04.**
+  - **408 `source-ats-hrone`** — HROne (hrone.cloud, India HRMS with recruitment). Public
+    per-tenant career site. **DISTINCT from `source-ats-hron`** (HR-ON Recruit, Danish).
+    Surface documented-but-unverified anonymously → defensive (verified=false).
+  - **409 `source-ats-workwise`** — Workwise (workwise.io, German SMB recruiting). Public
+    job widget / board surface. Documented best-effort → defensive (verified=false).
+  - **410 `source-ats-recruiteze`** — Recruiteze (recruiteze.com, US SMB ATS). Public
+    per-tenant career page/board. **Verified live 2026-06-04.**
+  - **411 `source-ats-sense`** — Sense (sensehq.com, US recruiting CRM / talent
+    engagement). Public hosted career-site feed. **Verified live 2026-06-04.**
+  - **412 `source-ats-radancy`** — Radancy (radancy.com, enterprise TA cloud / TalentBrew
+    career sites; formerly TMP Worldwide). Public career-site feed. **Verified live 2026-06-04.**
+  - **413 `source-ats-beamery`** — Beamery (beamery.com, enterprise talent CRM / career-site
+    platform). Public career-site surface. Documented best-effort → defensive (verified=false).
+  - **414 `source-ats-symphonytalent`** — Symphony Talent (symphonytalent.com, enterprise
+    recruitment marketing / career sites; incorporates SmashFly). Public career-site feed.
+    **Verified live 2026-06-04.**
+- **4 shared registration points** wired for all 10 (orchestrator):
+  `packages/models/src/enums/site.enum.ts` (Phases 414–423: `APPLOI`, `KENJO`, `SESAMEHR`,
+  `HRONE`, `WORKWISE`, `RECRUITEZE`, `SENSE`, `RADANCY`, `BEAMERY`, `SYMPHONYTALENT`),
+  `packages/plugins/index.ts` (imports + `ALL_SOURCE_MODULES`), `tsconfig.base.json` (path
+  aliases), `jest.config.js` (`moduleNameMapper`).
+- **Docs:** `docs/index.md` §7 gains rows 405–414 + footer bump; this `docs/log.md` entry;
+  `docs/SOURCE_ADOPTION_BACKLOG.md` adopted-section refresh; `docs/questions.md` Q for the 3
+  defensive surfaces.
+
+**Verification:**
+
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` → **clean (exit 0)** — the real
+  CI typecheck gate, compiling the whole API + every plugin via the registry.
+- `npx jest packages/plugins/source-ats-(apploi|kenjo|sesamehr|hrone|workwise|recruiteze|sense|radancy|beamery|symphonytalent)`
+  → **10 suites / 50 tests passed** (~63s). Each suite mirrors the hirehive 5-test contract
+  (known tenant tolerant of empty; empty when no slug/url; resolve from `companyUrl`; unknown
+  tenant → 0; respect `resultsWanted`).
+- Run #412 CI (Specs 395–404) confirmed **green** before building on it.
+
+**Counts after this run:** **162 `source-ats-*` adapters**, **414 specs**, **568 plugin
+packages**.
+
+**Notes:**
+
+- Competitor repos in `../OTHERS` (`Ats-scrapers`, `JobSpy`, `Jobspy-api`) re-pulled at run
+  start — all current (0 commits behind); nothing new to absorb.
+- The 3 defensive adapters (HROne, Workwise, Beamery) are logged for a future live
+  re-confirmation pass; they compile, register, and pass the tolerant test contract today.
+
+---
+
 ## 2026-06-03 — Scheduled run #412 (**TEN new generic ATS adapters: Hirehive, Eddy, PeopleStrong, Zimyo, GreytHR, Recruitly, Sage People, Cezanne HR, Workforce.com, HR Partner** — Specs 395–404, built in parallel)
 
 **Scope:** Direct continuation of the run-#400→#411 generic-ATS-adapter direction. With
