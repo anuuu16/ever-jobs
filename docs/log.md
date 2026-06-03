@@ -15,6 +15,165 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #404 (**TWELVE new generic ATS adapters: Ceipal, Softgarden, Recruitis, Flatchr, Jobsoid, Skeeled, Teamdash, DigitalRecruiters, Concludis, rexx systems, PCRecruiter, Prescreen** — Specs 319–330, built in parallel)
+
+**Scope:** Direct continuation of the run-#400/#401/#402/#403 generic-ATS-adapter
+direction — one multi-tenant adapter unlocks a whole catalogue of companies,
+versus one company per `source-company-*` plugin. Run #403 closed having
+shipped ten ATS adapters; this run adds **twelve** more, deliberately weighted
+toward **European** ATS platforms (German: Softgarden, Concludis, rexx systems;
+French: Flatchr, DigitalRecruiters; Czech: Recruitis; Estonian: Teamdash;
+Luxembourg: Skeeled; Austrian: Prescreen) plus US/global staffing ATS (Ceipal,
+PCRecruiter) and a global recruitment ATS (Jobsoid). All twelve were designed,
+spec'd, implemented, and tested in **one pass via a 12-agent parallel workflow**
+(`new-ats-adapters-404`). Each agent owned one platform end-to-end: research the
+real public surface (WebSearch + live WebFetch), write the 8 plugin files + the
+Spec-Kit triplet, and self-verify with per-package `tsc`. The orchestrator
+pre-seeded the 12 `Site` enum members (so each agent's `Site.X` reference
+compiled in isolation), then performed the remaining central registration (three
+shared files) sequentially to avoid edit conflicts. **Eleven of twelve adapters
+were live-verified** (`confidence: verified`) against real tenants on 2026-06-03;
+only Ceipal is `heuristic` (its anonymous career-portal API routing was confirmed
+live — `{apiKey}/job-postings/` returns the documented key-validation envelope —
+but all three sampled tenant API keys had rotated at verification time, so the
+per-row JSON shape was extracted byte-for-byte from the platform's own public
+reference client rather than a live job-list body; layered field-drift fallbacks
+cover the risk, tracked in Q-049). After central registration the full API build
+typecheck (`tsc --project apps/api/tsconfig.build.json --noEmit`) passed clean
+and all **48 e2e tests across the 12 new suites passed** (network-tolerant; zero
+results acceptable; shape assertions guarded by `length > 0`). All competitor
+repos under `OTHERS/` were re-pulled this run and were **up to date**
+(Ats-scrapers @ `b45c12a`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` — no
+upstream churn to absorb). Run #403 CI was confirmed green before building on top.
+
+**Changes:**
+
+- **NEW** plugin `packages/plugins/source-ats-ceipal/` (Spec 319) — Ceipal (US
+  staffing/talent-acquisition ATS). Anonymous career-portal API
+  `GET https://api.ceipal.com/{apiKey}/job-postings/?page={n}` (DRF pagination
+  envelope `{results,count,num_pages,page_number,next,previous}`) + per-job
+  `/{id}/` detail fetched only when a row lacks a description. Tenant identified
+  by the career-portal API key carried in the URL **path** (no auth header; key
+  masked in logs). The credentialed v1 ATS REST API (`/v1/getJobPostingsList`,
+  `Authorization: Token`) and the login-gated candidate portal are non-goals.
+  `heuristic` confidence (Q-049: tenant-key rotation prevented a live job-list
+  body capture; wire shape from the platform's reference client).
+- **NEW** plugin `packages/plugins/source-ats-softgarden/` (Spec 320) —
+  Softgarden (German ATS). Public schema.org `GET {tenantOrigin}/jobs.feed.json`
+  (a `DataFeed` of `JobPosting` items with inline HTML descriptions, structured
+  `jobLocation.address`, `employmentType`→department, `datePosted`) — one call
+  per tenant, no detail fan-out. The documented v2/v3 jobboard REST APIs require
+  a client token + channelId and are not used (Q-050). Legacy Wicket boards lack
+  the feed and degrade to empty. Verified live (10 jobs).
+- **NEW** plugin `packages/plugins/source-ats-recruitis/` (Spec 321) — Recruitis
+  (Czech ATS). `cheerio` scrape of the public career site
+  `GET https://jobs.recruitis.io/{tenant}?page={n}` (`div.row.job` blocks; next
+  link `--disabled` ends pagination) + per-job `#job-description` detail fan-out.
+  The token-gated `app.recruitis.io/api2/jobs` REST API is not used. Verified
+  live (recruitisio 6, allwyn 4). `datePosted` null — the public HTML exposes no
+  machine-readable publish date (Q-051).
+- **NEW** plugin `packages/plugins/source-ats-flatchr/` (Spec 322) — Flatchr
+  (French ATS). Public `GET https://careers.flatchr.io/company/{slug}.json` →
+  `{items:[...]}` with **full inline** vacancy records (description + mission +
+  profile HTML, structured address, contract_type, metier→department, salary,
+  remote) — exactly one network call per tenant, no detail fan-out. Verified live
+  (flatchr 3, groupeaudeo 2).
+- **NEW** plugin `packages/plugins/source-ats-jobsoid/` (Spec 323) — Jobsoid
+  (global recruitment ATS). Public anonymous JSON feed
+  `GET https://{tenant}.jobsoid.com/api/v1/jobs` (flat array of full job objects:
+  inline HTML description, structured `location{city,state,country}`,
+  `function.title`→department, `postedDate`, `hostedUrl`/`applyUrl`). The feed
+  ignores `offset`/`limit`, so results are sliced client-side and de-duped by
+  numeric id. Verified live (simpler, 3 jobs).
+- **NEW** plugin `packages/plugins/source-ats-skeeled/` (Spec 324) — Skeeled
+  (Luxembourg ATS). Public board page
+  `GET https://app.skeeled.com/board/{boardId}` whose SSR Nuxt data island
+  (`<script id="__NUXT_DATA__">`, flattened-reference JSON) carries all offers;
+  i18n title/description resolver (en→fr→nl→de→first) + `a[href*="/offer/c/"]`
+  HTML-card fallback. The credentialed REST API is not used. Verified live (two
+  boards: 2 and 44 offers). `datePosted` null (Q-052).
+- **NEW** plugin `packages/plugins/source-ats-teamdash/` (Spec 325) — Teamdash
+  (Estonian ATS). Public SSR career page
+  `https://{tenant}.teamdash.com/p/job/{landingToken}/{slug}` with an inline
+  `window.context` JSON blob (career-page feed + per-posting
+  `landing.data.blocks[]` HTML), extracted via a depth-tracking, string-literal-
+  aware brace scan. No anonymous JSON listing API exists (`/api/*`, `/careers`,
+  `/jobs` all 404). `companyUrl` is the reliable input — the landing token is an
+  opaque per-tenant random string, so `companySlug`-only resolution is best-effort
+  (Q-053). Verified live (cr14, 2 jobs).
+- **NEW** plugin `packages/plugins/source-ats-digitalrecruiters/` (Spec 326) —
+  DigitalRecruiters (French ATS). Public
+  `POST https://api.digitalrecruiters.com/public/v1/careers-site/job-ads?domainName={domain}&page={p}&locale={loc}`
+  (paged) + per-job `GET .../job-ads/{job_ad_id}` detail, with a config endpoint
+  (`careers/v1/careers-sites/{host}`) resolving the canonical career domain and a
+  **region-qualified** locale (a bare `iso_code` is rejected HTTP 400). Fan-out
+  via `Promise.allSettled`; de-dup by `job_ad_id`. Verified live (Segula 681, La
+  Boucherie 58). Multi-locale ingestion deferred to default locale (Q-054).
+- **NEW** plugin `packages/plugins/source-ats-concludis/` (Spec 327) — concludis
+  (German e-recruiting ATS). Public server-rendered listing
+  `GET https://{tenant}.concludis.de/prj/lst/{hash}/...htm?page={n}` (`cheerio`
+  rows `div[id=line_{oid}]`; total from `div.stellensum`; 25/page) + best-effort
+  per-job detail parsing schema.org JSON-LD (`Promise.allSettled`, concurrency 6;
+  a role is never dropped for missing enrichment). Verified live (hwk-stuttgart
+  3, smurfitkappa 206-role pagination). Detail pages are tenant-variable /
+  session-gated (Q-055); listing HTML mojibake handled by preferring JSON-LD
+  unicode.
+- **NEW** plugin `packages/plugins/source-ats-rexx/` (Spec 328) — rexx systems
+  (German HR/recruiting suite). No anonymous XML/RSS feed exists (all probed
+  export paths 404), so the adapter `cheerio`-scrapes the public listing
+  `GET https://{tenant}-portal.rexx-systems.com/stellenangebote.html`
+  (`article.joboffer_container` + `data-count`) then fans out
+  (`Promise.allSettled`, max 6/round, 250 ms delay) to each detail page and
+  extracts the embedded schema.org `JobPosting` JSON-LD as the primary field
+  source (listing card supplies fallbacks). `companySlug` auto-appends the
+  `-portal` host suffix. Verified live (icotek 3, nobix). Only the first listing
+  page is parsed (Q-056).
+- **NEW** plugin `packages/plugins/source-ats-pcrecruiter/` (Spec 329) —
+  PCRecruiter (US staffing ATS). Public job board
+  `GET https://www2.pcrecruiter.net/pcrbin/jobboard.aspx?uid={DisplayName}.{db}`
+  (`cheerio` `table#joblist` rows: recordid/title/location/date) + per-job
+  `?action=detail&recordid={id}` detail whose schema.org `JobPosting` JSON-LD is
+  the primary field source (`#jobdesc` marker-comment HTML as fallback). No
+  public JSON API. Stateful POST pagination on the server-issued `pcr-id` token
+  replicated best-effort, bounded by `MAX_PAGES=20`; page-1 always retained
+  (Q-057). Verified live (Alliance Staffing, 38 jobs).
+- **NEW** plugin `packages/plugins/source-ats-prescreen/` (Spec 330) — Prescreen
+  (Austrian ATS; part of the onlyfy/XING group). The candidate-facing host has
+  rebranded `jobbase.io` → `prescreenapp.io` → `onlyfy.jobs`; legacy hosts
+  301-redirect and the old anonymous JSON feed is retired (HTTP 404). The only
+  live anonymous surface is the server-rendered portal
+  `https://{handle}.onlyfy.jobs/` (`#jobList` rows) + `/job/{token}` schema.org
+  JSON-LD + `/job/show/{token}/full?lang=en` description fragment; `handle` is the
+  stable key across rebrands. Verified live end-to-end (v2c2, 3 jobs). Host
+  rebrand churn tracked in Q-058.
+
+- **Central registration** (CLAUDE.md §4): `packages/models/src/enums/site.enum.ts`
+  (`CEIPAL`, `SOFTGARDEN`, `RECRUITIS`, `FLATCHR`, `JOBSOID`, `SKEELED`,
+  `TEAMDASH`, `DIGITALRECRUITERS`, `CONCLUDIS`, `REXX`, `PCRECRUITER`,
+  `PRESCREEN` — Phases 328–339, pre-seeded by the orchestrator),
+  `packages/plugins/index.ts` (12 imports + `ALL_SOURCE_MODULES`),
+  `tsconfig.base.json` path aliases, `jest.config.js` `moduleNameMapper`.
+- **Docs:** `docs/index.md` (rows 319–330 + footer), `docs/ATS_INTEGRATIONS.md`
+  (12 new platform sections), `docs/questions.md` (Q-049…Q-058), this
+  `docs/log.md` entry, and `docs/SOURCE_ADOPTION_BACKLOG.md` (status refresh).
+
+**Verification:**
+
+- `tsc --project apps/api/tsconfig.build.json --noEmit` → exit 0 (all 12 new
+  plugins compile through the `@ever-jobs/plugin-sources` barrel).
+- `jest --testPathPatterns 'packages/plugins/source-ats-(…12 ids…)'` → 12 suites,
+  **48 tests, all passing** (network-tolerant).
+- Per-package `tsc --noEmit` was run by each building agent before hand-off.
+
+**Notes:**
+
+- Total source plugins now **478** (was 466); ATS adapters now **79** (was 67).
+- The `OTHERS/` competitor repos are referenced only in the parent-directory
+  watch file, never in this repo (per the scheduled-task brief). This entry
+  names only public platform brands, no third-party tools.
+
+---
+
 ## 2026-06-03 — Scheduled run #403 (**TEN new generic ATS adapters: Applied, CATS, Recruit CRM, Vincere, Factorial, Workstream, Harri, Tribepad, Eploy, Oorwin** — Specs 309–318, built in parallel)
 
 **Scope:** Direct continuation of the run-#400/#401/#402 generic-ATS-adapter

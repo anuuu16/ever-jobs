@@ -611,6 +611,150 @@ Cloud staffing & talent-management platform (ATS + CRM + HRMS). Each tenant is s
 
 ---
 
+### Ceipal
+
+US staffing & talent-acquisition ATS. Public career portals are powered by an anonymous, key-scoped REST API where the tenant's career-portal API key is carried in the URL path.
+
+- **Method**: GET `https://api.ceipal.com/{apiKey}/job-postings/?page={n}` (DRF pagination envelope `{results,count,num_pages,page_number,next,previous}`) + per-job GET `https://api.ceipal.com/{apiKey}/job-postings/{id}/` fetched only when a listing row lacks a description
+- **Auth**: None — the career-portal key authorises the read; it is masked in logs. The credentialed v1 ATS API (`/v1/getJobPostingsList`, `Authorization: Token`) is not used
+- **Data Format**: JSON
+- **Tenant Resolution**: career-portal API key via `companySlug` (or parsed from `companyUrl`)
+- **Known Limitation**: `heuristic` confidence — wire shape derived from the platform's public reference client; tenant keys rotate (Spec 319, Q-049)
+
+---
+
+### Softgarden
+
+German ATS. Modern React career pages expose a public schema.org job feed; no credentials required.
+
+- **Method**: GET `{tenantOrigin}/jobs.feed.json` — a schema.org `DataFeed` of `JobPosting` items with inline HTML descriptions; one call per tenant (no detail fan-out)
+- **Auth**: None — the documented v2/v3 jobboard REST APIs require a client token + `channelId` and are not used
+- **Data Format**: JSON (schema.org)
+- **Tenant Resolution**: `companyUrl` (origin) or `companySlug` → `{slug}.career.softgarden.de`
+- **Known Limitation**: legacy Wicket boards lack the feed and degrade to empty; `department` approximated from `employmentType` (Spec 320, Q-050)
+
+---
+
+### Recruitis
+
+Czech ATS. The public career site is server-rendered HTML, scraped with `cheerio`.
+
+- **Method**: GET `https://jobs.recruitis.io/{tenant}?page={n}` (`div.row.job` blocks; pagination ends on a `--disabled` next link) + per-job `#job-description` detail fan-out (`Promise.allSettled`)
+- **Auth**: None — the token-gated `app.recruitis.io/api2/jobs` REST API is not used
+- **Data Format**: HTML
+- **Tenant Resolution**: `companySlug` (tenant label) or `companyUrl`
+- **Known Limitation**: `datePosted` null (no machine-readable date in public HTML); chips are Czech-localised (Spec 321, Q-051/Q-052)
+
+---
+
+### Flatchr
+
+French ATS. A single public JSON endpoint returns the full vacancy catalogue inline.
+
+- **Method**: GET `https://careers.flatchr.io/company/{slug}.json` → `{items:[...]}` with full inline vacancy records (description + mission + profile HTML, structured address, contract, salary, remote) — exactly one network call per tenant
+- **Auth**: None
+- **Data Format**: JSON
+- **Tenant Resolution**: `companySlug` (tenant label) or `companyUrl`
+- **Known Limitation**: French-language HTML passed through verbatim; pagination not needed (full set in one document) (Spec 322)
+
+---
+
+### Jobsoid
+
+Recruitment ATS. Each tenant exposes a public anonymous JSON feed.
+
+- **Method**: GET `https://{tenant}.jobsoid.com/api/v1/jobs` — flat array of full job objects (inline HTML description, structured location, `function.title`→department, `hostedUrl`/`applyUrl`); results sliced client-side and de-duped by id
+- **Auth**: None
+- **Data Format**: JSON
+- **Tenant Resolution**: `companySlug` (tenant sub-domain) or `companyUrl`
+- **Known Limitation**: the feed ignores `offset`/`limit` (full set returned); remote is heuristic (no dedicated flag) (Spec 323)
+
+---
+
+### Skeeled
+
+Luxembourg-based ATS. Public board pages embed all offers in an SSR Nuxt data island.
+
+- **Method**: GET `https://app.skeeled.com/board/{boardId}` — offers parsed from `<script id="__NUXT_DATA__">` (flattened-reference JSON); i18n title/description resolver (en→fr→nl→de→first) with an `a[href*="/offer/c/"]` HTML-card fallback
+- **Auth**: None — the documented REST API is credentialed and not used
+- **Data Format**: HTML / embedded JSON
+- **Tenant Resolution**: 24-hex board id via `companySlug` or `companyUrl` (`.../board/{id}`)
+- **Known Limitation**: `datePosted` null; company name derived from the logo asset / board id (Spec 324, Q-052)
+
+---
+
+### Teamdash
+
+Estonian recruitment ATS. The public career page is the only anonymous surface — no JSON API exists.
+
+- **Method**: GET `https://{tenant}.teamdash.com/p/job/{landingToken}/{slug}` — jobs read from an inline `window.context` JSON blob (career-page feed + per-posting `landing.data.blocks[]` HTML), extracted via a depth-tracking brace scan
+- **Auth**: None
+- **Data Format**: HTML / embedded JSON
+- **Tenant Resolution**: `companyUrl` is reliable; `companySlug`-only is best-effort (opaque landing token)
+- **Known Limitation**: `department` = pipeline `stage.name`; multi-language postings resolve to default→en→first (Spec 325, Q-053)
+
+---
+
+### DigitalRecruiters
+
+French ATS (career-site platform). A public REST API serves paged job ads.
+
+- **Method**: POST `https://api.digitalrecruiters.com/public/v1/careers-site/job-ads?domainName={domain}&page={p}&locale={loc}` (paged) + per-job `GET .../job-ads/{job_ad_id}` detail; a config endpoint resolves the canonical career domain and a **region-qualified** locale (a bare `iso_code` is rejected HTTP 400)
+- **Auth**: None
+- **Data Format**: JSON (+ JSON-LD on detail)
+- **Tenant Resolution**: `{tenant}.digitalrecruiters.com` sub-domain or custom `companyUrl`
+- **Known Limitation**: default-locale-only ingestion (multi-locale deferred); detail takes the numeric `job_ad_id` (Spec 326, Q-054)
+
+---
+
+### Concludis
+
+German e-recruiting ATS. The public listing is server-rendered HTML with schema.org detail enrichment.
+
+- **Method**: GET `https://{tenant}.concludis.de/prj/lst/{hash}/...htm?page={n}` (`cheerio` rows `div[id=line_{oid}]`; total from `div.stellensum`; 25/page) + best-effort per-job detail parsing schema.org JSON-LD (`Promise.allSettled`, concurrency 6)
+- **Auth**: None
+- **Data Format**: HTML (+ JSON-LD detail)
+- **Tenant Resolution**: `companySlug` (sub-domain) or `companyUrl`; root redirects to the shared listing-view hash
+- **Known Limitation**: detail pages are tenant-variable / session-gated — a role is never dropped for missing enrichment (Spec 327, Q-055)
+
+---
+
+### rexx systems
+
+German HR/recruiting suite. No anonymous feed exists, so the public job market is scraped and enriched via schema.org JSON-LD.
+
+- **Method**: GET `https://{tenant}-portal.rexx-systems.com/stellenangebote.html` (`cheerio` `article.joboffer_container` + `data-count`) then per-job detail fan-out (`Promise.allSettled`, max 6/round, 250 ms delay) extracting the embedded schema.org `JobPosting` JSON-LD
+- **Auth**: None — probed XML/RSS export paths all 404
+- **Data Format**: HTML (+ JSON-LD detail)
+- **Tenant Resolution**: `companySlug` (auto-appends the `-portal` host suffix) or `companyUrl`
+- **Known Limitation**: only the first listing page is parsed; custom-domain portals assumed to share the path/JSON-LD shape (Spec 328, Q-056)
+
+---
+
+### PCRecruiter
+
+US staffing ATS (Main Sequence). Public job boards are server-rendered HTML with schema.org detail.
+
+- **Method**: GET `https://www2.pcrecruiter.net/pcrbin/jobboard.aspx?uid={DisplayName}.{db}` (`cheerio` `table#joblist` rows) + per-job `?action=detail&recordid={id}` whose schema.org `JobPosting` JSON-LD is the primary field source (`#jobdesc` marker-comment HTML as fallback)
+- **Auth**: None
+- **Data Format**: HTML (+ JSON-LD detail)
+- **Tenant Resolution**: `uid` (`{DisplayName}.{database}`) via `companySlug` or full `companyUrl`
+- **Known Limitation**: stateful `pcr-id`-token pagination replicated best-effort, bounded by `MAX_PAGES=20`, page-1 always retained (Spec 329, Q-057)
+
+---
+
+### Prescreen
+
+Austrian ATS (part of the onlyfy/XING group). The candidate portal is server-rendered HTML; the host has rebranded to `onlyfy.jobs`.
+
+- **Method**: GET `https://{handle}.onlyfy.jobs/` (`#jobList` rows) + `/job/{token}` schema.org JSON-LD + `/job/show/{token}/full?lang=en` description fragment
+- **Auth**: None — the retired `prescreenapp.io` JSON feed and credentialed `api.prescreenapp.io` are not used
+- **Data Format**: HTML (+ JSON-LD detail)
+- **Tenant Resolution**: `handle` (sub-domain label) via `companySlug` or `companyUrl`; legacy `jobbase.io`/`prescreenapp.io` hosts 301-redirect here
+- **Known Limitation**: host-rebrand churn; single listing page observed; description served in the tenant's language when `lang=en` is unavailable (Spec 330, Q-058)
+
+---
+
 ## Architecture
 
 Each ATS integration is an independent NestJS package following the `IScraper` interface:

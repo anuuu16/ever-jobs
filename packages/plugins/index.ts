@@ -66,6 +66,18 @@ import { HarriModule } from './source-ats-harri';
 import { TribepadModule } from './source-ats-tribepad';
 import { EployModule } from './source-ats-eploy';
 import { OorwinModule } from './source-ats-oorwin';
+import { CeipalModule } from './source-ats-ceipal';
+import { SoftgardenModule } from './source-ats-softgarden';
+import { RecruitisModule } from './source-ats-recruitis';
+import { FlatchrModule } from './source-ats-flatchr';
+import { JobsoidModule } from './source-ats-jobsoid';
+import { SkeeledModule } from './source-ats-skeeled';
+import { TeamdashModule } from './source-ats-teamdash';
+import { DigitalRecruitersModule } from './source-ats-digitalrecruiters';
+import { ConcludisModule } from './source-ats-concludis';
+import { RexxModule } from './source-ats-rexx';
+import { PCRecruiterModule } from './source-ats-pcrecruiter';
+import { PrescreenModule } from './source-ats-prescreen';
 import { PinpointModule } from './source-ats-pinpoint';
 import { RecruiteeModule } from './source-ats-recruitee';
 import { RecruiterflowModule } from './source-ats-recruiterflow';
@@ -532,6 +544,18 @@ export const ALL_SOURCE_MODULES = [
   TribepadModule,
   EployModule,
   OorwinModule,
+  CeipalModule,
+  SoftgardenModule,
+  RecruitisModule,
+  FlatchrModule,
+  JobsoidModule,
+  SkeeledModule,
+  TeamdashModule,
+  DigitalRecruitersModule,
+  ConcludisModule,
+  RexxModule,
+  PCRecruiterModule,
+  PrescreenModule,
   PinpointModule,
   RecruiteeModule,
   RecruiterflowModule,

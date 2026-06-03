@@ -22,12 +22,24 @@
 
 | Status     | Plugin id (planned)        | Category   | Platform / source                                   | Notes |
 | ---------- | -------------------------- | ---------- | --------------------------------------------------- | ----- |
-| proposed   | `source-ats-avature`       | `ats`      | **Avature** career-site platform.                   | Used by Bloomberg, IBM, and other large enterprises. URL pattern varies per tenant. |
-| proposed   | `source-ats-gem`           | `ats`      | **Gem** ATS / recruiting CRM (`gem.com`).           | URL: `gem.com/<company-slug>/jobs`. |
-| proposed   | `source-ats-joincom`       | `ats`      | **Join.com** ATS (`join.com/companies/<slug>/jobs`).| Public REST API. |
-| proposed   | `source-ats-oracle`        | `ats`      | **Oracle HCM Cloud** Recruiting (`*.fa.<region>.oraclecloud.com`). | Distinct from `source-ats-taleo` (legacy Oracle). Some tenants need a `--site-number` param (`CX_45001`). |
-| proposed   | `source-mercor`            | `niche`    | **Mercor** talent marketplace (`mercor.com`).       | Single-tenant — categorise as `niche` or `freelance`. |
+| shipped    | `source-ats-avature`       | `ats`      | **Avature** career-site platform.                   | Used by large enterprises. Shipped as `source-ats-avature`. |
+| shipped    | `source-ats-gem`           | `ats`      | **Gem** ATS / recruiting CRM (`gem.com`).           | Shipped as `source-ats-gem`. |
+| shipped    | `source-ats-joincom`       | `ats`      | **Join.com** ATS (`join.com/companies/<slug>/jobs`).| Public REST API. Shipped as `source-ats-joincom`. |
+| shipped    | `source-ats-oracle`        | `ats`      | **Oracle HCM Cloud** Recruiting (`*.fa.<region>.oraclecloud.com`). | Distinct from `source-ats-taleo` (legacy Oracle). Shipped as `source-ats-oracle`. |
+| shipped    | `source-ats-mercor`        | `niche`    | **Mercor** talent marketplace (`mercor.com`).       | Shipped as `source-ats-mercor`. |
 | proposed   | `source-company-tesla`     | `company`  | **Tesla** careers site (reverse-engineered API).    | Single company-direct plugin. |
+| shipped    | `source-ats-ceipal`        | `ats`      | **Ceipal** US staffing ATS.                         | Spec 319, run #404. Anonymous career-portal API `api.ceipal.com/{apiKey}/job-postings/`. Heuristic confidence (key rotation). |
+| shipped    | `source-ats-softgarden`    | `ats`      | **Softgarden** German ATS.                          | Spec 320, run #404. Public schema.org `{tenantOrigin}/jobs.feed.json`. |
+| shipped    | `source-ats-recruitis`     | `ats`      | **Recruitis** Czech ATS (`recruitis.io`).           | Spec 321, run #404. `cheerio` scrape of `jobs.recruitis.io/{tenant}`. |
+| shipped    | `source-ats-flatchr`       | `ats`      | **Flatchr** French ATS (`flatchr.io`).              | Spec 322, run #404. Public `careers.flatchr.io/company/{slug}.json`. |
+| shipped    | `source-ats-jobsoid`       | `ats`      | **Jobsoid** recruitment ATS (`jobsoid.com`).        | Spec 323, run #404. Public `{tenant}.jobsoid.com/api/v1/jobs`. |
+| shipped    | `source-ats-skeeled`       | `ats`      | **Skeeled** Luxembourg ATS (`skeeled.com`).         | Spec 324, run #404. SSR Nuxt data island on `app.skeeled.com/board/{id}`. |
+| shipped    | `source-ats-teamdash`      | `ats`      | **Teamdash** Estonian ATS (`teamdash.com`).         | Spec 325, run #404. SSR career page `window.context` JSON. |
+| shipped    | `source-ats-digitalrecruiters` | `ats`  | **DigitalRecruiters** French ATS (`digitalrecruiters.com`). | Spec 326, run #404. Public `api.digitalrecruiters.com/public/v1/careers-site/job-ads`. |
+| shipped    | `source-ats-concludis`     | `ats`      | **concludis** German e-recruiting ATS (`concludis.de`). | Spec 327, run #404. Server-rendered listing + JSON-LD detail. |
+| shipped    | `source-ats-rexx`          | `ats`      | **rexx systems** German HR suite (`rexx-systems.com`). | Spec 328, run #404. Listing scrape + schema.org JSON-LD detail. |
+| shipped    | `source-ats-pcrecruiter`   | `ats`      | **PCRecruiter** US staffing ATS (`pcrecruiter.net`). | Spec 329, run #404. Public job board + JSON-LD detail. |
+| shipped    | `source-ats-prescreen`     | `ats`      | **Prescreen** Austrian ATS (`prescreen.io`/`onlyfy.jobs`). | Spec 330, run #404. SSR candidate portal + JSON-LD detail. |
 | shipped    | `source-company-anthropic` | `company`  | **Anthropic** (`anthropic.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/anthropic/jobs`). | Spec 020, run #230. Thin wrapper following the `source-company-stripe` pattern. |
 | shipped    | `source-company-databricks`| `company`  | **Databricks** (`databricks.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/databricks/jobs`). | Spec 021, run #231. Thin wrapper following the `source-company-anthropic` pattern. |
 | shipped    | `source-company-discord`   | `company`  | **Discord** (`discord.com`) — Greenhouse-hosted (`api.greenhouse.io/v1/boards/discord/jobs`). | Spec 022, run #232. Thin wrapper following the `source-company-databricks` pattern. |

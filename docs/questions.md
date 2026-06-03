@@ -10,6 +10,163 @@
 
 ---
 
+## Q-058 — Prescreen candidate-host rebrand churn (jobbase.io → prescreenapp.io → onlyfy.jobs)
+
+**Context:** The Prescreen (Spec 330) candidate portal has rebranded twice;
+legacy `{handle}.jobbase.io` / `{handle}.prescreenapp.io` hosts 301-redirect to
+`{handle}.onlyfy.jobs`, and the old anonymous JSON feed is retired (HTTP 404).
+The adapter targets `onlyfy.jobs` and treats `handle` as the stable key.
+
+**Options:** **A** — target `onlyfy.jobs` directly, rely on redirects for legacy
+inputs *(chosen)*; **B** — maintain a host-alias table and follow redirects
+explicitly; **C** — wait for a stable public API.
+
+**Default:** **A** — `handle` survives the rebrands; the HTTP client follows
+redirects. Re-evaluate if the host changes again.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-057 — PCRecruiter stateful pagination token
+
+**Context:** PCRecruiter (Spec 329) paginates via a stateful POST to a
+server-issued `pcr-id` token + `unifiedsearch` cursor + `morecount` index, not a
+simple `?page=n`. The adapter replicates this best-effort, bounded by
+`MAX_PAGES=20`, and always retains page-1 results.
+
+**Default:** **A** — best-effort token-replay pagination, page-1 guaranteed,
+never throws. Revisit if tenants with >480 roles under-collect.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-056 — rexx systems multi-page listing portals
+
+**Context:** rexx systems (Spec 328) tenants typically render all roles on one
+`/stellenangebote.html` page (via `data-count`), so the adapter parses only the
+first listing page.
+
+**Default:** **A** — single listing page + per-job detail fan-out. Add page
+walking if a paginated tenant is observed.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-055 — concludis tenant-variable / session-gated detail pages
+
+**Context:** concludis (Spec 327) detail pages are tenant-variable: some
+302-redirect or session-gate, and not all embed schema.org JSON-LD. Detail fetch
+is best-effort (`Promise.allSettled`, concurrency 6); a role is never dropped for
+missing enrichment — it degrades to the listing teaser + tenant-derived company.
+
+**Default:** **A** — best-effort JSON-LD enrichment with listing-teaser fallback.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-054 — DigitalRecruiters multi-locale ingestion
+
+**Context:** DigitalRecruiters (Spec 326) career sites can publish the same roles
+under multiple region-qualified locales (e.g. `fr_FR`, `en_GB`). The adapter
+ingests the tenant's default/config locale only to avoid duplicate roles.
+
+**Default:** **A** — default-locale-only ingestion. Add opt-in multi-locale
+fan-out (with cross-locale de-dup) if demand appears.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-053 — Teamdash `companySlug`-only resolution (opaque landing token)
+
+**Context:** Teamdash (Spec 325) career-page URLs embed an opaque per-tenant
+random landing token (`/p/job/{landingToken}/{slug}`) with no anonymous listing
+API to discover it. `companyUrl` is the reliable input; `companySlug`-only
+resolution makes a single best-effort attempt at the well-known `career-page`
+slug and otherwise degrades to empty.
+
+**Default:** **A** — prefer `companyUrl`; best-effort `companySlug` fallback.
+A future seed-list should carry the full career-page URL for Teamdash tenants.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-052 — Adapters with no machine-readable publish date (Skeeled, Recruitis)
+
+**Context:** Skeeled (Spec 324) board payloads and Recruitis (Spec 321) public
+HTML expose no machine-readable publish date, so `datePosted` is left `null`. The
+credentialed APIs of both carry a date but are out of scope.
+
+**Default:** **A** — `datePosted: null` rather than guessing. Downstream
+`hoursOld` filtering simply won't apply to these sources. Acceptable.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-051 — Recruitis localisation of listing chips
+
+**Context:** Recruitis (Spec 321) public career-site chips (location / category /
+employment / remote) are Czech-localised and positionally ordered. The remote
+heuristic covers English + Czech markers (`home office`, `na dálku`); chip parsing
+is ordinal with graceful absence.
+
+**Default:** **A** — ordinal chip parse + bilingual remote heuristic, verified
+stable across two tenants (recruitisio, allwyn).
+
+**Resolution:** _pending review._
+
+---
+
+## Q-050 — Softgarden: schema.org feed vs credentialed jobboard REST API
+
+**Context:** Softgarden (Spec 320) documents v2/v3 jobboard REST APIs, but all
+require a client/user token + `channelId` and are not anonymously usable. The
+real anonymous surface is the React career page's schema.org
+`GET {tenantOrigin}/jobs.feed.json`. Legacy Wicket boards lack this feed and
+degrade to empty.
+
+**Options:** **A** — use the anonymous `jobs.feed.json` schema.org feed
+*(chosen)*; **B** — require per-tenant API credentials to call the REST API
+(richer fields, but credential management + non-goal of "no auth").
+
+**Default:** **A** — no-auth, verified live (10 jobs). The REST path can be added
+later as an optional credentialed enrichment if needed.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-049 — Ceipal heuristic wire shape (tenant API-key rotation)
+
+**Context:** Ceipal (Spec 319) exposes an anonymous career-portal API at
+`https://api.ceipal.com/{apiKey}/job-postings/` — routing was confirmed live (the
+key-validation envelope `{status:400,success:0,…}` proves the
+`{apiKey}/{resource}/` family is active), but all three sampled tenant API keys
+had rotated at verification time, so the per-row JSON shape was extracted
+byte-for-byte from the platform's own public reference client rather than a live
+job-list body. Hence `confidence: heuristic`, with layered field-drift fallbacks
+(`position_title`→`job_title`, `public_job_desc`→`requistion_description`,
+`id`→`job_id`, flat/data/results-wrapped detail bodies).
+
+**Options:** **A** — ship now as heuristic with layered fallbacks and re-confirm
+against a live key when one becomes available *(chosen)*; **B** — hold the
+adapter until a live job-list body is captured; **C** — require callers to supply
+a known-good key for verification.
+
+**Default:** **A** — the adapter is contract-complete and degrades gracefully;
+re-verify opportunistically. A live capture would upgrade it to `verified` with
+no code change expected.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-048 — Composite tenant-identifier ergonomics for adapters that need more than a bare slug
 
 **Context:** Several run #403 adapters cannot resolve a tenant from a single bare

@@ -791,6 +791,30 @@ export enum Site {
   EPLOY = 'eploy',
   // Phase 327: Spec 318 — Source ATS Plugin: Oorwin (oorwin.com)
   OORWIN = 'oorwin',
+  // Phase 328: Spec 319 — Source ATS Plugin: Ceipal (ceipal.com)
+  CEIPAL = 'ceipal',
+  // Phase 329: Spec 320 — Source ATS Plugin: Softgarden (softgarden.io)
+  SOFTGARDEN = 'softgarden',
+  // Phase 330: Spec 321 — Source ATS Plugin: Recruitis (recruitis.io)
+  RECRUITIS = 'recruitis',
+  // Phase 331: Spec 322 — Source ATS Plugin: Flatchr (flatchr.io)
+  FLATCHR = 'flatchr',
+  // Phase 332: Spec 323 — Source ATS Plugin: Jobsoid (jobsoid.com)
+  JOBSOID = 'jobsoid',
+  // Phase 333: Spec 324 — Source ATS Plugin: Skeeled (skeeled.com)
+  SKEELED = 'skeeled',
+  // Phase 334: Spec 325 — Source ATS Plugin: Teamdash (teamdash.com)
+  TEAMDASH = 'teamdash',
+  // Phase 335: Spec 326 — Source ATS Plugin: DigitalRecruiters (digitalrecruiters.com)
+  DIGITALRECRUITERS = 'digitalrecruiters',
+  // Phase 336: Spec 327 — Source ATS Plugin: Concludis (concludis.de)
+  CONCLUDIS = 'concludis',
+  // Phase 337: Spec 328 — Source ATS Plugin: rexx systems (rexx-systems.com)
+  REXX = 'rexx',
+  // Phase 338: Spec 329 — Source ATS Plugin: PCRecruiter (pcrecruiter.net)
+  PCRECRUITER = 'pcrecruiter',
+  // Phase 339: Spec 330 — Source ATS Plugin: Prescreen (prescreen.io)
+  PRESCREEN = 'prescreen',
 }
 
 /**
