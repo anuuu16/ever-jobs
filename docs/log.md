@@ -15,6 +15,108 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #411 (**TEN new generic ATS adapters: Gupy, Welcome to the Jungle, MokaHR, ELMO, isolved Hire, BeeSite, Greeting, PeopleFluent, Sólides, Jobtoolz** — Specs 385–394, built in parallel)
+
+**Scope:** Direct continuation of the run-#400→#410 generic-ATS-adapter direction.
+Run #410 broadened **European** coverage with twelve adapters; this run deliberately
+pivots to the **non-Western / under-served regions** the 132-adapter corpus had thin
+coverage of: **LATAM** (Gupy & Sólides — Brazil), **China** (MokaHR), **South Korea**
+(Greeting), **Australia / NZ / APAC** (ELMO), **DACH enterprise** (BeeSite / Milch &
+Zucker), **Benelux** (Jobtoolz — Belgium), **France / EU** (Welcome to the Jungle),
+and the **US** (isolved Hire SMB HCM + PeopleFluent / PeopleClick RMS enterprise). All
+ten were designed, spec'd, implemented, and tested in **one pass via a 10-agent
+parallel workflow** (`new-ats-adapters-411`). Each agent owned one platform
+end-to-end: researched the real public surface (WebSearch + live WebFetch), wrote the
+8 plugin files + the 3 spec docs, and returned structured metadata. The orchestrator
+(main loop) then wired the four shared registration points sequentially — agents did
+**not** touch shared files, avoiding parallel-edit races.
+
+**Changes:**
+
+- **10 new `source-ats-*` plugin packages** (Specs 385–394), each with the canonical
+  8-file layout (`package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/<id>.constants.ts`, `src/<id>.types.ts`, `src/<id>.module.ts`,
+  `src/<id>.service.ts`, `__tests__/<id>.e2e-spec.ts`) and a full
+  `.specify/specs/<NNN>-source-ats-<id>/` spec/plan/tasks triplet:
+  - **385 `source-ats-gupy`** — Gupy (gupy.io, Brazil/LATAM). Parses the SSR
+    Next.js `__NEXT_DATA__` island (`props.pageProps.jobs`) on `{tenant}.gupy.io`;
+    canonical `/jobs/{id}` URLs; structured workplace location + `workplaceType`.
+    **Verified live 2026-06-03** (tenant `sicredi`).
+  - **386 `source-ats-wttj`** — Welcome to the Jungle (welcometothejungle.com,
+    FR/EU). Queries the public anonymous WTTJ **Algolia** job index
+    (`wttj_jobs_production_en`, embedded search-only key, `Referer` allow-listed) by
+    `organization.slug`; canonical `/{lang}/companies/{slug}/jobs/{jobSlug}` URLs.
+    **Verified live** (tenant `groupe-partnaire`).
+  - **387 `source-ats-mokahr`** — MokaHR (mokahr.com, China). Tenant addressed by a
+    `{tenant}/{orgId}` pair on `app.mokahr.com/social-recruitment/...`; roles via the
+    public JSON listing `api.mokahr.com/api-platform/v1/jobs/{orgId}?mode=social`.
+    Defensive (verified=false).
+  - **388 `source-ats-elmo`** — ELMO (elmo.com.au, AU/NZ/APAC). Sub-domain
+    `{tenant}.elmotalent.com.au` / `.co.nz`; server-rendered `/careers/{board}` index,
+    `/job/view/{jobId}` anchors (numeric id = ATS id), no-redirect probe. Defensive
+    (verified=false).
+  - **389 `source-ats-isolved`** — isolved Hire (isolvedhire.com, US). Reads the
+    per-tenant `/job_site_map.xml` sitemap for open-role ids, bounded
+    `Promise.allSettled` fan-out to each `/jobs/{jobId}.html` detail page, parses the
+    embedded Google-for-Jobs JSON-LD `JobPosting`. **Verified live** (tenant
+    `americavotes`).
+  - **390 `source-ats-beesite`** — BeeSite / Milch & Zucker (beesite.de, DACH
+    enterprise). `JobBoardApi` JSON board (HR-XML `MatchedObjectDescriptor` envelope,
+    `FirstItem`/`CountItem` paging) with a server-rendered `?ac=search_result` HTML
+    fallback → `?ac=jobad&id={PositionID}` detail. **8s** timeout cap (two sequential
+    probe phases — see Notes). Defensive (verified=false).
+  - **391 `source-ats-greeting`** — Greeting (greetinghr.com, South Korea). Extracts
+    the open-roles set from the Next.js `__NEXT_DATA__` React-Query `["openings"]`
+    dehydrated query on `{tenant}.career.greetinghr.com`; reads `workspaceId` from
+    `getCareerBootInfo`; canonical `/{locale}/o/{openingId}` URLs; best-effort HTML
+    body enrichment via the public detail API. **Verified live** (tenant `ablelabs`).
+  - **392 `source-ats-peoplefluent`** — PeopleFluent / PeopleClick RMS
+    (peoplefluent.com, US/global enterprise).
+    `careers.peopleclick.com/careerscp/client_{tenant}/external/...` server-rendered
+    results, `jobDetail.html?jobPostId={id}` anchors (numeric id = ATS id), dedup by
+    `jobPostId`. Defensive (verified=false).
+  - **393 `source-ats-solides`** — Sólides (solides.com.br, Brazil).
+    `{tenant}.vagas.solides.com.br`; pages the public JSON gateway
+    `apigw.solides.com.br/jobs/v3/home/vacancy?slug={tenant}&take=&page=`; canonical
+    `/vaga/{id}` URLs; department, employment type, location, remote. **Verified live**
+    (tenant `solides`).
+  - **394 `source-ats-jobtoolz`** — Jobtoolz (jobtoolz.com, Belgium/Benelux).
+    Sub-domain `{tenant}.jobtoolz.com/{locale}` (nl/en) vacancy board. **Verified
+    live** (tenant `tordale`).
+- **Four shared registration points wired** (orchestrator, post-workflow): the
+  `Site` enum (`packages/models/src/enums/site.enum.ts`, Phases 394–403), the plugin
+  barrel (`packages/plugins/index.ts` — imports + `ALL_SOURCE_MODULES`), the TS path
+  map (`tsconfig.base.json`), and the Jest module-name map (`jest.config.js`).
+- **Docs:** this `log.md` entry; `docs/index.md` spec table rows 385–394 + footer;
+  `competitor-watch.md` (parent dir, outside the repo) run-#411 sync note.
+
+**Verification:**
+
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` → **exit 0** (the exact
+  CI type-check gate; all ten adapters + wired shared files compile clean).
+- `npx jest "source-ats-(gupy|wttj|mokahr|elmo|isolved|beesite|greeting|peoplefluent|solides|jobtoolz)"`
+  → **51 tests, all green** (after the BeeSite timeout fix below). The live-host
+  E2E cases tolerate empty result sets; the deterministic no-slug → empty and
+  unknown-tenant → graceful cases are network-independent.
+
+**Notes:**
+
+- **BeeSite 8s cap (vs the sibling adapters' 15s):** a dead BeeSite tenant is probed
+  across **two sequential phases** (the `JobBoardApi` JSON board, then the
+  server-rendered search-HTML fallback), so the worst-case wall-clock is ~2× one
+  request. At the inherited 15s cap a connect-then-hang tenant burned ~30s and tripped
+  the 30s graceful-degradation E2E budget (2 BeeSite tests timed out on first run).
+  Lowering the cap to 8s keeps the dead-tenant total near ~16s — comfortably inside
+  budget, still ample for a healthy portal (which responds in <1s). Re-ran: 5/5 green.
+- **6 of 10 verified live** this run (Gupy, WTTJ, isolved, Greeting, Sólides,
+  Jobtoolz); the other 4 (MokaHR, ELMO, BeeSite, PeopleFluent) ship as **defensive
+  (verified=false)** adapters following the Carerix/Darwinbox precedent — they
+  implement the documented public surface and degrade to empty results, ready to flip
+  to verified once a stable live tenant is confirmed.
+- The corpus now stands at **142 generic `source-ats-*` adapters** (132 → 142).
+
+---
+
 ## 2026-06-03 — Scheduled run #410 (**TWELVE new generic ATS adapters: Taleez, Softy, In-recruiting, Altamira, Oleeo, Hireserve, Carerix, OTYS, Umantis, Bizneo HR, CleverConnect, Emply** — Specs 373–384, built in parallel)
 
 **Scope:** Direct continuation of the run-#400→#409 generic-ATS-adapter direction —

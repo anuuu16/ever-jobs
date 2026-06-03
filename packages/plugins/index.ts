@@ -132,6 +132,16 @@ import { UmantisModule } from './source-ats-umantis';
 import { BizneoModule } from './source-ats-bizneo';
 import { CleverConnectModule } from './source-ats-cleverconnect';
 import { EmplyModule } from './source-ats-emply';
+import { GupyModule } from './source-ats-gupy';
+import { WelcomeToTheJungleModule } from './source-ats-wttj';
+import { MokaHrModule } from './source-ats-mokahr';
+import { ElmoModule } from './source-ats-elmo';
+import { IsolvedModule } from './source-ats-isolved';
+import { BeeSiteModule } from './source-ats-beesite';
+import { GreetingModule } from './source-ats-greeting';
+import { PeopleFluentModule } from './source-ats-peoplefluent';
+import { SolidesModule } from './source-ats-solides';
+import { JobtoolzModule } from './source-ats-jobtoolz';
 import { PinpointModule } from './source-ats-pinpoint';
 import { RecruiteeModule } from './source-ats-recruitee';
 import { RecruiterflowModule } from './source-ats-recruiterflow';
@@ -664,6 +674,16 @@ export const ALL_SOURCE_MODULES = [
   BizneoModule,
   CleverConnectModule,
   EmplyModule,
+  GupyModule,
+  WelcomeToTheJungleModule,
+  MokaHrModule,
+  ElmoModule,
+  IsolvedModule,
+  BeeSiteModule,
+  GreetingModule,
+  PeopleFluentModule,
+  SolidesModule,
+  JobtoolzModule,
   PinpointModule,
   RecruiteeModule,
   RecruiterflowModule,

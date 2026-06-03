@@ -923,6 +923,26 @@ export enum Site {
   CLEVERCONNECT = 'cleverconnect',
   // Phase 393: Spec 384 — Source ATS Plugin: Emply / Visma (emply.com)
   EMPLY = 'emply',
+  // Phase 394: Spec 385 — Source ATS Plugin: Gupy (gupy.io)
+  GUPY = 'gupy',
+  // Phase 395: Spec 386 — Source ATS Plugin: Welcome to the Jungle (welcometothejungle.com)
+  WTTJ = 'wttj',
+  // Phase 396: Spec 387 — Source ATS Plugin: MokaHR (mokahr.com)
+  MOKAHR = 'mokahr',
+  // Phase 397: Spec 388 — Source ATS Plugin: ELMO (elmo.com.au)
+  ELMO = 'elmo',
+  // Phase 398: Spec 389 — Source ATS Plugin: isolved Hire (isolvedhire.com)
+  ISOLVED = 'isolved',
+  // Phase 399: Spec 390 — Source ATS Plugin: BeeSite / Milch & Zucker (beesite.de)
+  BEESITE = 'beesite',
+  // Phase 400: Spec 391 — Source ATS Plugin: Greeting (greetinghr.com)
+  GREETING = 'greeting',
+  // Phase 401: Spec 392 — Source ATS Plugin: PeopleFluent (peoplefluent.com)
+  PEOPLEFLUENT = 'peoplefluent',
+  // Phase 402: Spec 393 — Source ATS Plugin: Sólides (solides.com.br)
+  SOLIDES = 'solides',
+  // Phase 403: Spec 394 — Source ATS Plugin: Jobtoolz (jobtoolz.com)
+  JOBTOOLZ = 'jobtoolz',
 }
 
 /**
