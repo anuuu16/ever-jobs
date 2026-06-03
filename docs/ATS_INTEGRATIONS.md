@@ -353,6 +353,46 @@ Single-company custom careers portal at `https://www.tesla.com/careers/search/`.
 - **Cross-Plugin Dedup**: When both Tesla plugins are enabled, rows emit under different `Site` keys (`Site.TESLA` vs `Site.TESLA_PLAYWRIGHT`) so per-source breaker policies (Spec 005 / FR-1) track them independently. `dedup-hybrid`'s hash strategy (Spec 003 / FR-3) collapses cross-site duplicates by `externalId` (per Q-032 default)
 - **Notable Users**: Tesla (single-tenant; no per-company variation)
 
+### Cornerstone OnDemand (CSOD)
+
+Enterprise talent-management suite whose Cornerstone Recruiting product powers the public career sites of many large enterprises and public-sector organizations at `https://{slug}.csod.com`. The public listing flow is an **anonymous two-step bootstrap** — no OAuth/operator credentials required.
+
+- **Method**: (1) GET the public career-site page `https://{slug}.csod.com/ux/ats/careersite/{siteId}/home?c={slug}` — embeds an anonymous JWT token and the regional "cloud" API host (e.g. `https://us.api.csod.com`), with the JWT `rurls` claim whitelisting `rec-job-search/external`; (2) `POST {cloud}/rec-job-search/external/jobs` paginated by `pageNumber` / `pageSize=25`, bounded concurrent fan-out with `Promise.allSettled`
+- **Auth**: None (anonymous JWT minted by the public career-site page)
+- **Data Format**: JSON — requisitions array; `externalDescription` already present in the listing (no per-requisition enrichment needed)
+- **Tenant Resolution**: `companySlug` → `https://{slug}.csod.com`, or explicit `companyUrl`; `siteNumber` overrides the default careerSiteId (`1`)
+- **Known Limitation**: WAF-gated tenants, the credentialed OAuth Recruiting REST API, and multi-portal careerSiteId auto-discovery are explicit non-goals (Spec 297)
+
+### Dayforce (Ceridian Dayforce HCM)
+
+Cloud HCM platform whose candidate career portals are hosted at `https://{client}.dayforcehcm.com/CandidatePortal/`. Ever Jobs reads the consolidated **no-auth geo job-posting search feed**.
+
+- **Method**: `POST https://jobs.dayforcehcm.com/api/geo/{client}/jobposting/search` with body `{ clientNamespace, jobBoardCode: 'CANDIDATEPORTAL', cultureCode: 'en-US', distanceUnit, paginationStart }`; server-fixed page size 25 paginated via `paginationStart`, bounded `Promise.allSettled` fan-out
+- **Auth**: None (public candidate-portal feed)
+- **Data Format**: JSON — `{ jobPostings[], maxCount, count }`. Parser reads both modern camelCase geo fields (`jobPostingId`, `jobTitle`, `jobDescription`, `postingLocations`, `postingStartTimestampUTC`) and the documented PascalCase RESTful fields (`Title`, `JobDetailsUrl`, `ApplyUrl`, `City`/`State`/`Country`, `DatePosted`, `ParentRequisitionCode`) defensively
+- **Tenant Resolution**: client namespace from `companySlug`, then `siteNumber`, then parsed from `companyUrl` (legacy `{client}.dayforcehcm.com` subdomain or the path segment after the locale / `CandidatePortal`)
+- **Known Limitation**: WAF/Cloudflare TLS-fingerprint-gated tenants (HTTP 403 on plain HTTPS) deferred to a browser-fingerprint follow-up (Q-044); per-posting detail enrichment and the legacy XML feed are non-goals (Spec 298)
+
+### Zoho Recruit
+
+Recruitment ATS in the Zoho suite; career sites are hosted per-tenant at `https://{slug}.zohorecruit.com` (with `.eu` / `.in` datacenter variants). Zoho **server-renders the full open-roles list into the careers page** rather than exposing a separate paginated JSON API.
+
+- **Method**: GET `https://{slug}.zohorecruit.com/jobs/Careers`; the open-roles list is an HTML-entity-encoded JSON array embedded in a hidden `<input id="jobs">`. The service fetches once, decodes entities, and `JSON.parse`s defensively (the single fetch is still wrapped in `Promise.allSettled` per the batch-safety rule)
+- **Auth**: None (public career site)
+- **Data Format**: Embedded JSON — `Job_Openings` fields (`id`, `Posting_Title` / `Job_Opening_Name`, `Job_Description`, `City` / `State` / `Country`, `Date_Opened`, `Remote_Job`, `Job_Type`, `Industry`, `Is_Locked` / `Publish`); job URLs built as `{host}/jobs/Careers/{id}/{title-slug}`
+- **Tenant Resolution**: `companySlug` (US `.com` default) or explicit `companyUrl` for EU/IN datacenters
+- **Known Limitation**: the OAuth REST API, WAF-gated tenants, lazy-load/digest-gated pagination beyond the embedded slice, and non-US datacenter auto-discovery are non-goals (Spec 299). Wires the previously-orphaned `Site.ZOHORECRUIT` enum member to a real plugin.
+
+### ClearCompany
+
+Talent-management ATS whose career sites are hosted at `https://careers-page.clearcompany.com/jobs/{slug}/...`. Ever Jobs reads the **verified public careers feed**.
+
+- **Method**: GET `https://careers-page.clearcompany.com/api/v1/careers/jobs` with an `API-ShortName: {slug}` header — returns the tenant's full open-roles list in a single call (no auth, no pagination envelope)
+- **Auth**: None
+- **Data Format**: JSON — flat array of PascalCase objects (`Id` GUID, `PositionTitle`, `Description` HTML, `OpenDate` ISO, `DepartmentName`, `OfficeName` free-text location, `ApplyUrl`, `OrganizationName`); dedup by job GUID via a `Set`
+- **Tenant Resolution**: slug from `companySlug` or the `companyUrl` `/jobs/{slug}` path segment; unknown tenants return HTTP 400 and are handled gracefully as empty
+- **Known Limitation**: WAF-gated tenants, server-side keyword/location filtering, structured-office lookup, and per-job detail enrichment (descriptions already in the feed) are non-goals (Spec 300)
+
 ---
 
 ## Architecture

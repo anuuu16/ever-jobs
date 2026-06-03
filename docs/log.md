@@ -15,6 +15,89 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #401 (**FOUR new generic ATS adapters: Cornerstone, Dayforce, Zoho Recruit, ClearCompany** — Specs 297–300, built in parallel)
+
+**Scope:** High-leverage continuation of the run-#400 ATS-adapter direction.
+Run #400's closing notes named four enterprise ATS platforms still unsupported
+(Cornerstone OnDemand, Dayforce/Ceridian, Zoho Recruit, ClearCompany). Each
+generic, multi-tenant adapter unlocks a large catalogue of companies from a
+single plugin (versus one company per `source-company-*` plugin). All four were
+designed, spec'd, implemented, and tested in **one pass via a 4-agent parallel
+workflow** (`new-ats-adapters-401`), each agent owning one adapter end-to-end
+(research the real public API → write the 8 plugin files + Spec-Kit triplet →
+self-verify with `tsc`). The orchestrator then performed the central
+registration (the four shared files) sequentially to avoid edit conflicts. All
+competitor repos under `OTHERS/` were re-pulled this run and were **up to date**
+(no upstream churn to absorb).
+
+**Changes:**
+
+- **NEW** plugin `packages/plugins/source-ats-cornerstone/` (Spec 297) —
+  Cornerstone OnDemand (CSOD). Anonymous **two-step bootstrap**: GET the public
+  career-site page (`/ux/ats/careersite/{siteId}/home?c={slug}`) to mint an
+  anonymous JWT + discover the regional "cloud" API host, then
+  `POST {cloud}/rec-job-search/external/jobs` paginated by `pageNumber`/
+  `pageSize=25` with bounded `Promise.allSettled` fan-out. Live-verified against
+  the `ouc` tenant. No OAuth/operator credentials required.
+- **NEW** plugin `packages/plugins/source-ats-dayforce/` (Spec 298) —
+  Ceridian Dayforce HCM. No-auth geo feed
+  `POST https://jobs.dayforcehcm.com/api/geo/{client}/jobposting/search`
+  (`jobBoardCode: CANDIDATEPORTAL`); page size 25 via `paginationStart`. Reads
+  both camelCase geo and PascalCase RESTful wire shapes defensively. Endpoint
+  verified against the Dayforce RESTful Web Services Developer Guide.
+- **NEW** plugin `packages/plugins/source-ats-zohorecruit/` (Spec 299) —
+  Zoho Recruit. Zoho **server-renders** the open-roles list into
+  `GET https://{slug}.zohorecruit.com/jobs/Careers` as an HTML-entity-encoded
+  JSON array inside a hidden `<input id="jobs">`; the service fetches once,
+  decodes, and `JSON.parse`s defensively. Live-verified against two real tenants
+  (`workbetternow`, `bruntwork`). **Wires the previously-orphaned
+  `Site.ZOHORECRUIT` enum member** (it existed near `EIGHTFOLD` with no plugin)
+  to a real adapter — the duplicate enum line the orchestrator initially added
+  was removed once the collision surfaced in `tsc`.
+- **NEW** plugin `packages/plugins/source-ats-clearcompany/` (Spec 300) —
+  ClearCompany. Verified public feed
+  `GET https://careers-page.clearcompany.com/api/v1/careers/jobs` with an
+  `API-ShortName: {slug}` header — returns the full open-roles list as a flat
+  PascalCase JSON array (no auth, no pagination envelope); dedup by job GUID.
+- All four follow the `source-ats-eightfold` template exactly (`@SourcePlugin`
+  decorator, `IScraper`, NestJS `Logger`, partial-results error handling,
+  `descriptionFormat` HTML/MARKDOWN/PLAIN handling, robust epoch/ISO date
+  parsing, `extractEmails`, intra-run dedup, `resultsWanted` trim).
+- **Registered centrally** in the four canonical files (CLAUDE.md §4):
+  `site.enum.ts` (`CORNERSTONE`, `DAYFORCE`, `CLEARCOMPANY` added;
+  `ZOHORECRUIT` already present), `packages/plugins/index.ts`
+  (imports + `ALL_SOURCE_MODULES`), `tsconfig.base.json` path aliases,
+  `jest.config.js` moduleNameMapper.
+- **Specs 297–300** added under `.specify/specs/` (spec/plan/tasks — all phases
+  `[x]`). **Docs:** `docs/ATS_INTEGRATIONS.md` (four new sections),
+  `docs/index.md` (rows 297–300 + footer), `docs/questions.md` (new **Q-044** —
+  consolidate ATS WAF recovery under the Q-043 follow-up), this `docs/log.md`.
+
+**Verification:**
+
+- `tsc --noEmit --skipLibCheck` per package → **clean (exit 0)** for all four,
+  plus `packages/models` clean after resolving the `ZOHORECRUIT` duplicate.
+- `jest --testPathPatterns "source-ats-(cornerstone|dayforce|zohorecruit|clearcompany)"`
+  → **4 suites / 16 tests passed**. Tests are network-tolerant (zero results
+  acceptable; shape assertions guarded). Observed live during the pass:
+  Cornerstone unknown-tenant `ENOTFOUND` and Dayforce `gannett` HTTP 403 (WAF) —
+  both handled gracefully (empty `JobResponseDto`, logged), exactly as designed.
+- No `console.log`, no `Promise.all(`, no competitor references anywhere in the
+  new packages or specs (grep-verified).
+
+**Notes:**
+
+- **NO competitor references** anywhere under `ever-jobs/`. The four platforms
+  are real, public, first-party ATS products documented on their own merits.
+- WAF/TLS-fingerprint-gated tenants are an explicit non-goal across all four
+  adapters; recovery is consolidated under the Q-043/Q-044 follow-up.
+- Next runs: (a) curated tenant seed lists for the new adapters in the
+  source-adoption backlog; (b) remaining ATS gaps (Dayforce legacy XML feed,
+  plus Zoho/ClearCompany datacenter variants); (c) resume the company-source
+  batch sweep; (d) the shared fingerprint-transport follow-up.
+
+---
+
 ## 2026-06-03 — Scheduled run #400 (**NEW ATS adapter: Eightfold AI** — Spec 296)
 
 **Scope:** Deliberate break from the company-source batch loop to add a

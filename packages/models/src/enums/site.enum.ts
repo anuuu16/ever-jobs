@@ -78,6 +78,7 @@ export enum Site {
   DEEL = 'deel',
   PHENOM = 'phenom',
   EIGHTFOLD = 'eightfold',
+  ZOHORECRUIT = 'zohorecruit',
   // Phase 8: Company scrapers
   IBM = 'ibm',
   BOEING = 'boeing',
@@ -745,6 +746,15 @@ export enum Site {
   APPLETREEPREP = 'appletreeprep',
   // Phase 305: Spec 295 — Source Company Plugin: Aktos
   APPLYTOAKTOS = 'applytoaktos',
+  // Phase 306: Spec 297 — Source ATS Plugin: Cornerstone OnDemand (CSOD)
+  CORNERSTONE = 'cornerstone',
+  // Phase 307: Spec 298 — Source ATS Plugin: Dayforce (Ceridian Dayforce HCM)
+  DAYFORCE = 'dayforce',
+  // Phase 308: Spec 299 — Source ATS Plugin: Zoho Recruit
+  //   (the ZOHORECRUIT enum member already exists above near EIGHTFOLD;
+  //    Spec 299 wires the previously-orphaned member to a real plugin.)
+  // Phase 309: Spec 300 — Source ATS Plugin: ClearCompany
+  CLEARCOMPANY = 'clearcompany',
 }
 
 /**

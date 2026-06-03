@@ -10,6 +10,37 @@
 
 ---
 
+## Q-044 — Should Dayforce/Cornerstone WAF-gated tenants share the Q-043 browser-fingerprint follow-up?
+
+**Context:** Spec 298 (`source-ats-dayforce`, run #401) ships a generic
+Ceridian Dayforce HCM adapter over the no-auth geo job-posting search feed.
+During the run-#401 E2E pass, at least one real tenant (`gannett`) returned
+HTTP 403 on plain HTTPS — the same Cloudflare/WAF TLS-fingerprint gating already
+tracked for Eightfold in Q-043. Cornerstone (Spec 297) anonymous-bootstrap
+tenants behind a WAF have the same exposure. These are all the *same* failure
+mode (plain-HTTPS 403, recoverable only with a browser-TLS-fingerprint client),
+across three+ generic ATS adapters now.
+
+**Options:**
+
+- **A. Treat WAF recovery as one cross-cutting follow-up (the Q-043 work) that
+  serves every ATS adapter.** Build the pluggable fingerprint transport once
+  (Q-043 option C), then opt each adapter in. Avoids N per-plugin WAF code paths.
+- **B. Add a per-plugin browser-fingerprint fallback to each affected adapter
+  independently.** Faster to land one plugin, but duplicates a heavy dependency
+  and request path across Cornerstone/Dayforce/Eightfold/….
+- **C. Do nothing; accept that WAF-gated tenants of these platforms return empty
+  (logged) indefinitely.** Zero cost, lowest coverage.
+
+**Default (proceeding):** **A** — consolidate all ATS WAF recovery under the
+Q-043 pluggable-transport follow-up rather than duplicating per-plugin paths.
+Each generic adapter already returns empty-and-logged for WAF-gated tenants
+(graceful), so coverage degrades safely until the shared transport lands.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-043 — Should the Eightfold ATS plugin add a browser-fingerprint WAF fallback?
 
 **Context:** Spec 296 (`source-ats-eightfold`, run #400) ships a generic
