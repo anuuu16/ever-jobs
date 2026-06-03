@@ -77,9 +77,13 @@ export class BeetweenService implements IScraper {
     const client = createHttpClient({
       proxies: input.proxies,
       caCert: input.caCert,
-      // Bound the timeout so an unresponsive Beetween portal host degrades
-      // gracefully fast rather than hanging on the shared client's 60s default.
-      timeout: input.requestTimeout ?? BEETWEEN_DEFAULT_TIMEOUT_SECONDS,
+      // Bound the per-request timeout so an unresponsive Beetween portal host
+      // (emploi.beetween.com can connect-then-hang) degrades gracefully fast
+      // rather than hanging on the shared client's 60s default. NOTE: the
+      // createHttpClient factory keys off `requestTimeout` (in seconds) — passing
+      // `timeout` here is silently ignored whenever proxies/requestTimeout select
+      // the factory's first branch, so we must set `requestTimeout` explicitly.
+      requestTimeout: input.requestTimeout ?? BEETWEEN_DEFAULT_TIMEOUT_SECONDS,
     });
     client.setHeaders(BEETWEEN_HEADERS);
 
