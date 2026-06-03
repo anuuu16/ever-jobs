@@ -162,6 +162,18 @@ import { SenseModule } from './source-ats-sense';
 import { RadancyModule } from './source-ats-radancy';
 import { BeameryModule } from './source-ats-beamery';
 import { SymphonyTalentModule } from './source-ats-symphonytalent';
+import { EmploymentHeroModule } from './source-ats-employmenthero';
+import { TalenteraModule } from './source-ats-talentera';
+import { SubscribeHrModule } from './source-ats-subscribehr';
+import { RoublerModule } from './source-ats-roubler';
+import { Expr3ssModule } from './source-ats-expr3ss';
+import { PeopleHrModule } from './source-ats-peoplehr';
+import { BreatheHrModule } from './source-ats-breathehr';
+import { VidCruiterModule } from './source-ats-vidcruiter';
+import { SympaModule } from './source-ats-sympa';
+import { CvWarehouseModule } from './source-ats-cvwarehouse';
+import { ConnexysModule } from './source-ats-connexys';
+import { HReasilyModule } from './source-ats-hreasily';
 import { PinpointModule } from './source-ats-pinpoint';
 import { RecruiteeModule } from './source-ats-recruitee';
 import { RecruiterflowModule } from './source-ats-recruiterflow';
@@ -724,6 +736,18 @@ export const ALL_SOURCE_MODULES = [
   RadancyModule,
   BeameryModule,
   SymphonyTalentModule,
+  EmploymentHeroModule,
+  TalenteraModule,
+  SubscribeHrModule,
+  RoublerModule,
+  Expr3ssModule,
+  PeopleHrModule,
+  BreatheHrModule,
+  VidCruiterModule,
+  SympaModule,
+  CvWarehouseModule,
+  ConnexysModule,
+  HReasilyModule,
   PinpointModule,
   RecruiteeModule,
   RecruiterflowModule,

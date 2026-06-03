@@ -10,6 +10,69 @@
 
 ---
 
+## Q-062 — Live re-confirmation pass for the 3 other defensive ATS surfaces shipped in run #414 (Expr3ss, Connexys, HReasily)
+
+**Context:** Run #414 shipped 12 new `source-ats-*` adapters (Specs 415–426). **8 were verified live
+2026-06-04** (Employment Hero, Talentera, Subscribe-HR, Access PeopleHR, Breathe HR, VidCruiter,
+Sympa, CVWarehouse). **4 are defensive (`verified=false`)**: Roubler (tracked separately in Q-061),
+plus three here:
+
+- **Expr3ss (Spec 419)** — the whole `*.expr3ss.com` board surface is behind an edge
+  managed-challenge (HTTP 403 + `Cf-Mitigated: challenge`) for non-browser clients, so the
+  schema.org JSON-LD / apply-anchor payload could not be extracted from a plain HTTP client this
+  run. Many real tenants confirmed live (cos, dnata, kelsian, krispykreme); only the anonymous
+  payload capture failed.
+- **Connexys (Spec 425)** — the documented public XML vacancy-feed URL contract + Dutch/English
+  field vocabulary were established, but the legacy `www.connexys.nl` host answered HTTP 400 during
+  Connexys's Salesforce-platform migration, so an anonymous body could not be re-confirmed
+  end-to-end. Defensive multi-alias parsing throughout.
+- **HReasily (Spec 426)** — platform identity, SEA/SG footprint, and the ATS module were confirmed,
+  but the candidate career-page host/path + public feed are undocumented and require a hiring tenant,
+  so the `careers.hreasily.com/{slug}` + JSON-LD contract is a best-effort model.
+
+**Options:**
+- A. Ship all three defensively (`verified=false`), each degrading to empty on any non-conforming
+  response, and re-confirm in a later run (e2e suites tolerate zero results, so CI stays green).
+- B. Defer these three until an anonymous response is captured (leaves their catalogues
+  un-ingestable indefinitely).
+
+**Default (proceeding):** A. All three ship `verified=false` with the surface flagged throughout
+(constants JSDoc, service JSDoc, spec §10, e2e header). Flip to `verified=true` once an anonymous
+response is captured — Expr3ss needs a browser-grade fetch to clear the edge challenge; Connexys
+needs the post-migration feed host; HReasily needs a live hiring tenant.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-061 — Roubler (Spec 418) public careers feed shape unconfirmed (verified=FALSE)
+
+**Context:** Live research on 2026-06-04 confirmed Roubler's platform, its shared candidate-facing
+SPA host `app.roubler.com` (region aliases `app.roubler.com.au` + `production.roubler.net` both
+301 → it), and the region-sharded backend `graphql.au.roubler.com` with a `/static/` REST
+namespace advertised in the board's runtime `config.js`. But no *anonymous* careers-feed JSON / RSS
+/ JSON-LD response was capturable: the board is client-rendered (empty `<title>`, no server-side
+JobPosting JSON-LD), `graphql.au.roubler.com/graphql` returns an auth error anonymously, and every
+`/static/*` path returns HTTP 403 anonymously.
+
+**Options:**
+- A. Ship a defensive best-effort model of the documented public careers feed
+  (`/static/careers/{companyId}/adverts`), narrow every field, degrade to empty on any
+  non-conforming response — verified=FALSE.
+- B. Defer the adapter until an anonymous response is captured (leaves the AU/APAC Roubler catalogue
+  un-ingestable indefinitely).
+- C. Use the authenticated GraphQL backend (out of scope — requires per-tenant credentials).
+
+**Default (proceeding):** A. The `source-ats-roubler` package + Spec 418 ship with the feed shape /
+path / pagination flagged verified=FALSE throughout (constants JSDoc, service JSDoc, spec §10 D-1,
+e2e header). Every network test tolerates zero results, so the suite passes whether or not the
+public feed responds anonymously. Re-confirm and flip to verified=true once an anonymous careers
+response is captured against a live tenant.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-060 — Live re-confirmation pass for the 3 defensive ATS surfaces shipped in run #413 (HROne, Workwise, Beamery)
 
 **Context:** Run #413 shipped 10 new `source-ats-*` adapters (Specs 405–414). **7 were

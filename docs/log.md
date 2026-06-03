@@ -15,6 +15,111 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #414 (**TWELVE new generic ATS adapters: Employment Hero, Talentera, Subscribe-HR, Roubler, Expr3ss, Access PeopleHR, Breathe HR, VidCruiter, Sympa, CVWarehouse, Connexys, HReasily** — Specs 415–426, built in parallel)
+
+**Scope:** Direct continuation of the run-#400→#413 generic-ATS-adapter direction. At run start
+the corpus held **162 `source-ats-*` adapters / 414 specs / 562 source plugin packages**, all three
+OTHERS reference repos were pulled and reported **no upstream changes** (logged in the
+parent-directory competitor-watch file), and the proposed ATS rows in
+`SOURCE_ADOPTION_BACKLOG.md` were exhausted. This run extends ATS coverage into **under-served
+regional tiers**: AU/NZ/SEA/UK HR+ATS (**Employment Hero**), MENA talent acquisition
+(**Talentera**), Australian HR/recruitment (**Subscribe-HR**, **Roubler**, **Expr3ss**), UK SMB HR
+(**Access PeopleHR** — distinct from the existing `peoplestrong`/`peoplefluent`; **Breathe HR**),
+global video-interview + ATS (**VidCruiter**), Nordic HR (**Sympa**), Belgian/EU ATS
+(**CVWarehouse**), Dutch ATS (**Connexys** — distinct from the existing `source-ats-bullhorn`,
+though now Bullhorn-owned), and SEA cloud HR & payroll (**HReasily**). All twelve were researched,
+spec'd, implemented, and tested in **one pass via a 12-agent parallel workflow**
+(`new-ats-adapters-414`). Each agent owned one platform end-to-end (WebSearch + live WebFetch
+surface research → 8 plugin files + 3 spec docs → structured metadata). The orchestrator (main
+loop) then wired the **four** shared registration points sequentially (`site.enum.ts`,
+`plugins/index.ts`, `tsconfig.base.json`, `jest.config.js`) — agents did **not** own shared files.
+
+**Surface confidence:** **8 verified live 2026-06-04** (Employment Hero, Talentera, Subscribe-HR,
+Access PeopleHR, Breathe HR, VidCruiter, Sympa, CVWarehouse) and **4 defensive / flagged for live
+re-confirmation** (Roubler → Q-061, Expr3ss / Connexys / HReasily → Q-062). Every adapter degrades
+gracefully (unknown tenant / 4xx / DNS / malformed → empty/partial, never throws).
+
+**Validation:** All **12 new e2e suites pass (60 tests)**; the project-wide `tsc --noEmit -p
+tsconfig.base.json` is **clean (exit 0)** with all 12 modules wired into the registry barrel; the
+`store-registry` + `source-ats-batch-2.integration` suites (which import `ALL_SOURCE_MODULES`) pass
+(51 tests) — confirming **no duplicate-`Site` collisions** and sound registry wiring.
+
+**Changes:**
+
+- **12 new `source-ats-*` plugin packages** (Specs 415–426), each with the canonical 8-file layout
+  (`package.json`, `tsconfig.json`, `src/index.ts`, `src/<id>.constants.ts`, `src/<id>.types.ts`,
+  `src/<id>.module.ts`, `src/<id>.service.ts`, `__tests__/<id>.e2e-spec.ts`) and a full
+  `.specify/specs/<NNN>-source-ats-<id>/` spec/plan/tasks triplet:
+  - **415 `source-ats-employmenthero`** — Employment Hero (employmenthero.com, AU/NZ/SEA/UK
+    HR+ATS). Public anonymous JSON `GET services.employmenthero.com/ats/api/v1/career_page/organisations/{slug}/jobs?page_index={n}&item_per_page={size}`
+    → `{ data: { items: [...], total_pages, total_items } }`; first-class page_index pagination;
+    canonical `/jobs/position/{friendly_id}/`. **Verified live 2026-06-04** (tenant `employmenthero`).
+  - **416 `source-ats-talentera`** — Talentera (talentera.com, MENA TA platform by Bayt). Public
+    per-tenant `{codename}.talentera.com` Vue portal; mints an anonymous guest `USER_token` from the
+    results page then drains `/app/control/byt_job_search_manager` JSON. **Verified live 2026-06-04**
+    (tenant `careerroyaljet`).
+  - **417 `source-ats-subscribehr`** — Subscribe-HR (subscribe-hr.com.au, AU cloud HR &
+    e-recruitment). Public server-rendered board `{tenant}.careers.subscribe-hr.com/?page={n}` with
+    inline role cards (`data-vacancyId`, `jobName`, `jobUrl`); walk-until-empty pagination. **Verified
+    live 2026-06-04** (tenant `subscribehr16`).
+  - **418 `source-ats-roubler`** — Roubler (roubler.com, AU/global workforce management & hiring).
+    Public `app.roubler.com/careers/{companyId}` SPA + region-sharded careers feed
+    `/static/careers/{companyId}/adverts`. Platform + hosts confirmed live, but anonymous feed gated
+    → **defensive (verified=false)**, tracked in **Q-061**.
+  - **419 `source-ats-expr3ss`** — Expr3ss (expr3ss.com, AU predictive-hiring ATS). Public
+    `{tenant}.expr3ss.com/home` board with schema.org JobPosting JSON-LD + apply anchors; many real
+    tenants confirmed live, but the surface is edge-challenge-gated for non-browser clients →
+    **defensive (verified=false)**, tracked in **Q-062**.
+  - **420 `source-ats-peoplehr`** — Access PeopleHR (peoplehr.com, The Access Group; UK SMB HR).
+    Public server-rendered board `{tenant}.peoplehr.net/JobBoard` with inline rows (vacancy GUID,
+    `lblVacancyName`/`lblLocation`/`lblDepartment`); canonical `Opening.aspx?v={GUID}`. DISTINCT from
+    `peoplestrong`/`peoplefluent`. **Verified live 2026-06-04** (tenant `efigroup`).
+  - **421 `source-ats-breathehr`** — Breathe HR (breathehr.com, UK SMB HR). Public per-vacancy
+    share page `hr.breathehr.com/v/{slug}-{id}`; resolves a tenant by harvesting share links from
+    their own careers page (Breathe hosts no public per-tenant index). **Verified live 2026-06-04**
+    (token `advocacy-worker-43996`, employer "Partners in Advocacy").
+  - **422 `source-ats-vidcruiter`** — VidCruiter (vidcruiter.com, global video-interview + ATS).
+    Public anonymous JSON `GET {tenant}.hiringplatform.com/list/{slug}.json?page={n}` →
+    `{ business_processes: [...] }`; canonical `/processes/{uuid}`; subdomain addressing. **Verified
+    live 2026-06-04** (tenant `vidcruiter`).
+  - **423 `source-ats-sympa`** — Sympa (sympa.com, Nordic HR suite recruitment). Public anonymous
+    single-fetch offers feed `GET {slug}.recruitee.com/api/offers/` → `{ offers: [...] }`; keeps
+    `status==='published'`, slices client-side. **Verified live 2026-06-04** (tenant `bunq`, 30
+    offers).
+  - **424 `source-ats-cvwarehouse`** — CVWarehouse (cvwarehouse.com, BE/EU ATS). Public
+    server-rendered board `jobpage.cvwarehouse.com/?companyGuid={guid}` with inline role anchors +
+    sibling detail blocks (single GET, no private XHR). **Verified live 2026-06-04** (GUID
+    `0875aa48-…`, 15 roles).
+  - **425 `source-ats-connexys`** — Connexys (connexys.com, Dutch ATS, now Bullhorn Connexys on
+    Salesforce). Public anonymous XML vacancy feed `{site}public/run/xml_feed.startup?p_pub_id={channelId}`
+    (Dutch/English `<vacancy>` vocabulary). DISTINCT from `source-ats-bullhorn`. Feed contract
+    established but legacy host returned HTTP 400 mid-migration → **defensive (verified=false)**,
+    tracked in **Q-062**.
+  - **426 `source-ats-hreasily`** — HReasily (hreasily.com, SEA cloud HR & payroll with hiring).
+    Public candidate career page `careers.hreasily.com/{slug}` with schema.org JobPosting JSON-LD
+    (+ SSR data-island & HTML-anchor fallbacks). Candidate host login-gated for anonymous research →
+    **defensive (verified=false)**, tracked in **Q-062**.
+- **4 shared registration points** wired for all 12 (orchestrator):
+  `packages/models/src/enums/site.enum.ts` (Phases 424–435: `EMPLOYMENTHERO`, `TALENTERA`,
+  `SUBSCRIBEHR`, `ROUBLER`, `EXPR3SS`, `PEOPLEHR`, `BREATHEHR`, `VIDCRUITER`, `SYMPA`, `CVWAREHOUSE`,
+  `CONNEXYS`, `HREASILY`), `packages/plugins/index.ts` (imports + `ALL_SOURCE_MODULES`),
+  `tsconfig.base.json` (path aliases), `jest.config.js` (`moduleNameMapper`). NB: a concurrent agent
+  had left a stray misplaced `BREATHEHR` enum line during the parallel run (known scheduled-task
+  concurrency hazard); the orchestrator removed it and re-added all 12 entries correctly in phase
+  order.
+- **Docs:** `docs/index.md` §7 gains rows 415–426 + footer bump; this `docs/log.md` entry;
+  `docs/questions.md` gains **Q-061** (Roubler) + **Q-062** (Expr3ss / Connexys / HReasily) and
+  renumbers the agent-authored `Q-RB-2` into the canonical `Q-0NN` scheme.
+
+**Notes:**
+
+- New corpus totals: **174 `source-ats-*` adapters / 426 specs / 574 source plugin packages**.
+- No competitor / scraper-library / third-party-tool name appears in any of the 132 new repo files
+  (verified by the per-agent guardrail scan + the canonical no-competitor rule).
+- Push performed via PowerShell + Windows OpenSSH per the project push-mechanism note.
+
+---
+
 ## 2026-06-04 — Scheduled run #413 (**TEN new generic ATS adapters: Apploi, Kenjo, Sesame HR, HROne, Workwise, Recruiteze, Sense, Radancy, Beamery, Symphony Talent** — Specs 405–414, built in parallel)
 
 **Scope:** Direct continuation of the run-#400→#412 generic-ATS-adapter direction. At run

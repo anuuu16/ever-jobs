@@ -983,6 +983,30 @@ export enum Site {
   BEAMERY = 'beamery',
   // Phase 423: Spec 414 — Source ATS Plugin: Symphony Talent (symphonytalent.com)
   SYMPHONYTALENT = 'symphonytalent',
+  // Phase 424: Spec 415 — Source ATS Plugin: Employment Hero (employmenthero.com)
+  EMPLOYMENTHERO = 'employmenthero',
+  // Phase 425: Spec 416 — Source ATS Plugin: Talentera (talentera.com)
+  TALENTERA = 'talentera',
+  // Phase 426: Spec 417 — Source ATS Plugin: Subscribe-HR (subscribe-hr.com.au)
+  SUBSCRIBEHR = 'subscribehr',
+  // Phase 427: Spec 418 — Source ATS Plugin: Roubler (roubler.com)
+  ROUBLER = 'roubler',
+  // Phase 428: Spec 419 — Source ATS Plugin: Expr3ss (expr3ss.com)
+  EXPR3SS = 'expr3ss',
+  // Phase 429: Spec 420 — Source ATS Plugin: Access PeopleHR (peoplehr.com)
+  PEOPLEHR = 'peoplehr',
+  // Phase 430: Spec 421 — Source ATS Plugin: Breathe HR (breathehr.com)
+  BREATHEHR = 'breathehr',
+  // Phase 431: Spec 422 — Source ATS Plugin: VidCruiter (vidcruiter.com)
+  VIDCRUITER = 'vidcruiter',
+  // Phase 432: Spec 423 — Source ATS Plugin: Sympa (sympa.com)
+  SYMPA = 'sympa',
+  // Phase 433: Spec 424 — Source ATS Plugin: CVWarehouse (cvwarehouse.com)
+  CVWAREHOUSE = 'cvwarehouse',
+  // Phase 434: Spec 425 — Source ATS Plugin: Connexys (connexys.com) — distinct from Bullhorn (BULLHORN)
+  CONNEXYS = 'connexys',
+  // Phase 435: Spec 426 — Source ATS Plugin: HReasily (hreasily.com)
+  HREASILY = 'hreasily',
 }
 
 /**
