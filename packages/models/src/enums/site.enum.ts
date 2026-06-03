@@ -847,6 +847,22 @@ export enum Site {
   DARWINBOX = 'darwinbox',
   // Phase 355: Spec 346 — Source ATS Plugin: TalentReef (talentreef.com)
   TALENTREEF = 'talentreef',
+  // Phase 356: Spec 347 — Source ATS Plugin: ApplicantStack (applicantstack.com)
+  APPLICANTSTACK = 'applicantstack',
+  // Phase 357: Spec 348 — Source ATS Plugin: Paycor Recruiting (paycor.com)
+  PAYCOR = 'paycor',
+  // Phase 358: Spec 349 — Source ATS Plugin: Arcoro (arcoro.com / birddoghr.com)
+  ARCORO = 'arcoro',
+  // Phase 359: Spec 350 — Source ATS Plugin: ReachMee (reachmee.com)
+  REACHMEE = 'reachmee',
+  // Phase 360: Spec 351 — Source ATS Plugin: Jobtrain (jobtrain.co.uk)
+  JOBTRAIN = 'jobtrain',
+  // Phase 361: Spec 352 — Source ATS Plugin: Avionté (avionte.com)
+  AVIONTE = 'avionte',
+  // Phase 362: Spec 353 — Source ATS Plugin: ExactHire (exacthire.com)
+  EXACTHIRE = 'exacthire',
+  // Phase 363: Spec 354 — Source ATS Plugin: Hireful (hireful.com)
+  HIREFUL = 'hireful',
 }
 
 /**

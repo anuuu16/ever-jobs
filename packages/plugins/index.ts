@@ -94,6 +94,14 @@ import { BeetweenModule } from './source-ats-beetween';
 import { ApplicantProModule } from './source-ats-applicantpro';
 import { DarwinboxModule } from './source-ats-darwinbox';
 import { TalentReefModule } from './source-ats-talentreef';
+import { ApplicantStackModule } from './source-ats-applicantstack';
+import { PaycorModule } from './source-ats-paycor';
+import { ArcoroModule } from './source-ats-arcoro';
+import { ReachMeeModule } from './source-ats-reachmee';
+import { JobtrainModule } from './source-ats-jobtrain';
+import { AvionteModule } from './source-ats-avionte';
+import { ExactHireModule } from './source-ats-exacthire';
+import { HirefulModule } from './source-ats-hireful';
 import { PinpointModule } from './source-ats-pinpoint';
 import { RecruiteeModule } from './source-ats-recruitee';
 import { RecruiterflowModule } from './source-ats-recruiterflow';
@@ -588,6 +596,14 @@ export const ALL_SOURCE_MODULES = [
   ApplicantProModule,
   DarwinboxModule,
   TalentReefModule,
+  ApplicantStackModule,
+  PaycorModule,
+  ArcoroModule,
+  ReachMeeModule,
+  JobtrainModule,
+  AvionteModule,
+  ExactHireModule,
+  HirefulModule,
   PinpointModule,
   RecruiteeModule,
   RecruiterflowModule,

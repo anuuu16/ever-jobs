@@ -15,6 +15,80 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #407 (**EIGHT new generic ATS adapters: ApplicantStack, Paycor, Arcoro, ReachMee, Jobtrain, Avionté, ExactHire, Hireful** — Specs 347–354, built in parallel)
+
+**Scope:** Direct continuation of the run-#400→#406 generic-ATS-adapter
+direction — one multi-tenant adapter unlocks a whole catalogue of companies,
+versus one company per `source-company-*` plugin. Run #406 shipped eight ATS
+adapters; this run adds **eight** more, broadening US-SMB, US-staffing,
+European, Nordic and UK coverage: **US SMB** (ApplicantStack/SwipeClock,
+ExactHire/HireCentric), **US ATS** (Paycor Recruiting / Newton Software), **US
+construction/blue-collar** (Arcoro / BirdDogHR), **US staffing** (Avionté),
+**Nordic** (ReachMee/Talentech), and **UK** (Jobtrain, Hireful/LiveVacancies).
+All eight were designed, spec'd, implemented, and tested in **one pass via an
+8-agent parallel workflow** (`new-ats-adapters-407`). Each agent owned one
+platform end-to-end: research the real public surface (WebSearch + live
+WebFetch), write the 8 plugin files + the 3 spec docs, and return structured
+metadata for the orchestrator to wire into the four shared registration points
+(`site.enum.ts`, `packages/plugins/index.ts`, `tsconfig.base.json` paths,
+`jest.config.js` moduleNameMapper). Agents did **not** touch the shared files —
+the orchestrator wired all four sequentially to avoid parallel-edit races.
+
+**Changes:**
+
+- **8 new `source-ats-*` plugin packages** (Specs 347–354), each with the
+  canonical 8-file layout (`package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/<id>.constants.ts`, `src/<id>.types.ts`, `src/<id>.module.ts`,
+  `src/<id>.service.ts`, `__tests__/<id>.e2e-spec.ts`) and a full
+  `.specify/specs/<NNN>-source-ats-<id>/` spec/plan/tasks triplet:
+  - **347 `source-ats-applicantstack`** — ApplicantStack (SwipeClock/WorkforceHub)
+    US SMB ATS. Public `https://{tenant}.applicantstack.com/x/openings` listing +
+    `/x/detail/{jobId}` enrichment. Verified live 2026-06-03.
+  - **348 `source-ats-paycor`** — Paycor Recruiting (formerly Newton Software).
+    Public clientId-addressed career portal (`/career/CareerHome.action?clientId={id}`
+    listing + `/career/JobIntroduction.action` detail). Verified live 2026-06-03.
+  - **349 `source-ats-arcoro`** — Arcoro (formerly BirdDogHR) US construction/
+    blue-collar ATS. Public server-rendered `/job/{id}` detail pages (schema.org
+    JobPosting JSON-LD / og: meta) on `jobs.ourcareerpages.com` and
+    `{tenant}.birddoghr.com`; roles harvested from search/sitemap. Verified live 2026-06-03.
+  - **350 `source-ats-reachmee`** — ReachMee (Talentech) Nordic ATS. Public,
+    unauthenticated per-installation RSS export on
+    `site{NNN}.reachmee.com/Public/rssfeed/external.ashx`. Verified live 2026-06-03.
+  - **351 `source-ats-jobtrain`** — Jobtrain UK ATS. Per-tenant `_JobCard` HTML
+    partial enumeration + per-detail schema.org JobPosting JSON-LD. Verified live 2026-06-03.
+  - **352 `source-ats-avionte`** — Avionté (AviontéBOLD) US staffing ATS. Public
+    per-build RSS/XML feed. Surface documented from public patterns; defensive
+    parser with graceful degradation.
+  - **353 `source-ats-exacthire`** — ExactHire (HireCentric) US SMB ATS. Public
+    `{tenant}.hirecentric.com` XML sitemap → `/jobs/{id}.html` schema.org
+    JobPosting JSON-LD detail. Defensive parser with graceful degradation.
+  - **354 `source-ats-hireful`** — Hireful (LiveVacancies) UK ATS. Public
+    `{tenant}.livevacancies.co.uk` XML sitemap → per-vacancy schema.org
+    JobPosting JSON-LD detail. Defensive parser with graceful degradation.
+- **Registration (4 files):** added `Site.{APPLICANTSTACK,PAYCOR,ARCORO,REACHMEE,
+  JOBTRAIN,AVIONTE,EXACTHIRE,HIREFUL}` enum members (Phases 356–363); appended
+  imports + `ALL_SOURCE_MODULES` entries in `packages/plugins/index.ts`; added
+  `tsconfig.base.json` path aliases and `jest.config.js` `moduleNameMapper`
+  entries for all eight `@ever-jobs/source-ats-*` packages.
+- **Docs:** updated `docs/index.md` (8 spec rows + footer), this `log.md`, and
+  `docs/SOURCE_ADOPTION_BACKLOG.md` (8 shipped rows appended).
+
+**Verification:**
+
+- `npx jest --testPathPatterns "source-ats-(applicantstack|paycor|arcoro|reachmee|jobtrain|avionte|exacthire|hireful)"` → **8 suites, 40 tests, all green** (~63 s). Bad-tenant `ENOTFOUND` / HTTP 500 error logs are the expected graceful-degradation paths.
+- `npx jest --testPathPatterns "source-ats-batch-(1|2).integration"` → **2 suites, 21 tests green** (DI graph / barrel intact with the 8 new modules registered).
+- `npx tsc --noEmit -p tsconfig.base.json` → **0 errors** across the whole workspace.
+
+**Notes:**
+
+- Five adapters confirmed a live public surface during research (ApplicantStack,
+  Paycor, Arcoro, ReachMee, Jobtrain); three (Avionté, ExactHire, Hireful) were
+  built defensively against documented public surface patterns and are flagged
+  for a live re-confirmation pass — recorded in `docs/SOURCE_ADOPTION_BACKLOG.md`.
+- Total `source-ats-*` adapters: **102** (was 94).
+
+---
+
 ## 2026-06-03 — Scheduled run #406 (**EIGHT new generic ATS adapters: JobDiva, EasyCruit, Varbi, Talentsoft, Beetween, ApplicantPro, Darwinbox, TalentReef** — Specs 339–346, built in parallel)
 
 **Scope:** Direct continuation of the run-#400→#405 generic-ATS-adapter
