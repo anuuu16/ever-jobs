@@ -15,6 +15,101 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #412 (**TEN new generic ATS adapters: Hirehive, Eddy, PeopleStrong, Zimyo, GreytHR, Recruitly, Sage People, Cezanne HR, Workforce.com, HR Partner** — Specs 395–404, built in parallel)
+
+**Scope:** Direct continuation of the run-#400→#411 generic-ATS-adapter direction. With
+the Western-Europe + LATAM/APAC corpus deep (142 ATS adapters at run start) and no fresh
+`proposed` ATS rows left in `SOURCE_ADOPTION_BACKLOG.md`, this run targets the
+**under-covered SMB-HR / HRIS-with-hiring niche across India, the UK/EU, and AU**:
+**India HRMS** (Zimyo, GreytHR, PeopleStrong), **UK/EU SMB & mid-market HR** (Recruitly,
+Sage People, Cezanne HR), **IE/EU SMB ATS** (Hirehive), **US SMB HRIS** (Eddy), and
+**AU/global SMB & hourly hiring** (HR Partner, Workforce.com). All ten were designed,
+spec'd, implemented, and tested in **one pass via a 10-agent parallel workflow**
+(`new-ats-adapters-412`). Each agent owned one platform end-to-end: researched the real
+public surface (WebSearch + live WebFetch), wrote the 8 plugin files + the 3 spec docs,
+and returned structured metadata. The orchestrator (main loop) then wired the **four**
+shared registration points sequentially (`site.enum.ts`, `plugins/index.ts`,
+`tsconfig.base.json`, `jest.config.js`) — agents did **not** touch shared files, avoiding
+parallel-edit races.
+
+**Changes:**
+
+- **10 new `source-ats-*` plugin packages** (Specs 395–404), each with the canonical
+  8-file layout (`package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/<id>.constants.ts`, `src/<id>.types.ts`, `src/<id>.module.ts`,
+  `src/<id>.service.ts`, `__tests__/<id>.e2e-spec.ts`) and a full
+  `.specify/specs/<NNN>-source-ats-<id>/` spec/plan/tasks triplet:
+  - **395 `source-ats-hirehive`** — Hirehive (hirehive.com, IE/EU SMB ATS). Public
+    anonymous CareerSite JSON feed `GET https://{tenant}.hirehive.com/api/v2/jobs?source=CareerSite`
+    (`{ meta, links, items }` envelope; roles carry `id` e.g. `job_QxZUlo`, `title`,
+    location, `description{html,text}`, `category`, `type`, `published_date`,
+    `hosted_url`). **Verified live 2026-06-03.**
+  - **396 `source-ats-eddy`** — Eddy (eddy.com, US SMB HRIS). Public anonymous JSON API
+    on `app.eddy.com` keyed by organization UUID
+    (`/api/ats/public/job-opening/organization/{uuid}` list + per-role
+    `/api/ats/public/job-opening/{jobUuid}/organization/{uuid}` detail enrichment);
+    canonical `app.eddy.com/careers/{orgUuid}/{jobUuid}`. **Verified live 2026-06-03.**
+  - **397 `source-ats-peoplestrong`** — PeopleStrong (peoplestrong.com, India/APAC
+    enterprise HCM). Public candidate portal `{tenant}.peoplestrong.com`; probes
+    tenant-scoped JSON board endpoints (narrowing a roles array under
+    `jobs`/`openings`/`requisitions`/`results`/`records`/`data`) with a JSON-LD /
+    embedded-island fallback; canonical `/job/detail/{id}`. Tenant host + detail-URL
+    pattern verified live; the open-roles JSON payload is documented-but-unverified
+    (board answered 403/500 anonymously). Defensive (verified=false).
+  - **398 `source-ats-zimyo`** — Zimyo (zimyo.com, India HRMS). Public anonymous widget
+    API `GET https://ats.zimyo.work/ats/ats/widget/joblist2?id={orgId}` + per-role
+    `widget/jobDetails?jobId={id}` (HTML body + workplace type) + `widget/orgDetails`
+    brand; canonical `zimyo.work/recruit/career/details/{base64(jobId)}/{base64(orgId)}`.
+    **Verified live 2026-06-03.**
+  - **399 `source-ats-greythr`** — GreytHR (greythr.com, India SMB HR by Greytip).
+    Public anonymous `POST https://{tenant}.greythr.com/hire/api/career/published_jobs/`
+    with empty `{}` body → `{ data: [{ id(UUID), title, slug, description(HTML),
+    job_type, is_remote, designation, apply_url }] }`. **Verified live 2026-06-03**
+    (tenants `greytip`, `fint`).
+  - **400 `source-ats-recruitly`** — Recruitly (recruitly.io, UK recruitment CRM).
+    Public anonymous job feed `GET https://api.recruitly.io/api/job?apiKey={apiKey}`
+    (`{ data: [...] }` of published roles; `applyUrl` at
+    `jobs.recruitly.io/widget/apply/{id}`); tenant addressed by its public board API key.
+    **Verified live 2026-06-03.**
+  - **401 `source-ats-sagepeople`** — Sage People (sage.com/people, formerly Fairsail,
+    UK/EU enterprise HCM on Salesforce Force.com). Public Visualforce / Experience-Cloud
+    career sites (`*.force.com` / `*.my.site.com`). DISTINCT from the existing
+    `source-ats-sagehr` (Sage HR / CakeHR). Surface documented from public patterns;
+    **flagged for live re-confirmation**. Defensive.
+  - **402 `source-ats-cezanne`** — Cezanne HR (cezannehr.com, UK/EU mid-market HR).
+    Public per-tenant vacancy board / feed. Defensive.
+  - **403 `source-ats-workforce`** — Workforce.com (workforce.com, US/AU/UK hourly
+    hiring). Public `/ats/apply/job/{uuid}` board surface; dedupe by UUID with bounded
+    detail fan-out. DISTINCT from the existing `source-ats-workstream`. Defensive.
+  - **404 `source-ats-hrpartner`** — HR Partner (hrpartner.io, AU/global SMB HR). Public
+    per-tenant careers/recruitment portal. Defensive.
+
+- **Four shared registration points wired** (orchestrator, sequential): the 10 `Site`
+  enum members (`HIREHIVE`…`HRPARTNER`, phases 404–413), the 10 module imports +
+  `ALL_SOURCE_MODULES` entries in `packages/plugins/index.ts`, the 10
+  `tsconfig.base.json` path aliases, and the 10 `jest.config.js` `moduleNameMapper`
+  entries.
+
+- **Docs:** `docs/index.md` (10 new spec rows 395–404), this `docs/log.md` entry,
+  `docs/SOURCE_ADOPTION_BACKLOG.md` (10 new shipped rows).
+
+**Verification:**
+
+- `npx tsc --noEmit -p tsconfig.base.json` — **0 errors** across the whole monorepo
+  (validates the new code + all four registration points).
+- `npx jest --testPathPatterns "source-ats-(hirehive|eddy|peoplestrong|zimyo|greythr|recruitly|sagepeople|cezanne|workforce|hrpartner)"`
+  — **10 suites / 50 tests passed.**
+- Lint: no competitor platform named in any new file (the two `competitor`-string hits in
+  the Workforce spec are constitution-compliance notes, not a named product); no
+  `.js`/`.py` runtime files introduced.
+
+**Notes:**
+
+- ATS corpus grows 142 → **152** generic multi-tenant adapters.
+- Six of ten verified live (Hirehive, Eddy, Zimyo, GreytHR, Recruitly, + PeopleStrong
+  host/URL); Sage People, Cezanne, Workforce, HR Partner ship defensively and are
+  **flagged for live re-confirmation** in a future run.
+
 ## 2026-06-03 — Scheduled run #411 (**TEN new generic ATS adapters: Gupy, Welcome to the Jungle, MokaHR, ELMO, isolved Hire, BeeSite, Greeting, PeopleFluent, Sólides, Jobtoolz** — Specs 385–394, built in parallel)
 
 **Scope:** Direct continuation of the run-#400→#410 generic-ATS-adapter direction.

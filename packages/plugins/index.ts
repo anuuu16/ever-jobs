@@ -142,6 +142,16 @@ import { GreetingModule } from './source-ats-greeting';
 import { PeopleFluentModule } from './source-ats-peoplefluent';
 import { SolidesModule } from './source-ats-solides';
 import { JobtoolzModule } from './source-ats-jobtoolz';
+import { HirehiveModule } from './source-ats-hirehive';
+import { EddyModule } from './source-ats-eddy';
+import { PeopleStrongModule } from './source-ats-peoplestrong';
+import { ZimyoModule } from './source-ats-zimyo';
+import { GreytHrModule } from './source-ats-greythr';
+import { RecruitlyModule } from './source-ats-recruitly';
+import { SagePeopleModule } from './source-ats-sagepeople';
+import { CezanneModule } from './source-ats-cezanne';
+import { WorkforceModule } from './source-ats-workforce';
+import { HrPartnerModule } from './source-ats-hrpartner';
 import { PinpointModule } from './source-ats-pinpoint';
 import { RecruiteeModule } from './source-ats-recruitee';
 import { RecruiterflowModule } from './source-ats-recruiterflow';
@@ -684,6 +694,16 @@ export const ALL_SOURCE_MODULES = [
   PeopleFluentModule,
   SolidesModule,
   JobtoolzModule,
+  HirehiveModule,
+  EddyModule,
+  PeopleStrongModule,
+  ZimyoModule,
+  GreytHrModule,
+  RecruitlyModule,
+  SagePeopleModule,
+  CezanneModule,
+  WorkforceModule,
+  HrPartnerModule,
   PinpointModule,
   RecruiteeModule,
   RecruiterflowModule,

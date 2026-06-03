@@ -943,6 +943,26 @@ export enum Site {
   SOLIDES = 'solides',
   // Phase 403: Spec 394 — Source ATS Plugin: Jobtoolz (jobtoolz.com)
   JOBTOOLZ = 'jobtoolz',
+  // Phase 404: Spec 395 — Source ATS Plugin: Hirehive (hirehive.com)
+  HIREHIVE = 'hirehive',
+  // Phase 405: Spec 396 — Source ATS Plugin: Eddy (eddy.com)
+  EDDY = 'eddy',
+  // Phase 406: Spec 397 — Source ATS Plugin: PeopleStrong (peoplestrong.com)
+  PEOPLESTRONG = 'peoplestrong',
+  // Phase 407: Spec 398 — Source ATS Plugin: Zimyo (zimyo.com)
+  ZIMYO = 'zimyo',
+  // Phase 408: Spec 399 — Source ATS Plugin: GreytHR (greythr.com)
+  GREYTHR = 'greythr',
+  // Phase 409: Spec 400 — Source ATS Plugin: Recruitly (recruitly.io)
+  RECRUITLY = 'recruitly',
+  // Phase 410: Spec 401 — Source ATS Plugin: Sage People (sage.com/people)
+  SAGEPEOPLE = 'sagepeople',
+  // Phase 411: Spec 402 — Source ATS Plugin: Cezanne HR (cezannehr.com)
+  CEZANNE = 'cezanne',
+  // Phase 412: Spec 403 — Source ATS Plugin: Workforce.com (workforce.com)
+  WORKFORCE = 'workforce',
+  // Phase 413: Spec 404 — Source ATS Plugin: HR Partner (hrpartner.io)
+  HRPARTNER = 'hrpartner',
 }
 
 /**
