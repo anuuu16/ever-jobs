@@ -831,6 +831,22 @@ export enum Site {
   HEYRECRUIT = 'heyrecruit',
   // Phase 347: Spec 338 — Source ATS Plugin: TalentAdore (talentadore.com)
   TALENTADORE = 'talentadore',
+  // Phase 348: Spec 339 — Source ATS Plugin: JobDiva (jobdiva.com)
+  JOBDIVA = 'jobdiva',
+  // Phase 349: Spec 340 — Source ATS Plugin: EasyCruit (easycruit.com)
+  EASYCRUIT = 'easycruit',
+  // Phase 350: Spec 341 — Source ATS Plugin: Varbi (varbi.com)
+  VARBI = 'varbi',
+  // Phase 351: Spec 342 — Source ATS Plugin: Talentsoft (talentsoft.com)
+  TALENTSOFT = 'talentsoft',
+  // Phase 352: Spec 343 — Source ATS Plugin: Beetween (beetween.com)
+  BEETWEEN = 'beetween',
+  // Phase 353: Spec 344 — Source ATS Plugin: ApplicantPro (applicantpro.com)
+  APPLICANTPRO = 'applicantpro',
+  // Phase 354: Spec 345 — Source ATS Plugin: Darwinbox (darwinbox.com)
+  DARWINBOX = 'darwinbox',
+  // Phase 355: Spec 346 — Source ATS Plugin: TalentReef (talentreef.com)
+  TALENTREEF = 'talentreef',
 }
 
 /**

@@ -86,6 +86,14 @@ import { WebcruiterModule } from './source-ats-webcruiter';
 import { DvinciModule } from './source-ats-dvinci';
 import { HeyrecruitModule } from './source-ats-heyrecruit';
 import { TalentAdoreModule } from './source-ats-talentadore';
+import { JobDivaModule } from './source-ats-jobdiva';
+import { EasyCruitModule } from './source-ats-easycruit';
+import { VarbiModule } from './source-ats-varbi';
+import { TalentsoftModule } from './source-ats-talentsoft';
+import { BeetweenModule } from './source-ats-beetween';
+import { ApplicantProModule } from './source-ats-applicantpro';
+import { DarwinboxModule } from './source-ats-darwinbox';
+import { TalentReefModule } from './source-ats-talentreef';
 import { PinpointModule } from './source-ats-pinpoint';
 import { RecruiteeModule } from './source-ats-recruitee';
 import { RecruiterflowModule } from './source-ats-recruiterflow';
@@ -572,6 +580,14 @@ export const ALL_SOURCE_MODULES = [
   DvinciModule,
   HeyrecruitModule,
   TalentAdoreModule,
+  JobDivaModule,
+  EasyCruitModule,
+  VarbiModule,
+  TalentsoftModule,
+  BeetweenModule,
+  ApplicantProModule,
+  DarwinboxModule,
+  TalentReefModule,
   PinpointModule,
   RecruiteeModule,
   RecruiterflowModule,

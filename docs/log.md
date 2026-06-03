@@ -15,6 +15,79 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #406 (**EIGHT new generic ATS adapters: JobDiva, EasyCruit, Varbi, Talentsoft, Beetween, ApplicantPro, Darwinbox, TalentReef** — Specs 339–346, built in parallel)
+
+**Scope:** Direct continuation of the run-#400→#405 generic-ATS-adapter
+direction — one multi-tenant adapter unlocks a whole catalogue of companies,
+versus one company per `source-company-*` plugin. Run #405 shipped eight ATS
+adapters; this run adds **eight** more, broadening geographic and segment
+coverage: **US staffing** (JobDiva — XML candidate-portal feeds), **Nordic**
+(EasyCruit/Visma — per-tenant vacancy-list XML; Varbi — Swedish public-sector
+career pages), **French/EU** (Talentsoft/Cegid — RSS offer export; Beetween),
+**US SMB** (ApplicantPro — schema.org job boards), **Asia** (Darwinbox — Indian/
+SE-Asia HR suite), and **US high-volume/hourly hiring** (TalentReef/Mitratech).
+All eight were designed, spec'd, implemented, and tested in **one pass via an
+8-agent parallel workflow** (`new-ats-adapters-406`). Each agent owned one
+platform end-to-end: research the real public surface (WebSearch + live
+WebFetch), write the 8 plugin files + the 3 spec docs, and return structured
+metadata for the orchestrator to wire into the four shared registration points
+(`site.enum.ts`, `packages/plugins/index.ts`, `tsconfig.base.json` paths,
+`jest.config.js` moduleNameMapper).
+
+**Changes:**
+
+- **8 new `source-ats-*` plugin packages** (Specs 339–346), each with the
+  canonical 8-file layout (`package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/<id>.constants.ts`, `src/<id>.types.ts`, `src/<id>.module.ts`,
+  `src/<id>.service.ts`, `__tests__/<id>.e2e-spec.ts`) and a full
+  `.specify/specs/<NNN>-source-ats-<id>/` spec/plan/tasks triplet:
+  - **339 `source-ats-jobdiva`** — JobDiva US staffing ATS. Public, anonymous
+    candidate-portal XML feeds (`getportaljobs.jsp?a={portalId}` primary,
+    `listofportaljobs.jsp` fallback), keyed by an opaque portal key; cheerio XML
+    parse of the `<outertag><jobs><job>` envelope. Verified live 2026-06-03.
+  - **340 `source-ats-easycruit`** — EasyCruit (Visma) Nordic ATS. Public
+    per-tenant vacancy-list XML (`https://{tenant}.easycruit.com/export/xml/vacancy/list.xml`,
+    namespace `urn:EasyCruit`); prefers English version, tolerant in-house
+    parser. Verified live 2026-06-03 (esvagt).
+  - **341 `source-ats-varbi`** — Varbi Swedish recruitment ATS. Public tenant
+    career page (`https://{tenant}.varbi.com/en/`) server-rendered listing +
+    bounded per-role job-ad enrichment. Verified live 2026-06-03 (kth — 60 roles).
+  - **342 `source-ats-talentsoft`** — Talentsoft (Cegid) French/EU ATS. Public
+    RSS offer export (`/handlers/offerRss.ashx?LCID={lcid}` on
+    `{tenant}-recrute.talent-soft.com`); dependency-free RSS parse. Verified
+    live 2026-06-03 (Elis — ~326 offers).
+  - **343 `source-ats-beetween`** — Beetween French ATS. Public per-tenant jobs
+    surface → JobPostDto. Verified live 2026-06-03.
+  - **344 `source-ats-applicantpro`** — ApplicantPro US SMB ATS. Public tenant
+    job board (`https://{tenant}.applicantpro.com/jobs/`) + schema.org
+    JobPosting markup. Verified live 2026-06-03.
+  - **345 `source-ats-darwinbox`** — Darwinbox Asian HR suite. Public candidate
+    careers surface. Verified live 2026-06-03.
+  - **346 `source-ats-talentreef`** — TalentReef (Mitratech) US hourly-hiring
+    ATS. Public job boards + schema.org JobPosting markup. Verified live 2026-06-03.
+- **Registration (4 files):** added `Site.{JOBDIVA,EASYCRUIT,VARBI,TALENTSOFT,
+  BEETWEEN,APPLICANTPRO,DARWINBOX,TALENTREEF}` enum members (Phases 348–355);
+  appended imports + `ALL_SOURCE_MODULES` entries in `packages/plugins/index.ts`;
+  added `tsconfig.base.json` path aliases and `jest.config.js`
+  `moduleNameMapper` entries for all eight `@ever-jobs/source-ats-*` packages.
+- **Docs:** updated `docs/index.md` (8 spec rows + footer), this `log.md`, and
+  `docs/SOURCE_ADOPTION_BACKLOG.md` (8 rows flipped to **shipped**).
+
+**Verification:**
+
+- `npx jest --testPathPatterns "source-ats-(jobdiva|easycruit|varbi|talentsoft|beetween|applicantpro|darwinbox|talentreef)"` → **8 suites, 36 tests, all green** (~106 s). Bad-tenant error logs are the expected graceful-degradation paths.
+- `npx jest --testPathPatterns "source-ats-batch-2.integration"` → **12 tests green** (barrel/DI graph intact).
+- `npx tsc --noEmit -p tsconfig.base.json` → **0 errors** across the whole workspace.
+
+**Notes:**
+
+- All eight adapters degrade gracefully (HTTP 4xx / network / parse error →
+  empty or partial `JobResponseDto`, never throw out of `scrape`) so one bad
+  tenant never breaks a batch run. E2E tests tolerate zero results.
+- No competitor references anywhere in the repo (rule upheld).
+
+---
+
 ## 2026-06-03 — Scheduled run #405 (**EIGHT new generic ATS adapters: Traffit, HR-ON Recruit, Sage HR, CareerPlug, Webcruiter, d.vinci, Heyrecruit, TalentAdore** — Specs 331–338, built in parallel)
 
 **Scope:** Direct continuation of the run-#400→#404 generic-ATS-adapter
