@@ -273,6 +273,7 @@ module.exports = {
     '^@ever-jobs/source-ats-fountain$': '<rootDir>/packages/plugins/source-ats-fountain/src/index.ts',
     '^@ever-jobs/source-ats-deel$': '<rootDir>/packages/plugins/source-ats-deel/src/index.ts',
     '^@ever-jobs/source-ats-phenom$': '<rootDir>/packages/plugins/source-ats-phenom/src/index.ts',
+    '^@ever-jobs/source-ats-eightfold$': '<rootDir>/packages/plugins/source-ats-eightfold/src/index.ts',
     '^@ever-jobs/source-company-ibm$': '<rootDir>/packages/plugins/source-company-ibm/src/index.ts',
     '^@ever-jobs/source-company-boeing$': '<rootDir>/packages/plugins/source-company-boeing/src/index.ts',
     '^@ever-jobs/source-company-zoom$': '<rootDir>/packages/plugins/source-company-zoom/src/index.ts',

@@ -15,6 +15,65 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #400 (**NEW ATS adapter: Eightfold AI** — Spec 296)
+
+**Scope:** Deliberate break from the company-source batch loop to add a
+high-leverage **generic, multi-tenant ATS adapter** for **Eightfold AI**
+("PCSX" / SmartApply) — a talent-intelligence platform powering the public
+careers sites of many large enterprises (Nvidia, Cisco, AT&T, Bayer, Booking,
+Dolby, Activision, …). One adapter unlocks a large catalogue of enterprise
+roles, versus one company per company-source plugin. Eightfold was previously
+**unsupported** (no `source-ats-eightfold`); the gap was surfaced by the
+competitor-watch sweep (an external scraper repo had just validated a batch of
+Eightfold tenants). All competitor repos were re-pulled this run and were
+**up to date** (no upstream churn to absorb).
+
+**Changes:**
+
+- **NEW** plugin package `packages/plugins/source-ats-eightfold/` (8 files):
+  `eightfold.{constants,types,service,module}.ts`, `index.ts`, `package.json`,
+  `tsconfig.json`, and `__tests__/eightfold.e2e-spec.ts`.
+  - `EightfoldService implements IScraper` over the public SmartApply positions
+    API `GET {host}/api/apply/v2/jobs?domain=&start=&num=10&sort_by=timestamp`.
+  - Tenant resolution from `companySlug` (→ `https://{slug}.eightfold.ai`) or a
+    custom-domain `companyUrl`; `domain` param defaults to `{slug}.com`.
+  - First page yields total `count`; remaining pages fanned out **concurrently
+    (≤8) with `Promise.allSettled`** (CLAUDE.md house style — no `.all`), jittered
+    300–600 ms pacing between chunks; intra-run de-dup by `atsId`.
+  - Robust wire-shape handling: camelCase + snake_case fields both modelled;
+    location strings ("Country, State, City") reversed into `LocationDto`;
+    remote detection from `workLocationOption` / `locationFlexibility`;
+    epoch-s / epoch-ms / ISO date parsing; HTML→Markdown/Plain per `descriptionFormat`.
+- **Registered** in the four canonical locations (CLAUDE.md §4):
+  `Site.EIGHTFOLD = 'eightfold'`, `ALL_SOURCE_MODULES`, `tsconfig.base.json`
+  path alias, `jest.config.js` moduleNameMapper.
+- **Spec 296** added under `.specify/specs/296-source-ats-eightfold/`
+  (spec.md / plan.md / tasks.md — all phases `[x]`).
+- **Docs:** `docs/ATS_INTEGRATIONS.md` (new Eightfold section),
+  `docs/index.md` (spec 296 row), `docs/questions.md` (new **Q-043** — WAF
+  fallback, default A: public-endpoint-only), this `docs/log.md` entry.
+
+**Verification:**
+
+- `tsc --noEmit --skipLibCheck -p packages/plugins/source-ats-eightfold/tsconfig.json`
+  → **clean (exit 0)** after fixing two `atsId` nullability narrowings.
+- E2E test is network-tolerant (zero results acceptable; shape assertions guarded)
+  so it is deterministic in the sandbox and exercises the real API in CI.
+
+**Notes:**
+
+- **NO competitor references** anywhere under `ever-jobs/` — the external repo
+  that prompted this work is referenced only conceptually here; Eightfold is a
+  real, public, first-party ATS platform documented on its own merits.
+- WAF-gated tenants (Cloudflare 403 on plain HTTPS) and per-position description
+  enrichment are explicit **non-goals** this iteration (Spec 296 §3 / Q-043).
+- Next runs: (a) consider a curated Eightfold tenant seed list in the
+  source-adoption backlog; (b) further ATS gaps (Cornerstone OnDemand, Dayforce/
+  Ceridian, Zoho Recruit, ClearCompany remain unsupported); (c) resume the
+  company-source batch sweep.
+
+---
+
 ## 2026-06-03 — Scheduled run #399 (Specs 204–295 closed end-to-end; **92 new `source-company-*` Greenhouse plugins shipped in one batch** via a two-phase, 113-agent parallel workflow. Workflow `company-source-discover-and-research-399` ran **Phase 1 (Discover)** — 14 agents probed + curated 168 alphabetically-next candidate Greenhouse slugs (`node .probe-batch.cjs` helper) in parallel, returning live canonical-variant-2 boards and filtering junk (sandbox/test/freelance/resumedrop/internship sub-boards, non-companies, dead/`<2`-role boards) — and **Phase 2 (Research)** — 99 agents, one per confirmed source, wrote a factual business profile. Deterministic post-processing re-probed the 99 confirmed slugs for byte-exact 3-listing fixture data, dropped 7 (`<3` live listings: agilize, alphalion, alvys, amnh, anchorhealthct, antheia, applytochalkbooks), dropped enum/module-name collisions, and generated all 92 via `scripts/scaffold-company-source.ts`. Notable sources: Agoda, Algolia, Anaplan, Apollo.io, Appian, AlphaSense, Altium, Amwell, Ahrefs, AppDirect, Appfire, Appier, Alarm.com, AirTrunk, Altos Labs, Apiiro, AGE Solutions, AgWest Farm Credit, Amylyx Pharmaceuticals, Apogee Therapeutics, Alamar Biosciences, and 71 others across SaaS, fintech, biotech, aerospace, healthcare, industrial, and nonprofit sectors. 208th–299th Greenhouse-backed company-direct plugins in the catalogue.)
 
 **Scope:** Run #399 is the **second and largest batch run** —

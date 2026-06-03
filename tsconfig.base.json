@@ -288,6 +288,7 @@
       "@ever-jobs/source-ats-fountain": ["packages/plugins/source-ats-fountain/src/index.ts"],
       "@ever-jobs/source-ats-deel": ["packages/plugins/source-ats-deel/src/index.ts"],
       "@ever-jobs/source-ats-phenom": ["packages/plugins/source-ats-phenom/src/index.ts"],
+      "@ever-jobs/source-ats-eightfold": ["packages/plugins/source-ats-eightfold/src/index.ts"],
       "@ever-jobs/source-company-ibm": ["packages/plugins/source-company-ibm/src/index.ts"],
       "@ever-jobs/source-company-boeing": ["packages/plugins/source-company-boeing/src/index.ts"],
       "@ever-jobs/source-company-zoom": ["packages/plugins/source-company-zoom/src/index.ts"],

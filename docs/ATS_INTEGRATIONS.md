@@ -275,6 +275,17 @@ Enterprise talent experience platform powering career sites for 900+ large enter
 - **Data Format**: JSON
 - **Notable Users**: Boeing, Hilton, Nestle, Comcast, Verizon
 
+### Eightfold
+
+Talent-intelligence platform ("PCSX" / SmartApply) powering the public careers sites of many large enterprises. Every tenant exposes the same public positions API; tenants are reachable at an Eightfold subdomain or a custom apply domain.
+
+- **Method**: Public positions REST API (`https://{slug}.eightfold.ai/api/apply/v2/jobs?domain={domain}&start=N&num=10&sort_by=timestamp`)
+- **Auth**: None (public SmartApply endpoint)
+- **Data Format**: JSON — `{ positions: [...], count: <total> }`; server-fixed page size 10, paginated by `start`; remaining pages fanned out concurrently (≤ 8) with `Promise.allSettled`
+- **Custom Domains**: Supported via the `companyUrl` input override
+- **Notable Users**: Nvidia, Cisco, AT&T, Bayer, Booking, Dolby, Activision
+- **Known Limitation**: tenants behind an aggressive WAF (Cloudflare) may 403 plain HTTPS; a browser-fingerprint fallback is a tracked follow-up (Q-043)
+
 ### Avature
 
 Enterprise-grade talent acquisition and CRM platform for global enterprises. Avature emphasizes flexible workflow configuration and is widely used in financial services, energy, and global staffing. Career portals are reachable both at standard subdomains and at custom-domain tenants (e.g. Bloomberg, IBM).

@@ -43,6 +43,7 @@ import { OracleModule } from './source-ats-oracle';
 import { PaylocityModule } from './source-ats-paylocity';
 import { PersonioModule } from './source-ats-personio';
 import { PhenomModule } from './source-ats-phenom';
+import { EightfoldModule } from './source-ats-eightfold';
 import { PinpointModule } from './source-ats-pinpoint';
 import { RecruiteeModule } from './source-ats-recruitee';
 import { RecruiterflowModule } from './source-ats-recruiterflow';
@@ -486,6 +487,7 @@ export const ALL_SOURCE_MODULES = [
   PaylocityModule,
   PersonioModule,
   PhenomModule,
+  EightfoldModule,
   PinpointModule,
   RecruiteeModule,
   RecruiterflowModule,

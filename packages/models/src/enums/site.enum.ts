@@ -77,6 +77,7 @@ export enum Site {
   FOUNTAIN = 'fountain',
   DEEL = 'deel',
   PHENOM = 'phenom',
+  EIGHTFOLD = 'eightfold',
   // Phase 8: Company scrapers
   IBM = 'ibm',
   BOEING = 'boeing',

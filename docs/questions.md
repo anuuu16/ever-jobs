@@ -10,6 +10,37 @@
 
 ---
 
+## Q-043 — Should the Eightfold ATS plugin add a browser-fingerprint WAF fallback?
+
+**Context:** Spec 296 (`source-ats-eightfold`, run #400) ships a generic
+multi-tenant Eightfold AI adapter over the public SmartApply positions API
+(`/api/apply/v2/jobs`). A subset of Eightfold tenants (observed externally:
+Bayer, AT&T, Activision, Verizon) sit behind an aggressive WAF (Cloudflare)
+that 403s plain HTTPS requests. Recovering those tenants requires a
+browser-TLS-fingerprint HTTP client, which is a heavyweight optional dependency
+and a meaningfully different request path.
+
+**Options:**
+
+- **A. Ship public-endpoint-only now; defer WAF fallback to a follow-up spec.**
+  Covers the majority of tenants with zero extra dependencies; WAF-gated tenants
+  return empty (logged) until the follow-up lands.
+- **B. Add an optional browser-fingerprint client behind a feature flag in this
+  spec.** Maximizes tenant coverage immediately but pulls in a heavy optional
+  dependency and a second code path before there's a concrete demand signal.
+- **C. Add a pluggable HTTP-transport adaptor so any source can opt into a
+  fingerprint transport.** Most modular/reusable, but a larger cross-cutting
+  change than this single plugin warrants right now.
+
+**Default (proceeding):** **A** — ship public-endpoint-only; the WAF fallback is
+recorded as a tracked follow-up (Spec 296 Q-EF-1 / Non-Goals). Aligns with the
+constitution's "smallest load-bearing change" preference and avoids a heavy
+optional dependency before a concrete demand signal exists.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-042 — How to handle the agent-driven backlog exhaustion (3rd-consecutive maintenance run, no concrete observable trigger)
 
 **Context:** Run #84 is the documented escalation gate per
