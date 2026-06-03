@@ -25,6 +25,7 @@ import {
   JOBTRAIN_LDJSON_REGEX,
   JOBTRAIN_REMOTE_REGEX,
   JOBTRAIN_DEFAULT_RESULTS,
+  JOBTRAIN_DEFAULT_TIMEOUT_SECONDS,
   JOBTRAIN_HEADERS,
 } from './jobtrain.constants';
 import { JobtrainJob, JobtrainJobPosting } from './jobtrain.types';
@@ -76,7 +77,16 @@ export class JobtrainService implements IScraper {
     const client = createHttpClient({
       proxies: input.proxies,
       caCert: input.caCert,
-      timeout: input.requestTimeout,
+      // Bound the per-request timeout. The createHttpClient factory keys off
+      // `requestTimeout` (seconds), and ScraperInputDto defaults requestTimeout
+      // to 60s — longer than callers' budgets — so we CAP it rather than rely on
+      // a fallback. `www.jobtrain.co.uk` can connect-then-hang on an unknown or
+      // overloaded tenant; capping at 15s keeps the graceful-degradation path
+      // fast. A caller may still request a shorter timeout; we only bound the top.
+      requestTimeout: Math.min(
+        input.requestTimeout ?? JOBTRAIN_DEFAULT_TIMEOUT_SECONDS,
+        JOBTRAIN_DEFAULT_TIMEOUT_SECONDS,
+      ),
     });
     client.setHeaders(JOBTRAIN_HEADERS);
 

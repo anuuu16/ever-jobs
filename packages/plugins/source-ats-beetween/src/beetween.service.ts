@@ -83,7 +83,16 @@ export class BeetweenService implements IScraper {
       // createHttpClient factory keys off `requestTimeout` (in seconds) — passing
       // `timeout` here is silently ignored whenever proxies/requestTimeout select
       // the factory's first branch, so we must set `requestTimeout` explicitly.
-      requestTimeout: input.requestTimeout ?? BEETWEEN_DEFAULT_TIMEOUT_SECONDS,
+      // NOTE: ScraperInputDto defaults requestTimeout to 60s, so a plain
+      // `?? fallback` never triggers — we must CAP it. The Beetween portal host
+      // (emploi.beetween.com) can connect-then-hang; capping at 15s keeps the
+      // graceful-degradation path well inside callers' budgets (a healthy tenant
+      // responds in well under a second). A caller may still request a SHORTER
+      // timeout; we only bound the upper end.
+      requestTimeout: Math.min(
+        input.requestTimeout ?? BEETWEEN_DEFAULT_TIMEOUT_SECONDS,
+        BEETWEEN_DEFAULT_TIMEOUT_SECONDS,
+      ),
     });
     client.setHeaders(BEETWEEN_HEADERS);
 

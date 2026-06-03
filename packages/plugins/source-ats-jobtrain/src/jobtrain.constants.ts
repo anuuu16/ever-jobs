@@ -115,6 +115,16 @@ export const JOBTRAIN_REMOTE_REGEX =
  */
 export const JOBTRAIN_DEFAULT_RESULTS = 100;
 
+/**
+ * Bounded per-request timeout (seconds). `ScraperInputDto` defaults
+ * `requestTimeout` to 60s, which is longer than typical caller budgets; the
+ * Jobtrain host (`www.jobtrain.co.uk`) can connect-then-hang on an unknown or
+ * overloaded tenant. Capping at 15s keeps the graceful-degradation path fast
+ * (a healthy tenant responds well under a second) while leaving headroom for a
+ * legitimately slow first byte. Callers can still request a SHORTER timeout.
+ */
+export const JOBTRAIN_DEFAULT_TIMEOUT_SECONDS = 15;
+
 /** Default request headers. The site expects a browser-like UA. */
 export const JOBTRAIN_HEADERS: Record<string, string> = {
   Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',

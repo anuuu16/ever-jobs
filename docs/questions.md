@@ -10,6 +10,54 @@
 
 ---
 
+## Q-059 — Systemic fix for live-host e2e timeout flakiness (default `requestTimeout` 60s > 30s test budget)
+
+**Context:** Run #407 CI repeatedly red on the **Test (Source Scrapers)** job because
+two ATS adapters (`source-ats-beetween`, `source-ats-jobtrain`) hit third-party
+career hosts that **connect-then-hang**. `ScraperInputDto` defaults
+`requestTimeout` to **60s** (set in the constructor before `Object.assign`), and the
+shared `createHttpClient` maps that to the axios instance timeout. The collocated
+e2e tests have a **30s** jest budget, so any hanging host blows the budget and fails
+the whole suite. Most dead hosts return a *fast* error (ENOTFOUND/404/500) and are
+unaffected; only the rare connect-then-hang host triggers the 60s wait. Two
+secondary defects compound this:
+  1. `createHttpClient`'s factory honors the **`requestTimeout`** key but silently
+     ignores a bare **`timeout`** key on its proxy/requestTimeout branch — most
+     adapters pass `timeout: input.requestTimeout`, so on a proxied path the cap is
+     lost and the 60s HttpClient default applies.
+  2. A plain `?? fallback` on `input.requestTimeout` never triggers because the DTO
+     default (60) is non-nullish — adapters must **cap** (`Math.min`), not fall back.
+
+**Interim fix applied (run #407):** capped `requestTimeout` at **15s** via `Math.min`
+in the two failing adapters (`BEETWEEN_DEFAULT_TIMEOUT_SECONDS`,
+`JOBTRAIN_DEFAULT_TIMEOUT_SECONDS`) and switched them to the `requestTimeout` key.
+Verified `createHttpClient({ requestTimeout: 15 })` yields a 15000ms axios timeout.
+
+**Options for the durable, systemic fix:**
+
+- **A. Lower the `ScraperInputDto` default `requestTimeout` from 60s → 20s.** One line;
+  brings every adapter under the 30s budget on the no-proxy path and speeds
+  production degradation on dead tenants. Risk: a production caller relying on 60s
+  for a genuinely slow large feed (can still set it explicitly).
+- **B. Fix the `createHttpClient` factory** so `timeout` is honored as a fallback for
+  `requestTimeout` (`timeout: options.requestTimeout ?? options.timeout`) AND add a
+  hard upper cap (e.g. 30s) regardless of input. Centralizes the bound; medium blast
+  radius across all sources.
+- **C. Per-adapter caps only** (current approach) — apply a `Math.min(...)` cap in each
+  adapter that hits a flaky host, as discovered. Lowest blast radius; risks
+  whack-a-mole if more connect-then-hang hosts appear.
+
+**Default (proceeding):** **C** for now (applied to Beetween + Jobtrain) because it is
+the lowest-risk change and the failing population is small (most dead hosts fast-fail).
+Recommend the owner adopt **A** (or **A+B**) as the durable systemic fix — it removes
+the budget mismatch for all ~100 adapters at once. Holding off on A/B autonomously
+because it changes core DTO/HTTP behavior for every source (a product decision) and a
+concurrent run was active on shared files.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-058 — Prescreen candidate-host rebrand churn (jobbase.io → prescreenapp.io → onlyfy.jobs)
 
 **Context:** The Prescreen (Spec 330) candidate portal has rebranded twice;
