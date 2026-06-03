@@ -863,6 +863,26 @@ export enum Site {
   EXACTHIRE = 'exacthire',
   // Phase 363: Spec 354 — Source ATS Plugin: Hireful (hireful.com)
   HIREFUL = 'hireful',
+  // Phase 364: Spec 355 — Source ATS Plugin: Paycom (paycomonline.net)
+  PAYCOM = 'paycom',
+  // Phase 365: Spec 356 — Source ATS Plugin: PageUp (pageuppeople.com)
+  PAGEUP = 'pageup',
+  // Phase 366: Spec 357 — Source ATS Plugin: BrassRing (sjobs.brassring.com)
+  BRASSRING = 'brassring',
+  // Phase 367: Spec 358 — Source ATS Plugin: Namely (namely.com)
+  NAMELY = 'namely',
+  // Phase 368: Spec 359 — Source ATS Plugin: TempWorks (jobboard.ontempworks.com)
+  TEMPWORKS = 'tempworks',
+  // Phase 369: Spec 360 — Source ATS Plugin: Keka (keka.com)
+  KEKA = 'keka',
+  // Phase 370: Spec 361 — Source ATS Plugin: Snaphunt (snaphunt.com)
+  SNAPHUNT = 'snaphunt',
+  // Phase 371: Spec 362 — Source ATS Plugin: Dover (dover.com)
+  DOVER = 'dover',
+  // Phase 372: Spec 363 — Source ATS Plugin: Paychex (paychex.com)
+  PAYCHEX = 'paychex',
+  // Phase 373: Spec 364 — Source ATS Plugin: PyjamaHR (jobs.pyjamahr.com)
+  PYJAMAHR = 'pyjamahr',
 }
 
 /**

@@ -15,6 +15,104 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #408 (**TEN new generic ATS adapters: Paycom, PageUp, BrassRing, Namely, TempWorks, Keka, Snaphunt, Dover, Paychex, PyjamaHR** — Specs 355–364, built in parallel)
+
+**Scope:** Direct continuation of the run-#400→#407 generic-ATS-adapter
+direction — one multi-tenant adapter unlocks a whole catalogue of companies,
+versus one company per `source-company-*` plugin. Run #407 shipped eight ATS
+adapters; this run adds **ten** more, broadening US enterprise/payroll, US
+staffing, global/APAC enterprise, and India/modern-startup coverage that the
+existing 102-adapter corpus did not yet reach. All ten were designed, spec'd,
+implemented, and tested in **one pass via a 10-agent parallel workflow**
+(`new-ats-adapters-408`). Each agent owned one platform end-to-end: research the
+real public surface (WebSearch + live WebFetch), write the 8 plugin files + the 3
+spec docs, and return structured metadata for the orchestrator to wire into the
+four shared registration points (`site.enum.ts`, `packages/plugins/index.ts`,
+`tsconfig.base.json` paths, `jest.config.js` moduleNameMapper). Agents did **not**
+touch the shared files — the orchestrator wired all four sequentially to avoid
+parallel-edit races.
+
+**Changes:**
+
+- **10 new `source-ats-*` plugin packages** (Specs 355–364), each with the
+  canonical 8-file layout (`package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/<id>.constants.ts`, `src/<id>.types.ts`, `src/<id>.module.ts`,
+  `src/<id>.service.ts`, `__tests__/<id>.e2e-spec.ts`) and a full
+  `.specify/specs/<NNN>-source-ats-<id>/` spec/plan/tasks triplet:
+  - **355 `source-ats-paycom`** — Paycom (US enterprise payroll + HCM). Public
+    clientkey-addressed careers board on `paycomonline.net` → page-embedded public
+    bearer token → applicant-tracking JSON API, with the classic detail page's
+    schema.org JobPosting JSON-LD as a defensive fallback. Defensive (verified=false).
+  - **356 `source-ats-pageup`** — PageUp (global/APAC enterprise recruitment).
+    Public server-rendered listing index on `careers.pageuppeople.com/{instanceId}`,
+    enumerating `…/job/{jobId}` anchors + `<strong>`-labelled detail fields
+    (JSON-LD/og fallbacks). Verified live 2026-06-03.
+  - **357 `source-ats-brassring`** — BrassRing (IBM Kenexa / Infinite). Shared
+    `sjobs.brassring.com` host addressed by a partnerid+siteid pair; public Talent
+    Gateway AJAX endpoint (`POST /TgNewUI/Search/Ajax/MatchedJobs`, `{ Jobs,
+    JobsCount }`) + per-role JSON-LD enrichment. Defensive (verified=false).
+  - **358 `source-ats-namely`** — Namely (US HR/recruiting). Per-tenant
+    `{tenant}.namely.com` XML sitemap → `/careersite/job/{jobId}` schema.org
+    JobPosting JSON-LD detail pages. Defensive (verified=false).
+  - **359 `source-ats-tempworks`** — TempWorks (US staffing). Per-tenant
+    `jobboard.ontempworks.com/{tenant}/Jobs/Search` listing + `/Jobs/Details/{orderId}`
+    detail pages. Verified live 2026-06-03.
+  - **360 `source-ats-keka`** — Keka (India HR/payroll + hiring). Per-tenant
+    `{tenant}.keka.com/careers` public published-jobs JSON feed + `/careers/jobdetails/{jobId}`
+    schema.org JobPosting JSON-LD enrichment. Defensive (verified=false; host +
+    detail-URL shape confirmed live).
+  - **361 `source-ats-snaphunt`** — Snaphunt (global/APAC remote-hiring
+    marketplace). Per-tenant `{tenant}.snaphunt.com/sitemap.xml` of `/job/{jobId}`
+    URLs → canonical apex `snaphunt.com/jobs/{jobId}` schema.org JobPosting JSON-LD;
+    marketplace company resolved per-job. Verified live 2026-06-03.
+  - **362 `source-ats-dover`** — Dover (modern recruiting-automation ATS). Public
+    careers-page JSON feed on `app.dover.com/api/v1/careers-page/{slug}` with a
+    schema.org JSON-LD board fallback. Defensive (verified=false).
+  - **363 `source-ats-paychex`** — Paychex (US payroll/HR, Flex Hiring). Per-tenant
+    `{tenant}.applybypaychex.com/sitemap.xml` of `/job/{jobId}` URLs → schema.org
+    JobPosting JSON-LD detail pages. Defensive (verified=false).
+  - **364 `source-ats-pyjamahr`** — PyjamaHR (modern ATS, India/global). Public
+    JSON API on `api.pyjamahr.com` keyed by `company_slug` — paginated list
+    (`GET /api/career/jobs/?company_slug={tenant}&page={n}`) + per-role detail
+    (`GET /api/career/jobs/{id}/?company_slug={tenant}`). Verified live 2026-06-03.
+- **Registration (4 files):** added `Site.{PAYCOM,PAGEUP,BRASSRING,NAMELY,
+  TEMPWORKS,KEKA,SNAPHUNT,DOVER,PAYCHEX,PYJAMAHR}` enum members (Phases 364–373);
+  appended imports + `ALL_SOURCE_MODULES` entries in `packages/plugins/index.ts`;
+  added the ten `@ever-jobs/source-ats-*` path aliases in `tsconfig.base.json` and
+  the matching `moduleNameMapper` entries in `jest.config.js`. All four edits made
+  sequentially by the orchestrator (not the agents).
+- **`docs/index.md`:** added Spec 355–364 rows to the spec table (run #408).
+- **Codebase improvement (off-spec, kept):** `source-ats-beetween` — bounded the
+  HTTP client timeout to a new `BEETWEEN_DEFAULT_TIMEOUT_SECONDS = 15` default
+  (was the shared client's 60s) so an unresponsive Beetween portal host degrades
+  gracefully fast and stays inside the 30s e2e budget; callers can still override
+  via `ScraperInputDto.requestTimeout`. Surfaced incidentally by an agent during
+  template study; reviewed and retained as a genuine performance/robustness win
+  per the "improve is OK" rule.
+
+**Verification:**
+
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` → **clean (exit 0)**
+  after one fix: `source-ats-keka` `KekaApiJob.isRemote/remote` widened to
+  `boolean | string | null` (the feed emits the flag as both a native boolean and
+  a stringified truthy token; `resolveRemoteFlag` already narrowed both shapes, but
+  the type was too narrow, tripping TS2339 `'never'.trim()`).
+- `npx jest` on the 10 new packages → **10 suites / 50 tests passed**. The expected
+  graceful-degradation paths (live 4xx/5xx, DNS ENOTFOUND for placeholder tenants)
+  are logged but tolerated; shape assertions only run when jobs are returned.
+- Competitor upstream sync (`OTHERS/Ats-scrapers`, `OTHERS/JobSpy`,
+  `OTHERS/Jobspy-api`): all three already up to date — no new competitor activity
+  this run.
+
+**Notes:**
+
+- ATS corpus grows 102 → **112** generic multi-tenant adapters.
+- `docs/ATS_INTEGRATIONS.md` per-ATS detail entries remain frozen at Spec 330
+  (the established convention since run #405 — spec docs are the per-adapter source
+  of truth). Not extended this run, for consistency.
+
+---
+
 ## 2026-06-03 — Scheduled run #407 (**EIGHT new generic ATS adapters: ApplicantStack, Paycor, Arcoro, ReachMee, Jobtrain, Avionté, ExactHire, Hireful** — Specs 347–354, built in parallel)
 
 **Scope:** Direct continuation of the run-#400→#406 generic-ATS-adapter

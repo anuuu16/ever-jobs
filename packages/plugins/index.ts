@@ -102,6 +102,16 @@ import { JobtrainModule } from './source-ats-jobtrain';
 import { AvionteModule } from './source-ats-avionte';
 import { ExactHireModule } from './source-ats-exacthire';
 import { HirefulModule } from './source-ats-hireful';
+import { PaycomModule } from './source-ats-paycom';
+import { PageUpModule } from './source-ats-pageup';
+import { BrassRingModule } from './source-ats-brassring';
+import { NamelyModule } from './source-ats-namely';
+import { TempWorksModule } from './source-ats-tempworks';
+import { KekaModule } from './source-ats-keka';
+import { SnaphuntModule } from './source-ats-snaphunt';
+import { DoverModule } from './source-ats-dover';
+import { PaychexModule } from './source-ats-paychex';
+import { PyjamaHrModule } from './source-ats-pyjamahr';
 import { PinpointModule } from './source-ats-pinpoint';
 import { RecruiteeModule } from './source-ats-recruitee';
 import { RecruiterflowModule } from './source-ats-recruiterflow';
@@ -604,6 +614,16 @@ export const ALL_SOURCE_MODULES = [
   AvionteModule,
   ExactHireModule,
   HirefulModule,
+  PaycomModule,
+  PageUpModule,
+  BrassRingModule,
+  NamelyModule,
+  TempWorksModule,
+  KekaModule,
+  SnaphuntModule,
+  DoverModule,
+  PaychexModule,
+  PyjamaHrModule,
   PinpointModule,
   RecruiteeModule,
   RecruiterflowModule,
