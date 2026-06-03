@@ -771,6 +771,26 @@ export enum Site {
   JOBADDER = 'jobadder',
   // Phase 317: Spec 308 — Source ATS Plugin: Hireology
   HIREOLOGY = 'hireology',
+  // Phase 318: Spec 309 — Source ATS Plugin: Applied (beapplied.com)
+  APPLIED = 'applied',
+  // Phase 319: Spec 310 — Source ATS Plugin: CATS (catsone.com)
+  CATSONE = 'catsone',
+  // Phase 320: Spec 311 — Source ATS Plugin: Recruit CRM (recruitcrm.io)
+  RECRUITCRM = 'recruitcrm',
+  // Phase 321: Spec 312 — Source ATS Plugin: Vincere (vincere.io)
+  VINCERE = 'vincere',
+  // Phase 322: Spec 313 — Source ATS Plugin: Factorial (factorialhr.com)
+  FACTORIAL = 'factorial',
+  // Phase 323: Spec 314 — Source ATS Plugin: Workstream (workstream.us)
+  WORKSTREAM = 'workstream',
+  // Phase 324: Spec 315 — Source ATS Plugin: Harri (harri.com)
+  HARRI = 'harri',
+  // Phase 325: Spec 316 — Source ATS Plugin: Tribepad (tribepad.com)
+  TRIBEPAD = 'tribepad',
+  // Phase 326: Spec 317 — Source ATS Plugin: Eploy (eploy.co.uk)
+  EPLOY = 'eploy',
+  // Phase 327: Spec 318 — Source ATS Plugin: Oorwin (oorwin.com)
+  OORWIN = 'oorwin',
 }
 
 /**

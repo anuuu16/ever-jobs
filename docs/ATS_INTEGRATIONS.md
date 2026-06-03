@@ -491,6 +491,126 @@ Multi-tenant SMB/automotive/healthcare careers platform at `careers.hireology.co
 
 ---
 
+### Applied
+
+Values-based hiring platform whose public org career pages live at `app.beapplied.com/org/{orgId}/{orgSlug}`. Applied exposes **no anonymous JSON API** (every `/api/v1/` path returns HTTP 401), so Ever Jobs reads the **verified public HTML** surface.
+
+- **Method**: GET `https://app.beapplied.com/org/{orgId}/{orgSlug}` (org listing) → parse `/apply/{jobSlug}` anchors with `cheerio`, then bounded `Promise.allSettled` fan-out to each `https://app.beapplied.com/apply/{jobSlug}` detail page for title, company, location, salary, employment type and description
+- **Auth**: None — public HTML only; all REST endpoints require authentication and are not used
+- **Data Format**: HTML (no JSON-LD / stable class anchors; description uses a largest-prose-container heuristic)
+- **Tenant Resolution**: `companySlug` in `{orgId}/{orgSlug}` form (e.g. `1549/citizens-uk`); a `companyUrl` whose path starts with `/org/` is also accepted
+- **Known Limitation**: HTML-shape dependent; the numeric `orgId` must be supplied (slug-only paths return HTTP 404) (Spec 309)
+
+---
+
+### CATS
+
+Recruiting ATS whose hosted public career portals live at `https://{slug}.catsone.com/careers/{portalID}-{name}`. The authenticated v3 REST API requires `Authorization: Token` and is not used; Ever Jobs reads the public server-rendered HTML.
+
+- **Method**: GET `https://{slug}.catsone.com/careers/{portalID}-{name}?page={n}` → parse `.cats-job` listing cards with `cheerio` (three fallback selector layers), then per-job detail fetches at `/careers/{portalID}-{name}/jobs/{jobID}-{slug}` for descriptions; pagination via `?page=N`
+- **Auth**: None — public portal HTML only
+- **Data Format**: HTML (`.cats-job` / `.cats-job-title` / `.cats-job-location` / `.cats-job-category`)
+- **Tenant Resolution**: `companySlug` (sub-domain label) or a `companyUrl` carrying the `/careers/{portalID}-{name}` path
+- **Known Limitation**: HTML selector cascade is template-dependent (heuristic confidence); descriptions fetched per role (Spec 310)
+
+---
+
+### Recruit CRM
+
+Recruiting-agency CRM/ATS whose public agency jobs pages live at `https://recruitcrm.io/jobs/{accountSlug}`. Ever Jobs calls the same anonymous backend endpoint the listing SPA uses.
+
+- **Method**: POST `https://albatross.recruitcrm.io/v1/external-pages/jobs-by-account/get?account={accountSlug}&batch=true` with `Origin: https://recruitcrm.io` and JSON body `{ limit, offset, search_data: {}, onlyJobs: true }`; paginated by `offset` (exhausted when the returned array is shorter than `limit`) with bounded `Promise.allSettled`
+- **Auth**: None — the credentialed `api.recruitcrm.io/v1/jobs` Bearer API is not used
+- **Data Format**: JSON job objects with embedded HTML descriptions
+- **Tenant Resolution**: `companySlug` (account slug, e.g. `Terra_Careers`) or `companyUrl`
+- **Known Limitation**: no publish timestamp or category in the feed (`datePosted`/`department` are null); custom-domain tenants out of scope (Spec 311)
+
+---
+
+### Vincere
+
+Recruitment-agency ATS/CRM whose public Instant Job Board is served at `https://{slug}.vincere.io/careers/`. Ever Jobs uses the same CSRF-gated AJAX endpoint the board calls — no secret API keys.
+
+- **Method**: anonymous GET `/careers/` to obtain the per-session `X-CSRF-TOKEN` + `laravel_session` cookie, then page POST `https://{slug}.vincere.io/careers/ajax/search-jobs` (10/page) → `{ items, total, more }` with structured JSON (HTML descriptions, location, employment type, publish date)
+- **Auth**: None secret — the CSRF token is obtained anonymously from the public careers page; the OAuth2 `/api/v2/job/search/` REST API is not used
+- **Data Format**: JSON (`VincereJob` items)
+- **Tenant Resolution**: `companySlug` (sub-domain label) or `companyUrl`
+- **Known Limitation**: depends on the public Instant Job Board being enabled for the tenant (Spec 312)
+
+---
+
+### Factorial
+
+HRIS platform with an integrated ATS that hosts public career pages for every tenant at `https://{slug}.factorialhr.com`. No anonymous JSON API exists; Ever Jobs reads the **verified public HTML** + sitemap.
+
+- **Method**: GET `/` (index page — job metadata embedded in `data-controller="job-postings"` HTML attributes), GET `/sitemap.xml` for `lastmod` dates, and per-job detail pages at `/job_posting/{title-slug}-{id}` for the full HTML description (`div.styledText`) + apply URL; detail fan-out bounded by `Promise.allSettled` (concurrency 6)
+- **Auth**: None — the OAuth2 `api.factorialhr.com/api/v1/ats/…` REST API is not used
+- **Data Format**: HTML + XML sitemap
+- **Tenant Resolution**: `companySlug` (sub-domain label) or `companyUrl`
+- **Known Limitation**: N+1 detail fetches (no list-level descriptions) (Spec 313)
+
+---
+
+### Workstream
+
+All-in-one HR/payroll/hiring platform for the hourly/deskless workforce. Public careers pages are served as HTML at `https://www.workstream.us/j/{accountId}/{brandSlug}`. No anonymous JSON API; Ever Jobs reads the public HTML.
+
+- **Method**: GET `https://www.workstream.us/j/{accountId}/{brandSlug}/positions` → extract job href links, then bounded `Promise.allSettled` fan-out to each `/j/{accountId}/{brandSlug}/{locationSlug}/{jobSlug}-{jobId}?locale=en` detail page; `atsId` is the 8-char hex suffix of the job path
+- **Auth**: None — the OAuth2 `public-api.workstream.us` REST API is not used
+- **Data Format**: HTML
+- **Tenant Resolution**: `companySlug` in `{accountId}/{brandSlug}` form (e.g. `36047dd7/jamba`); callers must know the account UUID
+- **Known Limitation**: `datePosted` not exposed (null); UUID discovery for new tenants out of scope (heuristic confidence) (Spec 314)
+
+---
+
+### Harri
+
+All-in-one workforce-management and talent-acquisition platform for the hospitality/service industries. Employer careers pages are public HTML at `https://harri.com/{employerSlug}`. No anonymous JSON API; Ever Jobs reads the public HTML.
+
+- **Method**: GET `https://harri.com/{employerSlug}` → parse job href links matching `/{slug}/job/{jobId}-{titleSlug}`, then bounded `Promise.allSettled` fan-out to each detail page for title/location/description via Open Graph meta tags + heuristic HTML extraction
+- **Auth**: None — Harri's underlying REST API is not used
+- **Data Format**: HTML (Open Graph meta tags)
+- **Tenant Resolution**: `companySlug` (employer slug) or `companyUrl`
+- **Known Limitation**: `datePosted` always null; detail parsing heuristic (heuristic confidence) (Spec 315)
+
+---
+
+### Tribepad
+
+UK enterprise ATS powering large public- and private-sector career sites. Each tenant site is public at `https://{slug}.tribepad-gro.com` (Gro tier) or a custom domain. No anonymous JSON API; Ever Jobs reads the public sitebuilder HTML.
+
+- **Method**: GET `https://{slug}.tribepad-gro.com/v2/job/search?page={n}&records_per_page={size}` → parse `.sitebuilder-job-results-item` cards with `cheerio`, then per-job detail fetches at `/members/modules/job/detail.php?record={id}` for the full HTML description; pagination via `?page=N`
+- **Auth**: None — public HTML only
+- **Data Format**: HTML (stable sitebuilder v2 template; Font Awesome icon-keyed location/salary/type/date fields)
+- **Tenant Resolution**: `companySlug` (→ `{slug}.tribepad-gro.com`) or `companyUrl` (origin used verbatim for custom domains)
+- **Known Limitation**: detail-page failures degrade gracefully to listing-level data (Spec 316)
+
+---
+
+### Eploy
+
+UK recruitment platform used by councils, NHS trusts, police services and private employers. Each tenant career site exposes a **public, anonymous XML datafeed** (the same feed customers use to syndicate roles to job boards).
+
+- **Method**: GET `{tenantUrl}/feeds/datafeed.ashx?Format=xml` → single XML document (`<Vacancies Count="N">` / `<Item>` children) parsed with `cheerio` in `xmlMode`; no pagination (all open roles in one document)
+- **Auth**: None — the OAuth2 `/api/vacancies/search` REST API is not used
+- **Data Format**: XML (PascalCase elements)
+- **Tenant Resolution**: `companyUrl` (custom domain, e.g. `https://jobs.islington.gov.uk`, stripped to scheme+host) or `companySlug` (bare hostname, or staging sub-domain under `eploy.net`)
+- **Known Limitation**: `<Company>` often empty for single-employer portals (company name derived from the tenant URL/slug) (Spec 317)
+
+---
+
+### Oorwin
+
+Cloud staffing & talent-management platform (ATS + CRM + HRMS). Each tenant is served from its own sub-domain under `oorwin.com` (e.g. `purpledrive.oorwin.com/careers/`) via two anonymous POST endpoints.
+
+- **Method**: POST `https://api.oorwin.ai/api/v2/careers/getJobList` with body `{ sub_domain, limit, page, order, sort, list_type, getDefaultData }` for paginated summaries (total from the first response), then per-job POST `https://api.oorwin.ai/api/v2/careers/job_view` with `{ sub_domain, job_id, view_type }` for the HTML description; detail fan-out bounded by `Promise.allSettled`
+- **Auth**: None — both endpoints are anonymous
+- **Data Format**: JSON (listing rows carry no description — two-stage fetch required)
+- **Tenant Resolution**: `companySlug` used directly as `sub_domain`, or the first sub-domain label of `companyUrl`
+- **Known Limitation**: large tenants page deeply (capped by `resultsWanted`); remote detection via `remote_status === 'Remote'` (Spec 318)
+
+---
+
 ## Architecture
 
 Each ATS integration is an independent NestJS package following the `IScraper` interface:

@@ -10,6 +10,68 @@
 
 ---
 
+## Q-048 — Composite tenant-identifier ergonomics for adapters that need more than a bare slug
+
+**Context:** Several run #403 adapters cannot resolve a tenant from a single bare
+slug. Applied (Spec 309) needs `{orgId}/{orgSlug}` (slug-only paths 404);
+Workstream (Spec 314) needs `{accountId}/{brandSlug}` where `accountId` is an
+opaque account UUID. The current convention overloads `companySlug` to carry the
+composite (e.g. `1549/citizens-uk`, `36047dd7/jamba`) or accepts a full
+`companyUrl`. This works but is undocumented at the seed/config layer and
+non-obvious to a catalogue curator.
+
+**Options:**
+
+- **A** — Keep overloading `companySlug` with the composite token (slash-joined)
+  + accept `companyUrl`; document the exact form per adapter in
+  `ATS_INTEGRATIONS.md` and the spec. *(chosen default)*
+- **B** — Add a generic structured `tenantParams: Record<string,string>` field to
+  `ScraperInputDto` so adapters read named parts (`orgId`, `brandSlug`, …) instead
+  of parsing a slash-joined slug. Cleaner, but a cross-cutting model change that
+  touches every adapter and the seed schema.
+- **C** — Add a per-adapter discovery helper that resolves a human-friendly slug
+  to its composite id (e.g. brand-name → account UUID). Highest fidelity, but
+  needs a reliable public lookup surface that may not exist.
+
+**Default:** **A** — zero model churn, already works and is now documented. Revisit
+as **B** if the count of composite-identifier adapters keeps growing (it is a
+recurring shape: 2 of 10 this run).
+
+---
+
+## Q-047 — HTML-scraper fragility for adapters with no anonymous JSON API
+
+**Context:** 4 of the 10 run #403 adapters have **no anonymous JSON API** and
+parse server-rendered HTML: Applied (Spec 309, largest-prose-container heuristic
+for descriptions), CATS (Spec 310, `.cats-job` selector cascade — `heuristic`
+confidence), Workstream (Spec 314, link-extraction + detail fan-out — `heuristic`),
+and Harri (Spec 315, Open Graph meta-tag extraction — `heuristic`). HTML surfaces
+drift more readily than JSON contracts, so these adapters carry a higher
+breakage risk than the verified-JSON adapters shipped alongside them (Recruit
+CRM, Vincere, Oorwin, Eploy).
+
+**Options:**
+
+- **A** — Ship the HTML scrapers now with layered fallback selectors + graceful
+  degradation (partial/empty results, never throw), and rely on the existing
+  per-plugin source-health circuit breaker (Spec 005) to flag drift in
+  production. *(chosen default)*
+- **B** — Gate the `heuristic`-confidence adapters behind a feature flag until a
+  live fixture-replay test proves each selector path against a captured tenant
+  page, before they are eligible for scheduled scraping.
+- **C** — Add a shared `cheerio`-based "resilient careers-page" helper in
+  `@ever-jobs/common` (link-extraction + JobPosting JSON-LD + Open Graph + prose
+  heuristics) that all HTML scrapers delegate to, reducing per-adapter selector
+  drift to one maintained surface.
+
+**Default:** **A** — every adapter degrades gracefully and the circuit breaker
+already isolates a failing source. Promote to **C** as a follow-up if HTML-scraper
+adapters keep accumulating (now 8+ across runs #402–#403) — a shared resilient
+parser would cut duplicated selector logic. Track alongside the Q-043 transport
+follow-up.
+
+---
+
 ## Q-045 — JobAdder Careerpage multi-page pagination & unlabelled-field classification
 
 **Context:** Spec 307 (`source-ats-jobadder`, run #402) ships a generic JobAdder

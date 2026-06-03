@@ -15,6 +15,135 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #403 (**TEN new generic ATS adapters: Applied, CATS, Recruit CRM, Vincere, Factorial, Workstream, Harri, Tribepad, Eploy, Oorwin** — Specs 309–318, built in parallel)
+
+**Scope:** Direct continuation of the run-#400/#401/#402 generic-ATS-adapter
+direction — one multi-tenant adapter unlocks a whole catalogue of companies,
+versus one company per `source-company-*` plugin. Run #402 closed having shipped
+eight mid-market/hosted ATS adapters; this run adds **ten** more spanning
+enterprise UK ATS (Tribepad, Eploy), recruitment-agency CRM/ATS (Recruit CRM,
+Vincere, Oorwin), HRIS-with-ATS (Factorial), values-based / hourly / hospitality
+hiring (Applied, Workstream, Harri), and a recruiting ATS (CATS). All ten were
+designed, spec'd, implemented, and tested in **one pass via a 10-agent parallel
+workflow** (`new-ats-adapters-403`). Each agent owned one platform end-to-end:
+research the real public surface (WebSearch + live WebFetch), write the 8 plugin
+files + the Spec-Kit triplet, and self-verify with `tsc`. The orchestrator
+pre-seeded the 10 `Site` enum members (so each agent's `Site.X` reference
+compiled in isolation), then performed the remaining central registration (three
+shared files) sequentially to avoid edit conflicts. **Seven of ten endpoints
+were live-verified** (`confidence: verified`) against real tenants on 2026-06-03;
+the other three (CATS, Workstream, Harri) are `heuristic` HTML scrapers whose URL
+patterns were confirmed live but whose CSS/markup extraction could not be
+byte-confirmed through the markdown-stripping fetch tool (layered fallback
+selectors + graceful degradation cover the risk; tracked in Q-047). All
+competitor repos under `OTHERS/` were re-pulled this run and were **up to date**
+(Ats-scrapers @ `b45c12a`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` — no
+upstream churn to absorb).
+
+**Changes:**
+
+- **NEW** plugin `packages/plugins/source-ats-applied/` (Spec 309) — Applied
+  (beapplied.com). No anonymous JSON API exists (every `/api/v1/` path returns
+  HTTP 401), so it scrapes the verified public org page
+  `GET https://app.beapplied.com/org/{orgId}/{orgSlug}`, parses `/apply/{slug}`
+  anchors with `cheerio`, and fans out to job detail pages
+  (`/apply/{jobSlug}`). `companySlug` must be `{orgId}/{orgSlug}` form. Verified
+  live against `1549/citizens-uk`.
+- **NEW** plugin `packages/plugins/source-ats-catsone/` (Spec 310) — CATS
+  (catsone.com). Server-rendered HTML portal
+  `GET https://{slug}.catsone.com/careers/{portalID}-{name}?page={n}` parsed with
+  `cheerio` (`.cats-job` cards, three fallback selector layers) + per-job detail
+  fetches for descriptions. The authenticated v3 `Authorization: Token` API is
+  not used. `heuristic` confidence (live tenants: `authoritypartnersinc`, `swan`,
+  `quantumservices`).
+- **NEW** plugin `packages/plugins/source-ats-recruitcrm/` (Spec 311) — Recruit
+  CRM. Calls the same anonymous backend the public agency-jobs SPA uses:
+  `POST https://albatross.recruitcrm.io/v1/external-pages/jobs-by-account/get?account={slug}&batch=true`
+  (`Origin: https://recruitcrm.io`, body `{limit,offset,search_data:{},onlyJobs:true}`),
+  paged by `offset`. The credentialed `api.recruitcrm.io` Bearer API is not used.
+  Verified live against `Terra_Careers` (14 jobs).
+- **NEW** plugin `packages/plugins/source-ats-vincere/` (Spec 312) — Vincere.
+  Anonymous `GET /careers/` for the per-session CSRF token, then pages
+  `POST https://{slug}.vincere.io/careers/ajax/search-jobs` → `{ items, total, more }`
+  (10/page) with structured JSON. The OAuth2 `/api/v2/job/search/` API is not
+  used. Verified live against `nordicjobsworldwide` (total 193).
+- **NEW** plugin `packages/plugins/source-ats-factorial/` (Spec 313) — Factorial.
+  No anonymous JSON API; reads the verified public career page
+  `https://{slug}.factorialhr.com` (jobs in `data-controller="job-postings"` HTML
+  attrs) + `/sitemap.xml` for dates + per-job `/job_posting/{slug}-{id}` detail
+  pages (bounded fan-out, concurrency 6). The OAuth2 REST API is not used.
+  Verified live against `jobs-tendencys` (22 jobs).
+- **NEW** plugin `packages/plugins/source-ats-workstream/` (Spec 314) —
+  Workstream (hourly hiring). Scrapes public HTML careers page
+  `https://www.workstream.us/j/{accountId}/{brandSlug}/positions`, extracts job
+  links, and fans out to detail pages; `atsId` = 8-char hex job-id suffix.
+  `companySlug` is `{accountId}/{brandSlug}` form. The OAuth2
+  `public-api.workstream.us` API is not used. `heuristic` confidence (tenant
+  `36047dd7/jamba`).
+- **NEW** plugin `packages/plugins/source-ats-harri/` (Spec 315) — Harri
+  (hospitality). Scrapes public employer careers HTML `https://harri.com/{slug}`,
+  parses `/{slug}/job/{jobId}-{titleSlug}` links, fans out to detail pages
+  parsing Open Graph meta tags. No anonymous JSON API; `datePosted` null.
+  `heuristic` confidence (tenant `riverstation-careers`).
+- **NEW** plugin `packages/plugins/source-ats-tribepad/` (Spec 316) — Tribepad
+  (UK enterprise ATS). `cheerio` HTML scrape of
+  `https://{slug}.tribepad-gro.com/v2/job/search?page={n}`
+  (`.sitebuilder-job-results-item` cards) + per-job
+  `/members/modules/job/detail.php?record={id}` detail fetches. Verified live
+  against `getsetuk` (18 jobs) and `ypocareers` (3 jobs).
+- **NEW** plugin `packages/plugins/source-ats-eploy/` (Spec 317) — Eploy (UK).
+  Reads the verified public XML datafeed
+  `GET {tenantUrl}/feeds/datafeed.ashx?Format=xml` (`<Vacancies Count="N">/<Item>`)
+  parsed with `cheerio` in `xmlMode`; single document, no pagination. Tenant from
+  `companyUrl` (custom domain) or `companySlug` (eploy.net staging). The OAuth2
+  `/api/vacancies/search` API is not used. Verified live against
+  `jobs.islington.gov.uk` (Count 30).
+- **NEW** plugin `packages/plugins/source-ats-oorwin/` (Spec 318) — Oorwin
+  (staffing/talent). Two anonymous POST endpoints:
+  `POST https://api.oorwin.ai/api/v2/careers/getJobList` (tenant via `sub_domain`
+  body field, paged by `limit`+`page`) + per-job
+  `POST .../careers/job_view` for HTML descriptions. Verified live against
+  `purpledrive` (2 804 jobs across 561 pages).
+
+- **Central registration** (CLAUDE.md §4): `packages/models/src/enums/site.enum.ts`
+  (`APPLIED`, `CATSONE`, `RECRUITCRM`, `VINCERE`, `FACTORIAL`, `WORKSTREAM`,
+  `HARRI`, `TRIBEPAD`, `EPLOY`, `OORWIN` — Phases 318–327, pre-seeded by the
+  orchestrator), `packages/plugins/index.ts` (10 imports + `ALL_SOURCE_MODULES`),
+  `tsconfig.base.json` path aliases, `jest.config.js` `moduleNameMapper`.
+- **Docs:** `docs/ATS_INTEGRATIONS.md` (10 new platform sections), `docs/index.md`
+  (rows 309–318 + footer), `docs/questions.md` (Q-047 HTML-scraper fragility,
+  Q-048 composite-tenant-identifier ergonomics), this `docs/log.md` entry.
+- **Fix:** `source-ats-catsone` e2e test referenced `job.atsId.length` /
+  `job.jobUrl` on nullable fields — the per-package `tsc` only covers `src/**/*`
+  (not `__tests__/`), so ts-jest caught it. Guarded with `?? ''` / `toBeDefined()`
+  (matches the niceboard test style).
+
+**Verification:**
+
+- Per-package `tsc --noEmit` clean (exit 0) ×10 + models package clean.
+- Jest new ATS sources: **10 suites / 40 tests passed** (e2e specs tolerate zero
+  network results; shape assertions run only when jobs are returned).
+- Jest registry + health (`store-registry`, `store-plugin`, `plugin-discovery`,
+  `store.module`, `health`): **11 suites / 135 tests passed** — the 10 new
+  modules register cleanly, no orphaned `Site` members.
+- `lint:docs` passed (broken-link, indexed-doc, log ordering, frontmatter checks).
+- No competitor references in the repo (the ten platforms are described by their
+  own public names only).
+
+**Notes:**
+
+- Spec-numbering convention held: Phase = Spec + 9 (Spec 309 → Phase 318 … Spec
+  318 → Phase 327).
+- Recurring shape observed this run: **6 HTML/XML scrapers vs 4 JSON-API
+  adapters** — HTML scrapers now total 8+ across runs #402–#403; Q-047 default C
+  flags a shared `@ever-jobs/common` resilient careers-page parser as the
+  consolidation follow-up if the trend continues.
+- 2 of 10 adapters need a composite tenant identifier (`{orgId}/{orgSlug}`,
+  `{accountId}/{brandSlug}`) — Q-048 tracks whether to formalise this as a
+  structured `tenantParams` model field.
+
+---
+
 ## 2026-06-03 — Scheduled run #402 (**EIGHT new generic ATS adapters: Niceboard, GoHire, Recooty, Polymer, VivaHR, Occupop, JobAdder, Hireology** — Specs 301–308, built in parallel)
 
 **Scope:** High-leverage continuation of the run-#400/#401 generic-ATS-adapter

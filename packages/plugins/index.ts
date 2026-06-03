@@ -56,6 +56,16 @@ import { VivaHRModule } from './source-ats-vivahr';
 import { OccupopModule } from './source-ats-occupop';
 import { JobAdderModule } from './source-ats-jobadder';
 import { HireologyModule } from './source-ats-hireology';
+import { AppliedModule } from './source-ats-applied';
+import { CatsoneModule } from './source-ats-catsone';
+import { RecruitCrmModule } from './source-ats-recruitcrm';
+import { VincereModule } from './source-ats-vincere';
+import { FactorialModule } from './source-ats-factorial';
+import { WorkstreamModule } from './source-ats-workstream';
+import { HarriModule } from './source-ats-harri';
+import { TribepadModule } from './source-ats-tribepad';
+import { EployModule } from './source-ats-eploy';
+import { OorwinModule } from './source-ats-oorwin';
 import { PinpointModule } from './source-ats-pinpoint';
 import { RecruiteeModule } from './source-ats-recruitee';
 import { RecruiterflowModule } from './source-ats-recruiterflow';
@@ -512,6 +522,16 @@ export const ALL_SOURCE_MODULES = [
   OccupopModule,
   JobAdderModule,
   HireologyModule,
+  AppliedModule,
+  CatsoneModule,
+  RecruitCrmModule,
+  VincereModule,
+  FactorialModule,
+  WorkstreamModule,
+  HarriModule,
+  TribepadModule,
+  EployModule,
+  OorwinModule,
   PinpointModule,
   RecruiteeModule,
   RecruiterflowModule,
