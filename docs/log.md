@@ -15,6 +15,83 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #399 (Specs 204–295 closed end-to-end; **92 new `source-company-*` Greenhouse plugins shipped in one batch** via a two-phase, 113-agent parallel workflow. Workflow `company-source-discover-and-research-399` ran **Phase 1 (Discover)** — 14 agents probed + curated 168 alphabetically-next candidate Greenhouse slugs (`node .probe-batch.cjs` helper) in parallel, returning live canonical-variant-2 boards and filtering junk (sandbox/test/freelance/resumedrop/internship sub-boards, non-companies, dead/`<2`-role boards) — and **Phase 2 (Research)** — 99 agents, one per confirmed source, wrote a factual business profile. Deterministic post-processing re-probed the 99 confirmed slugs for byte-exact 3-listing fixture data, dropped 7 (`<3` live listings: agilize, alphalion, alvys, amnh, anchorhealthct, antheia, applytochalkbooks), dropped enum/module-name collisions, and generated all 92 via `scripts/scaffold-company-source.ts`. Notable sources: Agoda, Algolia, Anaplan, Apollo.io, Appian, AlphaSense, Altium, Amwell, Ahrefs, AppDirect, Appfire, Appier, Alarm.com, AirTrunk, Altos Labs, Apiiro, AGE Solutions, AgWest Farm Credit, Amylyx Pharmaceuticals, Apogee Therapeutics, Alamar Biosciences, and 71 others across SaaS, fintech, biotech, aerospace, healthcare, industrial, and nonprofit sectors. 208th–299th Greenhouse-backed company-direct plugins in the catalogue.)
+
+**Scope:** Run #399 is the **second and largest batch run** —
+92 company-direct source plugins in a single pass, driven by a
+two-phase parallel workflow (113 subagents total: 14 discovery +
+99 research) plus the deterministic `scaffold-company-source.ts`
+generator from run #398. The discovery phase genuinely fanned
+agents across the candidate corpus to **gather** a live source
+list; the research phase fanned one agent per confirmed source to
+author its profile; code generation + registration + tests were
+deterministic for byte-accuracy. New specs **204–295**; enum
+phases **214–305**.
+
+**Changes:**
+
+- **NEW** 92 plugin packages `packages/plugins/source-company-<slug>`
+  (slugs: ag1, agebold, agecareers, agencywithin, agilisys,
+  agilysys, agoda, agwestfarmcredit, ahrefsjobs, aift, airia,
+  airnorth, airsculpt, airspace, airtrunk, aiserajobs, aisquared,
+  akidolabs, akko, akoya, akuity, alamarbiosciences, alarmcom,
+  albedo, alertmedia, algolia, align, align46, allcareers,
+  allencontrolsystems, allenintegratedsolutions,
+  alliancedefendingfreedom, allinc, allwebleads, allybehaviorcenters,
+  alpaca, alphafmc, alphafmcroles, alphagrepsecurities, alphasense,
+  alphasenseindia, alt, altanaai, altentechnologyusa, altium,
+  altoslabs, altscore, alu, alumniventures, alveole, alxafrica,
+  amaehealth, amarok, ambiententerprises, amca, amendconsulting,
+  americancapitalgroup, americaninstitute,
+  americaninstitutesforresearch, amount, amtechsoftware, amwell,
+  amylyx, anaplan, anchanto, animalmedicalcenter, aninebing, ansa,
+  antenna, anteriad, anteristech, antora, aoti, apaleo,
+  apartmentlife, aperaaiinc, aperiasolutions, apexcompanies,
+  apexcompaniescsw, apiiro, apiphani, aplayers, apogeetherapeutics,
+  apollobehaviorservices, apolloio, apparatus, appdirect, appfire,
+  appian, appier, appletreeprep, applytoaktos) — each with the
+  10-file package + spec layout (11-case unit suite + 3-listing
+  real-data fixture).
+- **NEW** 92 spec folders `.specify/specs/{204..295}-source-company-<slug>/`.
+- `packages/models/src/enums/site.enum.ts` — 92 enum values
+  (Phase 214–305).
+- `packages/plugins/index.ts` — 92 imports + `ALL_SOURCE_MODULES`
+  entries.
+- `tsconfig.base.json` — 92 path aliases.
+- `jest.config.js` — 92 `moduleNameMapper` entries.
+- `docs/index.md` — 92 spec-index rows (204–295).
+- `docs/log.md` — this entry.
+
+**Tests:**
+
+- `jest` for the 92 new suites: **92 suites / 1012 cases — all
+  green** (~225 s).
+- Registry/integration regression (`scripts/__tests__`,
+  `sources-health`, `sources-admin`): **5 suites / 62 cases —
+  green** (full barrel boots with all 92 new modules).
+- `npm run lint:docs`: **passed**.
+
+**Notes:**
+
+- Discovery agents called the temporary `.probe-batch.cjs` helper
+  (removed before commit) for robust, quote-safe probing; the
+  agent-returned metadata was treated as a shortlist and
+  **re-probed deterministically** for byte-exact fixture data
+  (IDs, timestamps, exact titles/departments/locations) — agents
+  never transcribe fixture bytes.
+- Strict inclusion filter: HTTP 200, canonical variant-2 URLs,
+  non-null `company_name`, ≥ 3 live listings whose first listing
+  carries a department + location, and no enum-key/module-name
+  collision with an existing source.
+- Same uniform template as run #398: wire `company_name`
+  pass-through, defensive `.trim()` on titles + departments,
+  entity-decode-then-tag-strip descriptions; fixtures force a
+  trailing space on listing[0] title + department so the trim is
+  always exercised. Imports/array/enum entries appended
+  (order-independent).
+
+---
+
 ## 2026-06-03 — Scheduled run #398 (Specs 188–203 closed end-to-end; **16 new `source-company-*` Greenhouse plugins shipped in one batch** — first parallel-workflow batch run. Authored a reusable deterministic scaffolder `scripts/scaffold-company-source.ts` (+ a 4-case unit suite under `scripts/__tests__/scaffold-company-source.spec.ts`); ran a 16-agent research workflow to produce factual per-company business descriptions; live-probed 70 alphabetically-next clean-slug candidates from the upstream Greenhouse company corpus, confirmed 60 live, and selected 16 **canonical variant-2** boards (`https://job-boards.greenhouse.io/<slug>/jobs/<id>`) with real 3-listing fixtures. Each plugin uses the canonical variant-2 + D-08 company-direct template with **wire `company_name` pass-through (D-09 omitted)**, **defensive `.trim()` on titles (D-10)** and **defensive `.trim()` on department names (D-11, now applied uniformly across the batch rather than the historical clean-pass-through)**, and the entity-decode-then-tag-strip description pipeline. New plugins: `adaptivefinancialconsulting` (Adaptive Financial Consulting — Fintech), `adcouncil` (the Ad Council — Nonprofit/PSA), `addepar1` (Addepar — Fintech/WealthTech), `adelphiresearch` (Adelphi Research — Market Research), `advancedspace` (Advanced Space — Aerospace), `advancedtechnologyservices` (Advanced Technology Services — Industrial Maintenance), `advocateconstruction` (Advocate Construction — Construction), `aec` (AEC — HVAC), `aechelontechnology` (Aechelon Technology — Defense/Simulation), `aegisventures` (Aegis Ventures — Healthcare venture studio), `aerospike` (Aerospike — Database), `aestudio` (AE Studio — AI/Software), `affinidi` (Affinidi — Digital Identity), `affinity` (Affinity.co — B2B SaaS/CRM), `afresh` (Afresh — Retail AI), `aftership` (AfterShip — E-commerce SaaS). 192nd–207th Greenhouse-backed company-direct plugins in the catalogue.)
 
 **Scope:** Run #398 is the **first batch run** — instead of
