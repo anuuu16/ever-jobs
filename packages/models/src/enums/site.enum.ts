@@ -883,6 +883,22 @@ export enum Site {
   PAYCHEX = 'paychex',
   // Phase 373: Spec 364 — Source ATS Plugin: PyjamaHR (jobs.pyjamahr.com)
   PYJAMAHR = 'pyjamahr',
+  // Phase 374: Spec 365 — Source ATS Plugin: LiveHire (livehire.com)
+  LIVEHIRE = 'livehire',
+  // Phase 375: Spec 366 — Source ATS Plugin: Scout Talent (applynow.net.au)
+  SCOUTTALENT = 'scouttalent',
+  // Phase 376: Spec 367 — Source ATS Plugin: TurboHire (turbohire.co)
+  TURBOHIRE = 'turbohire',
+  // Phase 377: Spec 368 — Source ATS Plugin: Zwayam (zwayam.com)
+  ZWAYAM = 'zwayam',
+  // Phase 378: Spec 369 — Source ATS Plugin: TrackerRMS (tracker-rms.com)
+  TRACKERRMS = 'trackerrms',
+  // Phase 379: Spec 370 — Source ATS Plugin: AkkenCloud (akkencloud.com)
+  AKKENCLOUD = 'akkencloud',
+  // Phase 380: Spec 371 — Source ATS Plugin: Mindscope (mindscope.com)
+  MINDSCOPE = 'mindscope',
+  // Phase 381: Spec 372 — Source ATS Plugin: HiBob (hibob.com)
+  HIBOB = 'hibob',
 }
 
 /**

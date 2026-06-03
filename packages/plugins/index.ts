@@ -112,6 +112,14 @@ import { SnaphuntModule } from './source-ats-snaphunt';
 import { DoverModule } from './source-ats-dover';
 import { PaychexModule } from './source-ats-paychex';
 import { PyjamaHrModule } from './source-ats-pyjamahr';
+import { LiveHireModule } from './source-ats-livehire';
+import { ScoutTalentModule } from './source-ats-scouttalent';
+import { TurboHireModule } from './source-ats-turbohire';
+import { ZwayamModule } from './source-ats-zwayam';
+import { TrackerRmsModule } from './source-ats-trackerrms';
+import { AkkenCloudModule } from './source-ats-akkencloud';
+import { MindscopeModule } from './source-ats-mindscope';
+import { HiBobModule } from './source-ats-hibob';
 import { PinpointModule } from './source-ats-pinpoint';
 import { RecruiteeModule } from './source-ats-recruitee';
 import { RecruiterflowModule } from './source-ats-recruiterflow';
@@ -624,6 +632,14 @@ export const ALL_SOURCE_MODULES = [
   DoverModule,
   PaychexModule,
   PyjamaHrModule,
+  LiveHireModule,
+  ScoutTalentModule,
+  TurboHireModule,
+  ZwayamModule,
+  TrackerRmsModule,
+  AkkenCloudModule,
+  MindscopeModule,
+  HiBobModule,
   PinpointModule,
   RecruiteeModule,
   RecruiterflowModule,

@@ -15,6 +15,92 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #409 (**EIGHT new generic ATS adapters: LiveHire, Scout Talent, TurboHire, Zwayam, TrackerRMS, AkkenCloud, Mindscope, HiBob** — Specs 365–372, built in parallel)
+
+**Scope:** Direct continuation of the run-#400→#408 generic-ATS-adapter
+direction — one multi-tenant adapter unlocks a whole catalogue of companies,
+versus one company per `source-company-*` plugin. Run #408 shipped ten ATS
+adapters; this run adds **eight** more, broadening AU/NZ talent-community,
+India/global recruitment-automation, US staffing-agency, and HR-platform careers
+coverage the existing 112-adapter corpus did not yet reach. All eight were
+designed, spec'd, implemented, and tested in **one pass via an 8-agent parallel
+workflow** (`new-ats-adapters-409`). Each agent owned one platform end-to-end:
+researched the real public surface (WebSearch + live WebFetch), wrote the 8 plugin
+files + the 3 spec docs, and returned structured metadata. The orchestrator (main
+loop) then wired the four shared registration points sequentially — agents did
+**not** touch shared files, avoiding parallel-edit races.
+
+**Changes:**
+
+- **8 new `source-ats-*` plugin packages** (Specs 365–372), each with the
+  canonical 8-file layout (`package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/<id>.constants.ts`, `src/<id>.types.ts`, `src/<id>.module.ts`,
+  `src/<id>.service.ts`, `__tests__/<id>.e2e-spec.ts`) and a full
+  `.specify/specs/<NNN>-source-ats-<id>/` spec/plan/tasks triplet:
+  - **365 `source-ats-livehire`** — LiveHire / Humanforce Talent (AU talent
+    community + ATS). The careers SPA's JSON API returns 403 to non-browser
+    clients, so the adapter consumes LiveHire's **server-rendered public
+    embeddable jobs widget** (`livehire.com/widgets/job-listings/{tenant}`),
+    anchoring on the stable canonical job-link regex
+    `/careers/{tenant}/job/{code}/{id}/{slug}` (opaque `{id}` segment = atsId).
+    **Verified live 2026-06-03** (tenant `perthmint` — The Perth Mint, 14 roles).
+  - **366 `source-ats-scouttalent`** — Scout Talent (AU/NZ recruitment). Per-tenant
+    server-rendered board on `{tenant}.applynow.net.au` → `/jobs/{code}-{slug}`
+    anchors + per-role schema.org JobPosting JSON-LD (og/title/body fallbacks).
+    **Verified live 2026-06-03** (tenant `krg` — Ku-ring-gai Council).
+  - **367 `source-ats-turbohire`** — TurboHire (India/global recruitment
+    automation). Tenant-addressed (`{tenant}.turbohire.co` / `careers.turbohire.co/{tenant}`)
+    public careerpage JSON surface on `api.turbohire.co` (paginated list +
+    per-role detail). Defensive (verified=false; platform + tenant addressing
+    confirmed live — tenant `tatamotors`).
+  - **368 `source-ats-zwayam`** — Zwayam (India ATS, now SHL). Tenant-addressed
+    openings JSON list + per-role preview detail. Defensive (verified=false).
+  - **369 `source-ats-trackerrms`** — TrackerRMS / Tracker (staffing & recruiting
+    ATS). Tenant-addressed careers listing + per-role detail. Defensive.
+  - **370 `source-ats-akkencloud`** — AkkenCloud (US staffing-agency front/back
+    office). Tenant-addressed public job board listing + detail. Defensive.
+  - **371 `source-ats-mindscope`** — Mindscope (staffing & recruiting ATS/CRM).
+    Tenant-addressed careers portal listing + detail. Defensive.
+  - **372 `source-ats-hibob`** — HiBob ("bob", HR platform). Tenant-addressed
+    customer careers pages / public jobs JSON. Defensive.
+- **Registration (4 files):** added `Site.{LIVEHIRE,SCOUTTALENT,TURBOHIRE,ZWAYAM,
+  TRACKERRMS,AKKENCLOUD,MINDSCOPE,HIBOB}` enum members (Phases 374–381); appended
+  imports + `ALL_SOURCE_MODULES` entries in `packages/plugins/index.ts`; added the
+  eight `@ever-jobs/source-ats-*` path aliases in `tsconfig.base.json` and the
+  matching `moduleNameMapper` entries in `jest.config.js`. All four edits made
+  sequentially by the orchestrator (not the agents).
+- **`docs/index.md`:** added Spec 365–372 rows to the spec table (run #409).
+- **Codebase improvement (CI fix, kept):** `source-ats-zwayam` — bounded the HTTP
+  client timeout to a new `ZWAYAM_DEFAULT_TIMEOUT_SECONDS = 15` cap, passed via
+  `requestTimeout` (the `createHttpClient` factory keys off `requestTimeout`, not
+  `timeout`; `ScraperInputDto` defaults it to 60s, so a plain pass-through was
+  silently ignored). The Zwayam careers host connect-then-hangs; without the cap
+  the four live-network e2e tests blew the 30s Jest budget on the shared 60s
+  default. Same fix class as run #408's Beetween bound — degradation now fast and
+  well inside callers' budgets.
+
+**Verification:**
+
+- `npx tsc --project apps/api/tsconfig.build.json --noEmit` → **clean (exit 0)**.
+- `npx jest` on the 8 new packages → after the Zwayam timeout fix, **8 suites /
+  40 tests passed**. Expected graceful-degradation paths (live 4xx/5xx, DNS
+  ENOTFOUND, connect-then-hang for defensive tenants) are logged but tolerated;
+  shape assertions only run when jobs are returned.
+- `npx jest packages/plugin/__tests__` (discovery/registry) → **2 suites / 20
+  tests passed** — the new modules register cleanly, no regression.
+- Competitor upstream sync (`OTHERS/Ats-scrapers`, `OTHERS/JobSpy`,
+  `OTHERS/Jobspy-api`): all three already up to date — no new competitor activity
+  this run.
+
+**Notes:**
+
+- ATS corpus grows 112 → **120** generic multi-tenant adapters.
+- `docs/ATS_INTEGRATIONS.md` per-ATS detail entries remain frozen at Spec 330 (the
+  established convention since run #405 — spec docs are the per-adapter source of
+  truth). Not extended this run, for consistency.
+
+---
+
 ## 2026-06-03 — Scheduled run #408 (**TEN new generic ATS adapters: Paycom, PageUp, BrassRing, Namely, TempWorks, Keka, Snaphunt, Dover, Paychex, PyjamaHR** — Specs 355–364, built in parallel)
 
 **Scope:** Direct continuation of the run-#400→#407 generic-ATS-adapter
