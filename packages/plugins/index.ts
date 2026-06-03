@@ -78,6 +78,14 @@ import { ConcludisModule } from './source-ats-concludis';
 import { RexxModule } from './source-ats-rexx';
 import { PCRecruiterModule } from './source-ats-pcrecruiter';
 import { PrescreenModule } from './source-ats-prescreen';
+import { TraffitModule } from './source-ats-traffit';
+import { HrOnModule } from './source-ats-hron';
+import { SageHrModule } from './source-ats-sagehr';
+import { CareerPlugModule } from './source-ats-careerplug';
+import { WebcruiterModule } from './source-ats-webcruiter';
+import { DvinciModule } from './source-ats-dvinci';
+import { HeyrecruitModule } from './source-ats-heyrecruit';
+import { TalentAdoreModule } from './source-ats-talentadore';
 import { PinpointModule } from './source-ats-pinpoint';
 import { RecruiteeModule } from './source-ats-recruitee';
 import { RecruiterflowModule } from './source-ats-recruiterflow';
@@ -556,6 +564,14 @@ export const ALL_SOURCE_MODULES = [
   RexxModule,
   PCRecruiterModule,
   PrescreenModule,
+  TraffitModule,
+  HrOnModule,
+  SageHrModule,
+  CareerPlugModule,
+  WebcruiterModule,
+  DvinciModule,
+  HeyrecruitModule,
+  TalentAdoreModule,
   PinpointModule,
   RecruiteeModule,
   RecruiterflowModule,

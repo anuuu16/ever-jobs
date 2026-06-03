@@ -15,6 +15,54 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #405 (**EIGHT new generic ATS adapters: Traffit, HR-ON Recruit, Sage HR, CareerPlug, Webcruiter, d.vinci, Heyrecruit, TalentAdore** — Specs 331–338, built in parallel)
+
+**Scope:** Direct continuation of the run-#400→#404 generic-ATS-adapter
+direction — one multi-tenant adapter unlocks a whole catalogue of companies,
+versus one company per `source-company-*` plugin. Run #404 shipped twelve ATS
+adapters; this run adds **eight** more, again weighted toward **European**
+platforms (Polish: Traffit; Danish: HR-ON Recruit; UK/global: Sage HR; Nordic:
+Webcruiter; German: d.vinci, Heyrecruit; Finnish: TalentAdore) plus one US SMB
+platform (CareerPlug). All eight were designed, spec'd, implemented, and tested
+in **one pass via an 8-agent parallel workflow** (`new-ats-adapters-405`). Each
+agent owned one platform end-to-end: research the real public surface
+(WebSearch + live WebFetch), write the 8 plugin files + the 3 spec docs, and
+return structured metadata for the orchestrator to wire into the five shared
+registration points.
+
+**Endpoints adopted (all verified live 2026-06-03, all anonymous / no-auth):**
+
+- **Traffit** (Spec 331) — public JSON adverts feed `GET https://{tenant}.traffit.com/public/job_posts/published`; array of advert envelopes, `advert.values[]` resolved by `field_id`. Verified: people.traffit.com (12 adverts), traffit.traffit.com (1).
+- **HR-ON Recruit** (Spec 332) — server-rendered career page; harvest `/jobposts?jobid={ID}` links via a theme-independent regex, fan out (bounded `Promise.allSettled`) to detail pages, parse HTML + optional schema.org JSON-LD. Verified: hr-on.com/careers (6 roles).
+- **Sage HR** (Spec 333) — cheerio scrape of `GET https://talent.sage.hr/{careerSiteId}/vacancies` (`div.job`) + `/jobs/{positionId}` detail fan-out; the `X-Auth-Token` REST API is a non-goal. Verified: Newstel career site (2 jobs).
+- **CareerPlug** (Spec 334) — schema.org ItemList of JobPosting JSON-LD on `https://{tenant}.careerplug.com/jobs` (with `/account` single-job fallback), paired with `/jobs/{id}` or `/j/{shortcode}` anchors. Verified: cplugjobs tenant.
+- **Webcruiter** (Spec 335) — public candidate-portal JSON API `POST https://candidate.webcruiter.com/api/odvert/companysearch/{lock}` with `{take,skip}` body; direct advert→DTO map. Verified: locks 77790000 (65 roles), 23109900 (13).
+- **d.vinci** (Spec 336) — public Job Publication REST API `GET https://{slug}.dvinci-hr.com/jobPublication/list.json`; single anonymous JSON-array fetch, structured `jobOpening.locations` + HTML content sections. Verified: inverto (60 jobs), vhw (2).
+- **Heyrecruit** (Spec 337) — cheerio parse of `GET https://{subdomain}.heyrecruit.de/?page=jobs` (`.job-tile`), decoding the HTML-entity-encoded job JSON in each tile's `jobClickEventListener(...)` onclick handler; the authenticated `app.heyrecruit.de/api/v2` JWT API is a non-goal. Verified: bodenseetherme (4 jobs).
+- **TalentAdore** (Spec 338) — public positions JSON feed `GET https://ats.talentadore.com/positions/{feedKey}/json` (feed key passed directly or harvested from the `{tenant}.careers.talentadore.com` page); `{version,company,generated_at,jobs[]}` envelope. Verified: amersports (36 roles).
+
+**Shared registration wired (five points each, per `CLAUDE.md` §4):**
+
+- `packages/models/src/enums/site.enum.ts` — added `TRAFFIT`, `HRON`, `SAGEHR`, `CAREERPLUG`, `WEBCRUITER`, `DVINCI`, `HEYRECRUIT`, `TALENTADORE` (Phases 340–347).
+- `packages/plugins/index.ts` — 8 imports + 8 `ALL_SOURCE_MODULES` entries.
+- `tsconfig.base.json` — 8 path aliases.
+- `jest.config.js` — 8 `moduleNameMapper` entries.
+- `docs/index.md` — 8 spec rows (331–338) + Last-revised bump.
+
+**Verification:** `npx tsc --project apps/api/tsconfig.build.json --noEmit` green
+both before (clean baseline) and after integration. Per-package source tests run
+clean (network e2e tolerate zero results, as is house convention). Docs-lint
+green. No competitor references anywhere in the repo.
+
+**Notes:** Every adapter degrades gracefully — DNS/HTTP-4xx/malformed-payload →
+empty `JobResponseDto`, never throws; malformed individual records skipped in
+isolation. Four of the eight (Traffit, d.vinci, Webcruiter, TalentAdore) expose
+true public JSON APIs; the other four (HR-ON, Sage HR, CareerPlug, Heyrecruit)
+require HTML/JSON-LD scraping because no anonymous JSON feed exists. ATS adapter
+count: **78 → 86**.
+
+---
+
 ## 2026-06-03 — Scheduled run #404 (**TWELVE new generic ATS adapters: Ceipal, Softgarden, Recruitis, Flatchr, Jobsoid, Skeeled, Teamdash, DigitalRecruiters, Concludis, rexx systems, PCRecruiter, Prescreen** — Specs 319–330, built in parallel)
 
 **Scope:** Direct continuation of the run-#400/#401/#402/#403 generic-ATS-adapter

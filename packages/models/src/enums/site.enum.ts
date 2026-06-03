@@ -815,6 +815,22 @@ export enum Site {
   PCRECRUITER = 'pcrecruiter',
   // Phase 339: Spec 330 — Source ATS Plugin: Prescreen (prescreen.io)
   PRESCREEN = 'prescreen',
+  // Phase 340: Spec 331 — Source ATS Plugin: Traffit (traffit.com)
+  TRAFFIT = 'traffit',
+  // Phase 341: Spec 332 — Source ATS Plugin: HR-ON Recruit (hr-on.com)
+  HRON = 'hron',
+  // Phase 342: Spec 333 — Source ATS Plugin: Sage HR (sage.hr)
+  SAGEHR = 'sagehr',
+  // Phase 343: Spec 334 — Source ATS Plugin: CareerPlug (careerplug.com)
+  CAREERPLUG = 'careerplug',
+  // Phase 344: Spec 335 — Source ATS Plugin: Webcruiter (webcruiter.com)
+  WEBCRUITER = 'webcruiter',
+  // Phase 345: Spec 336 — Source ATS Plugin: d.vinci (dvinci-hr.com)
+  DVINCI = 'dvinci',
+  // Phase 346: Spec 337 — Source ATS Plugin: Heyrecruit (heyrecruit.de)
+  HEYRECRUIT = 'heyrecruit',
+  // Phase 347: Spec 338 — Source ATS Plugin: TalentAdore (talentadore.com)
+  TALENTADORE = 'talentadore',
 }
 
 /**
