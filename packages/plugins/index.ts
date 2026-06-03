@@ -120,6 +120,18 @@ import { TrackerRmsModule } from './source-ats-trackerrms';
 import { AkkenCloudModule } from './source-ats-akkencloud';
 import { MindscopeModule } from './source-ats-mindscope';
 import { HiBobModule } from './source-ats-hibob';
+import { TaleezModule } from './source-ats-taleez';
+import { SoftyModule } from './source-ats-softy';
+import { InRecruitingModule } from './source-ats-inrecruiting';
+import { AltamiraModule } from './source-ats-altamira';
+import { OleeoModule } from './source-ats-oleeo';
+import { HireserveModule } from './source-ats-hireserve';
+import { CarerixModule } from './source-ats-carerix';
+import { OtysModule } from './source-ats-otys';
+import { UmantisModule } from './source-ats-umantis';
+import { BizneoModule } from './source-ats-bizneo';
+import { CleverConnectModule } from './source-ats-cleverconnect';
+import { EmplyModule } from './source-ats-emply';
 import { PinpointModule } from './source-ats-pinpoint';
 import { RecruiteeModule } from './source-ats-recruitee';
 import { RecruiterflowModule } from './source-ats-recruiterflow';
@@ -640,6 +652,18 @@ export const ALL_SOURCE_MODULES = [
   AkkenCloudModule,
   MindscopeModule,
   HiBobModule,
+  TaleezModule,
+  SoftyModule,
+  InRecruitingModule,
+  AltamiraModule,
+  OleeoModule,
+  HireserveModule,
+  CarerixModule,
+  OtysModule,
+  UmantisModule,
+  BizneoModule,
+  CleverConnectModule,
+  EmplyModule,
   PinpointModule,
   RecruiteeModule,
   RecruiterflowModule,

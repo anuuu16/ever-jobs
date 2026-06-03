@@ -15,6 +15,121 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #410 (**TWELVE new generic ATS adapters: Taleez, Softy, In-recruiting, Altamira, Oleeo, Hireserve, Carerix, OTYS, Umantis, Bizneo HR, CleverConnect, Emply** — Specs 373–384, built in parallel)
+
+**Scope:** Direct continuation of the run-#400→#409 generic-ATS-adapter direction —
+one multi-tenant adapter unlocks a whole catalogue of companies, versus one company
+per `source-company-*` plugin. Run #409 shipped eight ATS adapters; this run adds
+**twelve** more, deliberately broadening **European** coverage the existing
+120-adapter corpus under-served: France (Taleez, Softy, CleverConnect), Italy
+(In-recruiting/Intervieweb, Altamira), the UK (Oleeo, Hireserve), the Netherlands
+(Carerix, OTYS), DACH (Umantis/Haufe Talent), Spain (Bizneo HR), and the Nordics
+(Emply/Visma, Denmark). All twelve were designed, spec'd, implemented, and tested in
+**one pass via a 12-agent parallel workflow** (`new-ats-adapters-410`). Each agent
+owned one platform end-to-end: researched the real public surface (WebSearch + live
+WebFetch), wrote the 8 plugin files + the 3 spec docs, and returned structured
+metadata. The orchestrator (main loop) then wired the four shared registration points
+sequentially — agents did **not** touch shared files, avoiding parallel-edit races.
+
+**Changes:**
+
+- **12 new `source-ats-*` plugin packages** (Specs 373–384), each with the canonical
+  8-file layout (`package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/<id>.constants.ts`, `src/<id>.types.ts`, `src/<id>.module.ts`,
+  `src/<id>.service.ts`, `__tests__/<id>.e2e-spec.ts`) and a full
+  `.specify/specs/<NNN>-source-ats-<id>/` spec/plan/tasks triplet:
+  - **373 `source-ats-taleez`** — Taleez (taleez.com, FR). Harvests canonical
+    `taleez.com/apply/{slug}` anchors from a tenant careers board, parses each
+    server-rendered detail page's schema.org JobPosting JSON-LD. **Verified live
+    2026-06-03** (tenant `tehtris`).
+  - **374 `source-ats-softy`** — Softy (softy.pro, FR). Server-rendered
+    `{tenant}.softy.pro/offres` index → `/offre/{ID}-{slug}` anchors + labelled card
+    fields, best-effort detail bodies. **Verified live** (tenant `groupecls`).
+  - **375 `source-ats-inrecruiting`** — In-recruiting / Intervieweb
+    (intervieweb.it, IT). Server-rendered `*.intervieweb.it` career board across
+    both sub-domain and path-tenant shapes; `/jobs/{slug}-{id}` anchors +
+    schema.org JobPosting JSON-LD. **Verified live** (tenant `rinascente`).
+  - **376 `source-ats-altamira`** — Altamira Recruiting (altamirahrm.com, IT).
+    Server-rendered `{tenant}.altamiraweb.com/jobs` index; `/jobs/{slug}-{JobID}.htm`
+    + `job-details?JobID=` anchors. **Verified live** (tenant `etinars`).
+  - **377 `source-ats-oleeo`** — Oleeo (tal.net, UK enterprise ATS). Server-rendered
+    `{tenant}.tal.net` candidate board; `/opp/{ID}-{slug}` anchors + per-role detail
+    hydration. **Verified live** (tenant `fcdo`).
+  - **378 `source-ats-hireserve`** — Hireserve (hireserve.com, UK). Public
+    `wd_portal` current-vacancies listing keyed by host + `p_web_site_id`;
+    `/vacancy/{slug}-{ID}.html` anchors. **Verified live.**
+  - **379 `source-ats-carerix`** — Carerix (carerix.com, NL). Public CxTools XML
+    vacancy feeds (`indeedFeed.php` / `jobboardFeed.php` / `RSSx.php`) on
+    `{tenant}.carerix.com`, keyed by stable publicationID. Defensive (verified=false).
+  - **380 `source-ats-otys`** — OTYS (otys.com, NL). Server-rendered `/vacatures.html`
+    board; `/vacatures/vacature-{slug}-{id}-{websiteId}.html` (numeric id = ATS id) +
+    JSON-LD/og detail. **Verified live** (tenant `middendorprecruitment`).
+  - **381 `source-ats-umantis`** — Umantis / Haufe Talent (umantis.com, DACH).
+    Server-rendered `recruitingapp-{tenantId}.umantis.com/Jobs/All` index +
+    `/Vacancies/{ID}/Description/{lang}` detail pages. **Verified live** (tenant `5476`).
+  - **382 `source-ats-bizneo`** — Bizneo HR (bizneo.com, ES). Server-rendered
+    `{tenant}.bizneo.com/jobs` open-roles index; `/jobs/{slug}` anchors (slug = ATS
+    id). **Verified live** (tenant `groundforce`).
+  - **383 `source-ats-cleverconnect`** — CleverConnect (cleverconnect.com, FR).
+    Decodes the pre-rendered Angular TransferState JSON island on
+    `career.{tenant}.cleverconnect.com/jobs`, maps each PUBLISHED offer. **Verified
+    live.**
+  - **384 `source-ats-emply`** — Emply / Visma (emply.com, DK).
+    `{tenant}.career.emply.com/{locale}/vacant-positions` index with the embedded
+    `proceedBatch({ vacancies: JSON.parse('…') })` bootstrap. **Verified live**
+    (tenant `au`).
+
+- **Four shared registration points wired** (orchestrator, sequential, no races):
+  `packages/models/src/enums/site.enum.ts` (Phases 382–393 = Specs 373–384, twelve
+  new `Site` members), `packages/plugins/index.ts` (12 imports + 12
+  `ALL_SOURCE_MODULES` registrations), `tsconfig.base.json` (12 path aliases), and
+  `jest.config.js` (12 `moduleNameMapper` entries).
+
+- **Hardening during integration (two adapters):**
+  - `source-ats-hireserve` — capped the per-request HTTP timeout at **15s**
+    (`HIRESERVE_DEFAULT_TIMEOUT_SECONDS`), bounding BOTH the `timeout` (no-proxy
+    path) and `requestTimeout` (proxy path) keys, so a legacy `wd_portal` host that
+    connects-then-hangs degrades gracefully inside callers' budgets (was hanging on
+    the shared client's 60s default).
+  - `source-ats-emply` — capped the timeout at **15s** (`EMPLY_DEFAULT_TIMEOUT_SECONDS`)
+    AND made the locale/path probe sweep abort on a transport-level (host-unreachable)
+    failure AND disabled redirect-following (`maxRedirects: 0`). An unknown / parked
+    Emply tenant fast-302s OFF the career host to the `emply.com` marketing site,
+    which axios was following into a hang; surfacing the 3xx as a fast, skippable
+    response keeps a dead tenant from burning a 12-probe × 60s budget. Unknown-tenant
+    e2e now completes in ~13s.
+
+**Tests:**
+
+- All **12 new e2e suites pass (62 tests, 62 passed)** under `npx jest`. Each suite
+  mirrors the canonical livehire shape: tolerates zero results on the live-network
+  happy path; deterministic empty-input and unknown-tenant cases assert empty;
+  `resultsWanted` cap respected; 30s timeouts on network tests.
+- Whole-project `tsc --noEmit -p tsconfig.base.json` is clean (EXIT 0) after wiring.
+- `scripts/docs-lint.ts` passes (✓ no issues): all 12 spec triplets linked from
+  `docs/index.md`; all spec/plan files carry an H1 + metadata table (added missing
+  metadata tables to 6 plan.md files the workflow agents had emitted without one).
+
+**Docs:**
+
+- `docs/index.md` — added 12 rows (Specs 373–384) to the spec registry (the
+  authoritative exhaustive adapter list; `docs/ATS_INTEGRATIONS.md` is a curated
+  marketing-style deep-dive on a subset and, per the established convention since the
+  batch-adapter runs began, is not expanded per-adapter).
+- `docs/log.md` — this entry.
+
+**Notes:**
+
+- Carerix is the only verified=false adapter this run (the agent confirmed the
+  CxTools feed addressing from public docs but could not pin a live named tenant
+  during the run); built defensively with graceful degradation like the other
+  documented-but-unverified adapters in the corpus.
+- ATS adapter corpus now stands at **132** generic multi-tenant adapters.
+- Competitor repos in `../OTHERS` (Ats-scrapers, JobSpy, Jobspy-api) were fetched at
+  run start and were all up-to-date — no upstream changes to mirror this run.
+
+---
+
 ## 2026-06-03 — Scheduled run #409 (**EIGHT new generic ATS adapters: LiveHire, Scout Talent, TurboHire, Zwayam, TrackerRMS, AkkenCloud, Mindscope, HiBob** — Specs 365–372, built in parallel)
 
 **Scope:** Direct continuation of the run-#400→#408 generic-ATS-adapter

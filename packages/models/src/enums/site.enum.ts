@@ -899,6 +899,30 @@ export enum Site {
   MINDSCOPE = 'mindscope',
   // Phase 381: Spec 372 — Source ATS Plugin: HiBob (hibob.com)
   HIBOB = 'hibob',
+  // Phase 382: Spec 373 — Source ATS Plugin: Taleez (taleez.com)
+  TALEEZ = 'taleez',
+  // Phase 383: Spec 374 — Source ATS Plugin: Softy (softy.pro)
+  SOFTY = 'softy',
+  // Phase 384: Spec 375 — Source ATS Plugin: In-recruiting / Intervieweb (intervieweb.it)
+  INRECRUITING = 'inrecruiting',
+  // Phase 385: Spec 376 — Source ATS Plugin: Altamira (altamirahrm.com)
+  ALTAMIRA = 'altamira',
+  // Phase 386: Spec 377 — Source ATS Plugin: Oleeo (tal.net)
+  OLEEO = 'oleeo',
+  // Phase 387: Spec 378 — Source ATS Plugin: Hireserve (hireserve.com)
+  HIRESERVE = 'hireserve',
+  // Phase 388: Spec 379 — Source ATS Plugin: Carerix (carerix.com)
+  CARERIX = 'carerix',
+  // Phase 389: Spec 380 — Source ATS Plugin: OTYS (otys.com)
+  OTYS = 'otys',
+  // Phase 390: Spec 381 — Source ATS Plugin: Umantis / Haufe Talent (umantis.com)
+  UMANTIS = 'umantis',
+  // Phase 391: Spec 382 — Source ATS Plugin: Bizneo HR (bizneo.com)
+  BIZNEO = 'bizneo',
+  // Phase 392: Spec 383 — Source ATS Plugin: CleverConnect (cleverconnect.com)
+  CLEVERCONNECT = 'cleverconnect',
+  // Phase 393: Spec 384 — Source ATS Plugin: Emply / Visma (emply.com)
+  EMPLY = 'emply',
 }
 
 /**
