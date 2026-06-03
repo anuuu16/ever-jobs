@@ -48,6 +48,14 @@ import { CornerstoneModule } from './source-ats-cornerstone';
 import { DayforceModule } from './source-ats-dayforce';
 import { ZohoRecruitModule } from './source-ats-zohorecruit';
 import { ClearCompanyModule } from './source-ats-clearcompany';
+import { NiceboardModule } from './source-ats-niceboard';
+import { GoHireModule } from './source-ats-gohire';
+import { RecootyModule } from './source-ats-recooty';
+import { PolymerModule } from './source-ats-polymer';
+import { VivaHRModule } from './source-ats-vivahr';
+import { OccupopModule } from './source-ats-occupop';
+import { JobAdderModule } from './source-ats-jobadder';
+import { HireologyModule } from './source-ats-hireology';
 import { PinpointModule } from './source-ats-pinpoint';
 import { RecruiteeModule } from './source-ats-recruitee';
 import { RecruiterflowModule } from './source-ats-recruiterflow';
@@ -496,6 +504,14 @@ export const ALL_SOURCE_MODULES = [
   DayforceModule,
   ZohoRecruitModule,
   ClearCompanyModule,
+  NiceboardModule,
+  GoHireModule,
+  RecootyModule,
+  PolymerModule,
+  VivaHRModule,
+  OccupopModule,
+  JobAdderModule,
+  HireologyModule,
   PinpointModule,
   RecruiteeModule,
   RecruiterflowModule,

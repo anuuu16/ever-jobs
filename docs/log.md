@@ -15,6 +15,118 @@
 
 ---
 
+## 2026-06-03 — Scheduled run #402 (**EIGHT new generic ATS adapters: Niceboard, GoHire, Recooty, Polymer, VivaHR, Occupop, JobAdder, Hireology** — Specs 301–308, built in parallel)
+
+**Scope:** High-leverage continuation of the run-#400/#401 generic-ATS-adapter
+direction (one multi-tenant adapter unlocks a whole catalogue of companies,
+versus one company per `source-company-*` plugin). Run #401 closed having shipped
+four enterprise ATS adapters; this run adds **eight** more mid-market / hosted
+job-board ATS platforms, all designed, spec'd, implemented, and tested in **one
+pass via an 8-agent parallel workflow** (`new-ats-adapters-402`). Each agent
+owned one platform end-to-end: research the real public surface (WebSearch +
+live WebFetch), write the 8 plugin files + the Spec-Kit triplet, and self-verify
+with `tsc`. The orchestrator then performed the central registration (the four
+shared files) sequentially to avoid edit conflicts. **All eight endpoints were
+live-verified** (`confidence: verified`) against real tenants on 2026-06-03.
+All competitor repos under `OTHERS/` were re-pulled this run and were **up to
+date** (Ats-scrapers @ `b45c12a`, JobSpy @ `fda080a`, Jobspy-api @ `26bb6f4` —
+no upstream churn to absorb).
+
+**Changes:**
+
+- **NEW** plugin `packages/plugins/source-ats-niceboard/` (Spec 301) — Niceboard
+  hosted job-board platform. Pages the public board search feed
+  `GET https://{slug}.niceboard.co/api/jobs` (the same call the board's Vue SPA
+  makes) with a fixed JSON-encoded base query → `{ jobs, count }` with embedded
+  `description_html`; `limit`/`page` pagination via bounded `Promise.allSettled`.
+  The credentialed `/api/v1/jobs?key=` private API is deliberately not used.
+  Verified live against `avajobboard.niceboard.co` (count 224).
+- **NEW** plugin `packages/plugins/source-ats-gohire/` (Spec 302) — GoHire.
+  List feed `GET https://api2.gohire.io/widget-jobs/{clientHash}` → `{ jobs }`,
+  then per-role detail `GET https://api.gohire.io/widget-job?clientHash={hash}&jobId={id}`
+  (bounded fan-out, max 8) for the full HTML description + structured location.
+  Browser UA required; no auth. Verified against three tenants
+  (`hrscgarc`, `nngipgfj`, `1tqyvzgs`).
+- **NEW** plugin `packages/plugins/source-ats-recooty/` (Spec 303) — Recooty.
+  Public Job Widget feed
+  `GET https://standaloneapi.recooty.app/api/widget/{widgetId}?language=en` →
+  `{ career_page_url, team:{ jobPosts[] } }`. The 32-char hex widget id is a
+  public read key in the URL path; `REMOTE/ON_SITE/HYBRID` +
+  `FULL_TIME/PART_TIME/CONTRACTOR/INTERN/OTHER` enums mapped. Unknown id → HTTP
+  422 handled as empty. Verified against the public sample widget id.
+- **NEW** plugin `packages/plugins/source-ats-polymer/` (Spec 304) — Polymer.
+  Unauthenticated Public API (`developer.polymer.co`): list
+  `GET https://api.polymer.co/v1/hire/organizations/{slug}/jobs?page={n}&per_page=50`
+  (`{ items, meta }`, walked via `meta.is_last`) + per-job detail `.../jobs/{id}`
+  (concurrency-5 fan-out) for HTML description + department. snake_case wire with
+  defensive camelCase aliases. Verified against tenants `teton`, `return`.
+- **NEW** plugin `packages/plugins/source-ats-vivahr/` (Spec 305) — VivaHR/AvaHR.
+  No anonymous JSON API exists, so it scrapes the public careers HTML at
+  `https://jobs.avahr.com/{tenant}/jobs` (legacy `jobs.vivahr.com` 301-redirects
+  post-rebrand), enumerates detail URLs, and parses the schema.org `JobPosting`
+  JSON-LD per detail page (bounded fan-out). `companySlug` = full `{id}-{slug}`
+  token (e.g. `236-avahr`). Verified against `236-avahr` (4 roles).
+- **NEW** plugin `packages/plugins/source-ats-occupop/` (Spec 306) — Occupop.
+  Unauthenticated Apollo GraphQL gateway:
+  `POST https://gateway.server.occupop.com/graphql` op `LiveJobs`
+  `{ companyKey: "{slug}", tags: [], includeAllBrandsJobs: false }` →
+  `data.careersPage.liveJobs[]`. The query + gateway host were extracted verbatim
+  from the careers SPA bundle (introspection disabled). Unknown key → GraphQL
+  error + `data:null` handled as empty. Verified against `molloygroup` (3 roles).
+- **NEW** plugin `packages/plugins/source-ats-jobadder/` (Spec 307) — JobAdder.
+  The v2 jobs API requires OAuth2, so it scrapes the anonymous hosted Careerpage
+  HTML at `https://clientapps.jobadder.com/{accountId}/{slug}`, parsing
+  `job_items` cards + lazy per-role detail fetches (bounded fan-out). Tenant is
+  an `{accountId}/{slug}` pair; unknown → HTTP 404 handled as empty. Verified
+  against `84381/eq8-recruit`. Caveats logged as **Q-045** (single-page +
+  heuristic field classification).
+- **NEW** plugin `packages/plugins/source-ats-hireology/` (Spec 308) — Hireology.
+  Scrapes the anonymous public `window.startingData.apiToken` minted into the
+  careers page, then GETs the public feed
+  `https://api.hireology.com/v2/public/careers/{slug}?page={n}&page_size=50`
+  (`Authorization: Bearer {token}`) → `{ data, count }`; paginated via bounded
+  `Promise.allSettled`. The bearer is a public, non-credential read-only token
+  (re-scraped per run). Verified against `hireology2` (count 5). Token-bootstrap
+  cadence/caching logged as **Q-046**.
+- All eight follow the `source-ats-clearcompany` template exactly (`@SourcePlugin`
+  decorator, `IScraper`, NestJS `Logger`, partial-results error handling,
+  `descriptionFormat` HTML/MARKDOWN/PLAIN handling, robust epoch/ISO date
+  parsing, `extractEmails`, intra-run dedup by ATS id, `resultsWanted` trim,
+  `companySlug`/`companyUrl` tenant resolution).
+- **Registered centrally** in the four canonical files (CLAUDE.md §4):
+  `site.enum.ts` (`NICEBOARD`, `GOHIRE`, `RECOOTY`, `POLYMER`, `VIVAHR`,
+  `OCCUPOP`, `JOBADDER`, `HIREOLOGY` — Phases 310–317), `packages/plugins/index.ts`
+  (8 imports + `ALL_SOURCE_MODULES` entries), `tsconfig.base.json` path aliases,
+  `jest.config.js` moduleNameMapper.
+- **Specs 301–308** added under `.specify/specs/` (spec/plan/tasks — all phases
+  `[x]`). **Docs:** `docs/ATS_INTEGRATIONS.md` (eight new sections),
+  `docs/index.md` (rows 301–308 + footer), `docs/questions.md` (new **Q-045**,
+  **Q-046**), this `docs/log.md`.
+
+**Verification:**
+
+- `tsc --noEmit --skipLibCheck` per package → **clean (exit 0)** for all eight,
+  plus `packages/models` clean after the eight enum members were registered.
+- `jest --testPathPatterns "source-ats-(niceboard|gohire|recooty|polymer|vivahr|occupop|jobadder|hireology)"`
+  → **8 suites / 32 tests passed**.
+- Registry + health suites (`plugin-registry|registry|health|all-sources|source-modules`)
+  → **8 suites / 100 tests passed** (confirms no `Site` enum collision and the
+  eight new modules register cleanly in `ALL_SOURCE_MODULES`).
+- `npm run lint:docs` → passed (re-run post-edit before commit).
+
+**Notes:**
+
+- The eight platforms were chosen to extend hosted/mid-market ATS coverage with
+  **verifiable anonymous public surfaces** (no operator OAuth required): two pure
+  JSON list feeds (Niceboard, Polymer), one widget list+detail pair (GoHire), one
+  path-key widget (Recooty), one GraphQL gateway (Occupop), one token-bootstrap
+  JSON feed (Hireology), and two HTML/JSON-LD scrapers where no anonymous JSON
+  API exists (VivaHR, JobAdder).
+- Per the brief, **nothing in `ever-jobs/` references any competitor**; the
+  parent `competitor-watch.md` remains the only place competitor repos are named.
+
+---
+
 ## 2026-06-03 — Scheduled run #401 (**FOUR new generic ATS adapters: Cornerstone, Dayforce, Zoho Recruit, ClearCompany** — Specs 297–300, built in parallel)
 
 **Scope:** High-leverage continuation of the run-#400 ATS-adapter direction.

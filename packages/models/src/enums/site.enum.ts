@@ -755,6 +755,22 @@ export enum Site {
   //    Spec 299 wires the previously-orphaned member to a real plugin.)
   // Phase 309: Spec 300 — Source ATS Plugin: ClearCompany
   CLEARCOMPANY = 'clearcompany',
+  // Phase 310: Spec 301 — Source ATS Plugin: Niceboard (hosted job-board platform)
+  NICEBOARD = 'niceboard',
+  // Phase 311: Spec 302 — Source ATS Plugin: GoHire
+  GOHIRE = 'gohire',
+  // Phase 312: Spec 303 — Source ATS Plugin: Recooty
+  RECOOTY = 'recooty',
+  // Phase 313: Spec 304 — Source ATS Plugin: Polymer
+  POLYMER = 'polymer',
+  // Phase 314: Spec 305 — Source ATS Plugin: VivaHR (AvaHR rebrand)
+  VIVAHR = 'vivahr',
+  // Phase 315: Spec 306 — Source ATS Plugin: Occupop
+  OCCUPOP = 'occupop',
+  // Phase 316: Spec 307 — Source ATS Plugin: JobAdder
+  JOBADDER = 'jobadder',
+  // Phase 317: Spec 308 — Source ATS Plugin: Hireology
+  HIREOLOGY = 'hireology',
 }
 
 /**

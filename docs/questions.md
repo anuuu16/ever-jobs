@@ -10,6 +10,59 @@
 
 ---
 
+## Q-045 — JobAdder Careerpage multi-page pagination & unlabelled-field classification
+
+**Context:** Spec 307 (`source-ats-jobadder`, run #402) ships a generic JobAdder
+adapter. JobAdder's structured v2 jobs API requires OAuth2, so the adapter
+scrapes the only anonymous, slug-addressable surface — the hosted Careerpage
+HTML at `https://clientapps.jobadder.com/{accountId}/{slug}`. Two ambiguities
+surfaced: (1) the verified tenants observed were single-page (no visible pager),
+so multi-page pagination is currently unhandled; (2) the listing `<ul>` mixes a
+role's classification, location, and employment type into label-less `<li>`s,
+so those fields are assigned heuristically.
+
+**Options:**
+
+- **A** — Ship single-page + heuristic classification now (correct for observed
+  tenants), defer multi-page and labelled-field parsing until a real multi-page
+  or mis-classified tenant is found. *(chosen default)*
+- **B** — Reverse-engineer the (likely JS/XHR) pager before shipping, blocking
+  the adapter on a tenant that actually paginates.
+- **C** — Switch to the OAuth2 v2 API (`/jobboards/{boardId}/ads`) for fully
+  structured data, accepting that it needs per-tenant operator credentials and
+  therefore is no longer an anonymous public source.
+
+**Default:** **A** — the adapter degrades gracefully (partial results, never
+throws) and matches every tenant verified live in run #402. Revisit when a
+multi-page or mis-classified JobAdder tenant is reported.
+
+---
+
+## Q-046 — Token-bootstrap ATS sources (Hireology) — refresh cadence & caching
+
+**Context:** Spec 308 (`source-ats-hireology`, run #402) reads the public jobs
+feed `https://api.hireology.com/v2/public/careers/{slug}` using an anonymous
+bearer token that the careers page mints into `window.startingData.apiToken`
+(token TTL ~1 day). The adapter re-scrapes a fresh token on every run. This is
+the first ATS adapter in the codebase that bootstraps a short-lived public token
+from an HTML shell before hitting a JSON feed (distinct from header-key feeds
+like ClearCompany or path-key feeds like Recooty).
+
+**Options:**
+
+- **A** — Re-scrape the token per run (current). Simplest, always-valid, one
+  extra HTML GET per scrape. *(chosen default)*
+- **B** — Add a shared token cache (keyed by slug, TTL < token expiry) in the
+  adapter so repeated scrapes within a window skip the bootstrap GET.
+- **C** — Promote a generic "public-token-bootstrap" helper into
+  `@ever-jobs/common` so future token-minting ATS sources reuse it.
+
+**Default:** **A** — correctness over micro-optimization for a per-run scrape;
+revisit with **C** (a shared helper) if/when a second token-bootstrap ATS source
+appears, at which point the pattern is worth extracting.
+
+---
+
 ## Q-044 — Should Dayforce/Cornerstone WAF-gated tenants share the Q-043 browser-fingerprint follow-up?
 
 **Context:** Spec 298 (`source-ats-dayforce`, run #401) ships a generic

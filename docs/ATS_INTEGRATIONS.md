@@ -395,6 +395,102 @@ Talent-management ATS whose career sites are hosted at `https://careers-page.cle
 
 ---
 
+### Niceboard
+
+Hosted job-board platform; each board lives at `https://{slug}.niceboard.co`. Ever Jobs reads the **verified public board search feed** (the same call the board's SPA makes).
+
+- **Method**: GET `https://{slug}.niceboard.co/api/jobs` with a fixed base query (JSON-encoded array filters + `custom_fields={}`), paginated by `limit`/`page`; remaining pages fanned out via bounded `Promise.allSettled`
+- **Auth**: None (the credentialed `/api/v1/jobs?key=` private API is deliberately not used)
+- **Data Format**: JSON `{ jobs, count }`; snake_case job objects with embedded `description_html`, `is_remote`, `apply_url`, `published_at`, nested `location.{city_long,state_long,country_long}`, `category.name`, `jobtype.name`
+- **Tenant Resolution**: board sub-domain from `companySlug` or `companyUrl`; job-detail URL `/job/{id}-{slug}-{board}` (or `/job/{id}-{slug}` when `anonymity_enabled`)
+- **Known Limitation**: server-side filtering and the credentialed private API are non-goals (Spec 301)
+
+---
+
+### GoHire
+
+Hosted careers boards at `jobs.gohire.io`, keyed by an opaque client hash. Ever Jobs reads the **verified public widget feeds**.
+
+- **Method**: list feed GET `https://api2.gohire.io/widget-jobs/{clientHash}` → `{ jobs: [...] }`; per-role detail GET `https://api.gohire.io/widget-job?clientHash={hash}&jobId={id}` hydrates the full HTML description + structured city/county/country via a bounded `Promise.allSettled` (max 8) fan-out
+- **Auth**: None (a browser `User-Agent` header is required; the authenticated dashboard route is not used)
+- **Data Format**: JSON; list rows carry `{id,title,location,salary,type,date,link}` (empty description), detail returns `{client:{name,country},title,type:{name},city,county,country:{code,name},description(HTML),salary}`
+- **Tenant Resolution**: client hash from `companySlug` or `companyUrl`; unknown tenant returns `{}` (HTTP 200, no jobs) → empty
+- **Known Limitation**: list-feed descriptions are empty, so detail hydration is mandatory for full descriptions (Spec 302)
+
+---
+
+### Recooty
+
+Recruiting platform with hosted career pages. Ever Jobs reads the **verified public Job Widget feed**.
+
+- **Method**: GET `https://standaloneapi.recooty.app/api/widget/{widgetId}?language=en` → one envelope `{ career_page_url, team:{ name, slug, jobPosts[] }, translation }`
+- **Auth**: None — the 32-char hex widget id functions as a public read key supplied in the URL path
+- **Data Format**: JSON; `team.jobPosts` rows (`id,title,slug,description,city,state,location_type,employment_type,department,published_at`); `location_type` ∈ `REMOTE/ON_SITE/HYBRID`, `employment_type` ∈ `FULL_TIME/PART_TIME/CONTRACTOR/INTERN/OTHER`
+- **Tenant Resolution**: widget id from `companySlug` or the `companyUrl` `/widget/{id}` segment; job/apply URLs built from `career_page_url` + `team.slug` + `job.slug`; unknown id returns HTTP 422 → empty
+- **Known Limitation**: requires the dashboard-issued widget id (not a human slug) (Spec 303)
+
+---
+
+### Polymer
+
+Modern ATS/careers-page platform. Ever Jobs reads the **verified unauthenticated Public API** (documented at `developer.polymer.co`).
+
+- **Method**: list feed GET `https://api.polymer.co/v1/hire/organizations/{slug}/jobs?page={n}&per_page=50` (paginated `{ items, meta }`, walked via `meta.is_last`); per-job detail GET `.../jobs/{id}` hydrates HTML description + department via a bounded (concurrency 5) fan-out
+- **Auth**: None
+- **Data Format**: JSON; snake_case (`id`, `hash_id`, `title`, `city`, `state_region`, `country`, `display_location`, `remoteness_pretty`, `kind_pretty`, `job_post_url`, `organization_name`, `job_category_name`, `published_at`); camelCase aliases modelled defensively
+- **Tenant Resolution**: slug from `companySlug` or `companyUrl`; ATS id = numeric `id`, falling back to `hash_id`
+- **Known Limitation**: list rows carry no description, so detail hydration is mandatory; a failed detail fetch keeps the role with a null description (Spec 304)
+
+---
+
+### VivaHR (AvaHR)
+
+Multi-tenant ATS; public careers sites are server-rendered HTML at `https://jobs.avahr.com/{tenant}/jobs` (legacy `jobs.vivahr.com` 301-redirects after the AvaHR rebrand). No anonymous JSON API exists, so Ever Jobs scrapes the **verified public HTML + schema.org JSON-LD**.
+
+- **Method**: GET the listing page to enumerate each role's `/{tenant}/{jobId}-{jobSlug}/` detail URL, then parse the `JobPosting` JSON-LD embedded in each detail page via a bounded `Promise.allSettled` fan-out
+- **Auth**: None (the developer API and WordPress plugin both require a per-tenant API key and are intentionally not used)
+- **Data Format**: schema.org JSON-LD (`title`, HTML `description`, `datePosted`, `employmentType`, `industry`, `identifier.value` job id, `hiringOrganization`, `baseSalary`, `jobLocation`, `jobLocationType` for remote)
+- **Tenant Resolution**: `companySlug` is the full `{id}-{slug}` tenant token (e.g. `236-avahr`), or extracted from a `companyUrl`
+- **Known Limitation**: anonymous surface is HTML-only (no JSON feed); descriptions require per-detail fetches (Spec 305)
+
+---
+
+### Occupop
+
+Dublin-based ATS; tenant careers sites (`{slug}.occupop-careers.com`) are backed by a public Apollo GraphQL gateway. Ever Jobs reads the **verified unauthenticated GraphQL feed**.
+
+- **Method**: POST `https://gateway.server.occupop.com/graphql`, operation `LiveJobs`, variables `{ companyKey: "{slug}", tags: [], includeAllBrandsJobs: false }` → `data.careersPage.liveJobs[]`
+- **Auth**: None (the GraphQL query + gateway host were extracted verbatim from the careers SPA bundle; introspection is disabled)
+- **Data Format**: JSON; `liveJobs` rows (`uuid`, `title`, HTML `description`, `publishedAt`, `companyName`, `location{city,country}`, `hiringCompany{name}`, `period` employment type, `subsectors[{name,sector{name}}]`)
+- **Tenant Resolution**: `companyKey` from `companySlug`/`companyUrl`; apply page `https://{slug}.occupop-careers.com/jobs/{uuid}/apply`; unknown key returns a GraphQL error + `data:null` → empty
+- **Known Limitation**: location exposes only city/country (no state); the REST `/rest/jobs` route requires a per-tenant token and is not used (Spec 306)
+
+---
+
+### JobAdder
+
+ATS powering many hosted job boards. The structured v2 API requires OAuth2, so Ever Jobs scrapes the **verified anonymous hosted Careerpage HTML**.
+
+- **Method**: GET `https://clientapps.jobadder.com/{accountId}/{slug}` (server-rendered HTML), parse each `job_items` card for title/jobId/date/location/employmentType/department, then lazily fetch each detail page `/{accountId}/{slug}/{jobId}/{titleSlug}` for the full description via a bounded `Promise.allSettled` fan-out
+- **Auth**: None (the OAuth2 v2 jobs API and opaque-key JS widget endpoints are not used)
+- **Data Format**: HTML (listing cards + detail-page description container)
+- **Tenant Resolution**: tenant is an `{accountId}/{slug}` **pair** — `companySlug` must be `"{accountId}/{slug}"` (e.g. `84381/eq8-recruit`) or `companyUrl` a full Careerpage URL; a bare slug is rejected; unknown account/slug returns HTTP 404 → empty
+- **Known Limitation**: listing-page only (multi-page pagination deferred — Q-044); the unlabelled listing `<ul>` is classified heuristically into classification/location/employmentType (Spec 307)
+
+---
+
+### Hireology
+
+Multi-tenant SMB/automotive/healthcare careers platform at `careers.hireology.com/{slug}`. Ever Jobs reads the **verified public jobs feed**, bootstrapping the anonymous token the careers page mints.
+
+- **Method**: scrape the careers shell for `window.startingData.apiToken` (an anonymous, short-lived public bearer minted into every careers page), then GET `https://api.hireology.com/v2/public/careers/{slug}?page={n}&page_size=50` with `Authorization: Bearer {token}` → `{ data, count, page, page_size }`; remaining pages fanned out via bounded `Promise.allSettled`
+- **Auth**: None in practice — the bearer is not a private credential; it is minted unauthenticated into the public careers page and only authorizes the read-only public feed (re-scraped per run)
+- **Data Format**: JSON; snake_case (`id`, `name`, `job_description` HTML, `created_at` ISO, `status`, `employment_status`, `remote`, `locations[].{city,state,zip_code,address}`, `organization.{id,name,type}`, `job_family.{id,name}`, `career_site_url`, `application_path`)
+- **Tenant Resolution**: slug from `companySlug`/`companyUrl`; unknown tenant → HTTP 404 / no token → empty
+- **Known Limitation**: depends on the public-token bootstrap remaining un-gated (Spec 308)
+
+---
+
 ## Architecture
 
 Each ATS integration is an independent NestJS package following the `IScraper` interface:
