@@ -10,6 +10,38 @@
 
 ---
 
+## Q-063 — Build method for Greenhouse company-direct source batches: deterministic main-loop probe vs. parallel research-agent workflow
+
+**Context.** Run #415 pivoted from generic ATS adapters back to company-direct sources, shipping 17
+new Greenhouse-hosted plugins (Specs 427–443). Unlike ATS adapters — which need genuine per-platform
+research of pagination and (often anonymous) auth flows and therefore justify a fan-out of research
+subagents — the company-direct Greenhouse template is fully deterministic: every plugin hits the
+same public `boards-api.greenhouse.io/v1/boards/<slug>/jobs` shape, and the only per-company facts
+needed are (a) which slug is a live valid board, (b) the board's real brand name, and (c) a few real
+listings for the fixture. All three are obtained by a direct API probe in the main loop.
+
+**Options.**
+- **A — Deterministic main-loop probe (chosen default).** `curl`/`fetch` each candidate slug + the
+  board-meta endpoint, keep boards that return ≥3 live roles AND whose `name` matches the intended
+  brand, capture 3 real listings into the fixture, then run the `scaffold-company-source.ts` batch
+  generator. Cheapest, fastest, fully reproducible; and it is what caught the `remote` → "General
+  Assembly Remote Jobs" and ambiguous `warp`/`knock`/`ghost` mis-mapping traps this run.
+- **B — Parallel research-agent workflow.** Spawn one agent per candidate to research + verify +
+  compose the descriptor. Higher token cost and more variance for facts the probe already returns
+  deterministically; reserves its real value (auth-flow discovery) for a problem company-direct
+  Greenhouse boards do not have.
+- **C — Hybrid.** Deterministic probe for slug/brand/listing verification, plus a light agent pass
+  only for prose metadata (sector/HQ/description) on companies the main loop does not already know.
+
+**Default (proceeding):** **A** for Greenhouse company-direct batches; reserve the parallel-agent
+workflow (Option B) for ATS adapters that require per-platform auth-flow research. Revisit toward C
+if a future batch targets less-well-known companies whose sector/HQ the main loop cannot author
+accurately.
+
+**Resolution.** _(pending human review — default A continues.)_
+
+---
+
 ## Q-062 — Live re-confirmation pass for the 3 other defensive ATS surfaces shipped in run #414 (Expr3ss, Connexys, HReasily)
 
 **Context:** Run #414 shipped 12 new `source-ats-*` adapters (Specs 415–426). **8 were verified live

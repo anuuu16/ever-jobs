@@ -1007,6 +1007,40 @@ export enum Site {
   CONNEXYS = 'connexys',
   // Phase 435: Spec 426 — Source ATS Plugin: HReasily (hreasily.com)
   HREASILY = 'hreasily',
+  // Phase 436: Spec 427 — Source Company Plugin: Gemini
+  GEMINI = 'gemini',
+  // Phase 437: Spec 428 — Source Company Plugin: Ripple
+  RIPPLE = 'ripple',
+  // Phase 438: Spec 429 — Source Company Plugin: Abnormal Security
+  ABNORMALSECURITY = 'abnormalsecurity',
+  // Phase 439: Spec 430 — Source Company Plugin: Hightouch
+  HIGHTOUCH = 'hightouch',
+  // Phase 440: Spec 431 — Source Company Plugin: Grafana Labs
+  GRAFANALABS = 'grafanalabs',
+  // Phase 441: Spec 432 — Source Company Plugin: Cockroach Labs
+  COCKROACHLABS = 'cockroachlabs',
+  // Phase 442: Spec 433 — Source Company Plugin: Verkada
+  VERKADA = 'verkada',
+  // Phase 443: Spec 434 — Source Company Plugin: Nextdoor
+  NEXTDOOR = 'nextdoor',
+  // Phase 444: Spec 435 — Source Company Plugin: Mindbody
+  MINDBODY = 'mindbody',
+  // Phase 445: Spec 436 — Source Company Plugin: Omada Health
+  OMADAHEALTH = 'omadahealth',
+  // Phase 446: Spec 437 — Source Company Plugin: Sendbird
+  SENDBIRD = 'sendbird',
+  // Phase 447: Spec 438 — Source Company Plugin: ClickHouse
+  CLICKHOUSE = 'clickhouse',
+  // Phase 448: Spec 439 — Source Company Plugin: SingleStore
+  SINGLESTORE = 'singlestore',
+  // Phase 449: Spec 440 — Source Company Plugin: YugabyteDB
+  YUGABYTE = 'yugabyte',
+  // Phase 450: Spec 441 — Source Company Plugin: Wrike
+  WRIKE = 'wrike',
+  // Phase 451: Spec 442 — Source Company Plugin: UJET
+  UJET = 'ujet',
+  // Phase 452: Spec 443 — Source Company Plugin: Materialize
+  MATERIALIZE = 'materialize',
 }
 
 /**

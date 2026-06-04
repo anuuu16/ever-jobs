@@ -15,6 +15,99 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #415 (**SEVENTEEN new Greenhouse company-direct source plugins: Gemini, Ripple, Abnormal Security, Hightouch, Grafana Labs, Cockroach Labs, Verkada, Nextdoor, Mindbody, Omada Health, Sendbird, ClickHouse, SingleStore, YugabyteDB, Wrike, UJET, Materialize** — Specs 427–443)
+
+**Scope:** The generic-ATS-adapter direction (runs #400→#414) reached **174 `source-ats-*`
+adapters**, exhausting every distinct ATS platform on the `SOURCE_ADOPTION_BACKLOG.md` proposed
+rows and every regional tier surfaced by prior research. Per the scheduled-task directive to "add
+more large companies jobs feeds parsers (as sources)" when the ATS surface is saturated, this run
+**pivots back to company-direct sources** and ships **17 new large-tech-company Greenhouse-direct
+source plugins** (Specs 427–443) via the deterministic `scripts/scaffold-company-source.ts` batch
+generator. At run start the corpus held **291 `source-company-*` plugins / 174 `source-ats-*`
+adapters / 580 source plugin packages total / 426 specs**; all three OTHERS reference repos
+(`Ats-scrapers`, `JobSpy`, `Jobspy-api`) were pulled and reported **no upstream changes** (recorded
+in the parent-directory competitor-watch file — never in this repo).
+
+**Selection method — live deterministic probe (not a workflow of research agents):** all candidate
+company slugs were verified live via direct `curl`/`fetch` against the public Greenhouse boards API
+(`https://boards-api.greenhouse.io/v1/boards/<slug>/jobs` and the board-meta
+`…/boards/<slug>` endpoint) to confirm (a) the board returns a 200 with a non-empty `jobs` array,
+and (b) the board's `name` metadata matches the intended brand. This caught and **rejected two
+mis-mapped slugs**: `remote` → board name "General Assembly Remote Jobs" (NOT Remote.com), and the
+ambiguous `warp`/`knock`/`ghost` boards (dropped to avoid wrong-company labelling). Three real live
+listings per board were captured into each plugin's fixture so the unit suites exercise faithful
+wire shapes.
+
+**Confidence:** **all 17 verified live 2026-06-04** (every board returned ≥3 live roles on probe;
+job counts ranged from 3 (Materialize) to 311 (Verkada)).
+
+**Validation:** project-wide `tsc --noEmit -p tsconfig.base.json` is **clean (exit 0)**; all **17
+new unit suites pass (187 tests)**; the `store-registry` + `source-ats-batch-2.integration` suites
+(which import `ALL_SOURCE_MODULES`) pass (**51 tests**) — confirming **no duplicate-`Site`
+collisions** and sound four-file registry wiring; **docs-lint passes** (all 51 new spec docs linked
+from `docs/index.md`).
+
+**Codebase improvement this run:** fixed a latent robustness bug in the shared
+`scripts/scaffold-company-source.ts` generator — the generated happy-path unit test asserted
+`first.departments[0].name` unconditionally, which threw `TypeError` for the (common) Greenhouse
+boards that expose **no public departments** (the boards `/jobs` list endpoint returns
+`departments: []`). The generated test now derives `firstDept` null-safely
+(`first.departments?.[0] ? …trim() : null`), so the scaffolder is correct for department-less
+boards on all future runs as well.
+
+**Changes:**
+
+- **17 new `source-company-*` plugin packages** (Specs 427–443), each with the canonical 7-file
+  layout (`package.json`, `tsconfig.json`, `src/index.ts`, `src/<slug>.module.ts`,
+  `src/<slug>.service.ts`, `__tests__/<slug>.service.spec.ts`, `__tests__/fixtures/<slug>-jobs.json`)
+  and a full `.specify/specs/<NNN>-source-company-<slug>/` spec/plan/tasks triplet. All follow the
+  canonical Greenhouse variant-2 + D-08/D-09/D-10/D-11 company-direct template:
+  - **427 `source-company-gemini`** — Gemini (regulated crypto exchange & custodian, NYC; 27 roles).
+  - **428 `source-company-ripple`** — Ripple (XRP Ledger crypto payments, SF; 128 roles).
+  - **429 `source-company-abnormalsecurity`** — Abnormal Security (AI-native email security, SF; 87 roles).
+  - **430 `source-company-hightouch`** — Hightouch (composable CDP / reverse ETL, SF; 66 roles).
+  - **431 `source-company-grafanalabs`** — Grafana Labs (open-source observability, NYC; 135 roles).
+  - **432 `source-company-cockroachlabs`** — Cockroach Labs (distributed SQL, NYC; 34 roles).
+  - **433 `source-company-verkada`** — Verkada (cloud physical security & IoT, San Mateo; 311 roles).
+  - **434 `source-company-nextdoor`** — Nextdoor (local social network, SF; 18 roles).
+  - **435 `source-company-mindbody`** — Mindbody (wellness/fitness business SaaS, SLO; 35 roles).
+  - **436 `source-company-omadahealth`** — Omada Health (virtual chronic-condition care, SF; 26 roles).
+  - **437 `source-company-sendbird`** — Sendbird (in-app chat/conversations API, San Mateo; 16 roles).
+  - **438 `source-company-clickhouse`** — ClickHouse (open-source OLAP database, SF; 167 roles).
+  - **439 `source-company-singlestore`** — SingleStore (real-time distributed SQL, SF; 47 roles).
+  - **440 `source-company-yugabyte`** — YugabyteDB (distributed SQL, Sunnyvale; 33 roles).
+  - **441 `source-company-wrike`** — Wrike (collaborative work management, San Jose; 49 roles).
+  - **442 `source-company-ujet`** — UJET (cloud contact-center / CCaaS, SF; 5 roles).
+  - **443 `source-company-materialize`** — Materialize (streaming/operational SQL database, NYC; 3 roles).
+- **Four shared wiring files** updated (via the EOL-aware `scripts/.wire-batch.js` helper — uses
+  literal `split/join` replacement to avoid `String.replace` `$'`-pattern corruption on the
+  `$`-terminated jest mapper keys): `packages/models/src/enums/site.enum.ts` (17 enum values,
+  Phases 436–452), `packages/plugins/index.ts` (17 imports + 17 `ALL_SOURCE_MODULES` entries),
+  `tsconfig.base.json` (17 path aliases), `jest.config.js` (17 `moduleNameMapper` entries).
+- **`scripts/scaffold-company-source.ts`** — null-safe department assertion fix (see above).
+- **`docs/index.md`** — 17 new spec rows (427–443) + "Last revised" bump.
+
+**Notes:**
+
+- The per-batch helpers used this run (`.batch-input.json`, `scripts/.gen-batch.js`,
+  `scripts/.wire-batch.js`, `scripts/.probe-listings.js`, `scripts/.listings.json`,
+  `scripts/.index-rows.txt`) were transient scratch artifacts and were **removed after use** —
+  they are fully regenerable from the live Greenhouse probe. The durable, committed artifacts are
+  the 17 plugin packages + 17 spec triplets, the four wiring-file edits, the null-safe fix to the
+  reusable `scripts/scaffold-company-source.ts` generator, and the doc updates. (NB: the EOL-aware
+  wiring helper used literal `split/join` replacement, not `String.replace`, specifically because
+  the jest mapper keys are `$`-terminated and `String.replace`'s `$'`/`$&` replacement patterns
+  would otherwise corrupt the file — a pitfall worth remembering for any future shared-file batch
+  editor.)
+- Selection deliberately favored **deterministic live probing in the main loop** over a fan-out of
+  research subagents: the company-direct template is fully templated and the only per-company facts
+  needed (real listings, brand identity) are obtained more reliably and cheaply by a direct API
+  probe than by N agents — and the probe is what caught the `remote`/`warp` mis-mapping traps. Q-063
+  records this choice with a default to "keep deterministic probe for Greenhouse company batches;
+  reserve the parallel-agent workflow for ATS adapters that require per-platform auth-flow research."
+
+---
+
 ## 2026-06-04 — Scheduled run #414 (**TWELVE new generic ATS adapters: Employment Hero, Talentera, Subscribe-HR, Roubler, Expr3ss, Access PeopleHR, Breathe HR, VidCruiter, Sympa, CVWarehouse, Connexys, HReasily** — Specs 415–426, built in parallel)
 
 **Scope:** Direct continuation of the run-#400→#413 generic-ATS-adapter direction. At run start

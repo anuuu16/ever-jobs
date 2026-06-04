@@ -580,6 +580,23 @@ import { AppianModule } from './source-company-appian';
 import { AppierModule } from './source-company-appier';
 import { AppletreeprepModule } from './source-company-appletreeprep';
 import { ApplytoaktosModule } from './source-company-applytoaktos';
+import { GeminiModule } from './source-company-gemini';
+import { RippleModule } from './source-company-ripple';
+import { AbnormalsecurityModule } from './source-company-abnormalsecurity';
+import { HightouchModule } from './source-company-hightouch';
+import { GrafanalabsModule } from './source-company-grafanalabs';
+import { CockroachlabsModule } from './source-company-cockroachlabs';
+import { VerkadaModule } from './source-company-verkada';
+import { NextdoorModule } from './source-company-nextdoor';
+import { MindbodyModule } from './source-company-mindbody';
+import { OmadahealthModule } from './source-company-omadahealth';
+import { SendbirdModule } from './source-company-sendbird';
+import { ClickhouseModule } from './source-company-clickhouse';
+import { SinglestoreModule } from './source-company-singlestore';
+import { YugabyteModule } from './source-company-yugabyte';
+import { WrikeModule } from './source-company-wrike';
+import { UjetModule } from './source-company-ujet';
+import { MaterializeModule } from './source-company-materialize';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1153,4 +1170,21 @@ export const ALL_SOURCE_MODULES = [
   AppierModule,
   AppletreeprepModule,
   ApplytoaktosModule,
+  GeminiModule,
+  RippleModule,
+  AbnormalsecurityModule,
+  HightouchModule,
+  GrafanalabsModule,
+  CockroachlabsModule,
+  VerkadaModule,
+  NextdoorModule,
+  MindbodyModule,
+  OmadahealthModule,
+  SendbirdModule,
+  ClickhouseModule,
+  SinglestoreModule,
+  YugabyteModule,
+  WrikeModule,
+  UjetModule,
+  MaterializeModule,
 ];

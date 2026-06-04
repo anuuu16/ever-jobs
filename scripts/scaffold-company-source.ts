@@ -555,8 +555,12 @@ describe('${d.serviceName} — Spec ${d.specNo} / T04', () => {
         'https://job-boards.greenhouse.io/${d.slug}/jobs/' + first.id,
       );
       expect(job0?.jobUrl).toContain('job-boards.greenhouse.io/${d.slug}/jobs/');
-      // D-11 department-trim lock.
-      expect(job0?.department).toBe(String(first.departments[0].name).trim());
+      // D-11 department-trim lock (null-safe: some boards expose no departments).
+      const firstDept =
+        first.departments && first.departments[0]
+          ? String(first.departments[0].name).trim()
+          : null;
+      expect(job0?.department).toBe(firstDept);
       expect(job0?.location?.city).toBe(first.location.name);
       expect(job0?.isRemote).toBe(
         String(first.location.name).toLowerCase().includes('remote'),
