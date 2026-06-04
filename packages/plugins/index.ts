@@ -611,6 +611,34 @@ import { BuilderModule } from './source-company-builder';
 import { StoryblokModule } from './source-company-storyblok';
 import { ImplyModule } from './source-company-imply';
 import { MotiveModule } from './source-company-motive';
+import { RelativityModule } from './source-company-relativity';
+import { TripactionsModule } from './source-company-tripactions';
+import { TenstorrentModule } from './source-company-tenstorrent';
+import { DiscoModule } from './source-company-disco';
+import { FalModule } from './source-company-fal';
+import { EpirusModule } from './source-company-epirus';
+import { EverlawModule } from './source-company-everlaw';
+import { SurveymonkeyModule } from './source-company-surveymonkey';
+import { TuringModule } from './source-company-turing';
+import { HuntressModule } from './source-company-huntress';
+import { FireworksaiModule } from './source-company-fireworksai';
+import { HeygenModule } from './source-company-heygen';
+import { RunpodModule } from './source-company-runpod';
+import { MergeModule } from './source-company-merge';
+import { AlloyModule } from './source-company-alloy';
+import { DashlaneModule } from './source-company-dashlane';
+import { SpeechmaticsModule } from './source-company-speechmatics';
+import { HighnoteModule } from './source-company-highnote';
+import { LithicModule } from './source-company-lithic';
+import { FourkitesModule } from './source-company-fourkites';
+import { CometModule } from './source-company-comet';
+import { GalileoModule } from './source-company-galileo';
+import { InflectionaiModule } from './source-company-inflectionai';
+import { StabilityaiModule } from './source-company-stabilityai';
+import { WarpModule } from './source-company-warp';
+import { CurrentModule } from './source-company-current';
+import { KnockModule } from './source-company-knock';
+import { MercariModule } from './source-company-mercari';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1215,4 +1243,32 @@ export const ALL_SOURCE_MODULES = [
   StoryblokModule,
   ImplyModule,
   MotiveModule,
+  RelativityModule,
+  TripactionsModule,
+  TenstorrentModule,
+  DiscoModule,
+  FalModule,
+  EpirusModule,
+  EverlawModule,
+  SurveymonkeyModule,
+  TuringModule,
+  HuntressModule,
+  FireworksaiModule,
+  HeygenModule,
+  RunpodModule,
+  MergeModule,
+  AlloyModule,
+  DashlaneModule,
+  SpeechmaticsModule,
+  HighnoteModule,
+  LithicModule,
+  FourkitesModule,
+  CometModule,
+  GalileoModule,
+  InflectionaiModule,
+  StabilityaiModule,
+  WarpModule,
+  CurrentModule,
+  KnockModule,
+  MercariModule,
 ];

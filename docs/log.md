@@ -15,6 +15,105 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #417 (**TWENTY-EIGHT new Greenhouse company-direct source plugins: Relativity Space, Navan, Tenstorrent, DISCO, fal, Epirus, Everlaw, SurveyMonkey, Turing, Huntress, Fireworks AI, HeyGen, Runpod, Merge, Alloy, Dashlane, Speechmatics, Highnote, Lithic, FourKites, Comet, Galileo, Inflection AI, Stability AI, Warp, Current, Knock, Mercari** — Specs 458–485)
+
+**Scope:** Direct continuation of the run-#416 company-direct Greenhouse direction. At run start the
+corpus held **322 `source-company-*` plugins / 174 `source-ats-*` adapters / 605 source plugin
+packages total / 452 specs / last enum Phase 466**; all three OTHERS reference repos
+(`Ats-scrapers` @ `b45c12a`, `JobSpy` @ `fda080a`, `Jobspy-api` @ `26bb6f4`) were pulled and
+reported **no upstream changes** (`git rev-list --left-right --count HEAD...@{u}` = `0  0` for all
+three; recorded in the parent-directory competitor-watch file — never in this repo). Per the
+scheduled-task directive to "add more large companies jobs feeds parsers (as sources)" when the ATS
+surface is saturated, this run ships **28 new large-company Greenhouse-direct source plugins**
+(Specs 458–485) via the deterministic `scripts/scaffold-company-source.ts` batch generator, spanning
+under-covered verticals: aerospace/launch (**Relativity Space**), defense directed-energy
+(**Epirus**), AI/ML infrastructure (**fal**, **Fireworks AI**, **Runpod**, **Tenstorrent**,
+**Inflection AI**, **Stability AI**), generative-AI media/eval (**HeyGen**, **Comet**, **Galileo**,
+**Speechmatics**), legal tech (**DISCO**, **Everlaw**), corporate travel/expense (**Navan**),
+survey/experience (**SurveyMonkey**), remote-talent (**Turing**), cybersecurity (**Huntress**,
+**Dashlane**), embedded fintech / card-issuing / identity (**Highnote**, **Lithic**, **Alloy**,
+**Current**), supply-chain visibility (**FourKites**), unified-API / dev-infra (**Merge**, **Knock**,
+**Warp**), and e-commerce marketplace (**Mercari**).
+
+**Selection method — live deterministic probe (per Q-063 default):** two candidate waves of
+well-known companies (~250 slugs total) were probed live against the public Greenhouse boards API
+(`https://boards-api.greenhouse.io/v1/boards/<slug>/jobs?content=false` + board-meta
+`…/boards/<slug>`), filtered against the 322 already-covered board tokens, and accepted only boards
+that returned a 200 with ≥3 live roles AND a board-name that matched the intended brand. The
+board-name gate confirmed several non-obvious mappings: **`tripactions` resolves to board name
+"Navan"** (the renamed TripActions — display name set to **Navan**), **`relativity` resolves to
+"Relativity Space"** (the rocket company, NOT the eDiscovery firm — display name set to **Relativity
+Space**), and **`merge` resolves to "Merge API"** (the unified-API company). All 28 enum keys, plugin
+slugs and package directories were verified collision-free against the existing
+`source-company-*` / `source-ats-*` corpus before scaffolding. Three real live listings per board
+were captured into each plugin's fixture so the unit suites exercise faithful wire shapes.
+
+**Confidence:** **all 28 verified live 2026-06-04** (every board returned ≥3 live roles on probe;
+job counts ranged from 3 (Mercari) to 295 (Relativity Space)).
+
+**Validation:** project-wide `tsc --noEmit -p tsconfig.base.json` is **clean (exit 0)**; all **28
+new unit suites pass** and the `source-ats-batch-2.integration` suite (which imports
+`ALL_SOURCE_MODULES`) passes — combined **328 tests across 30 suites** — confirming **no
+duplicate-`Site` collisions** and sound four-file registry wiring; the `store-registry` suite passes
+(part of the 116-test smoke run); **docs-lint passes** (all 28 new spec triplets linked from
+`docs/index.md`).
+
+**Changes:**
+
+- **28 new `source-company-*` plugin packages** (Specs 458–485), each with the canonical 10-file
+  layout (`package.json`, `tsconfig.json`, `src/index.ts`, `src/<slug>.module.ts`,
+  `src/<slug>.service.ts`, `__tests__/<slug>.service.spec.ts`, `__tests__/fixtures/<slug>-jobs.json`)
+  and a full `.specify/specs/<NNN>-source-company-<slug>/` spec/plan/tasks triplet, all following
+  the canonical Greenhouse variant-2 + D-08/D-09/D-10/D-11 company-direct template:
+  - **458 `source-company-relativity`** — Relativity Space (aerospace/rockets, Long Beach; 295 roles).
+  - **459 `source-company-tripactions`** — Navan (corporate travel & expense, Palo Alto; 215 roles).
+  - **460 `source-company-tenstorrent`** — Tenstorrent (AI & RISC-V semiconductors, Toronto; 121 roles).
+  - **461 `source-company-disco`** — DISCO (legal tech / ediscovery, Austin; 49 roles).
+  - **462 `source-company-fal`** — fal (generative-media AI inference, SF; 44 roles).
+  - **463 `source-company-epirus`** — Epirus (defense directed-energy, Torrance; 38 roles).
+  - **464 `source-company-everlaw`** — Everlaw (legal tech / litigation, Oakland; 36 roles).
+  - **465 `source-company-surveymonkey`** — SurveyMonkey (survey & XM software, San Mateo; 31 roles).
+  - **466 `source-company-turing`** — Turing (AI & remote-engineering talent, Palo Alto; 31 roles).
+  - **467 `source-company-huntress`** — Huntress (cybersecurity / managed SOC, Ellicott City; 29 roles).
+  - **468 `source-company-fireworksai`** — Fireworks AI (generative-AI inference, Redwood City; 28 roles).
+  - **469 `source-company-heygen`** — HeyGen (generative-AI video/avatars, Los Angeles; 22 roles).
+  - **470 `source-company-runpod`** — Runpod (GPU cloud infrastructure, Wilmington DE; 21 roles).
+  - **471 `source-company-merge`** — Merge (unified API integrations, SF; 21 roles).
+  - **472 `source-company-alloy`** — Alloy (identity & fraud-prevention fintech, NYC; 19 roles).
+  - **473 `source-company-dashlane`** — Dashlane (password / credential security, NYC; 17 roles).
+  - **474 `source-company-speechmatics`** — Speechmatics (speech-recognition AI, Cambridge UK; 16 roles).
+  - **475 `source-company-highnote`** — Highnote (embedded fintech / card issuing, SF; 9 roles).
+  - **476 `source-company-lithic`** — Lithic (card-issuing fintech infra, NYC; 9 roles).
+  - **477 `source-company-fourkites`** — FourKites (supply-chain visibility, Chicago; 8 roles).
+  - **478 `source-company-comet`** — Comet (MLOps / experiment tracking, NYC; 6 roles).
+  - **479 `source-company-galileo`** — Galileo (AI evaluation & observability, SF; 6 roles).
+  - **480 `source-company-inflectionai`** — Inflection AI (enterprise AI, Palo Alto; 5 roles).
+  - **481 `source-company-stabilityai`** — Stability AI (open generative-AI models, London; 5 roles).
+  - **482 `source-company-warp`** — Warp (AI terminal / dev tools, NYC; 4 roles).
+  - **483 `source-company-current`** — Current (consumer fintech / neobank, NYC; 4 roles).
+  - **484 `source-company-knock`** — Knock (developer notification infra, NYC; 4 roles).
+  - **485 `source-company-mercari`** — Mercari (C2C e-commerce marketplace, Tokyo; 3 roles).
+- **Four shared wiring files** updated via the EOL-aware line-splice helper (`.wire.js`):
+  `packages/models/src/enums/site.enum.ts` (28 enum values, Phases 467–494),
+  `packages/plugins/index.ts` (28 imports + 28 `ALL_SOURCE_MODULES` entries), `tsconfig.base.json`
+  (28 path aliases), `jest.config.js` (28 `moduleNameMapper` entries).
+- **`docs/index.md`** — 28 new spec rows (458–485) appended to the spec catalogue; "Last revised"
+  footer updated to run #417.
+
+**Notes:**
+
+- Probe-driven gating accepted only boards whose returned board-name matched the intended brand,
+  which is how `tripactions`→"Navan", `relativity`→"Relativity Space", and `merge`→"Merge API" were
+  correctly labelled rather than mis-mapped.
+- Batch generated and wired deterministically (scaffolder + line-splice scripts) rather than via
+  parallel hand-authoring agents — the deterministic path is conflict-free and idempotent for the
+  four shared wiring files, which is safer than N agents racing on the same files. Temp build
+  scripts (`.batch-build.js`, `.batch-input.json`, `.enriched.json`, `.enrich.js`, `.wire.js`,
+  `.docrows.js`) are scratch artifacts and are removed before commit.
+- All three OTHERS competitor repos reported no upstream changes this run.
+
+---
+
 ## 2026-06-04 — Scheduled run #416 (**FOURTEEN new Greenhouse company-direct source plugins: Waymo, Remote, Riot Games, Lucid Motors, Nuro, Together AI, Fireblocks, Tailscale, project44, Salesloft, Builder.io, Storyblok, Imply, Motive** — Specs 444–457)
 
 **Scope:** Direct continuation of the run-#415 company-direct Greenhouse direction. At run start the

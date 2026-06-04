@@ -1069,6 +1069,62 @@ export enum Site {
   IMPLY = 'imply',
   // Phase 466: Spec 457 — Source Company Plugin: Motive
   MOTIVE = 'motive',
+  // Phase 467: Spec 458 — Source Company Plugin: Relativity Space
+  RELATIVITY = 'relativity',
+  // Phase 468: Spec 459 — Source Company Plugin: Navan
+  TRIPACTIONS = 'tripactions',
+  // Phase 469: Spec 460 — Source Company Plugin: Tenstorrent
+  TENSTORRENT = 'tenstorrent',
+  // Phase 470: Spec 461 — Source Company Plugin: DISCO
+  DISCO = 'disco',
+  // Phase 471: Spec 462 — Source Company Plugin: fal
+  FAL = 'fal',
+  // Phase 472: Spec 463 — Source Company Plugin: Epirus
+  EPIRUS = 'epirus',
+  // Phase 473: Spec 464 — Source Company Plugin: Everlaw
+  EVERLAW = 'everlaw',
+  // Phase 474: Spec 465 — Source Company Plugin: SurveyMonkey
+  SURVEYMONKEY = 'surveymonkey',
+  // Phase 475: Spec 466 — Source Company Plugin: Turing
+  TURING = 'turing',
+  // Phase 476: Spec 467 — Source Company Plugin: Huntress
+  HUNTRESS = 'huntress',
+  // Phase 477: Spec 468 — Source Company Plugin: Fireworks AI
+  FIREWORKSAI = 'fireworksai',
+  // Phase 478: Spec 469 — Source Company Plugin: HeyGen
+  HEYGEN = 'heygen',
+  // Phase 479: Spec 470 — Source Company Plugin: Runpod
+  RUNPOD = 'runpod',
+  // Phase 480: Spec 471 — Source Company Plugin: Merge
+  MERGE = 'merge',
+  // Phase 481: Spec 472 — Source Company Plugin: Alloy
+  ALLOY = 'alloy',
+  // Phase 482: Spec 473 — Source Company Plugin: Dashlane
+  DASHLANE = 'dashlane',
+  // Phase 483: Spec 474 — Source Company Plugin: Speechmatics
+  SPEECHMATICS = 'speechmatics',
+  // Phase 484: Spec 475 — Source Company Plugin: Highnote
+  HIGHNOTE = 'highnote',
+  // Phase 485: Spec 476 — Source Company Plugin: Lithic
+  LITHIC = 'lithic',
+  // Phase 486: Spec 477 — Source Company Plugin: FourKites
+  FOURKITES = 'fourkites',
+  // Phase 487: Spec 478 — Source Company Plugin: Comet
+  COMET = 'comet',
+  // Phase 488: Spec 479 — Source Company Plugin: Galileo
+  GALILEO = 'galileo',
+  // Phase 489: Spec 480 — Source Company Plugin: Inflection AI
+  INFLECTIONAI = 'inflectionai',
+  // Phase 490: Spec 481 — Source Company Plugin: Stability AI
+  STABILITYAI = 'stabilityai',
+  // Phase 491: Spec 482 — Source Company Plugin: Warp
+  WARP = 'warp',
+  // Phase 492: Spec 483 — Source Company Plugin: Current
+  CURRENT = 'current',
+  // Phase 493: Spec 484 — Source Company Plugin: Knock
+  KNOCK = 'knock',
+  // Phase 494: Spec 485 — Source Company Plugin: Mercari
+  MERCARI = 'mercari',
 }
 
 /**
