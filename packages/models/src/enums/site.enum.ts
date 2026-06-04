@@ -1283,6 +1283,34 @@ export enum Site {
   ELECTRIC_HYDROGEN = 'eh2',
   // Phase 573: Spec 564 — Source Company Plugin: Tide
   TIDE = 'tide',
+  // Phase 574: Spec 565 — Source Company Plugin: Imbue
+  IMBUE = 'imbue',
+  // Phase 575: Spec 566 — Source Company Plugin: One Medical
+  ONE_MEDICAL = 'onemedical',
+  // Phase 576: Spec 567 — Source Company Plugin: Relay Therapeutics
+  RELAY_THERAPEUTICS = 'relaytherapeutics',
+  // Phase 577: Spec 568 — Source Company Plugin: Formation Bio
+  FORMATION_BIO = 'formationbio',
+  // Phase 578: Spec 569 — Source Company Plugin: Valo Health
+  VALO_HEALTH = 'valohealth',
+  // Phase 579: Spec 570 — Source Company Plugin: Brooklinen
+  BROOKLINEN = 'brooklinen',
+  // Phase 580: Spec 571 — Source Company Plugin: Reformation
+  REFORMATION = 'reformation',
+  // Phase 581: Spec 572 — Source Company Plugin: Gymshark
+  GYMSHARK = 'gymshark',
+  // Phase 582: Spec 573 — Source Company Plugin: Rockstar Games
+  ROCKSTAR_GAMES = 'rockstargames',
+  // Phase 583: Spec 574 — Source Company Plugin: Outschool
+  OUTSCHOOL = 'outschool',
+  // Phase 584: Spec 575 — Source Company Plugin: Guild
+  GUILD = 'guild',
+  // Phase 585: Spec 576 — Source Company Plugin: Degreed
+  DEGREED = 'degreed',
+  // Phase 586: Spec 577 — Source Company Plugin: PhonePe
+  PHONEPE = 'phonepe',
+  // Phase 587: Spec 578 — Source Company Plugin: Groww
+  GROWW = 'groww',
 }
 
 /**

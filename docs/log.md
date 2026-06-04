@@ -15,6 +15,72 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #422 (**FOURTEEN new Greenhouse company-direct source plugins: Imbue, One Medical, Relay Therapeutics, Formation Bio, Valo Health, Brooklinen, Reformation, Gymshark, Rockstar Games, Outschool, Guild, Degreed, PhonePe, Groww** — Specs 565–578)
+
+**Scope:** Direct continuation of the run-#421 company-direct Greenhouse direction. At run start the
+corpus held **429 `source-company-*` plugins / 712 source plugin packages total / 559 specs / last
+enum Phase 573**; all three OTHERS reference repos (`Ats-scrapers` @ `b45c12a`, `JobSpy` @ `fda080a`,
+`Jobspy-api` @ `26bb6f4`) were fetched and reported **no upstream changes** (`local == remote` for all
+three; tracked only in the parent-directory competitor-watch file — never in this repo). The prior
+run's CI (run `26934594598`) was confirmed **green** and `origin/develop` already held `8e72365`, so
+this run started from a clean, fully-pushed tree.
+
+Per the scheduled-task directive to "add more large companies jobs feeds parsers (as sources)" when
+the ATS surface is saturated, this run ships **14 new large-company Greenhouse-direct source plugins**
+(Specs 565–578) via the deterministic `scripts/scaffold-company-source.ts` batch generator. Candidate
+slugs were discovered by a **live Greenhouse-board probe** (`boards-api.greenhouse.io/v1/boards/<slug>/jobs`)
+across under-mined fresh verticals (AI reasoning labs, primary-care healthcare, precision-medicine and
+AI-drug-discovery biotech, DTC home goods, sustainable fashion, fitness apparel, AAA gaming, K-12 and
+workforce edtech, and Indian fintech). Every candidate was gated on a **board-name brand-match** and a
+**≥ 3 live-listing** floor before inclusion. Many large brand probes that resolve to Ashby/Lever rather
+than Greenhouse (Ramp, Cohere, Writer, Perplexity, Scale AI, Glean, Revolut, Wise, Monzo, Razorpay,
+Rivian, Lucid, etc.) were probed and **excluded** because their Greenhouse board returned no roles.
+`2k` (Take-Two label) was also probed and confirmed live (117 roles) but **dropped** to avoid a
+leading-digit TS class identifier; the broader Take-Two gaming brand is already represented via
+**Rockstar Games**. `Bungie` was probed but **dropped** because its live board fell to a single role
+(below the ≥ 3 fixture floor).
+
+**New plugins (live-probed 2026-06-04):**
+
+- **Imbue** (`imbue`) — Artificial Intelligence / Foundation Models, San Francisco, California, USA. 3 live roles.
+- **One Medical** (`onemedical`) — Healthcare / Primary Care, New York, New York, USA. 293 live roles.
+- **Relay Therapeutics** (`relaytherapeutics`) — Biotechnology / Precision Medicine, Cambridge, Massachusetts, USA. 6 live roles.
+- **Formation Bio** (`formationbio`) — Biotechnology / AI Drug Development, New York, New York, USA. 19 live roles.
+- **Valo Health** (`valohealth`) — Biotechnology / AI Drug Discovery, Lexington, Massachusetts, USA. 4 live roles.
+- **Brooklinen** (`brooklinen`) — Consumer / Direct-to-Consumer Home Goods, New York, New York, USA. 13 live roles.
+- **Reformation** (`reformation`) — Consumer / Sustainable Fashion, Los Angeles, California, USA. 129 live roles.
+- **Gymshark** (`gymshark`) — Consumer / Fitness Apparel, Solihull, England, United Kingdom. 14 live roles.
+- **Rockstar Games** (`rockstargames`) — Gaming / Interactive Entertainment, New York, New York, USA. 78 live roles.
+- **Outschool** (`outschool`) — Education Technology / K-12 Marketplace, San Francisco, California, USA. 3 live roles.
+- **Guild** (`guild`) — Education Technology / Workforce Development, Denver, Colorado, USA. 12 live roles.
+- **Degreed** (`degreed`) — Education Technology / Corporate Learning, Pleasanton, California, USA. 4 live roles.
+- **PhonePe** (`phonepe`) — Fintech / Digital Payments, Bengaluru, Karnataka, India. 70 live roles.
+- **Groww** (`groww`) — Fintech / Retail Investing, Bengaluru, Karnataka, India. 15 live roles.
+
+**Changes:**
+
+- Scaffolded 14 plugin packages (140 files) via `scripts/scaffold-company-source.ts` from a
+  `.batch-input-422.json` descriptor assembled from the live probe (3 real listings per board).
+- Wired all 14 into the four shared registration files: `packages/models/src/enums/site.enum.ts`
+  (Phases 574–587), `packages/plugins/index.ts` (imports + `ALL_SOURCE_MODULES`),
+  `tsconfig.base.json` (path aliases) and `jest.config.js` (`moduleNameMapper`).
+- Added 14 spec triplets under `.specify/specs/565…578-source-company-<slug>/` (spec/plan/tasks).
+- Updated `docs/index.md` (14 new spec rows + revised footer) and this `docs/log.md`.
+
+**Verification:**
+
+- `npx jest` over the 14 new packages: **14 suites / 154 tests pass** (the per-service HTTP-500
+  ERROR lines are the intentional graceful-degradation error-path cases — services never throw).
+- Registry + scaffolder + docs-lint suites: **35 tests pass**.
+- `docs-lint.ts`: **✓ no issues** (all 42 new spec docs linked from `docs/index.md`).
+
+**Notes:**
+
+- New corpus totals: **443 `source-company-*` plugins / 726 source plugin packages / 573 specs /
+  last enum Phase 587**.
+
+---
+
 ## 2026-06-04 — Scheduled run #421 (**TWELVE new Greenhouse company-direct source plugins: Apptronik, Mill, Clover Health, OLIPOP, Vannevar Labs, Diligent Robotics, Wayve, Modern Animal, Bicycle Health, Lunar Energy, Electric Hydrogen, Tide** — Specs 553–564)
 
 **Scope:** Direct continuation of the run-#420 company-direct Greenhouse direction. At run start the

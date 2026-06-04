@@ -718,6 +718,20 @@ import { BicyclehealthModule } from './source-company-bicyclehealth';
 import { LunarenergyModule } from './source-company-lunarenergy';
 import { Eh2Module } from './source-company-eh2';
 import { TideModule } from './source-company-tide';
+import { ImbueModule } from './source-company-imbue';
+import { OnemedicalModule } from './source-company-onemedical';
+import { RelaytherapeuticsModule } from './source-company-relaytherapeutics';
+import { FormationbioModule } from './source-company-formationbio';
+import { ValohealthModule } from './source-company-valohealth';
+import { BrooklinenModule } from './source-company-brooklinen';
+import { ReformationModule } from './source-company-reformation';
+import { GymsharkModule } from './source-company-gymshark';
+import { RockstargamesModule } from './source-company-rockstargames';
+import { OutschoolModule } from './source-company-outschool';
+import { GuildModule } from './source-company-guild';
+import { DegreedModule } from './source-company-degreed';
+import { PhonepeModule } from './source-company-phonepe';
+import { GrowwModule } from './source-company-groww';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1429,4 +1443,18 @@ export const ALL_SOURCE_MODULES = [
   LunarenergyModule,
   Eh2Module,
   TideModule,
+  ImbueModule,
+  OnemedicalModule,
+  RelaytherapeuticsModule,
+  FormationbioModule,
+  ValohealthModule,
+  BrooklinenModule,
+  ReformationModule,
+  GymsharkModule,
+  RockstargamesModule,
+  OutschoolModule,
+  GuildModule,
+  DegreedModule,
+  PhonepeModule,
+  GrowwModule,
 ];
