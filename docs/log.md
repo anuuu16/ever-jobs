@@ -15,6 +15,79 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #429 (**TWENTY new Greenhouse company-direct source plugins: On Running, Charlie Health, Two Chairs, Nexamp, firsthand Health, Atoms Tech, Form Health, Ilia Digital, Factorial Energy, Sidecar Health, Ownwell, Grove Collaborative, Patch Caregiving, Nanit, Nutrafol, Waymark Health, Seed Health, Unite Us, Banyan Infrastructure, Camus Energy** — Specs 663–682)
+
+**Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held
+**527 `source-company-*` plugins / 810 source plugin packages total / 662 last spec / 810 enum members /
+last enum Phase 671 (Spec 662, Silicon Ranch)**. All three OTHERS reference repos were `git pull`-ed and
+reported **no upstream changes** (`Ats-scrapers` @ `b45c12a`, `JobSpy` @ `fda080a`, `Jobspy-api` @ `26bb6f4`
+— all "Already up to date"). The prior run's CI (run `26954130349`, Specs 647–662) was confirmed **green**
+and `origin/develop` held `8c31bb9` with a clean working tree, so this run started from a clean, fully-pushed
+baseline. `docs-lint` was confirmed clean at run start.
+
+This run ships **20 new large-company Greenhouse-direct source plugins** (Specs 663–682, enum Phases
+672–691) via the now-standard deterministic pipeline (`probe → enrich → assemble → scaffold → wire`).
+
+**Candidate discovery (live probe):** a **274-slug** candidate list was assembled across still-fertile
+verticals (consumer fintech & neobanks, LatAm payments, insurtech, fertility / telehealth & women's health,
+behavioral & mental health, value-based & Medicaid care, climate & grid-scale energy storage, community
+solar, carbon removal, proptech, DTC consumer goods, baby tech & wellness supplements) — deduped against the
+527 existing company slugs — and probed concurrently via `scripts/probe-company-source.ts` (16-way) against
+the public Greenhouse Job-Board API. **21 survived** the ≥ 3-roles + brand-match gate.
+
+**Quality-review drop (1):** `agency` returned board **"Meridial"** (793 roles) — a freelance-AI-trainer
+staffing aggregator, a clear brand mismatch (slug `agency` ≠ a single named company). It was dropped at the
+review gate. The remaining **20 survivors were all adopted**.
+
+The **20 adopted** boards and their live role counts (probed 2026-06-04): On (313), Charlie Health (327),
+Two Chairs (90), Nexamp (42), firsthand Health (30), Atoms (30), Form Health (20), ília (20), Factorial
+Energy (17), Sidecar Health (15), Ownwell (14), Grove Collaborative (12), Patch (10), Nanit (9), Nutrafol
+(8), Waymark (8), Seed (7), Unite Us (5), Banyan Infrastructure (4), Camus Energy (3). Real probed listings
+(id / title / location / updated_at) were used to build each plugin's 3-listing fixture so the unit suites
+assert against real-world wire shapes.
+
+**Disambiguation guards (4):** the enrichment agents (grounded strictly on live board name + sample job
+titles + locations) produced ASCII-only, collision-free canonical displayNames, disambiguating four
+generic / non-ASCII bare board names: **"On"** → **On Running** (`ON_RUNNING`; the bare `ON` class/enum key
+is too generic for the Swiss sportswear brand), **"ília"** → **Ilia Digital** (`ILIA_DIGITAL`; strips the
+diacritic that `enumKeyOf` would otherwise mangle to `LIA`, and disambiguates the Brazilian data/AI
+consultancy from the unrelated US cosmetics brand), **"Patch"** → **Patch Caregiving** (`PATCH_CAREGIVING`;
+employer-backup-childcare provider, per the on-call substitute childcare-teacher roles), and **"Atoms"** →
+**Atoms Tech** (`ATOMS_TECH`; backend/ML-infra + "money engineering" roles, distinct from the similarly
+named DTC footwear brand). All 20 derived enumKeys and classNames were verified collision-free against
+`site.enum.ts` and `packages/plugins/index.ts` before scaffolding.
+
+**Enrichment (parallel workflow):** descriptor prose (one-liner, sector, HQ, 2–3-sentence description,
+2–3 highlights, canonical displayName) for all 20 companies was produced by a **20-agent parallel
+`Workflow`** (one agent per company, each grounded STRICTLY on the live board name + sample job titles +
+role locations, schema-validated output; 589 K subagent tokens, 60 s wall-clock). Spec/plan/tasks + package
+files were materialised by the deterministic `scaffold-company-source.ts` generator and registered by the
+idempotent, replacement-function-based `wire-company-source.ts` helper (avoids the jest-config `$'`
+foot-gun).
+
+**Changes:**
+
+- **20 new source-company plugin packages** under `packages/plugins/source-company-{onrunning,charliehealth,
+  twochairs,nexamp,firsthand,atoms,formhealth,ilia,factorialenergy,sidecarhealth,ownwell,grovecollaborative,
+  patch,nanit,nutrafol,waymark,seed,uniteus,banyaninfrastructure,camusenergy}/` — each with `package.json`,
+  `tsconfig.json`, `src/index.ts`, `src/<slug>.module.ts`, `src/<slug>.service.ts`,
+  `__tests__/<slug>.service.spec.ts`, and a 3-listing fixture (200 files total). All mirror the canonical
+  variant-2 + D-08 company-direct template (wire `company_name` pass-through; defensive D-10/D-11
+  title/department trim; entity-decode-then-tag-strip descriptions; graceful degradation to `{ jobs: [] }`
+  on transport error).
+- **20 new spec dirs** `.specify/specs/{663..682}-source-company-<slug>/` (spec.md, plan.md, tasks.md).
+- **Four wiring files** updated via `wire-company-source.ts`: `site.enum.ts` (+20 enum members, Phases
+  672–691), `packages/plugins/index.ts` (+20 `ALL_SOURCE_MODULES` entries), `tsconfig.base.json` (+20 path
+  aliases), `jest.config.js` (+20 moduleNameMapper entries).
+- **`docs/index.md`** — 20 new spec rows (663–682) + "Last revised" footer bumped to run #429.
+- **`docs/log.md`** — this entry.
+
+**Verification:** `tsc --noEmit -p tsconfig.base.json` clean (exit 0); the **20 new Jest suites pass**
+(20/20 suites, 220/220 tests green; the `status 500` ERROR lines in the output are the intentional
+graceful-degradation test cases asserting `{ jobs: [] }` on transport failure). `docs-lint` clean.
+
+---
+
 ## 2026-06-04 — Scheduled run #428 (**SIXTEEN new Greenhouse company-direct source plugins: C6 Bank, Carrot Fertility, Clara, EBANX, Ethos Life, Flo Health, Harry's, Insurify, Ledgy, Mission Lane, Mochi Health, Pie Insurance, QuintoAndar, quip, Rondo Energy, Silicon Ranch** — Specs 647–662)
 
 **Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held

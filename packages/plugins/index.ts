@@ -816,6 +816,26 @@ import { QuintoAndarModule } from './source-company-quintoandar';
 import { QuipModule } from './source-company-quip';
 import { RondoEnergyModule } from './source-company-rondoenergy';
 import { SiliconRanchModule } from './source-company-siliconranch';
+import { OnRunningModule } from './source-company-onrunning';
+import { CharlieHealthModule } from './source-company-charliehealth';
+import { TwoChairsModule } from './source-company-twochairs';
+import { NexampModule } from './source-company-nexamp';
+import { FirsthandHealthModule } from './source-company-firsthand';
+import { AtomsTechModule } from './source-company-atoms';
+import { FormHealthModule } from './source-company-formhealth';
+import { IliaDigitalModule } from './source-company-ilia';
+import { FactorialEnergyModule } from './source-company-factorialenergy';
+import { SidecarHealthModule } from './source-company-sidecarhealth';
+import { OwnwellModule } from './source-company-ownwell';
+import { GroveCollaborativeModule } from './source-company-grovecollaborative';
+import { PatchCaregivingModule } from './source-company-patch';
+import { NanitModule } from './source-company-nanit';
+import { NutrafolModule } from './source-company-nutrafol';
+import { WaymarkHealthModule } from './source-company-waymark';
+import { SeedHealthModule } from './source-company-seed';
+import { UniteUsModule } from './source-company-uniteus';
+import { BanyanInfrastructureModule } from './source-company-banyaninfrastructure';
+import { CamusEnergyModule } from './source-company-camusenergy';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1625,4 +1645,24 @@ export const ALL_SOURCE_MODULES = [
   QuipModule,
   RondoEnergyModule,
   SiliconRanchModule,
+  OnRunningModule,
+  CharlieHealthModule,
+  TwoChairsModule,
+  NexampModule,
+  FirsthandHealthModule,
+  AtomsTechModule,
+  FormHealthModule,
+  IliaDigitalModule,
+  FactorialEnergyModule,
+  SidecarHealthModule,
+  OwnwellModule,
+  GroveCollaborativeModule,
+  PatchCaregivingModule,
+  NanitModule,
+  NutrafolModule,
+  WaymarkHealthModule,
+  SeedHealthModule,
+  UniteUsModule,
+  BanyanInfrastructureModule,
+  CamusEnergyModule,
 ];

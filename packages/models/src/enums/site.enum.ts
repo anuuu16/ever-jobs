@@ -1479,6 +1479,46 @@ export enum Site {
   RONDO_ENERGY = 'rondoenergy',
   // Phase 671: Spec 662 — Source Company Plugin: Silicon Ranch
   SILICON_RANCH = 'siliconranch',
+  // Phase 672: Spec 663 — Source Company Plugin: On Running
+  ON_RUNNING = 'onrunning',
+  // Phase 673: Spec 664 — Source Company Plugin: Charlie Health
+  CHARLIE_HEALTH = 'charliehealth',
+  // Phase 674: Spec 665 — Source Company Plugin: Two Chairs
+  TWO_CHAIRS = 'twochairs',
+  // Phase 675: Spec 666 — Source Company Plugin: Nexamp
+  NEXAMP = 'nexamp',
+  // Phase 676: Spec 667 — Source Company Plugin: firsthand Health
+  FIRSTHAND_HEALTH = 'firsthand',
+  // Phase 677: Spec 668 — Source Company Plugin: Atoms Tech
+  ATOMS_TECH = 'atoms',
+  // Phase 678: Spec 669 — Source Company Plugin: Form Health
+  FORM_HEALTH = 'formhealth',
+  // Phase 679: Spec 670 — Source Company Plugin: Ilia Digital
+  ILIA_DIGITAL = 'ilia',
+  // Phase 680: Spec 671 — Source Company Plugin: Factorial Energy
+  FACTORIAL_ENERGY = 'factorialenergy',
+  // Phase 681: Spec 672 — Source Company Plugin: Sidecar Health
+  SIDECAR_HEALTH = 'sidecarhealth',
+  // Phase 682: Spec 673 — Source Company Plugin: Ownwell
+  OWNWELL = 'ownwell',
+  // Phase 683: Spec 674 — Source Company Plugin: Grove Collaborative
+  GROVE_COLLABORATIVE = 'grovecollaborative',
+  // Phase 684: Spec 675 — Source Company Plugin: Patch Caregiving
+  PATCH_CAREGIVING = 'patch',
+  // Phase 685: Spec 676 — Source Company Plugin: Nanit
+  NANIT = 'nanit',
+  // Phase 686: Spec 677 — Source Company Plugin: Nutrafol
+  NUTRAFOL = 'nutrafol',
+  // Phase 687: Spec 678 — Source Company Plugin: Waymark Health
+  WAYMARK_HEALTH = 'waymark',
+  // Phase 688: Spec 679 — Source Company Plugin: Seed Health
+  SEED_HEALTH = 'seed',
+  // Phase 689: Spec 680 — Source Company Plugin: Unite Us
+  UNITE_US = 'uniteus',
+  // Phase 690: Spec 681 — Source Company Plugin: Banyan Infrastructure
+  BANYAN_INFRASTRUCTURE = 'banyaninfrastructure',
+  // Phase 691: Spec 682 — Source Company Plugin: Camus Energy
+  CAMUS_ENERGY = 'camusenergy',
 }
 
 /**
