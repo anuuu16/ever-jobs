@@ -503,6 +503,41 @@ Tesla is a **single-tenant** scraper — `companyUrl` and `companySlug` are both
 | Company | Slug | Industry |
 | ------- | ---- | -------- |
 | Tesla | `tesla` | Electric Vehicles / Energy |
+| Upstart | `upstart` | Fintech / AI Lending |
+| Tamara | `tamara` | Fintech / BNPL |
+| TrueLayer | `truelayer` | Fintech / Open Banking |
+| Public | `public` | Fintech / Retail Investing |
+| Paystack | `paystack` | Fintech / Payments |
+| Moniepoint | `moniepoint` | Fintech / Business Banking |
+| Thrive Market | `thrivemarket` | E-commerce / Online Grocery |
+| Form3 | `form3` | Fintech / Payments Infrastructure |
+| Marvel Fusion | `marvelfusion` | Energy / Fusion |
+| Kairos Power | `kairospower` | Energy / Advanced Nuclear |
+| Wolt | `wolt` | Food Delivery / Local Commerce |
+| Redwood Materials | `redwoodmaterials` | Energy / Battery Materials |
+| Group14 Technologies | `group14` | Energy / Battery Materials |
+| Carbon | `carbon` | Manufacturing / Additive Manufacturing |
+| Forward | `forward` | Digital Health / Primary Care |
+| Tia | `tia` | Digital Health / Women’s Health |
+| Headway | `headway` | Digital Health / Mental Health |
+| Talkspace | `talkspace` | Digital Health / Mental Health |
+| Octave | `octave` | Digital Health / Mental Health |
+| Freenome | `freenome` | Biotech / Diagnostics |
+| Natera | `natera` | Biotech / Genetic Diagnostics |
+| Generate Biomedicines | `generatebiomedicines` | Biotech / AI Drug Discovery |
+| Oura | `oura` | Consumer Health Hardware |
+| Carvana | `carvana` | E-commerce / Auto Retail |
+| unybrands | `unybrands` | E-commerce / Brand Aggregator |
+| Yotpo | `yotpo` | MarTech / E-commerce |
+| TaxBit | `taxbit` | Fintech / Crypto Tax |
+| Culture Amp | `cultureamp` | HR Tech / People Analytics |
+| Energage | `energage` | HR Tech / Employee Engagement |
+| Veriff | `veriff` | Identity / KYC |
+| Thoropass | `thoropass` | Security / Compliance |
+| Endor Labs | `endorlabs` | Security / AppSec |
+| Cybereason | `cybereason` | Security / Endpoint |
+| Tanium | `tanium` | Security / Endpoint Management |
+| Expel | `expel` | Security / MDR |
 
 The OPTIONAL `source-tesla-playwright` companion plugin is opt-in (per Q-028 / FR-13) — operators must manually import `TeslaPlaywrightModule` AND install `playwright` (`npm install playwright && npx playwright install chromium`) to enable the Akamai-bypass path. Both plugins emit jobs against the same single `tesla` slug; the dedup engine collapses cross-plugin duplicates by `externalId` per Spec 003 / FR-3.
 

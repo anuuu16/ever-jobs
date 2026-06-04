@@ -1171,6 +1171,76 @@ export enum Site {
   HEALTHJOY = 'healthjoy',
   // Phase 517: Spec 508 — Source Company Plugin: Papa
   PAPA = 'papa',
+  // Phase 518: Spec 509 — Source Company Plugin: Upstart
+  UPSTART = 'upstart',
+  // Phase 519: Spec 510 — Source Company Plugin: Tamara
+  TAMARA = 'tamara',
+  // Phase 520: Spec 511 — Source Company Plugin: TrueLayer
+  TRUELAYER = 'truelayer',
+  // Phase 521: Spec 512 — Source Company Plugin: Public
+  PUBLIC_INVEST = 'public',
+  // Phase 522: Spec 513 — Source Company Plugin: Paystack
+  PAYSTACK = 'paystack',
+  // Phase 523: Spec 514 — Source Company Plugin: Moniepoint
+  MONIEPOINT = 'moniepoint',
+  // Phase 524: Spec 515 — Source Company Plugin: Thrive Market
+  THRIVE_MARKET = 'thrivemarket',
+  // Phase 525: Spec 516 — Source Company Plugin: Form3
+  FORM3 = 'form3',
+  // Phase 526: Spec 517 — Source Company Plugin: Marvel Fusion
+  MARVEL_FUSION = 'marvelfusion',
+  // Phase 527: Spec 518 — Source Company Plugin: Kairos Power
+  KAIROS_POWER = 'kairospower',
+  // Phase 528: Spec 519 — Source Company Plugin: Wolt
+  WOLT = 'wolt',
+  // Phase 529: Spec 520 — Source Company Plugin: Redwood Materials
+  REDWOOD_MATERIALS = 'redwoodmaterials',
+  // Phase 530: Spec 521 — Source Company Plugin: Group14 Technologies
+  GROUP14 = 'group14',
+  // Phase 531: Spec 522 — Source Company Plugin: Carbon
+  CARBON = 'carbon',
+  // Phase 532: Spec 523 — Source Company Plugin: Forward
+  FORWARD_HEALTH = 'forward',
+  // Phase 533: Spec 524 — Source Company Plugin: Tia
+  TIA_HEALTH = 'tia',
+  // Phase 534: Spec 525 — Source Company Plugin: Headway
+  HEADWAY = 'headway',
+  // Phase 535: Spec 526 — Source Company Plugin: Talkspace
+  TALKSPACE = 'talkspace',
+  // Phase 536: Spec 527 — Source Company Plugin: Octave
+  OCTAVE_HEALTH = 'octave',
+  // Phase 537: Spec 528 — Source Company Plugin: Freenome
+  FREENOME = 'freenome',
+  // Phase 538: Spec 529 — Source Company Plugin: Natera
+  NATERA = 'natera',
+  // Phase 539: Spec 530 — Source Company Plugin: Generate Biomedicines
+  GENERATE_BIOMEDICINES = 'generatebiomedicines',
+  // Phase 540: Spec 531 — Source Company Plugin: Oura
+  OURA = 'oura',
+  // Phase 541: Spec 532 — Source Company Plugin: Carvana
+  CARVANA = 'carvana',
+  // Phase 542: Spec 533 — Source Company Plugin: unybrands
+  UNYBRANDS = 'unybrands',
+  // Phase 543: Spec 534 — Source Company Plugin: Yotpo
+  YOTPO = 'yotpo',
+  // Phase 544: Spec 535 — Source Company Plugin: TaxBit
+  TAXBIT = 'taxbit',
+  // Phase 545: Spec 536 — Source Company Plugin: Culture Amp
+  CULTURE_AMP = 'cultureamp',
+  // Phase 546: Spec 537 — Source Company Plugin: Energage
+  ENERGAGE = 'energage',
+  // Phase 547: Spec 538 — Source Company Plugin: Veriff
+  VERIFF = 'veriff',
+  // Phase 548: Spec 539 — Source Company Plugin: Thoropass
+  THOROPASS = 'thoropass',
+  // Phase 549: Spec 540 — Source Company Plugin: Endor Labs
+  ENDOR_LABS = 'endorlabs',
+  // Phase 550: Spec 541 — Source Company Plugin: Cybereason
+  CYBEREASON = 'cybereason',
+  // Phase 551: Spec 542 — Source Company Plugin: Tanium
+  TANIUM = 'tanium',
+  // Phase 552: Spec 543 — Source Company Plugin: Expel
+  EXPEL = 'expel',
 }
 
 /**

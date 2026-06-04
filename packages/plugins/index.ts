@@ -662,6 +662,41 @@ import { NayyaModule } from './source-company-nayya';
 import { CaribouModule } from './source-company-caribou';
 import { HealthjoyModule } from './source-company-healthjoy';
 import { PapaModule } from './source-company-papa';
+import { UpstartModule } from './source-company-upstart';
+import { TamaraModule } from './source-company-tamara';
+import { TruelayerModule } from './source-company-truelayer';
+import { PublicModule } from './source-company-public';
+import { PaystackModule } from './source-company-paystack';
+import { MoniepointModule } from './source-company-moniepoint';
+import { ThrivemarketModule } from './source-company-thrivemarket';
+import { Form3Module } from './source-company-form3';
+import { MarvelfusionModule } from './source-company-marvelfusion';
+import { KairospowerModule } from './source-company-kairospower';
+import { WoltModule } from './source-company-wolt';
+import { RedwoodmaterialsModule } from './source-company-redwoodmaterials';
+import { Group14Module } from './source-company-group14';
+import { CarbonModule } from './source-company-carbon';
+import { ForwardModule } from './source-company-forward';
+import { TiaModule } from './source-company-tia';
+import { HeadwayModule } from './source-company-headway';
+import { TalkspaceModule } from './source-company-talkspace';
+import { OctaveModule } from './source-company-octave';
+import { FreenomeModule } from './source-company-freenome';
+import { NateraModule } from './source-company-natera';
+import { GeneratebiomedicinesModule } from './source-company-generatebiomedicines';
+import { OuraModule } from './source-company-oura';
+import { CarvanaModule } from './source-company-carvana';
+import { UnybrandsModule } from './source-company-unybrands';
+import { YotpoModule } from './source-company-yotpo';
+import { TaxbitModule } from './source-company-taxbit';
+import { CultureampModule } from './source-company-cultureamp';
+import { EnergageModule } from './source-company-energage';
+import { VeriffModule } from './source-company-veriff';
+import { ThoropassModule } from './source-company-thoropass';
+import { EndorlabsModule } from './source-company-endorlabs';
+import { CybereasonModule } from './source-company-cybereason';
+import { TaniumModule } from './source-company-tanium';
+import { ExpelModule } from './source-company-expel';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1317,4 +1352,39 @@ export const ALL_SOURCE_MODULES = [
   CaribouModule,
   HealthjoyModule,
   PapaModule,
+  UpstartModule,
+  TamaraModule,
+  TruelayerModule,
+  PublicModule,
+  PaystackModule,
+  MoniepointModule,
+  ThrivemarketModule,
+  Form3Module,
+  MarvelfusionModule,
+  KairospowerModule,
+  WoltModule,
+  RedwoodmaterialsModule,
+  Group14Module,
+  CarbonModule,
+  ForwardModule,
+  TiaModule,
+  HeadwayModule,
+  TalkspaceModule,
+  OctaveModule,
+  FreenomeModule,
+  NateraModule,
+  GeneratebiomedicinesModule,
+  OuraModule,
+  CarvanaModule,
+  UnybrandsModule,
+  YotpoModule,
+  TaxbitModule,
+  CultureampModule,
+  EnergageModule,
+  VeriffModule,
+  ThoropassModule,
+  EndorlabsModule,
+  CybereasonModule,
+  TaniumModule,
+  ExpelModule,
 ];

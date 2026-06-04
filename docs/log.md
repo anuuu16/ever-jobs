@@ -15,6 +15,84 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #419 (**THIRTY-FIVE new Greenhouse company-direct source plugins: Upstart, Tamara, TrueLayer, Public, Paystack, Moniepoint, Thrive Market, Form3, Marvel Fusion, Kairos Power, Wolt, Redwood Materials, Group14 Technologies, Carbon, Forward, Tia, Headway, Talkspace, Octave, Freenome, Natera, Generate Biomedicines, Oura, Carvana, unybrands, Yotpo, TaxBit, Culture Amp, Energage, Veriff, Thoropass, Endor Labs, Cybereason, Tanium, Expel** — Specs 509–543)
+
+**Scope:** Direct continuation of the run-#418 company-direct Greenhouse direction. At run start the
+corpus held **373 `source-company-*` plugins / 174 `source-ats-*` adapters / 656 source plugin
+packages total / 508 specs / last enum Phase 517**; all three OTHERS reference repos
+(`Ats-scrapers` @ `b45c12a`, `JobSpy` @ `fda080a`, `Jobspy-api` @ `26bb6f4`) were pulled and
+reported **no upstream changes** (`git pull` = "Already up to date." for all three; recorded in the
+parent-directory competitor-watch file — never in this repo). Per the scheduled-task directive to
+"add more large companies jobs feeds parsers (as sources)" when the ATS surface is saturated, this
+run ships **35 new large-company Greenhouse-direct source plugins** (Specs 509–543) via the
+deterministic `scripts/scaffold-company-source.ts` batch generator, broadening sector coverage across
+under-mined consumer/regulated verticals: neobanking & payments (**Upstart**, **TrueLayer**,
+**Public**, **Paystack**, **Moniepoint**, **Form3**, **TaxBit**), BNPL (**Tamara**), online grocery &
+food delivery (**Thrive Market**, **Wolt**), fusion & advanced-nuclear energy (**Marvel Fusion**,
+**Kairos Power**), battery materials & recycling (**Redwood Materials**, **Group14 Technologies**),
+additive manufacturing (**Carbon**), digital health & mental health (**Forward**, **Tia**,
+**Headway**, **Talkspace**, **Octave**), diagnostics & AI drug discovery (**Freenome**, **Natera**,
+**Generate Biomedicines**), consumer health hardware (**Oura**), auto e-commerce & brand aggregation
+(**Carvana**, **unybrands**), e-commerce martech (**Yotpo**), HR-tech / people analytics
+(**Culture Amp**, **Energage**), identity & compliance (**Veriff**, **Thoropass**), and
+cybersecurity (**Endor Labs**, **Cybereason**, **Tanium**, **Expel**).
+
+**Selection method — live deterministic probe (per Q-063 default):** ~379 candidate well-known
+company board tokens across ten verticals were probed live (concurrency-6, 12 s per-request
+AbortController timeout) against the public Greenhouse boards API
+(`https://boards-api.greenhouse.io/v1/boards/<slug>` board-meta + `…/<slug>/jobs?content=false`),
+filtered against the 556-token exclude set (359 already-covered board tokens ∪ the published
+`COMPANY_SLUG_DIRECTORY` tokens), and accepted only boards that returned a 200 with **≥3 live roles
+AND a board-name that matched the intended brand**. The brand-name gate **dropped** the ambiguous
+`sesai` board (board name "SES" — could be SES S.A. satellites or SES AI batteries; no confident
+single-brand mapping) and the collision check **dropped** `robinhood` (already covered by the
+existing `source-company-robinhood` plugin under a different host pattern). The deliberately-generic
+but unambiguously-resolving boards `public` (→ "Public", the multi-asset investing app) and `forward`
+(→ "Forward", the preventive-care company) were retained because each resolved to its intended
+company; their enum keys are de-collided as `PUBLIC_INVEST` / `FORWARD_HEALTH` (the slug/board token
+stays `public` / `forward`). All 35 enum keys, plugin slugs and package directories were verified
+collision-free against the existing `source-company-*` / `source-ats-*` corpus before scaffolding.
+Three real live listings per board were captured into each plugin's fixture so the unit suites
+exercise faithful wire shapes.
+
+**Confidence:** **all 35 verified live 2026-06-04** (every board returned ≥3 live roles on probe; job
+counts ranged from 4 (Public) to 2220 (Carvana), 289 (Wolt), 194 (Natera) and 156 (Robinhood-probe
+sibling Headway, 65)).
+
+**Validation:** project-wide `tsc --noEmit -p tsconfig.base.json` is **clean (exit 0)**; all **35 new
+unit suites pass (385 tests across two batches: 220 + 165)** and the integration suites that import
+`ALL_SOURCE_MODULES` (`source-ats-batch-2.integration` family + `store-registry`, 7 suites / 78
+tests) pass — confirming **no duplicate-`Site` collisions** and sound four-file registry wiring;
+**docs-lint passes** (all 35 new spec triplets linked from `docs/index.md`).
+
+**Changes:**
+
+- **35 new `source-company-*` plugin packages** (Specs 509–543), each with the canonical 10-file
+  layout (`package.json`, `tsconfig.json`, `src/index.ts`, `src/<slug>.module.ts`,
+  `src/<slug>.service.ts`, `__tests__/<slug>.service.spec.ts`, `__tests__/fixtures/<slug>-jobs.json`)
+  and a full `.specify/specs/<NNN>-source-company-<slug>/` spec/plan/tasks triplet, all following the
+  canonical Greenhouse variant-2 + D-08/D-09/D-10/D-11 company-direct template.
+- **Four shared wiring files** updated (`packages/models/src/enums/site.enum.ts` — Phases 518–552;
+  `packages/plugins/index.ts` — imports + `ALL_SOURCE_MODULES`; `tsconfig.base.json` path aliases;
+  `jest.config.js` `moduleNameMapper`).
+- **Docs:** `docs/index.md` (+35 spec rows, revised footer), `docs/COMPANY_SLUG_DIRECTORY.md`
+  (+35 Greenhouse rows).
+- Post-run corpus: **408 `source-company-*` plugins / 174 `source-ats-*` adapters / 691 source
+  plugin packages total / 543 specs / last enum Phase 552.**
+
+**Notes:**
+
+- Throwaway probe/build-batch/registration/doc-patch helper scripts (`.probe*`, `.build-batch.mjs`,
+  `.register.mjs`, `.docrows.mjs`, `.docpatch.mjs`, `.batch-input.json`, generated row files) were
+  used to generate this batch and **removed before commit** (kept the run footprint to product
+  artifacts only, matching prior runs and the TS-only `scripts/` convention).
+- Hit-rate observation for future runs: the consumer/health/energy/fintech/security verticals
+  continue to yield fresh Greenhouse boards at a much higher rate than the AI/dev-infra cluster mined
+  out in runs #410–417. Identity/compliance (Veriff, Thoropass) and managed-security (Expel,
+  Cybereason, Tanium) are newly-productive seams worth re-probing next run.
+
+---
+
 ## 2026-06-04 — Scheduled run #418 (**TWENTY-THREE new Greenhouse company-direct source plugins: Nubank, CookUnity, Oklo, Fetch, Zocdoc, Thunes, Strive Health, Home Chef, Pacific Fusion, Otter.ai, Observe.AI, Honor, Weee!, Narvar, Transcarent, Watershed Informatics, Quaise Energy, Upside, Hungryroot, Nayya, Caribou Financial, HealthJoy, Papa** — Specs 486–508)
 
 **Scope:** Direct continuation of the run-#417 company-direct Greenhouse direction. At run start the
