@@ -15,6 +15,76 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #425 (**FOURTEEN new Greenhouse company-direct source plugins: Alo Yoga, Kodiak Robotics, Altruist, ON.energy, Divergent, Typeface, Range, Upgrade, Bombas, Overstory, Stackline, Pagaya, LetsGetChecked, Happy Money** — Specs 606–619)
+
+**Scope:** Direct continuation of the run-#424 company-direct Greenhouse direction. At run start the
+corpus held **470 `source-company-*` plugins / 753 source plugin packages total / 600 spec dirs / 753
+enum members / last enum Phase 614 (Spec 605, Suitsupply)**. All three OTHERS reference repos were
+`git pull`-ed and reported **no upstream changes** (`Ats-scrapers` @ `b45c12a`, `JobSpy` @ `fda080a`,
+`Jobspy-api` @ `26bb6f4` — all "Already up to date"). The prior run's CI (run `26942609344`, Specs
+594–605) was confirmed **green** and `origin/develop` held `38f365a` with a clean working tree, so this
+run started from a clean, fully-pushed baseline.
+
+Per the scheduled-task directive to "add more large companies jobs feeds parsers (as sources)" when the
+ATS surface is saturated, this run ships **14 new large-company Greenhouse-direct source plugins**
+(Specs 606–619) via the deterministic `scripts/scaffold-company-source.ts` batch generator, with the
+four shared wiring files registered by a new deterministic, idempotent, anchor-based helper
+`scripts/wire-company-source.ts` (replacement-function form throughout — avoids the jest-config `$'`
+foot-gun).
+
+**Candidate discovery (live probe):** ~300 candidate slugs were assembled across the still-fertile
+verticals flagged in prior runs (consumer DTC apparel/activewear, consumer fintech & lending,
+grid-scale energy storage / climate tech, advanced manufacturing & autonomous transport, at-home
+health diagnostics, enterprise generative-AI content, retail/e-commerce intelligence) and probed
+concurrently against `https://boards-api.greenhouse.io/v1/boards/<slug>/jobs`. Each survivor was gated
+on (a) ≥ 3 live roles and (b) a board-name brand-match via `https://boards-api.greenhouse.io/v1/boards/<slug>`.
+The 14 adopted boards and their live role counts (probed 2026-06-04): Alo Yoga (663), Kodiak Robotics
+(58), Altruist (58), ON.energy (53), Divergent (54), Typeface (23), Range (20), Upgrade (17), Bombas
+(13), Overstory (12), Stackline (10), Pagaya (8), LetsGetChecked (4), Happy Money (3). Ambiguous slugs
+`tempo` (board "Tempo" resolves to "Tempo Innovations" — borderline brand-match at the ≥ 3-listing
+floor) and `kettle` (board "Kettle" resolves to a creative product studio, ambiguous against multiple
+"Kettle" companies) were **dropped** per the brand-match gate. Real probed listings (id / title /
+location / updated_at) were used to build each plugin's 3-listing fixture so the unit suites assert
+against real-world wire shapes.
+
+**Changes:**
+
+- **14 new source-company plugin packages** under `packages/plugins/source-company-{aloyoga,kodiak,
+  altruist,onenergy,divergent,typeface,range,upgrade,bombas,overstory,stackline,pagaya,letsgetchecked,
+  happymoney}/` — each with `package.json`, `tsconfig.json`, `src/index.ts`, `src/<slug>.module.ts`,
+  `src/<slug>.service.ts`, `__tests__/<slug>.service.spec.ts`, and a 3-listing fixture. All mirror the
+  canonical variant-2 + D-08 company-direct template (wire `company_name` pass-through; defensive
+  D-10/D-11 title/department trim; entity-decode-then-tag-strip descriptions; graceful degradation to
+  `{ jobs: [] }` on transport error).
+- **14 new spec dirs** `.specify/specs/{606..619}-source-company-<slug>/` (spec.md, plan.md, tasks.md).
+- **New helper `scripts/wire-company-source.ts`** — idempotent, anchor-based registration of the four
+  shared wiring files (`site.enum.ts`, `packages/plugins/index.ts`, `tsconfig.base.json`,
+  `jest.config.js`). Uses replacement-FUNCTION form and CRLF-robust brace location for the enum close.
+- **Four wiring files** updated via that helper: `site.enum.ts` (+14 enum members, Phases 615–628),
+  `packages/plugins/index.ts` (+14 imports, +14 `ALL_SOURCE_MODULES` entries), `tsconfig.base.json`
+  (+14 path aliases), `jest.config.js` (+14 moduleNameMapper entries).
+- **docs/index.md** — 14 new spec rows appended to the spec registry (§7).
+- **docs/log.md** — this entry.
+
+**Verification:**
+
+- `npx jest "source-company-(aloyoga|…|happymoney)/"` → **14 suites, 154 tests, all green** (the
+  `ERROR … status 500` lines are the intentional error-path test cases asserting graceful degradation).
+- `tsc --noEmit -p packages/models/tsconfig.json` → **clean** (enum change typechecks).
+- `scripts/docs-lint.ts` → **✓ passed — no issues** (all new spec docs linked from index.md).
+
+**Notes:**
+
+- New corpus totals after this run: **484 `source-company-*` plugins / 767 source plugin packages /
+  614 spec dirs / 767 enum members / last enum Phase 628 (Spec 619, Happy Money)**.
+- Nothing in this repo references competitors; OTHERS sync is tracked only in the parent-directory
+  `competitor-watch.md`.
+- Next run: continue probing fresh Greenhouse boards (consumer-DTC, fintech/lending, climate/energy
+  verticals still yielding) and/or broaden ATS-adapter coverage; alternatively deepen feature-plugin
+  test coverage.
+
+---
+
 ## 2026-06-04 — Scheduled run #424 (**TWELVE new Greenhouse company-direct source plugins: CarGurus, Ruggable, Quince, Everlane, Zenni Optical, goodr, ThirdLove, Cuyana, Kikoff, DriveWealth, Karat, Suitsupply** — Specs 594–605)
 
 **Scope:** Direct continuation of the run-#423 company-direct Greenhouse direction. At run start the

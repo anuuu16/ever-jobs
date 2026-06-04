@@ -1365,6 +1365,34 @@ export enum Site {
   KARAT_INTERVIEWS = 'karat',
   // Phase 614: Spec 605 — Source Company Plugin: Suitsupply
   SUITSUPPLY = 'suitsupply',
+  // Phase 615: Spec 606 — Source Company Plugin: Alo Yoga
+  ALO_YOGA = 'aloyoga',
+  // Phase 616: Spec 607 — Source Company Plugin: Kodiak Robotics
+  KODIAK_ROBOTICS = 'kodiak',
+  // Phase 617: Spec 608 — Source Company Plugin: Altruist
+  ALTRUIST = 'altruist',
+  // Phase 618: Spec 609 — Source Company Plugin: ON.energy
+  ON_ENERGY = 'onenergy',
+  // Phase 619: Spec 610 — Source Company Plugin: Divergent
+  DIVERGENT = 'divergent',
+  // Phase 620: Spec 611 — Source Company Plugin: Typeface
+  TYPEFACE = 'typeface',
+  // Phase 621: Spec 612 — Source Company Plugin: Range
+  RANGE_TRAVEL = 'range',
+  // Phase 622: Spec 613 — Source Company Plugin: Upgrade
+  UPGRADE = 'upgrade',
+  // Phase 623: Spec 614 — Source Company Plugin: Bombas
+  BOMBAS = 'bombas',
+  // Phase 624: Spec 615 — Source Company Plugin: Overstory
+  OVERSTORY = 'overstory',
+  // Phase 625: Spec 616 — Source Company Plugin: Stackline
+  STACKLINE = 'stackline',
+  // Phase 626: Spec 617 — Source Company Plugin: Pagaya
+  PAGAYA = 'pagaya',
+  // Phase 627: Spec 618 — Source Company Plugin: LetsGetChecked
+  LETSGETCHECKED = 'letsgetchecked',
+  // Phase 628: Spec 619 — Source Company Plugin: Happy Money
+  HAPPY_MONEY = 'happymoney',
 }
 
 /**

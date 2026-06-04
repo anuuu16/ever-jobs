@@ -759,6 +759,20 @@ import { KikoffModule } from './source-company-kikoff';
 import { DriveWealthModule } from './source-company-drivewealth';
 import { KaratModule } from './source-company-karat';
 import { SuitsupplyModule } from './source-company-suitsupply';
+import { AloYogaModule } from './source-company-aloyoga';
+import { KodiakModule } from './source-company-kodiak';
+import { AltruistModule } from './source-company-altruist';
+import { OnEnergyModule } from './source-company-onenergy';
+import { DivergentModule } from './source-company-divergent';
+import { TypefaceModule } from './source-company-typeface';
+import { RangeModule } from './source-company-range';
+import { UpgradeModule } from './source-company-upgrade';
+import { BombasModule } from './source-company-bombas';
+import { OverstoryModule } from './source-company-overstory';
+import { StacklineModule } from './source-company-stackline';
+import { PagayaModule } from './source-company-pagaya';
+import { LetsGetCheckedModule } from './source-company-letsgetchecked';
+import { HappyMoneyModule } from './source-company-happymoney';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1511,4 +1525,18 @@ export const ALL_SOURCE_MODULES = [
   DriveWealthModule,
   KaratModule,
   SuitsupplyModule,
+  AloYogaModule,
+  KodiakModule,
+  AltruistModule,
+  OnEnergyModule,
+  DivergentModule,
+  TypefaceModule,
+  RangeModule,
+  UpgradeModule,
+  BombasModule,
+  OverstoryModule,
+  StacklineModule,
+  PagayaModule,
+  LetsGetCheckedModule,
+  HappyMoneyModule,
 ];
