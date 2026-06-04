@@ -1393,6 +1393,40 @@ export enum Site {
   LETSGETCHECKED = 'letsgetchecked',
   // Phase 628: Spec 619 — Source Company Plugin: Happy Money
   HAPPY_MONEY = 'happymoney',
+  // Phase 629: Spec 620 — Source Company Plugin: Clutch
+  CLUTCH = 'clutch',
+  // Phase 630: Spec 621 — Source Company Plugin: Counterpart
+  COUNTERPART = 'counterpart',
+  // Phase 631: Spec 622 — Source Company Plugin: EnergyHub
+  ENERGYHUB = 'energyhub',
+  // Phase 632: Spec 623 — Source Company Plugin: Ethos
+  ETHOS = 'ethos',
+  // Phase 633: Spec 624 — Source Company Plugin: Extend
+  EXTEND = 'extend',
+  // Phase 634: Spec 625 — Source Company Plugin: Ghost
+  GHOST = 'ghost',
+  // Phase 635: Spec 626 — Source Company Plugin: HomeLight
+  HOMELIGHT = 'homelight',
+  // Phase 636: Spec 627 — Source Company Plugin: Isomorphic Labs
+  ISOMORPHIC_LABS = 'isomorphiclabs',
+  // Phase 637: Spec 628 — Source Company Plugin: Loop
+  LOOP = 'loop',
+  // Phase 638: Spec 629 — Source Company Plugin: Openly
+  OPENLY = 'openly',
+  // Phase 639: Spec 630 — Source Company Plugin: Rocket Lab
+  ROCKET_LAB = 'rocketlab',
+  // Phase 640: Spec 631 — Source Company Plugin: Seurat Technologies
+  SEURAT_TECHNOLOGIES = 'seurat',
+  // Phase 641: Spec 632 — Source Company Plugin: SpaceX
+  SPACEX = 'spacex',
+  // Phase 642: Spec 633 — Source Company Plugin: Sparkfund
+  SPARKFUND = 'sparkfund',
+  // Phase 643: Spec 634 — Source Company Plugin: Rocket Money
+  ROCKET_MONEY = 'truebill',
+  // Phase 644: Spec 635 — Source Company Plugin: Weave
+  WEAVE = 'weave',
+  // Phase 645: Spec 636 — Source Company Plugin: Wing
+  WING = 'wing',
 }
 
 /**

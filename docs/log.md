@@ -15,7 +15,64 @@
 
 ---
 
-## 2026-06-04 — Scheduled run #425 (**FOURTEEN new Greenhouse company-direct source plugins: Alo Yoga, Kodiak Robotics, Altruist, ON.energy, Divergent, Typeface, Range, Upgrade, Bombas, Overstory, Stackline, Pagaya, LetsGetChecked, Happy Money** — Specs 606–619)
+## 2026-06-04 — Scheduled run #426 (**SEVENTEEN new Greenhouse company-direct source plugins: Clutch, Counterpart, EnergyHub, Ethos, Extend, Ghost, HomeLight, Isomorphic Labs, Loop, Openly, Rocket Lab, Seurat Technologies, SpaceX, Sparkfund, Rocket Money, Weave, Wing** — Specs 620–636; + two new reusable discovery/assembly scripts)
+
+**Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held
+**484 `source-company-*` plugins / 767 source plugin packages total / 619 last spec / 767 enum members /
+last enum Phase 628 (Spec 619, Happy Money)**. All three OTHERS reference repos were `git pull`-ed and
+reported **no upstream changes** (`Ats-scrapers` @ `b45c12a`, `JobSpy` @ `fda080a`, `Jobspy-api` @
+`26bb6f4` — all "Already up to date"). The prior run's CI (run `26945946711`, Specs 606–619) was
+confirmed **green** and `origin/develop` held `a1ceec9` with a clean working tree, so this run started
+from a clean, fully-pushed baseline.
+
+This run ships **17 new large-company Greenhouse-direct source plugins** (Specs 620–636, enum Phases
+629–645) plus **two new reusable pipeline scripts** that formalise the discovery + assembly steps that
+prior runs performed ad-hoc:
+
+- **`scripts/probe-company-source.ts`** — a deterministic, bounded-concurrency (16-way) Greenhouse
+  discovery probe. Reads a newline-separated candidate-slug file, concurrently hits both the board
+  metadata (`/v1/boards/<slug>`) and jobs (`/v1/boards/<slug>/jobs`) endpoints, and emits a survivors
+  JSON. The gate (`gateBoard`) + listing-normaliser (`extractListings`) are pure, side-effect-free, and
+  unit-tested; only `probeOne`/`getJson` touch the network. A candidate survives iff the jobs endpoint
+  returns HTTP 200 with ≥ 3 live listings **and** the board endpoint exposes a non-empty `name`
+  (brand-match anchor).
+- **`scripts/assemble-company-batch.ts`** — joins the survivors file + an enrichment file (factual
+  prose) + a numbering file into the `CompanyDescriptor[]` batch consumed by both the scaffolder and the
+  wiring helper. All mechanical identifier fields (`className`/`moduleName`/`serviceName`/`enumKey`) are
+  **derived** from the canonical `displayName` via the pure, unit-tested `pascalBase`/`enumKeyOf`
+  helpers, so the naming convention is single-sourced and collision-free.
+
+**Candidate discovery (live probe):** **270 candidate slugs** were assembled across the fertile
+verticals flagged in prior runs (consumer fintech & lending, climate / grid-scale energy, at-home
+health & biotech, advanced manufacturing & aerospace, proptech, insurtech, logistics) and probed
+concurrently. **17 survived** the ≥ 3-roles + brand-match gate: Clutch (70), Counterpart (10),
+EnergyHub (21), Ethos (3), Extend (13), Ghost (5), HomeLight (20), Isomorphic Labs (27), Loop (10),
+Openly (6), Rocket Lab (310), Seurat Technologies (3), **SpaceX (1,725)**, Sparkfund (6), Rocket Money
+(slug `truebill`, 26), Weave (7), Wing (29).
+
+**Enrichment (parallel workflow):** descriptor prose (one-liner, sector, HQ, 2–3-sentence description,
+3 highlights) for all 17 was produced by a **17-agent parallel `Workflow`** (one agent per company,
+each grounded on the live board name + sample job titles, schema-validated output). Agent output was
+HTML-entity-decoded before assembly. Spec/plan/tasks + package files were materialised by the
+deterministic `scaffold-company-source.ts` generator and registered by the idempotent,
+replacement-function-based `wire-company-source.ts` helper (avoids the jest-config `$'` foot-gun).
+
+**Verification:** `tsc --noEmit -p tsconfig.base.json` clean; the **17 new Jest suites pass (187 tests,
+0 failures)** — the `status 500` ERROR log lines are the intentional error-path assertions
+(network-failure → empty `{ jobs: [] }`). New unit tests for the two new scripts added under
+`scripts/__tests__/`.
+
+**Notes / decisions:**
+
+- *Brand-name disambiguation:* "Ethos", "Ghost", "Loop", "Wing", "Clutch" are generic board names; each
+  enrichment agent inferred the specific company from the live board name + job titles. Recorded results:
+  Ethos = AI expert network (London); Ghost = B2B surplus-inventory marketplace (LA); Loop = logistics-AI
+  freight-audit platform (SF); Wing = Alphabet drone-delivery (Palo Alto); Clutch = Canadian online
+  used-car retailer (Toronto). `truebill` slug hosts the canonical **Rocket Money** board (displayName
+  pinned to "Rocket Money", `enumKey ROCKET_MONEY`).
+- *Phase numbering:* enum Phases 629–645 map 1:1 to Specs 620–636.
+
+
 
 **Scope:** Direct continuation of the run-#424 company-direct Greenhouse direction. At run start the
 corpus held **470 `source-company-*` plugins / 753 source plugin packages total / 600 spec dirs / 753

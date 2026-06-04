@@ -773,6 +773,23 @@ import { StacklineModule } from './source-company-stackline';
 import { PagayaModule } from './source-company-pagaya';
 import { LetsGetCheckedModule } from './source-company-letsgetchecked';
 import { HappyMoneyModule } from './source-company-happymoney';
+import { ClutchModule } from './source-company-clutch';
+import { CounterpartModule } from './source-company-counterpart';
+import { EnergyHubModule } from './source-company-energyhub';
+import { EthosModule } from './source-company-ethos';
+import { ExtendModule } from './source-company-extend';
+import { GhostModule } from './source-company-ghost';
+import { HomeLightModule } from './source-company-homelight';
+import { IsomorphicLabsModule } from './source-company-isomorphiclabs';
+import { LoopModule } from './source-company-loop';
+import { OpenlyModule } from './source-company-openly';
+import { RocketLabModule } from './source-company-rocketlab';
+import { SeuratTechnologiesModule } from './source-company-seurat';
+import { SpaceXModule } from './source-company-spacex';
+import { SparkfundModule } from './source-company-sparkfund';
+import { RocketMoneyModule } from './source-company-truebill';
+import { WeaveModule } from './source-company-weave';
+import { WingModule } from './source-company-wing';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1539,4 +1556,21 @@ export const ALL_SOURCE_MODULES = [
   PagayaModule,
   LetsGetCheckedModule,
   HappyMoneyModule,
+  ClutchModule,
+  CounterpartModule,
+  EnergyHubModule,
+  EthosModule,
+  ExtendModule,
+  GhostModule,
+  HomeLightModule,
+  IsomorphicLabsModule,
+  LoopModule,
+  OpenlyModule,
+  RocketLabModule,
+  SeuratTechnologiesModule,
+  SpaceXModule,
+  SparkfundModule,
+  RocketMoneyModule,
+  WeaveModule,
+  WingModule,
 ];
