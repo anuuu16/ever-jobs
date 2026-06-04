@@ -706,6 +706,18 @@ import { FoundModule } from './source-company-found';
 import { ParsleyhealthModule } from './source-company-parsleyhealth';
 import { NeuralinkModule } from './source-company-neuralink';
 import { ClearModule } from './source-company-clear';
+import { ApptronikModule } from './source-company-apptronik';
+import { MillModule } from './source-company-mill';
+import { CloverhealthModule } from './source-company-cloverhealth';
+import { OlipopModule } from './source-company-olipop';
+import { VannevarlabsModule } from './source-company-vannevarlabs';
+import { DiligentroboticsModule } from './source-company-diligentrobotics';
+import { WayveModule } from './source-company-wayve';
+import { ModernanimalModule } from './source-company-modernanimal';
+import { BicyclehealthModule } from './source-company-bicyclehealth';
+import { LunarenergyModule } from './source-company-lunarenergy';
+import { Eh2Module } from './source-company-eh2';
+import { TideModule } from './source-company-tide';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1405,4 +1417,16 @@ export const ALL_SOURCE_MODULES = [
   ParsleyhealthModule,
   NeuralinkModule,
   ClearModule,
+  ApptronikModule,
+  MillModule,
+  CloverhealthModule,
+  OlipopModule,
+  VannevarlabsModule,
+  DiligentroboticsModule,
+  WayveModule,
+  ModernanimalModule,
+  BicyclehealthModule,
+  LunarenergyModule,
+  Eh2Module,
+  TideModule,
 ];

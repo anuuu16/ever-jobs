@@ -15,6 +15,68 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #421 (**TWELVE new Greenhouse company-direct source plugins: Apptronik, Mill, Clover Health, OLIPOP, Vannevar Labs, Diligent Robotics, Wayve, Modern Animal, Bicycle Health, Lunar Energy, Electric Hydrogen, Tide** — Specs 553–564)
+
+**Scope:** Direct continuation of the run-#420 company-direct Greenhouse direction. At run start the
+corpus held **417 `source-company-*` plugins / 706 source plugin packages total / 547 specs / last
+enum Phase 561**; all three OTHERS reference repos (`Ats-scrapers` @ `b45c12a`, `JobSpy` @ `fda080a`,
+`Jobspy-api` @ `26bb6f4`) were fetched and reported **no upstream changes** (`local == remote` for all
+three; tracked only in the parent-directory competitor-watch file — never in this repo). The prior
+run's CI (run `26932444609`) was confirmed **green** and `origin/develop` already held `1cb998a`, so
+this run started from a clean, fully-pushed tree.
+
+Per the scheduled-task directive to "add more large companies jobs feeds parsers (as sources)" when
+the ATS surface is saturated, this run ships **12 new large-company Greenhouse-direct source plugins**
+(Specs 553–564) via the deterministic `scripts/scaffold-company-source.ts` batch generator. Candidate
+slugs were discovered by a **live Greenhouse-board probe** (`boards-api.greenhouse.io/v1/boards/<slug>/jobs`)
+across under-mined fresh verticals (humanoid/service robotics, climate hardware, green hydrogen, home
+energy storage, defense AI, autonomous driving, veterinary care, telehealth, SMB business banking,
+prebiotic beverage, Medicare Advantage); every candidate was gated on a **board-name brand-match** and a
+**≥ 3 live-listing** floor before inclusion. Many large brand probes that resolve to Ashby/Lever rather
+than Greenhouse (Notion, Vanta, Rippling, Deel, Gong, Anduril, Crusoe, etc.) were probed and **excluded**
+because their Greenhouse board returned no roles.
+
+**New plugins (live-probed 2026-06-04):**
+
+- **Apptronik** (`apptronik`) — Humanoid Robotics / Embodied AI, Austin, Texas, USA. 86 live roles.
+- **Mill** (`mill`) — Climate / Consumer Hardware, San Bruno, California, USA. 13 live roles.
+- **Clover Health** (`cloverhealth`) — Healthcare / Medicare Advantage, Nashville, Tennessee, USA. 114 live roles.
+- **OLIPOP** (`olipop`) — Consumer Packaged Goods / Beverage, Oakland, California, USA. 22 live roles.
+- **Vannevar Labs** (`vannevarlabs`) — Defense Technology / National Security AI, San Francisco, California, USA. 26 live roles.
+- **Diligent Robotics** (`diligentrobotics`) — Healthcare Robotics / Service Robotics, Austin, Texas, USA. 15 live roles.
+- **Wayve** (`wayve`) — Autonomous Driving / Embodied AI, London, United Kingdom. 119 live roles.
+- **Modern Animal** (`modernanimal`) — Veterinary Care / Consumer Health, Los Angeles, California, USA. 324 live roles.
+- **Bicycle Health** (`bicyclehealth`) — Telehealth / Behavioral Health, Boston, Massachusetts, USA. 12 live roles.
+- **Lunar Energy** (`lunarenergy`) — Clean Energy / Home Energy Storage, Mountain View, California, USA. 16 live roles.
+- **Electric Hydrogen** (`eh2`) — Clean Energy / Green Hydrogen, Devens, Massachusetts, USA. 14 live roles.
+- **Tide** (`tide`) — Fintech / SMB Business Banking, London, United Kingdom. 630 live roles.
+
+**Changes:**
+
+- Scaffolded 12 plugin packages (120 files) via `scripts/scaffold-company-source.ts` from a
+  `.batch-input-421.json` descriptor assembled from the live probe (3 real listings per board).
+- Wired all 12 into the four shared registration files: `packages/models/src/enums/site.enum.ts`
+  (Phases 562–573), `packages/plugins/index.ts` (imports + `ALL_SOURCE_MODULES`),
+  `tsconfig.base.json` (path aliases) and `jest.config.js` (`moduleNameMapper`).
+- Added 12 spec triplets under `.specify/specs/553…564-source-company-<slug>/` (spec/plan/tasks).
+- Updated `docs/index.md` (12 new spec rows + revised footer) and this `docs/log.md`.
+
+**Verification:**
+
+- `npx jest` over the 12 new packages: **12 suites / 132 tests pass** (the per-service HTTP-500
+  ERROR lines are the intentional graceful-degradation error-path cases — services never throw).
+- Registry + scaffolder + docs-lint suites: **35 tests pass**.
+- `docs-lint.ts`: **✓ no issues** (all 36 new spec docs linked from `docs/index.md`).
+
+**Notes:**
+
+- Slug `eh2` is retained as the package/board slug because the Greenhouse board host is literally
+  `eh2`; the display name and enum key are the human-readable `Electric Hydrogen` / `ELECTRIC_HYDROGEN`.
+- New corpus totals: **429 `source-company-*` plugins / 718 source plugin packages / 559 specs /
+  last enum Phase 573**.
+
+---
+
 ## 2026-06-04 — Scheduled run #420 (**NINE new Greenhouse company-direct source plugins: Figure, Slice, Chowbus, TabaPay, PathAI, Found, Parsley Health, Neuralink, CLEAR** — Specs 544–552)
 
 **Scope:** Direct continuation of the run-#419 company-direct Greenhouse direction. At run start the

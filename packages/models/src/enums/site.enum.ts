@@ -1259,6 +1259,30 @@ export enum Site {
   NEURALINK = 'neuralink',
   // Phase 561: Spec 552 — Source Company Plugin: CLEAR
   CLEAR = 'clear',
+  // Phase 562: Spec 553 — Source Company Plugin: Apptronik
+  APPTRONIK = 'apptronik',
+  // Phase 563: Spec 554 — Source Company Plugin: Mill
+  MILL = 'mill',
+  // Phase 564: Spec 555 — Source Company Plugin: Clover Health
+  CLOVER_HEALTH = 'cloverhealth',
+  // Phase 565: Spec 556 — Source Company Plugin: OLIPOP
+  OLIPOP = 'olipop',
+  // Phase 566: Spec 557 — Source Company Plugin: Vannevar Labs
+  VANNEVAR_LABS = 'vannevarlabs',
+  // Phase 567: Spec 558 — Source Company Plugin: Diligent Robotics
+  DILIGENT_ROBOTICS = 'diligentrobotics',
+  // Phase 568: Spec 559 — Source Company Plugin: Wayve
+  WAYVE = 'wayve',
+  // Phase 569: Spec 560 — Source Company Plugin: Modern Animal
+  MODERN_ANIMAL = 'modernanimal',
+  // Phase 570: Spec 561 — Source Company Plugin: Bicycle Health
+  BICYCLE_HEALTH = 'bicyclehealth',
+  // Phase 571: Spec 562 — Source Company Plugin: Lunar Energy
+  LUNAR_ENERGY = 'lunarenergy',
+  // Phase 572: Spec 563 — Source Company Plugin: Electric Hydrogen
+  ELECTRIC_HYDROGEN = 'eh2',
+  // Phase 573: Spec 564 — Source Company Plugin: Tide
+  TIDE = 'tide',
 }
 
 /**
