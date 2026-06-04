@@ -747,6 +747,18 @@ import { ZwiftModule } from './source-company-zwift';
 import { PacasoModule } from './source-company-pacaso';
 import { OrchardModule } from './source-company-orchard';
 import { RoofstockModule } from './source-company-roofstock';
+import { CarGurusModule } from './source-company-cargurus';
+import { RuggableModule } from './source-company-ruggable';
+import { QuinceModule } from './source-company-quince';
+import { EverlaneModule } from './source-company-everlane';
+import { ZenniOpticalModule } from './source-company-zennioptical';
+import { GoodrModule } from './source-company-goodr';
+import { ThirdLoveModule } from './source-company-thirdlove';
+import { CuyanaModule } from './source-company-cuyana';
+import { KikoffModule } from './source-company-kikoff';
+import { DriveWealthModule } from './source-company-drivewealth';
+import { KaratModule } from './source-company-karat';
+import { SuitsupplyModule } from './source-company-suitsupply';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1487,4 +1499,16 @@ export const ALL_SOURCE_MODULES = [
   PacasoModule,
   OrchardModule,
   RoofstockModule,
+  CarGurusModule,
+  RuggableModule,
+  QuinceModule,
+  EverlaneModule,
+  ZenniOpticalModule,
+  GoodrModule,
+  ThirdLoveModule,
+  CuyanaModule,
+  KikoffModule,
+  DriveWealthModule,
+  KaratModule,
+  SuitsupplyModule,
 ];

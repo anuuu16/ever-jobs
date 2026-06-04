@@ -1341,6 +1341,30 @@ export enum Site {
   ORCHARD = 'orchard',
   // Phase 602: Spec 593 — Source Company Plugin: Roofstock
   ROOFSTOCK = 'roofstock',
+  // Phase 603: Spec 594 — Source Company Plugin: CarGurus
+  CARGURUS = 'cargurus',
+  // Phase 604: Spec 595 — Source Company Plugin: Ruggable
+  RUGGABLE = 'ruggable',
+  // Phase 605: Spec 596 — Source Company Plugin: Quince
+  QUINCE = 'quince',
+  // Phase 606: Spec 597 — Source Company Plugin: Everlane
+  EVERLANE = 'everlane',
+  // Phase 607: Spec 598 — Source Company Plugin: Zenni Optical
+  ZENNI_OPTICAL = 'zennioptical',
+  // Phase 608: Spec 599 — Source Company Plugin: goodr
+  GOODR = 'goodr',
+  // Phase 609: Spec 600 — Source Company Plugin: ThirdLove
+  THIRDLOVE = 'thirdlove',
+  // Phase 610: Spec 601 — Source Company Plugin: Cuyana
+  CUYANA = 'cuyana',
+  // Phase 611: Spec 602 — Source Company Plugin: Kikoff
+  KIKOFF = 'kikoff',
+  // Phase 612: Spec 603 — Source Company Plugin: DriveWealth
+  DRIVEWEALTH = 'drivewealth',
+  // Phase 613: Spec 604 — Source Company Plugin: Karat
+  KARAT_INTERVIEWS = 'karat',
+  // Phase 614: Spec 605 — Source Company Plugin: Suitsupply
+  SUITSUPPLY = 'suitsupply',
 }
 
 /**

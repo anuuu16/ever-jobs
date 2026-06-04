@@ -15,6 +15,67 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #424 (**TWELVE new Greenhouse company-direct source plugins: CarGurus, Ruggable, Quince, Everlane, Zenni Optical, goodr, ThirdLove, Cuyana, Kikoff, DriveWealth, Karat, Suitsupply** — Specs 594–605)
+
+**Scope:** Direct continuation of the run-#423 company-direct Greenhouse direction. At run start the
+corpus held **458 `source-company-*` plugins / 747 source plugin packages total (incl. 174
+`source-ats-*`) / 588 spec dirs / 741 enum members / last enum Phase 602 (Spec 593, Roofstock)**. All
+three OTHERS reference repos were `git pull`-ed and reported **no upstream changes** (`Ats-scrapers`
+@ `b45c12a`, `JobSpy` @ `fda080a`, `Jobspy-api` @ `26bb6f4` — all "Already up to date"). The prior
+run's CI (run `26939677384`, Specs 579–593) was confirmed **green** and `origin/develop` held
+`0bb79e1` with a clean working tree, so this run started from a clean, fully-pushed baseline.
+
+Per the scheduled-task directive to "add more large companies jobs feeds parsers (as sources)" when
+the ATS surface is saturated, this run ships **12 new large-company Greenhouse-direct source plugins**
+(Specs 594–605) via the deterministic `scripts/scaffold-company-source.ts` batch generator.
+
+**Candidate discovery (live probe):** ~250 candidate slugs were assembled across the still-fertile
+verticals flagged in prior runs (consumer DTC retail/apparel/eyewear, consumer fintech, embedded
+finance, home goods) and probed concurrently against
+`https://boards-api.greenhouse.io/v1/boards/<slug>/jobs`. Each survivor was gated on (a) ≥ 3 live
+roles and (b) a board-name brand-match via `https://boards-api.greenhouse.io/v1/boards/<slug>`. The
+12 adopted boards and their live role counts (probed 2026-06-04): CarGurus (53), Ruggable (11),
+Quince (119), Everlane (28), Zenni Optical (18), goodr (9), ThirdLove (6), Cuyana (5), Kikoff (47),
+DriveWealth (18), Karat (8), Suitsupply (160). Ambiguous slug `apex` (board name "Apex Eye", a
+regional eye-care provider that does not brand-match the slug) was **dropped** per the brand-match
+gate. Real probed listings (id / title / location / updated_at) were used to build each plugin's
+3-listing fixture so the unit suites assert against real-world wire shapes.
+
+**Changes:**
+
+- **12 new source-company plugin packages** under `packages/plugins/source-company-{cargurus,
+  ruggable,quince,everlane,zennioptical,goodr,thirdlove,cuyana,kikoff,drivewealth,karat,suitsupply}/`
+  — each with `package.json`, `tsconfig.json`, `src/index.ts`, `src/<slug>.module.ts`,
+  `src/<slug>.service.ts`, `__tests__/<slug>.service.spec.ts`, and a 3-listing fixture. All mirror the
+  canonical variant-2 + D-08 company-direct template (wire `company_name` pass-through; defensive
+  D-10/D-11 title/department trim; entity-decode-then-tag-strip descriptions; graceful degradation to
+  `{ jobs: [] }` on transport error).
+- **12 new spec dirs** `.specify/specs/{594..605}-source-company-<slug>/` (spec.md, plan.md, tasks.md).
+- **Four wiring files** updated (idempotent anchor-based insertion, no regex — avoids the jest-config
+  `$'` foot-gun): `site.enum.ts` (+12 enum members, Phases 603–614), `packages/plugins/index.ts`
+  (+12 imports, +12 `ALL_SOURCE_MODULES` entries), `tsconfig.base.json` (+12 path aliases),
+  `jest.config.js` (+12 moduleNameMapper entries).
+- **docs/index.md** — 12 new spec rows appended to the spec registry (§7).
+- **docs/log.md** — this entry.
+
+**Verification:**
+
+- `npx jest "source-company-(cargurus|…|suitsupply)/"` → **12 suites, 132 tests, all green** (the
+  `ERROR … status 500` lines are the intentional error-path test cases asserting graceful degradation).
+- `tsc --noEmit -p packages/models/tsconfig.json` → **clean** (enum change typechecks).
+- `scripts/docs-lint.ts` → **✓ passed — no issues** (all 36 new spec docs linked from index.md).
+
+**Notes:**
+
+- New corpus totals after this run: **470 `source-company-*` plugins / 759 source plugin packages /
+  600 spec dirs / 753 enum members / last enum Phase 614 (Spec 605, Suitsupply)**.
+- Nothing in this repo references competitors; OTHERS sync is tracked only in the parent-directory
+  `competitor-watch.md`.
+- Next run: continue probing fresh Greenhouse boards (consumer-DTC verticals still yielding) and/or
+  broaden ATS-adapter coverage; alternatively deepen feature-plugin test coverage.
+
+---
+
 ## 2026-06-04 — Scheduled run #423 (**FIFTEEN new Greenhouse company-direct source plugins: Ritual, Mejuri, Parachute Home, Ginkgo Bioworks, World Labs, Recursion, Spire Global, Muon Space, FanDuel, Underdog, Future, Zwift, Pacaso, Orchard, Roofstock** — Specs 579–593)
 
 **Scope:** Direct continuation of the run-#422 company-direct Greenhouse direction. At run start the
