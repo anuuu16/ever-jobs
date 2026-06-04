@@ -15,6 +15,71 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #431 (**FIVE new Greenhouse company-direct source plugins: Amperity, Keeper Security, mabl, Proton, StackBlitz** — Specs 696–700)
+
+**Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held
+**560 `source-company-*` plugins / 843 source plugin packages total / 849 plugin packages / 695 last spec /
+last enum Phase 704 (Spec 695, Verve Group)**. All three OTHERS reference repos were `git pull`-ed and
+reported **no upstream changes** (`Ats-scrapers` @ `b45c12a`, `JobSpy` @ `fda080a`, `Jobspy-api` @ `26bb6f4`
+— all "Already up to date"). The prior run's CI (run `26960959617`, Specs 683–695) was confirmed **green**
+and `origin/develop` held `127e997b` with a clean working tree, so this run started from a clean,
+fully-pushed baseline. `docs-lint` was confirmed clean at run start.
+
+This run ships **5 new large-company Greenhouse-direct source plugins** (Specs 696–700, enum Phases
+705–709) via the established deterministic pipeline (`probe → enrich → assemble → scaffold → wire`).
+
+**Candidate discovery (live probe):** a **216-slug** candidate list was assembled across consumer fintech /
+spend-management, climate/energy, food/grocery DTC, health-data, privacy/security, dev-tools & QA-automation,
+deduped against the 560 existing company slugs, and probed concurrently via `scripts/probe-company-source.ts`
+(16-way) against the public Greenhouse Job-Board API. **6 survived** the ≥ 3-roles + brand-match gate.
+
+**Quality-review drop (1):** `crisp` returned board **"Crisp"** (6 roles) with a role mix (Case Manager in
+Kent WA / Corpus Christi TX, Director of Marketing) that matches no identifiable single well-known brand —
+a generic single-word slug with high collision/ambiguity risk. It was dropped at the review gate (mirrors
+the `ess` drop in run #430). The remaining **5 survivors were all adopted**.
+
+The **5 adopted** boards and their live role counts (probed 2026-06-04): Keeper Security (92), Proton (63),
+Amperity (19), StackBlitz / "Bolt.new" board (13), mabl (5). Real probed listings (id / title / location /
+updated_at) were used to build each plugin's 3-listing fixture so the unit suites assert against
+real-world wire shapes.
+
+**Disambiguation guard (1):** the StackBlitz board is branded **"Bolt.new"** (its flagship AI app-builder
+product). The enrichment agent (grounded on board name + sample titles + locations) resolved the canonical
+company to **StackBlitz** (`STACKBLITZ`; the company also makes WebContainers), avoiding any collision with
+the unrelated "Bolt" checkout / ride-hailing companies. All 5 derived enumKeys (`AMPERITY`,
+`KEEPER_SECURITY`, `MABL`, `PROTON`, `STACKBLITZ`) and classNames were verified collision-free against
+`site.enum.ts` before scaffolding.
+
+**Enrichment (parallel workflow):** descriptor prose (one-liner, sector, HQ, 2–3-sentence description,
+2–3 highlights, canonical displayName) for all 5 companies was produced by a **5-agent parallel
+`Workflow`** (one agent per company, each grounded STRICTLY on the live board name + sample job titles +
+role locations, schema-validated output; ~149 K subagent tokens, ~29 s wall-clock). Spec/plan/tasks + package
+files were materialised by the deterministic `scaffold-company-source.ts` generator and registered by the
+idempotent, replacement-function-based `wire-company-source.ts` helper (avoids the jest-config `$'`
+foot-gun).
+
+**Changes:**
+
+- **5 new source-company plugin packages** under `packages/plugins/source-company-{amperity,keepersecurity,
+  mabl,proton,stackblitz}/` — each with `package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/<slug>.module.ts`, `src/<slug>.service.ts`, `__tests__/<slug>.service.spec.ts`, and a 3-listing
+  fixture. All mirror the canonical variant-2 + D-08 company-direct template (wire `company_name`
+  pass-through; defensive D-10/D-11 title/department trim; entity-decode-then-tag-strip descriptions;
+  graceful degradation to `{ jobs: [] }` on transport error).
+- **5 new spec dirs** `.specify/specs/{696..700}-source-company-<slug>/` (spec.md, plan.md, tasks.md).
+- **Four wiring files** updated via `wire-company-source.ts`: `site.enum.ts` (+5 enum members, Phases
+  705–709), `packages/plugins/index.ts` (+5 `ALL_SOURCE_MODULES` entries), `tsconfig.base.json` (+5 path
+  aliases), `jest.config.js` (+5 moduleNameMapper entries).
+- **`docs/index.md`** — 5 new spec rows (696–700) + "Last revised" footer bumped to run #431.
+- **`docs/log.md`** — this entry.
+
+**Verification:** `tsc --noEmit -p tsconfig.base.json` clean (exit 0); the **5 new Jest suites pass**
+(55 tests, 5 suites; the logged `500` errors are the expected graceful-degradation test cases asserting
+`{ jobs: [] }` on transport failure). `docs-lint` clean (exit 0). Corpus now holds **565
+`source-company-*` plugins** / **848 source plugin packages** / **700 last spec** / **last enum Phase 709**.
+
+---
+
 ## 2026-06-04 — Scheduled run #430 (**THIRTEEN new Greenhouse company-direct source plugins: Bitpanda, BVNK, ChargePoint, Cleo AI, Inceptive, Momentous, NewLimit, Ozow, Profluent, Saatva, SumUp, Valence Labs, Verve Group** — Specs 683–695)
 
 **Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held

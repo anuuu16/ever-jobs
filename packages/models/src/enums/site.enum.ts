@@ -1545,6 +1545,16 @@ export enum Site {
   VALENCE_LABS = 'valencelabs',
   // Phase 704: Spec 695 — Source Company Plugin: Verve Group
   VERVE_GROUP = 'verve',
+  // Phase 705: Spec 696 — Source Company Plugin: Amperity
+  AMPERITY = 'amperity',
+  // Phase 706: Spec 697 — Source Company Plugin: Keeper Security
+  KEEPER_SECURITY = 'keepersecurity',
+  // Phase 707: Spec 698 — Source Company Plugin: mabl
+  MABL = 'mabl',
+  // Phase 708: Spec 699 — Source Company Plugin: Proton
+  PROTON = 'proton',
+  // Phase 709: Spec 700 — Source Company Plugin: StackBlitz
+  STACKBLITZ = 'stackblitz',
 }
 
 /**

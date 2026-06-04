@@ -849,6 +849,11 @@ import { SaatvaModule } from './source-company-saatva';
 import { SumUpModule } from './source-company-sumup';
 import { ValenceLabsModule } from './source-company-valencelabs';
 import { VerveGroupModule } from './source-company-verve';
+import { AmperityModule } from './source-company-amperity';
+import { KeeperSecurityModule } from './source-company-keepersecurity';
+import { MablModule } from './source-company-mabl';
+import { ProtonModule } from './source-company-proton';
+import { StackBlitzModule } from './source-company-stackblitz';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1691,4 +1696,9 @@ export const ALL_SOURCE_MODULES = [
   SumUpModule,
   ValenceLabsModule,
   VerveGroupModule,
+  AmperityModule,
+  KeeperSecurityModule,
+  MablModule,
+  ProtonModule,
+  StackBlitzModule,
 ];
