@@ -1311,6 +1311,36 @@ export enum Site {
   PHONEPE = 'phonepe',
   // Phase 587: Spec 578 — Source Company Plugin: Groww
   GROWW = 'groww',
+  // Phase 588: Spec 579 — Source Company Plugin: Ritual
+  RITUAL = 'ritual',
+  // Phase 589: Spec 580 — Source Company Plugin: Mejuri
+  MEJURI = 'mejuri',
+  // Phase 590: Spec 581 — Source Company Plugin: Parachute Home
+  PARACHUTE_HOME = 'parachutehome',
+  // Phase 591: Spec 582 — Source Company Plugin: Ginkgo Bioworks
+  GINKGO_BIOWORKS = 'ginkgobioworks',
+  // Phase 592: Spec 583 — Source Company Plugin: World Labs
+  WORLD_LABS = 'worldlabs',
+  // Phase 593: Spec 584 — Source Company Plugin: Recursion
+  RECURSION = 'recursionpharmaceuticals',
+  // Phase 594: Spec 585 — Source Company Plugin: Spire Global
+  SPIRE_GLOBAL = 'spire',
+  // Phase 595: Spec 586 — Source Company Plugin: Muon Space
+  MUON_SPACE = 'muonspace',
+  // Phase 596: Spec 587 — Source Company Plugin: FanDuel
+  FANDUEL = 'fanduel',
+  // Phase 597: Spec 588 — Source Company Plugin: Underdog
+  UNDERDOG = 'underdogfantasy',
+  // Phase 598: Spec 589 — Source Company Plugin: Future
+  FUTURE_FITNESS = 'future',
+  // Phase 599: Spec 590 — Source Company Plugin: Zwift
+  ZWIFT = 'zwift',
+  // Phase 600: Spec 591 — Source Company Plugin: Pacaso
+  PACASO = 'pacaso',
+  // Phase 601: Spec 592 — Source Company Plugin: Orchard
+  ORCHARD = 'orchard',
+  // Phase 602: Spec 593 — Source Company Plugin: Roofstock
+  ROOFSTOCK = 'roofstock',
 }
 
 /**

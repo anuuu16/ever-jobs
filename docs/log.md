@@ -15,6 +15,77 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #423 (**FIFTEEN new Greenhouse company-direct source plugins: Ritual, Mejuri, Parachute Home, Ginkgo Bioworks, World Labs, Recursion, Spire Global, Muon Space, FanDuel, Underdog, Future, Zwift, Pacaso, Orchard, Roofstock** — Specs 579–593)
+
+**Scope:** Direct continuation of the run-#422 company-direct Greenhouse direction. At run start the
+corpus held **443 `source-company-*` plugins / 726 source plugin packages total / 573 specs / last
+enum Phase 587**; all three OTHERS reference repos (`Ats-scrapers` @ `b45c12a`, `JobSpy` @ `fda080a`,
+`Jobspy-api` @ `26bb6f4`) were fetched and reported **no upstream changes** (`local == remote` for all
+three; tracked only in the parent-directory competitor-watch file — never in this repo). The prior
+run's CI (run `26936977675`) was confirmed **green** and `origin/develop` already held `c6959c4`, so
+this run started from a clean, fully-pushed tree.
+
+Per the scheduled-task directive to "add more large companies jobs feeds parsers (as sources)" when
+the ATS surface is saturated, this run ships **15 new large-company Greenhouse-direct source plugins**
+(Specs 579–593) via the deterministic `scripts/scaffold-company-source.ts` batch generator. Candidate
+slugs were discovered by a **live Greenhouse-board probe** (`boards-api.greenhouse.io/v1/boards/<slug>/jobs`)
+across under-mined fresh verticals (DTC consumer brands, synthetic-biology and AI drug-discovery
+biotech, spatial-intelligence AI, space / satellite operators, online sports betting and fantasy
+gaming, connected-fitness, and real-estate technology). Every candidate was gated on a **board-name
+brand-match** and a **≥ 3 live-listing** floor before inclusion. Many AI/dev-infra brands probed
+(Temporal, Anthropic, OpenAI, ClickHouse, Vercel, Netlify, PlanetScale, CockroachLabs, etc.) were
+**excluded** — most already exist as plugins or resolve to Ashby/Lever rather than Greenhouse,
+confirming the AI/dev-infra Greenhouse surface is mined out. `privateer` was probed live but **dropped**
+because its board name resolves to "Orbital Insight" (brand-match gate failure). `bungie` was probed
+but **dropped** at the ≥ 3-listing fixture floor — its public board returned only a single content-bearing
+listing (same as run #422).
+
+**New plugins (live-probed 2026-06-04):**
+
+- **Ritual** (`ritual`) — Consumer / Health & Wellness Supplements, Los Angeles, California, USA. 15 live roles.
+- **Mejuri** (`mejuri`) — Consumer / Fine Jewelry (DTC), Toronto, Ontario, Canada. 138 live roles.
+- **Parachute Home** (`parachutehome`) — Consumer / Home Goods & Bedding, Los Angeles, California, USA. 14 live roles.
+- **Ginkgo Bioworks** (`ginkgobioworks`) — Biotechnology / Synthetic Biology, Boston, Massachusetts, USA. 12 live roles.
+- **World Labs** (`worldlabs`) — Artificial Intelligence / Spatial Intelligence, San Francisco, California, USA. 14 live roles.
+- **Recursion** (`recursionpharmaceuticals`) — Biotechnology / AI Drug Discovery, Salt Lake City, Utah, USA. 38 live roles.
+- **Spire Global** (`spire`) — Space / Satellite Data & Analytics, Vienna, Virginia, USA. 45 live roles.
+- **Muon Space** (`muonspace`) — Space / Earth-Observation Satellites, Mountain View, California, USA. 44 live roles.
+- **FanDuel** (`fanduel`) — Consumer / Online Sports Betting & Gaming, New York, New York, USA. 118 live roles.
+- **Underdog** (`underdogfantasy`) — Consumer / Fantasy Sports & Gaming, Brooklyn, New York, USA. 8 live roles.
+- **Future** (`future`) — Consumer / Digital Fitness Coaching, San Francisco, California, USA. 5 live roles.
+- **Zwift** (`zwift`) — Consumer / Connected Fitness & Gaming, Long Beach, California, USA. 8 live roles.
+- **Pacaso** (`pacaso`) — Real Estate / Co-Ownership Marketplace, San Francisco, California, USA. 6 live roles.
+- **Orchard** (`orchard`) — Real Estate / Home Buying & Selling, New York, New York, USA. 73 live roles.
+- **Roofstock** (`roofstock`) — Real Estate / Single-Family Rental Marketplace, Oakland, California, USA. 49 live roles.
+
+**Changes:**
+
+- Scaffolded 15 plugin packages (150 files) via `scripts/scaffold-company-source.ts` from a
+  `.batch-input-423.json` descriptor assembled from the live probe (3 real listings per board).
+- Wired all 15 into the four shared registration files: `packages/models/src/enums/site.enum.ts`
+  (Phases 588–602), `packages/plugins/index.ts` (imports + `ALL_SOURCE_MODULES`),
+  `tsconfig.base.json` (path aliases) and `jest.config.js` (`moduleNameMapper`).
+- Added 15 spec triplets under `.specify/specs/579…593-source-company-<slug>/` (spec/plan/tasks).
+- Updated `docs/index.md` (15 new spec rows + revised footer) and this `docs/log.md`.
+
+**Verification:**
+
+- `npx jest` over the 15 new packages: **15 suites / 165 tests pass** (the per-service HTTP-500
+  ERROR lines are the intentional graceful-degradation error-path cases — services never throw).
+- Registry + scaffolder + docs-lint suites: **3 suites / 74 tests pass** (enum-vs-module count
+  invariant holds after wiring).
+- `lint:docs`: **✓ no issues** (all new spec docs linked from `docs/index.md`).
+
+**Notes:**
+
+- New corpus totals: **458 `source-company-*` plugins / 741 source plugin packages / 588 specs /
+  last enum Phase 602**.
+- Ephemeral helper scripts (`build-batch-423.py`, `wire-batch-423.js`, `docs-batch-423.js`) and the
+  `.batch-input-423.json` descriptor were used to assemble and wire the batch, then **deleted** before
+  commit so the repo remains TypeScript-only (CLAUDE.md §5) and free of batch scratch files.
+
+---
+
 ## 2026-06-04 — Scheduled run #422 (**FOURTEEN new Greenhouse company-direct source plugins: Imbue, One Medical, Relay Therapeutics, Formation Bio, Valo Health, Brooklinen, Reformation, Gymshark, Rockstar Games, Outschool, Guild, Degreed, PhonePe, Groww** — Specs 565–578)
 
 **Scope:** Direct continuation of the run-#421 company-direct Greenhouse direction. At run start the

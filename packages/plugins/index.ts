@@ -732,6 +732,21 @@ import { GuildModule } from './source-company-guild';
 import { DegreedModule } from './source-company-degreed';
 import { PhonepeModule } from './source-company-phonepe';
 import { GrowwModule } from './source-company-groww';
+import { RitualModule } from './source-company-ritual';
+import { MejuriModule } from './source-company-mejuri';
+import { ParachuteHomeModule } from './source-company-parachutehome';
+import { GinkgoBioworksModule } from './source-company-ginkgobioworks';
+import { WorldLabsModule } from './source-company-worldlabs';
+import { RecursionModule } from './source-company-recursionpharmaceuticals';
+import { SpireGlobalModule } from './source-company-spire';
+import { MuonSpaceModule } from './source-company-muonspace';
+import { FanDuelModule } from './source-company-fanduel';
+import { UnderdogModule } from './source-company-underdogfantasy';
+import { FutureFitnessModule } from './source-company-future';
+import { ZwiftModule } from './source-company-zwift';
+import { PacasoModule } from './source-company-pacaso';
+import { OrchardModule } from './source-company-orchard';
+import { RoofstockModule } from './source-company-roofstock';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1457,4 +1472,19 @@ export const ALL_SOURCE_MODULES = [
   DegreedModule,
   PhonepeModule,
   GrowwModule,
+  RitualModule,
+  MejuriModule,
+  ParachuteHomeModule,
+  GinkgoBioworksModule,
+  WorldLabsModule,
+  RecursionModule,
+  SpireGlobalModule,
+  MuonSpaceModule,
+  FanDuelModule,
+  UnderdogModule,
+  FutureFitnessModule,
+  ZwiftModule,
+  PacasoModule,
+  OrchardModule,
+  RoofstockModule,
 ];
