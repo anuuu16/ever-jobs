@@ -15,6 +15,82 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #427 (**TEN new Greenhouse company-direct source plugins: Axiom, Bitso, Ezra, Fay, Fingerprint, Incode Technologies, Jumio, Perpay, Prenuvo, Vast** — Specs 637–646)
+
+**Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held
+**501 `source-company-*` plugins / 784 source plugin packages total / 636 last spec / 784 enum members /
+last enum Phase 645 (Spec 636, Wing)**. All three OTHERS reference repos were `git pull`-ed and reported
+**no upstream changes** (`Ats-scrapers` @ `b45c12a`, `JobSpy` @ `fda080a`, `Jobspy-api` @ `26bb6f4` — all
+"Already up to date"). The prior run's CI (run `26948545478`, Specs 620–636) was confirmed **green** and
+`origin/develop` held `aef1641` with a clean working tree, so this run started from a clean, fully-pushed
+baseline.
+
+This run ships **10 new large-company Greenhouse-direct source plugins** (Specs 637–646, enum Phases
+646–655) via the now-standard deterministic pipeline (`probe → enrich → assemble → scaffold → wire`).
+
+**Candidate discovery (live probe):** a **317-slug** candidate list was assembled across the still-fertile
+verticals (consumer fintech & lending, crypto & payments, identity/fraud, climate & grid-scale energy,
+at-home health & biotech screening, advanced manufacturing & aerospace, proptech, insurtech) — deduped
+against the 501 existing company slugs — and probed concurrently via `scripts/probe-company-source.ts`
+(16-way) against the public Greenhouse Job-Board API. **14 survived** the ≥ 3-roles + brand-match gate.
+Three survivors were **dropped at quality review** per the brand-match discipline:
+- **`regent`** — board "Regent" mixed unrelated industries (Warsaw NetScaler engineer + Beverly Hills
+  general contractor); reads as an aggregator/holding board, not a single brand. Non-matching HQ vs the
+  REGENT seaglider company.
+- **`gravity`** — generic single-word board name, Budapest software roles, no confident single-company
+  brand-match.
+- **`aircompany`** — board "AIRCO" returned only 2 real roles plus a "Don't see the job…" placeholder
+  listing; below the quality floor and a borderline brand alias.
+- **`cleo`** — board "Cleo (US)" is genuinely ambiguous between Cleo AI (London consumer-fintech, whose
+  "(US)" suffix pattern fits) and Cleo Integration Cloud (Rockford EDI); dropped to avoid shipping an
+  incorrect company profile. Recorded for possible future re-adoption once disambiguated.
+
+The **10 adopted** boards and their live role counts (probed 2026-06-04): Vast (143), Prenuvo (27),
+Axiom (24), Jumio (18), Fingerprint (16), Incode Technologies (15), Perpay (13), Bitso (12), Ezra (12),
+Fay (5). Real probed listings (id / title / location / updated_at) were used to build each plugin's
+3-listing fixture so the unit suites assert against real-world wire shapes.
+
+**Enrichment (parallel workflow):** descriptor prose (one-liner, sector, HQ, 2–3-sentence description,
+3 highlights) for all candidates was produced by an **11-agent parallel `Workflow`** (one agent per
+company, each grounded STRICTLY on the live board name + sample job titles + role locations,
+schema-validated output) — the locations were the key disambiguator for generic names (e.g. Nairobi/Ghana
++ AML compliance roles ⇒ Ezra = African B2B digital-lending fintech, not the similarly-named MRI company;
+"Astronaut Operations" + Long Beach ⇒ Vast = commercial space-station developer). Agent output was
+HTML-entity-decoded (`&amp;` → `&` etc.) before assembly. Spec/plan/tasks + package files were
+materialised by the deterministic `scaffold-company-source.ts` generator and registered by the
+idempotent, replacement-function-based `wire-company-source.ts` helper (avoids the jest-config `$'`
+foot-gun).
+
+**Changes:**
+
+- **10 new source-company plugin packages** under `packages/plugins/source-company-{axiom,bitso,ezra,fay,
+  fingerprint,incode,jumio,perpay,prenuvo,vast}/` — each with `package.json`, `tsconfig.json`,
+  `src/index.ts`, `src/<slug>.module.ts`, `src/<slug>.service.ts`,
+  `__tests__/<slug>.service.spec.ts`, and a 3-listing fixture. All mirror the canonical variant-2 + D-08
+  company-direct template (wire `company_name` pass-through; defensive D-10/D-11 title/department trim;
+  entity-decode-then-tag-strip descriptions; graceful degradation to `{ jobs: [] }` on transport error).
+- **10 new spec dirs** `.specify/specs/{637..646}-source-company-<slug>/` (spec.md, plan.md, tasks.md).
+- **Four wiring files** updated via `wire-company-source.ts`: `site.enum.ts` (+10 enum members, Phases
+  646–655; note `INCODE_TECHNOLOGIES = 'incode'` — enumKey derived from displayName), `packages/plugins/index.ts`
+  (+10 `ALL_SOURCE_MODULES` entries), `tsconfig.base.json` (+10 path aliases), `jest.config.js`
+  (+10 moduleNameMapper entries).
+- **`docs/index.md`** — 10 new spec rows (637–646) + "Last revised" footer bumped to run #427.
+- **`docs/log.md`** — this entry.
+
+**Verification:** `tsc --noEmit -p tsconfig.base.json` clean (exit 0); the **10 new Jest suites pass
+(110 tests, 0 failures)** — the `status 500` ERROR log lines are the intentional error-path assertions
+(network-failure → empty `{ jobs: [] }`). Enum member count 784 → 794.
+
+**Notes / decisions:**
+
+- *Brand-name disambiguation:* "Axiom" board (AE/BD roles, London/Sydney/Chicago) resolved to Axiom the
+  alternative-legal-services provider (NYC); "Fay" (NYC/SF, CFO/BizOps) → Fay Nutrition (insurance-covered
+  dietitian marketplace); "Ezra" (Nairobi/Ghana, AMLRO) → African B2B digital-lending fintech (NOT the
+  NYC MRI-screening company). All recorded in the index rows.
+- *Phase numbering:* enum Phases 646–655 map 1:1 to Specs 637–646.
+
+---
+
 ## 2026-06-04 — Scheduled run #426 (**SEVENTEEN new Greenhouse company-direct source plugins: Clutch, Counterpart, EnergyHub, Ethos, Extend, Ghost, HomeLight, Isomorphic Labs, Loop, Openly, Rocket Lab, Seurat Technologies, SpaceX, Sparkfund, Rocket Money, Weave, Wing** — Specs 620–636; + two new reusable discovery/assembly scripts)
 
 **Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held

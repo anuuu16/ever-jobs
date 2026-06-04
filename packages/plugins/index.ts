@@ -790,6 +790,16 @@ import { SparkfundModule } from './source-company-sparkfund';
 import { RocketMoneyModule } from './source-company-truebill';
 import { WeaveModule } from './source-company-weave';
 import { WingModule } from './source-company-wing';
+import { AxiomModule } from './source-company-axiom';
+import { BitsoModule } from './source-company-bitso';
+import { EzraModule } from './source-company-ezra';
+import { FayModule } from './source-company-fay';
+import { FingerprintModule } from './source-company-fingerprint';
+import { IncodeTechnologiesModule } from './source-company-incode';
+import { JumioModule } from './source-company-jumio';
+import { PerpayModule } from './source-company-perpay';
+import { PrenuvoModule } from './source-company-prenuvo';
+import { VastModule } from './source-company-vast';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1573,4 +1583,14 @@ export const ALL_SOURCE_MODULES = [
   RocketMoneyModule,
   WeaveModule,
   WingModule,
+  AxiomModule,
+  BitsoModule,
+  EzraModule,
+  FayModule,
+  FingerprintModule,
+  IncodeTechnologiesModule,
+  JumioModule,
+  PerpayModule,
+  PrenuvoModule,
+  VastModule,
 ];

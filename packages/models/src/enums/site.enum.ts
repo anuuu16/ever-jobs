@@ -1427,6 +1427,26 @@ export enum Site {
   WEAVE = 'weave',
   // Phase 645: Spec 636 — Source Company Plugin: Wing
   WING = 'wing',
+  // Phase 646: Spec 637 — Source Company Plugin: Axiom
+  AXIOM = 'axiom',
+  // Phase 647: Spec 638 — Source Company Plugin: Bitso
+  BITSO = 'bitso',
+  // Phase 648: Spec 639 — Source Company Plugin: Ezra
+  EZRA = 'ezra',
+  // Phase 649: Spec 640 — Source Company Plugin: Fay
+  FAY = 'fay',
+  // Phase 650: Spec 641 — Source Company Plugin: Fingerprint
+  FINGERPRINT = 'fingerprint',
+  // Phase 651: Spec 642 — Source Company Plugin: Incode Technologies
+  INCODE_TECHNOLOGIES = 'incode',
+  // Phase 652: Spec 643 — Source Company Plugin: Jumio
+  JUMIO = 'jumio',
+  // Phase 653: Spec 644 — Source Company Plugin: Perpay
+  PERPAY = 'perpay',
+  // Phase 654: Spec 645 — Source Company Plugin: Prenuvo
+  PRENUVO = 'prenuvo',
+  // Phase 655: Spec 646 — Source Company Plugin: Vast
+  VAST = 'vast',
 }
 
 /**
