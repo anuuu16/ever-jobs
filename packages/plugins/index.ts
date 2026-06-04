@@ -639,6 +639,29 @@ import { WarpModule } from './source-company-warp';
 import { CurrentModule } from './source-company-current';
 import { KnockModule } from './source-company-knock';
 import { MercariModule } from './source-company-mercari';
+import { NubankModule } from './source-company-nubank';
+import { CookunityModule } from './source-company-cookunity';
+import { OkloModule } from './source-company-oklo';
+import { FetchModule } from './source-company-fetch';
+import { ZocdocModule } from './source-company-zocdoc';
+import { ThunesModule } from './source-company-thunes';
+import { StrivehealthModule } from './source-company-strivehealth';
+import { HomechefModule } from './source-company-homechef';
+import { PacificfusionModule } from './source-company-pacificfusion';
+import { OtteraiModule } from './source-company-otterai';
+import { ObserveaiModule } from './source-company-observeai';
+import { HonorModule } from './source-company-honor';
+import { WeeeModule } from './source-company-weee';
+import { NarvarModule } from './source-company-narvar';
+import { TranscarentModule } from './source-company-transcarent';
+import { WatershedModule } from './source-company-watershed';
+import { QuaiseModule } from './source-company-quaise';
+import { UpsideModule } from './source-company-upside';
+import { HungryrootModule } from './source-company-hungryroot';
+import { NayyaModule } from './source-company-nayya';
+import { CaribouModule } from './source-company-caribou';
+import { HealthjoyModule } from './source-company-healthjoy';
+import { PapaModule } from './source-company-papa';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1271,4 +1294,27 @@ export const ALL_SOURCE_MODULES = [
   CurrentModule,
   KnockModule,
   MercariModule,
+  NubankModule,
+  CookunityModule,
+  OkloModule,
+  FetchModule,
+  ZocdocModule,
+  ThunesModule,
+  StrivehealthModule,
+  HomechefModule,
+  PacificfusionModule,
+  OtteraiModule,
+  ObserveaiModule,
+  HonorModule,
+  WeeeModule,
+  NarvarModule,
+  TranscarentModule,
+  WatershedModule,
+  QuaiseModule,
+  UpsideModule,
+  HungryrootModule,
+  NayyaModule,
+  CaribouModule,
+  HealthjoyModule,
+  PapaModule,
 ];

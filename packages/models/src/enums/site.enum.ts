@@ -1125,6 +1125,52 @@ export enum Site {
   KNOCK = 'knock',
   // Phase 494: Spec 485 — Source Company Plugin: Mercari
   MERCARI = 'mercari',
+  // Phase 495: Spec 486 — Source Company Plugin: Nubank
+  NUBANK = 'nubank',
+  // Phase 496: Spec 487 — Source Company Plugin: CookUnity
+  COOKUNITY = 'cookunity',
+  // Phase 497: Spec 488 — Source Company Plugin: Oklo
+  OKLO = 'oklo',
+  // Phase 498: Spec 489 — Source Company Plugin: Fetch
+  FETCH = 'fetch',
+  // Phase 499: Spec 490 — Source Company Plugin: Zocdoc
+  ZOCDOC = 'zocdoc',
+  // Phase 500: Spec 491 — Source Company Plugin: Thunes
+  THUNES = 'thunes',
+  // Phase 501: Spec 492 — Source Company Plugin: Strive Health
+  STRIVEHEALTH = 'strivehealth',
+  // Phase 502: Spec 493 — Source Company Plugin: Home Chef
+  HOMECHEF = 'homechef',
+  // Phase 503: Spec 494 — Source Company Plugin: Pacific Fusion
+  PACIFICFUSION = 'pacificfusion',
+  // Phase 504: Spec 495 — Source Company Plugin: Otter.ai
+  OTTERAI = 'otterai',
+  // Phase 505: Spec 496 — Source Company Plugin: Observe.AI
+  OBSERVEAI = 'observeai',
+  // Phase 506: Spec 497 — Source Company Plugin: Honor
+  HONOR = 'honor',
+  // Phase 507: Spec 498 — Source Company Plugin: Weee!
+  WEEE = 'weee',
+  // Phase 508: Spec 499 — Source Company Plugin: Narvar
+  NARVAR = 'narvar',
+  // Phase 509: Spec 500 — Source Company Plugin: Transcarent
+  TRANSCARENT = 'transcarent',
+  // Phase 510: Spec 501 — Source Company Plugin: Watershed Informatics
+  WATERSHED = 'watershed',
+  // Phase 511: Spec 502 — Source Company Plugin: Quaise Energy
+  QUAISE = 'quaise',
+  // Phase 512: Spec 503 — Source Company Plugin: Upside
+  UPSIDE = 'upside',
+  // Phase 513: Spec 504 — Source Company Plugin: Hungryroot
+  HUNGRYROOT = 'hungryroot',
+  // Phase 514: Spec 505 — Source Company Plugin: Nayya
+  NAYYA = 'nayya',
+  // Phase 515: Spec 506 — Source Company Plugin: Caribou Financial
+  CARIBOU = 'caribou',
+  // Phase 516: Spec 507 — Source Company Plugin: HealthJoy
+  HEALTHJOY = 'healthjoy',
+  // Phase 517: Spec 508 — Source Company Plugin: Papa
+  PAPA = 'papa',
 }
 
 /**

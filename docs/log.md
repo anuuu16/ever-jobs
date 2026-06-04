@@ -15,6 +15,76 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #418 (**TWENTY-THREE new Greenhouse company-direct source plugins: Nubank, CookUnity, Oklo, Fetch, Zocdoc, Thunes, Strive Health, Home Chef, Pacific Fusion, Otter.ai, Observe.AI, Honor, Weee!, Narvar, Transcarent, Watershed Informatics, Quaise Energy, Upside, Hungryroot, Nayya, Caribou Financial, HealthJoy, Papa** — Specs 486–508)
+
+**Scope:** Direct continuation of the run-#417 company-direct Greenhouse direction. At run start the
+corpus held **350 `source-company-*` plugins / 174 `source-ats-*` adapters / 633 source plugin
+packages total / 485 specs / last enum Phase 494**; all three OTHERS reference repos
+(`Ats-scrapers` @ `b45c12a`, `JobSpy` @ `fda080a`, `Jobspy-api` @ `26bb6f4`) were pulled and
+reported **no upstream changes** (`git pull` = "Already up to date." for all three; recorded in the
+parent-directory competitor-watch file — never in this repo). Per the scheduled-task directive to
+"add more large companies jobs feeds parsers (as sources)" when the ATS surface is saturated, this
+run ships **23 new large-company Greenhouse-direct source plugins** (Specs 486–508) via the
+deterministic `scripts/scaffold-company-source.ts` batch generator, deliberately broadening sector
+coverage **away from the AI/dev-infra cluster of recent runs** into under-covered consumer verticals:
+neobanking/fintech (**Nubank**, **Thunes**, **Caribou Financial**), food-tech & meal delivery
+(**CookUnity**, **Home Chef**, **Hungryroot**), advanced energy (**Oklo** — advanced nuclear,
+**Pacific Fusion** — fusion, **Quaise Energy** — deep geothermal), digital health & value-based care
+(**Zocdoc**, **Strive Health**, **Honor**, **Transcarent**, **HealthJoy**, **Papa**, **Nayya**),
+e-commerce/grocery & post-purchase (**Weee!**, **Narvar**, **Upside**, **Fetch**), AI productivity &
+contact-center (**Otter.ai**, **Observe.AI**), and computational biology (**Watershed Informatics**).
+
+**Selection method — live deterministic probe (per Q-063 default):** ~300 candidate well-known
+company board tokens across seven verticals were probed live (concurrency-6, 12 s per-request
+AbortController timeout) against the public Greenhouse boards API
+(`https://boards-api.greenhouse.io/v1/boards/<slug>/jobs?content=false` + board-meta
+`…/boards/<slug>`), filtered against the 350 already-covered board tokens, and accepted only boards
+that returned a 200 with **≥3 live roles AND a board-name that matched the intended brand**. The
+board-name gate caught and **rejected** several false-positives — e.g. `watershed` resolves to
+**"Watershed Informatics"** (a computational-biology firm, NOT the carbon-accounting Watershed; the
+plugin is named for the resolved entity) — and the deliberately-generic-but-real-brand boards
+(`honor`, `upside`, `papa`, `fetch`) were retained because each resolved to its intended company,
+while ambiguous generic boards (`loop`, `route`, `ghost`, `mesh`, `found`, `seamless`) were
+**dropped** for lack of a confident single-brand mapping. All 23 enum keys, plugin slugs and package
+directories were verified collision-free against the existing `source-company-*` / `source-ats-*`
+corpus before scaffolding. Three real live listings per board were captured into each plugin's
+fixture so the unit suites exercise faithful wire shapes.
+
+**Confidence:** **all 23 verified live 2026-06-04** (every board returned ≥3 live roles on probe; job
+counts ranged from 4 (Caribou, HealthJoy, Papa) to 138 (CookUnity) and 107 (Nubank)).
+
+**Validation:** project-wide `tsc --noEmit -p tsconfig.base.json` is **clean (exit 0)**; all **23 new
+unit suites pass (253 tests)** and the `source-ats-batch-2.integration` suite (which imports
+`ALL_SOURCE_MODULES`) passes alongside the `store-registry` suite — confirming **no
+duplicate-`Site` collisions** and sound four-file registry wiring; **docs-lint passes** (all 23 new
+spec triplets linked from `docs/index.md`).
+
+**Changes:**
+
+- **23 new `source-company-*` plugin packages** (Specs 486–508), each with the canonical 10-file
+  layout (`package.json`, `tsconfig.json`, `src/index.ts`, `src/<slug>.module.ts`,
+  `src/<slug>.service.ts`, `__tests__/<slug>.service.spec.ts`, `__tests__/fixtures/<slug>-jobs.json`)
+  and a full `.specify/specs/<NNN>-source-company-<slug>/` spec/plan/tasks triplet, all following the
+  canonical Greenhouse variant-2 + D-08/D-09/D-10/D-11 company-direct template.
+- **Four shared wiring files** updated (`packages/models/src/enums/site.enum.ts` — Phases 495–517;
+  `packages/plugins/index.ts` — imports + `ALL_SOURCE_MODULES`; `tsconfig.base.json` path aliases;
+  `jest.config.js` `moduleNameMapper`).
+- **Docs:** `docs/index.md` (+23 spec rows, revised footer), `docs/COMPANY_SLUG_DIRECTORY.md`
+  (+23 Greenhouse rows).
+- Post-run corpus: **373 `source-company-*` plugins / 174 `source-ats-*` adapters / 656 source
+  plugin packages total / 508 specs / last enum Phase 517.**
+
+**Notes:**
+
+- Throwaway probe/scaffold-batch/registration helper scripts were used to generate this batch and
+  removed before commit (kept the run footprint to product artifacts only, matching prior runs and
+  the TS-only `scripts/` convention).
+- Hit-rate observation for future runs: modern venture-backed startups increasingly use
+  Ashby/Lever rather than Greenhouse, so the consumer/health/energy/fintech verticals now yield more
+  fresh Greenhouse boards than the AI/dev-infra cluster mined in runs #410–417.
+
+---
+
 ## 2026-06-04 — Scheduled run #417 (**TWENTY-EIGHT new Greenhouse company-direct source plugins: Relativity Space, Navan, Tenstorrent, DISCO, fal, Epirus, Everlaw, SurveyMonkey, Turing, Huntress, Fireworks AI, HeyGen, Runpod, Merge, Alloy, Dashlane, Speechmatics, Highnote, Lithic, FourKites, Comet, Galileo, Inflection AI, Stability AI, Warp, Current, Knock, Mercari** — Specs 458–485)
 
 **Scope:** Direct continuation of the run-#416 company-direct Greenhouse direction. At run start the

@@ -107,6 +107,29 @@ Greenhouse slugs are the subdomain used in `boards.greenhouse.io/{slug}`.
 | Symphony Communication Services | `symphony` | Institutional Encrypted Collaboration |
 | Tatari | `tatari` | Streaming-and-Linear-TV Connected Attribution |
 | Textio | `textio` | Augmented-Writing / HR-Language-AI |
+| Nubank | `nubank` | Fintech / Neobank |
+| CookUnity | `cookunity` | Food-tech / Meal delivery |
+| Oklo | `oklo` | Energy / Advanced nuclear |
+| Fetch | `fetch` | Consumer / Loyalty & rewards |
+| Zocdoc | `zocdoc` | Health-tech / Marketplace |
+| Thunes | `thunes` | Fintech / Payments |
+| Strive Health | `strivehealth` | Health-tech / Value-based care |
+| Home Chef | `homechef` | Food-tech / Meal kits |
+| Pacific Fusion | `pacificfusion` | Energy / Fusion |
+| Otter.ai | `otterai` | AI / Productivity |
+| Observe.AI | `observeai` | AI / Contact center |
+| Honor | `honor` | Health-tech / Home care |
+| Weee! | `weee` | E-commerce / Grocery |
+| Narvar | `narvar` | E-commerce / Logistics SaaS |
+| Transcarent | `transcarent` | Health-tech / Navigation |
+| Watershed Informatics | `watershed` | Bio-tech / Computational biology |
+| Quaise Energy | `quaise` | Energy / Geothermal |
+| Upside | `upside` | Consumer / Retail tech |
+| Hungryroot | `hungryroot` | Food-tech / Grocery |
+| Nayya | `nayya` | Insurtech / Benefits |
+| Caribou Financial | `caribou` | Fintech / Lending |
+| HealthJoy | `healthjoy` | Health-tech / Benefits |
+| Papa | `papa` | Health-tech / Care |
 
 ---
 
