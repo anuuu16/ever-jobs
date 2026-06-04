@@ -597,6 +597,20 @@ import { YugabyteModule } from './source-company-yugabyte';
 import { WrikeModule } from './source-company-wrike';
 import { UjetModule } from './source-company-ujet';
 import { MaterializeModule } from './source-company-materialize';
+import { WaymoModule } from './source-company-waymo';
+import { RemotecomModule } from './source-company-remotecom';
+import { RiotgamesModule } from './source-company-riotgames';
+import { LucidmotorsModule } from './source-company-lucidmotors';
+import { NuroModule } from './source-company-nuro';
+import { TogetheraiModule } from './source-company-togetherai';
+import { FireblocksModule } from './source-company-fireblocks';
+import { TailscaleModule } from './source-company-tailscale';
+import { Project44Module } from './source-company-project44';
+import { SalesloftModule } from './source-company-salesloft';
+import { BuilderModule } from './source-company-builder';
+import { StoryblokModule } from './source-company-storyblok';
+import { ImplyModule } from './source-company-imply';
+import { MotiveModule } from './source-company-motive';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1187,4 +1201,18 @@ export const ALL_SOURCE_MODULES = [
   WrikeModule,
   UjetModule,
   MaterializeModule,
+  WaymoModule,
+  RemotecomModule,
+  RiotgamesModule,
+  LucidmotorsModule,
+  NuroModule,
+  TogetheraiModule,
+  FireblocksModule,
+  TailscaleModule,
+  Project44Module,
+  SalesloftModule,
+  BuilderModule,
+  StoryblokModule,
+  ImplyModule,
+  MotiveModule,
 ];

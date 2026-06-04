@@ -1041,6 +1041,34 @@ export enum Site {
   UJET = 'ujet',
   // Phase 452: Spec 443 — Source Company Plugin: Materialize
   MATERIALIZE = 'materialize',
+  // Phase 453: Spec 444 — Source Company Plugin: Waymo
+  WAYMO = 'waymo',
+  // Phase 454: Spec 445 — Source Company Plugin: Remote
+  REMOTECOM = 'remotecom',
+  // Phase 455: Spec 446 — Source Company Plugin: Riot Games
+  RIOTGAMES = 'riotgames',
+  // Phase 456: Spec 447 — Source Company Plugin: Lucid Motors
+  LUCIDMOTORS = 'lucidmotors',
+  // Phase 457: Spec 448 — Source Company Plugin: Nuro
+  NURO = 'nuro',
+  // Phase 458: Spec 449 — Source Company Plugin: Together AI
+  TOGETHERAI = 'togetherai',
+  // Phase 459: Spec 450 — Source Company Plugin: Fireblocks
+  FIREBLOCKS = 'fireblocks',
+  // Phase 460: Spec 451 — Source Company Plugin: Tailscale
+  TAILSCALE = 'tailscale',
+  // Phase 461: Spec 452 — Source Company Plugin: project44
+  PROJECT44 = 'project44',
+  // Phase 462: Spec 453 — Source Company Plugin: Salesloft
+  SALESLOFT = 'salesloft',
+  // Phase 463: Spec 454 — Source Company Plugin: Builder.io
+  BUILDER = 'builder',
+  // Phase 464: Spec 455 — Source Company Plugin: Storyblok
+  STORYBLOK = 'storyblok',
+  // Phase 465: Spec 456 — Source Company Plugin: Imply
+  IMPLY = 'imply',
+  // Phase 466: Spec 457 — Source Company Plugin: Motive
+  MOTIVE = 'motive',
 }
 
 /**

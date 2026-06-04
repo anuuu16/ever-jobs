@@ -15,6 +15,84 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #416 (**FOURTEEN new Greenhouse company-direct source plugins: Waymo, Remote, Riot Games, Lucid Motors, Nuro, Together AI, Fireblocks, Tailscale, project44, Salesloft, Builder.io, Storyblok, Imply, Motive** — Specs 444–457)
+
+**Scope:** Direct continuation of the run-#415 company-direct Greenhouse direction. At run start the
+corpus held **308 `source-company-*` plugins / 174 `source-ats-*` adapters / 597 source plugin
+packages total / 438 specs / last enum Phase 452**; all three OTHERS reference repos
+(`Ats-scrapers`, `JobSpy`, `Jobspy-api`) were pulled and reported **no upstream changes** (recorded
+in the parent-directory competitor-watch file — never in this repo). Per the scheduled-task
+directive to "add more large companies jobs feeds parsers (as sources)" when the ATS surface is
+saturated, this run ships **14 new large-company Greenhouse-direct source plugins** (Specs 444–457)
+via the deterministic `scripts/scaffold-company-source.ts` batch generator, spanning under-covered
+verticals: autonomous mobility (**Waymo**, **Nuro**), EV manufacturing (**Lucid Motors**), global
+HR/EOR (**Remote**), gaming/esports (**Riot Games**), AI infrastructure (**Together AI**),
+digital-asset custody (**Fireblocks**), zero-trust networking (**Tailscale**), supply-chain
+visibility (**project44**), sales engagement (**Salesloft**), headless CMS / visual dev
+(**Builder.io**, **Storyblok**), real-time analytics (**Imply**), and fleet/physical-ops
+(**Motive**).
+
+**Selection method — live deterministic probe (per Q-063 default):** a candidate list of ~150
+well-known companies was probed live against the public Greenhouse boards API
+(`https://boards-api.greenhouse.io/v1/boards/<slug>/jobs` + board-meta `…/boards/<slug>`),
+filtered against the 294 already-covered board tokens, and accepted only boards that returned a
+200 with ≥3 live roles AND a board-name that matched the intended brand. This probe-driven gating
+**rejected `greenhouse` (enum-key collision with the existing `source-ats-greenhouse` adapter — the
+scaffolder hard-binds the board token to the plugin slug, so a `greenhouse` company slug is not
+admissible)** and confirmed `remotecom` resolves to board name "Remote" (the Remote.com EOR
+company, NOT the run-#415 `remote`/General-Assembly mis-mapping trap). Three real live listings per
+board were captured into each plugin's fixture so the unit suites exercise faithful wire shapes.
+
+**Confidence:** **all 14 verified live 2026-06-04** (every board returned ≥3 live roles on probe;
+job counts ranged from 4 (Motive) to 430 (Waymo)).
+
+**Validation:** project-wide `tsc --noEmit -p tsconfig.base.json` is **clean (exit 0)**; all **14
+new unit suites pass (154 tests)**; the `store-registry` + `source-ats-batch-2.integration` suites
+(which import `ALL_SOURCE_MODULES`) pass (**51 tests**) — confirming **no duplicate-`Site`
+collisions** and sound four-file registry wiring; **docs-lint passes** (all 14 new spec triplets
+linked from `docs/index.md`).
+
+**Changes:**
+
+- **14 new `source-company-*` plugin packages** (Specs 444–457), each with the canonical 7-file
+  layout (`package.json`, `tsconfig.json`, `src/index.ts`, `src/<slug>.module.ts`,
+  `src/<slug>.service.ts`, `__tests__/<slug>.service.spec.ts`, `__tests__/fixtures/<slug>-jobs.json`)
+  and a full `.specify/specs/<NNN>-source-company-<slug>/` spec/plan/tasks triplet, all following
+  the canonical Greenhouse variant-2 + D-08/D-09/D-10/D-11 company-direct template:
+  - **444 `source-company-waymo`** — Waymo (autonomous driving tech, Mountain View; 430 roles).
+  - **445 `source-company-remotecom`** — Remote (global HR/payroll/EOR, SF; 254 roles).
+  - **446 `source-company-riotgames`** — Riot Games (video games & esports, LA; 187 roles).
+  - **447 `source-company-lucidmotors`** — Lucid Motors (luxury EVs, Newark CA; 165 roles).
+  - **448 `source-company-nuro`** — Nuro (autonomous delivery & robotics, Mountain View; 107 roles).
+  - **449 `source-company-togetherai`** — Together AI (AI cloud & inference, SF; 55 roles).
+  - **450 `source-company-fireblocks`** — Fireblocks (digital-asset custody, NYC; 47 roles).
+  - **451 `source-company-tailscale`** — Tailscale (zero-trust mesh VPN, Toronto; 44 roles).
+  - **452 `source-company-project44`** — project44 (supply-chain visibility, Chicago; 32 roles).
+  - **453 `source-company-salesloft`** — Salesloft (sales engagement, Atlanta; 31 roles).
+  - **454 `source-company-builder`** — Builder.io (visual dev / headless CMS, SF; 9 roles).
+  - **455 `source-company-storyblok`** — Storyblok (headless CMS, Linz AT; 8 roles).
+  - **456 `source-company-imply`** — Imply (real-time analytics on Apache Druid, Burlingame; 7 roles).
+  - **457 `source-company-motive`** — Motive (fleet management / physical ops, SF; 4 roles).
+- **Four shared wiring files** updated (via the EOL-aware split/join helper — literal `split/join`
+  replacement to avoid `String.replace` `$'`-pattern corruption on the `$`-terminated jest mapper
+  keys): `packages/models/src/enums/site.enum.ts` (14 enum values, Phases 453–466),
+  `packages/plugins/index.ts` (14 imports + 14 `ALL_SOURCE_MODULES` entries), `tsconfig.base.json`
+  (14 path aliases), `jest.config.js` (14 `moduleNameMapper` entries).
+- **`docs/index.md`** — 14 new spec rows (444–457) + "Last revised" bump.
+
+**Notes:**
+
+- The per-batch helpers used this run (`.batch-input.json`, `scripts/.probe-candidates.js`,
+  `scripts/.probe-listings.js`, `scripts/.gen-batch.js`, `scripts/.wire-batch.js`,
+  `scripts/.listings.json`, `scripts/.index-rows.txt`, `tmp_existing_tokens.txt`) were transient
+  scratch artifacts and were **removed after use** — they are fully regenerable from the live
+  Greenhouse probe. The durable, committed artifacts are the 14 plugin packages + 14 spec triplets,
+  the four wiring-file edits, and the doc updates.
+- Corpus after this run: **322 `source-company-*` plugins / 174 `source-ats-*` adapters / 611
+  source plugin packages total / 452 specs / last enum Phase 466**.
+
+---
+
 ## 2026-06-04 — Scheduled run #415 (**SEVENTEEN new Greenhouse company-direct source plugins: Gemini, Ripple, Abnormal Security, Hightouch, Grafana Labs, Cockroach Labs, Verkada, Nextdoor, Mindbody, Omada Health, Sendbird, ClickHouse, SingleStore, YugabyteDB, Wrike, UJET, Materialize** — Specs 427–443)
 
 **Scope:** The generic-ATS-adapter direction (runs #400→#414) reached **174 `source-ats-*`
