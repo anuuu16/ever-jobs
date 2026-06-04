@@ -697,6 +697,15 @@ import { EndorlabsModule } from './source-company-endorlabs';
 import { CybereasonModule } from './source-company-cybereason';
 import { TaniumModule } from './source-company-tanium';
 import { ExpelModule } from './source-company-expel';
+import { FigureaiModule } from './source-company-figureai';
+import { SliceModule } from './source-company-slice';
+import { ChowbusModule } from './source-company-chowbus';
+import { TabapayModule } from './source-company-tabapay';
+import { PathaiModule } from './source-company-pathai';
+import { FoundModule } from './source-company-found';
+import { ParsleyhealthModule } from './source-company-parsleyhealth';
+import { NeuralinkModule } from './source-company-neuralink';
+import { ClearModule } from './source-company-clear';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1387,4 +1396,13 @@ export const ALL_SOURCE_MODULES = [
   CybereasonModule,
   TaniumModule,
   ExpelModule,
+  FigureaiModule,
+  SliceModule,
+  ChowbusModule,
+  TabapayModule,
+  PathaiModule,
+  FoundModule,
+  ParsleyhealthModule,
+  NeuralinkModule,
+  ClearModule,
 ];

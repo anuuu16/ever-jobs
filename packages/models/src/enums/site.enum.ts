@@ -1241,6 +1241,24 @@ export enum Site {
   TANIUM = 'tanium',
   // Phase 552: Spec 543 — Source Company Plugin: Expel
   EXPEL = 'expel',
+  // Phase 553: Spec 544 — Source Company Plugin: Figure
+  FIGURE = 'figureai',
+  // Phase 554: Spec 545 — Source Company Plugin: Slice
+  SLICE = 'slice',
+  // Phase 555: Spec 546 — Source Company Plugin: Chowbus
+  CHOWBUS = 'chowbus',
+  // Phase 556: Spec 547 — Source Company Plugin: TabaPay
+  TABAPAY = 'tabapay',
+  // Phase 557: Spec 548 — Source Company Plugin: PathAI
+  PATHAI = 'pathai',
+  // Phase 558: Spec 549 — Source Company Plugin: Found
+  FOUND = 'found',
+  // Phase 559: Spec 550 — Source Company Plugin: Parsley Health
+  PARSLEY_HEALTH = 'parsleyhealth',
+  // Phase 560: Spec 551 — Source Company Plugin: Neuralink
+  NEURALINK = 'neuralink',
+  // Phase 561: Spec 552 — Source Company Plugin: CLEAR
+  CLEAR = 'clear',
 }
 
 /**

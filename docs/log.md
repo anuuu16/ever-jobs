@@ -15,6 +15,61 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #420 (**NINE new Greenhouse company-direct source plugins: Figure, Slice, Chowbus, TabaPay, PathAI, Found, Parsley Health, Neuralink, CLEAR** — Specs 544–552)
+
+**Scope:** Direct continuation of the run-#419 company-direct Greenhouse direction. At run start the
+corpus held **408 `source-company-*` plugins / 697 source plugin packages total / 543 specs / last
+enum Phase 552**; all three OTHERS reference repos (`Ats-scrapers` @ `b45c12a`, `JobSpy` @ `fda080a`,
+`Jobspy-api` @ `26bb6f4`) were fetched and reported **no upstream changes** (`local == remote` for all
+three; tracked only in the parent-directory competitor-watch file — never in this repo). The prior
+run's CI (run `26930414228`) was confirmed **green** and `origin/develop` already held `c28019a`, so
+this run started from a clean, fully-pushed tree.
+
+Per the scheduled-task directive to "add more large companies jobs feeds parsers (as sources)" when
+the ATS surface is saturated, this run ships **9 new large-company Greenhouse-direct source plugins**
+(Specs 544–552) via the deterministic `scripts/scaffold-company-source.ts` batch generator. Candidate
+slugs were discovered by a **live Greenhouse-board probe** (`boards-api.greenhouse.io/v1/boards/<slug>/jobs`)
+across under-mined fresh verticals (humanoid robotics, neurotech, restaurant-tech, SMB fintech,
+digital pathology, telehealth, biometric identity); every candidate was gated on a **board-name
+brand-match** and a **≥ 3 live-listing** floor before inclusion. Marginal single-listing boards
+(snackpass, palmetto, flexe, calm) were probed and **deliberately excluded** to keep fixture quality
+and the 3-listing test contract intact.
+
+**New plugins (live-probed 2026-06-04):**
+
+- **Figure** (`figureai`) — Humanoid Robotics / AI, San Jose, California, USA. 111 live roles.
+- **Slice** (`slice`) — SMB Fintech / Restaurant Technology, New York, USA. 77 live roles.
+- **Chowbus** (`chowbus`) — Restaurant Technology / Food Delivery, Chicago, Illinois, USA. 70 live roles.
+- **TabaPay** (`tabapay`) — Payments / Fintech Infrastructure, Mountain View, California, USA. 12 live roles.
+- **PathAI** (`pathai`) — Healthcare AI / Digital Pathology, Boston, Massachusetts, USA. 9 live roles.
+- **Found** (`found`) — SMB Fintech / Business Banking, San Francisco, California, USA. 7 live roles.
+- **Parsley Health** (`parsleyhealth`) — Healthcare / Telehealth, New York, USA. 5 live roles.
+- **Neuralink** (`neuralink`) — Neurotechnology / Brain-Computer Interface, Fremont, California, USA. 75 live roles.
+- **CLEAR** (`clear`) — Identity / Biometric Security, New York, USA. 63 live roles.
+
+**Changes:**
+
+- Scaffolded 9 `source-company-*` packages (90 files) + 9 `.specify/specs/<NNN>-source-company-*`
+  spec/plan/tasks triplets via the batch generator.
+- Wired all four registration files: `Site` enum (Phases 553–561), `packages/plugins/index.ts`
+  (imports + `ALL_SOURCE_MODULES`), `tsconfig.base.json` path aliases, and `jest.config.js`
+  module-name mappers (9 entries each).
+- Updated `docs/COMPANY_SLUG_DIRECTORY.md` (9 Greenhouse rows + date bump), `docs/index.md`
+  (spec rows 544–552 + footer), and this log.
+- **Tests:** 10 suites / 107 cases green for the new cohort (`jest source-company-(…)`); each plugin
+  carries a ≥ 9-case unit suite with a mocked HTTP fixture exercising the D-04/D-08/D-09/D-10/D-11
+  template invariants and graceful HTTP-500 degradation.
+
+**Notes:**
+
+- One-off generator/wiring helpers (`scripts/.tmp-*.mjs`, `.batch-input.json`) are scratch and removed
+  before commit; only committed tooling is the existing `scripts/scaffold-company-source.ts`.
+- A `String.replace` foot-gun was hit during automated wiring: the jest-mapper anchor contains `$'`,
+  which is a special replacement pattern (right-context). Repaired in-place; future wiring scripts must
+  use a replacement **function** (not a string) when the anchor can contain `$`.
+
+---
+
 ## 2026-06-04 — Scheduled run #419 (**THIRTY-FIVE new Greenhouse company-direct source plugins: Upstart, Tamara, TrueLayer, Public, Paystack, Moniepoint, Thrive Market, Form3, Marvel Fusion, Kairos Power, Wolt, Redwood Materials, Group14 Technologies, Carbon, Forward, Tia, Headway, Talkspace, Octave, Freenome, Natera, Generate Biomedicines, Oura, Carvana, unybrands, Yotpo, TaxBit, Culture Amp, Energage, Veriff, Thoropass, Endor Labs, Cybereason, Tanium, Expel** — Specs 509–543)
 
 **Scope:** Direct continuation of the run-#418 company-direct Greenhouse direction. At run start the

@@ -2,7 +2,7 @@
 
 > A curated list of verified company slugs organized by ATS platform. Use these with the `companySlug` parameter to search jobs at specific companies.
 
-**Last Updated:** 2026-04-28
+**Last Updated:** 2026-06-04
 
 ---
 
@@ -538,6 +538,15 @@ Tesla is a **single-tenant** scraper — `companyUrl` and `companySlug` are both
 | Cybereason | `cybereason` | Security / Endpoint |
 | Tanium | `tanium` | Security / Endpoint Management |
 | Expel | `expel` | Security / MDR |
+| Figure | `figureai` | Humanoid Robotics / AI |
+| Slice | `slice` | SMB Fintech / Restaurant Technology |
+| Chowbus | `chowbus` | Restaurant Technology / Food Delivery |
+| TabaPay | `tabapay` | Payments / Fintech Infrastructure |
+| PathAI | `pathai` | Healthcare AI / Digital Pathology |
+| Found | `found` | SMB Fintech / Business Banking |
+| Parsley Health | `parsleyhealth` | Healthcare / Telehealth |
+| Neuralink | `neuralink` | Neurotechnology / Brain-Computer Interface |
+| CLEAR | `clear` | Identity / Biometric Security |
 
 The OPTIONAL `source-tesla-playwright` companion plugin is opt-in (per Q-028 / FR-13) — operators must manually import `TeslaPlaywrightModule` AND install `playwright` (`npm install playwright && npx playwright install chromium`) to enable the Akamai-bypass path. Both plugins emit jobs against the same single `tesla` slug; the dedup engine collapses cross-plugin duplicates by `externalId` per Spec 003 / FR-3.
 
