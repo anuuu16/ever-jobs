@@ -800,6 +800,22 @@ import { JumioModule } from './source-company-jumio';
 import { PerpayModule } from './source-company-perpay';
 import { PrenuvoModule } from './source-company-prenuvo';
 import { VastModule } from './source-company-vast';
+import { C6BankModule } from './source-company-c6bank';
+import { CarrotFertilityModule } from './source-company-carrotfertility';
+import { ClaraModule } from './source-company-clara';
+import { EBANXModule } from './source-company-ebanx';
+import { EthosLifeModule } from './source-company-ethoslife';
+import { FloHealthModule } from './source-company-flohealth';
+import { HarrySModule } from './source-company-harrys';
+import { InsurifyModule } from './source-company-insurify';
+import { LedgyModule } from './source-company-ledgy';
+import { MissionLaneModule } from './source-company-missionlane';
+import { MochiHealthModule } from './source-company-mochihealth';
+import { PieInsuranceModule } from './source-company-pieinsurance';
+import { QuintoAndarModule } from './source-company-quintoandar';
+import { QuipModule } from './source-company-quip';
+import { RondoEnergyModule } from './source-company-rondoenergy';
+import { SiliconRanchModule } from './source-company-siliconranch';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1593,4 +1609,20 @@ export const ALL_SOURCE_MODULES = [
   PerpayModule,
   PrenuvoModule,
   VastModule,
+  C6BankModule,
+  CarrotFertilityModule,
+  ClaraModule,
+  EBANXModule,
+  EthosLifeModule,
+  FloHealthModule,
+  HarrySModule,
+  InsurifyModule,
+  LedgyModule,
+  MissionLaneModule,
+  MochiHealthModule,
+  PieInsuranceModule,
+  QuintoAndarModule,
+  QuipModule,
+  RondoEnergyModule,
+  SiliconRanchModule,
 ];

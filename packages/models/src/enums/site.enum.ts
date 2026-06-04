@@ -1447,6 +1447,38 @@ export enum Site {
   PRENUVO = 'prenuvo',
   // Phase 655: Spec 646 — Source Company Plugin: Vast
   VAST = 'vast',
+  // Phase 656: Spec 647 — Source Company Plugin: C6 Bank
+  C6_BANK = 'c6bank',
+  // Phase 657: Spec 648 — Source Company Plugin: Carrot Fertility
+  CARROT_FERTILITY = 'carrotfertility',
+  // Phase 658: Spec 649 — Source Company Plugin: Clara
+  CLARA = 'clara',
+  // Phase 659: Spec 650 — Source Company Plugin: EBANX
+  EBANX = 'ebanx',
+  // Phase 660: Spec 651 — Source Company Plugin: Ethos Life
+  ETHOS_LIFE = 'ethoslife',
+  // Phase 661: Spec 652 — Source Company Plugin: Flo Health
+  FLO_HEALTH = 'flohealth',
+  // Phase 662: Spec 653 — Source Company Plugin: Harry's
+  HARRY_S = 'harrys',
+  // Phase 663: Spec 654 — Source Company Plugin: Insurify
+  INSURIFY = 'insurify',
+  // Phase 664: Spec 655 — Source Company Plugin: Ledgy
+  LEDGY = 'ledgy',
+  // Phase 665: Spec 656 — Source Company Plugin: Mission Lane
+  MISSION_LANE = 'missionlane',
+  // Phase 666: Spec 657 — Source Company Plugin: Mochi Health
+  MOCHI_HEALTH = 'mochihealth',
+  // Phase 667: Spec 658 — Source Company Plugin: Pie Insurance
+  PIE_INSURANCE = 'pieinsurance',
+  // Phase 668: Spec 659 — Source Company Plugin: QuintoAndar
+  QUINTOANDAR = 'quintoandar',
+  // Phase 669: Spec 660 — Source Company Plugin: quip
+  QUIP = 'quip',
+  // Phase 670: Spec 661 — Source Company Plugin: Rondo Energy
+  RONDO_ENERGY = 'rondoenergy',
+  // Phase 671: Spec 662 — Source Company Plugin: Silicon Ranch
+  SILICON_RANCH = 'siliconranch',
 }
 
 /**

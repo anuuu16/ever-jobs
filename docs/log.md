@@ -15,6 +15,75 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #428 (**SIXTEEN new Greenhouse company-direct source plugins: C6 Bank, Carrot Fertility, Clara, EBANX, Ethos Life, Flo Health, Harry's, Insurify, Ledgy, Mission Lane, Mochi Health, Pie Insurance, QuintoAndar, quip, Rondo Energy, Silicon Ranch** — Specs 647–662)
+
+**Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held
+**511 `source-company-*` plugins / 800 source plugin packages total / 646 last spec / 794 enum members /
+last enum Phase 655 (Spec 646, Vast)**. All three OTHERS reference repos were `git pull`-ed and reported
+**no upstream changes** (`Ats-scrapers` @ `b45c12a`, `JobSpy` @ `fda080a`, `Jobspy-api` @ `26bb6f4` — all
+"Already up to date"). The prior run's CI (run `26951129689`, Specs 637–646) was confirmed **green** and
+`origin/develop` held `cec145a` with a clean working tree, so this run started from a clean, fully-pushed
+baseline. `docs-lint` was confirmed clean at run start.
+
+This run ships **16 new large-company Greenhouse-direct source plugins** (Specs 647–662, enum Phases
+656–671) via the now-standard deterministic pipeline (`probe → enrich → assemble → scaffold → wire`).
+
+**Candidate discovery (live probe):** a **248-slug** candidate list was assembled across the still-fertile
+verticals (consumer fintech & lending, LatAm payments & neobanks, insurtech, fertility/telehealth & women's
+health, climate & grid-scale energy storage, solar IPPs, proptech, DTC consumer goods & personal care) —
+deduped against the 511 existing company slugs — and probed concurrently via
+`scripts/probe-company-source.ts` (16-way) against the public Greenhouse Job-Board API. **16 survived** the
+≥ 3-roles + brand-match gate; all 16 were adopted (no quality-review drops this run — every survivor was a
+clean single-brand board).
+
+The **16 adopted** boards and their live role counts (probed 2026-06-04): C6 Bank (129), Clara (85),
+Grupo QuintoAndar (79), Ethos Life (49), Flo Health (37), EBANX (36), Ledgy (19), Insurify (16),
+Mochi Health (16), Harry's (15), Pie Insurance (13), Carrot (12), Silicon Ranch (12), Rondo Energy (10),
+Mission Lane (8), quip (5). Real probed listings (id / title / location / updated_at) were used to build
+each plugin's 3-listing fixture so the unit suites assert against real-world wire shapes.
+
+**Collision guard:** the enrichment agent returned displayName **"Ethos"** for the `ethoslife` board, which
+would have derived `enumKey ETHOS` / `className Ethos` — a hard collision with the **existing
+`source-company-ethos` plugin** (Spec 623, a *different* company: a London expert-network / AI knowledge
+marketplace). The descriptor was overridden to displayName **"Ethos Life"** (→ `ETHOS_LIFE` / `EthosLife` /
+`EthosLifeService`), keeping both distinct companies cleanly addressable.
+
+**Enrichment (parallel workflow):** descriptor prose (one-liner, sector, HQ, 2–3-sentence description,
+3 highlights, canonical displayName) for all 16 companies was produced by a **16-agent parallel `Workflow`**
+(one agent per company, each grounded STRICTLY on the live board name + sample job titles + role locations,
+schema-validated output). Locations were the key disambiguator for short brand names (e.g. São Paulo +
+fraud-prevention/AML titles ⇒ C6 Bank = Brazilian digital bank; Bogotá/Mexico City bill-pay AE titles ⇒
+Clara = LatAm corporate-spend fintech, *not* the similarly named US/EDI brands). Spec/plan/tasks + package
+files were materialised by the deterministic `scaffold-company-source.ts` generator and registered by the
+idempotent, replacement-function-based `wire-company-source.ts` helper (avoids the jest-config `$'`
+foot-gun).
+
+**Changes:**
+
+- **16 new source-company plugin packages** under `packages/plugins/source-company-{c6bank,carrotfertility,
+  clara,ebanx,ethoslife,flohealth,harrys,insurify,ledgy,missionlane,mochihealth,pieinsurance,quintoandar,
+  quip,rondoenergy,siliconranch}/` — each with `package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/<slug>.module.ts`, `src/<slug>.service.ts`, `__tests__/<slug>.service.spec.ts`, and a 3-listing
+  fixture (160 files total). All mirror the canonical variant-2 + D-08 company-direct template
+  (wire `company_name` pass-through; defensive D-10/D-11 title/department trim; entity-decode-then-tag-strip
+  descriptions; graceful degradation to `{ jobs: [] }` on transport error).
+- **16 new spec dirs** `.specify/specs/{647..662}-source-company-<slug>/` (spec.md, plan.md, tasks.md).
+- **Four wiring files** updated via `wire-company-source.ts`: `site.enum.ts` (+16 enum members, Phases
+  656–671; note `ETHOS_LIFE = 'ethoslife'`, `EBANX = 'ebanx'`, `QUINTOANDAR = 'quintoandar'`,
+  `HARRY_S = 'harrys'`), `packages/plugins/index.ts` (+16 `ALL_SOURCE_MODULES` entries),
+  `tsconfig.base.json` (+16 path aliases), `jest.config.js` (+16 moduleNameMapper entries).
+- **`docs/index.md`** — 16 new spec rows (647–662) + "Last revised" footer bumped to run #428.
+- **`docs/log.md`** — this entry.
+
+**Verification:** `tsc --noEmit -p tsconfig.base.json` clean (exit 0); the **16 new Jest suites pass**
+(16/16 suites, 176/176 tests green; the `status 500` ERROR lines in the output are the intentional
+graceful-degradation test cases asserting `{ jobs: [] }` on transport failure). `docs-lint` clean.
+
+**Corpus after this run:** 527 `source-company-*` plugins / 816 source plugin packages total / 662 last
+spec / 810 enum members / last enum Phase 671 (Spec 662, Silicon Ranch).
+
+---
+
 ## 2026-06-04 — Scheduled run #427 (**TEN new Greenhouse company-direct source plugins: Axiom, Bitso, Ezra, Fay, Fingerprint, Incode Technologies, Jumio, Perpay, Prenuvo, Vast** — Specs 637–646)
 
 **Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held
