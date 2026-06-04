@@ -836,6 +836,19 @@ import { SeedHealthModule } from './source-company-seed';
 import { UniteUsModule } from './source-company-uniteus';
 import { BanyanInfrastructureModule } from './source-company-banyaninfrastructure';
 import { CamusEnergyModule } from './source-company-camusenergy';
+import { BitpandaModule } from './source-company-bitpanda';
+import { BVNKModule } from './source-company-bvnk';
+import { ChargePointModule } from './source-company-chargepoint';
+import { CleoAIModule } from './source-company-cleo';
+import { InceptiveModule } from './source-company-inceptive';
+import { MomentousModule } from './source-company-momentous';
+import { NewLimitModule } from './source-company-newlimit';
+import { OzowModule } from './source-company-ozow';
+import { ProfluentModule } from './source-company-profluent';
+import { SaatvaModule } from './source-company-saatva';
+import { SumUpModule } from './source-company-sumup';
+import { ValenceLabsModule } from './source-company-valencelabs';
+import { VerveGroupModule } from './source-company-verve';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1665,4 +1678,17 @@ export const ALL_SOURCE_MODULES = [
   UniteUsModule,
   BanyanInfrastructureModule,
   CamusEnergyModule,
+  BitpandaModule,
+  BVNKModule,
+  ChargePointModule,
+  CleoAIModule,
+  InceptiveModule,
+  MomentousModule,
+  NewLimitModule,
+  OzowModule,
+  ProfluentModule,
+  SaatvaModule,
+  SumUpModule,
+  ValenceLabsModule,
+  VerveGroupModule,
 ];

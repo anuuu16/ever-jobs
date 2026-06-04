@@ -15,6 +15,74 @@
 
 ---
 
+## 2026-06-04 — Scheduled run #430 (**THIRTEEN new Greenhouse company-direct source plugins: Bitpanda, BVNK, ChargePoint, Cleo AI, Inceptive, Momentous, NewLimit, Ozow, Profluent, Saatva, SumUp, Valence Labs, Verve Group** — Specs 683–695)
+
+**Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held
+**547 `source-company-*` plugins / 830 source plugin packages total / 682 last spec / 832 enum lines /
+last enum Phase 691 (Spec 682, Camus Energy)**. All three OTHERS reference repos were `git pull`-ed and
+reported **no upstream changes** (`Ats-scrapers` @ `b45c12a`, `JobSpy` @ `fda080a`, `Jobspy-api` @ `26bb6f4`
+— all "Already up to date"). The prior run's CI (run `26957464279`, Specs 663–682) was confirmed **green**
+and `origin/develop` held `bad7d9e` with a clean working tree, so this run started from a clean,
+fully-pushed baseline. `docs-lint` was confirmed clean at run start.
+
+This run ships **13 new large-company Greenhouse-direct source plugins** (Specs 683–695, enum Phases
+692–704) via the established deterministic pipeline (`probe → enrich → assemble → scaffold → wire`).
+
+**Candidate discovery (live probe):** a **307-slug** candidate list was assembled across the still-fertile
+verticals (consumer fintech / neobanks / lending / payments, LatAm & African payments, telehealth & mental
+health, climate / grid-scale energy / EV charging, DTC consumer goods & sports nutrition, proptech, and
+generative-biology / longevity biotech), deduped against the 547 existing company slugs, and probed
+concurrently via `scripts/probe-company-source.ts` (16-way) against the public Greenhouse Job-Board API.
+**14 survived** the ≥ 3-roles + brand-match gate.
+
+**Quality-review drop (1):** `ess` returned board **"cBEYONData + SMX"** (16 roles) — a govcon staffing
+aggregator, a clear brand mismatch (slug `ess` ≠ a single named company). It was dropped at the review
+gate. The remaining **13 survivors were all adopted**.
+
+The **13 adopted** boards and their live role counts (probed 2026-06-04): SumUp (437), Verve Group (46),
+Bitpanda (43), ChargePoint (27), BVNK (19), Profluent (16), Saatva (14), NewLimit (12), Ozow (11),
+Valence Labs (8), Inceptive (7), Cleo AI (6), Momentous (6). Real probed listings (id / title / location /
+updated_at) were used to build each plugin's 3-listing fixture so the unit suites assert against
+real-world wire shapes.
+
+**Disambiguation guards (2):** the enrichment agents (grounded strictly on live board name + sample job
+titles + locations) produced ASCII-only, collision-free canonical displayNames, disambiguating two generic
+/ region-suffixed bare board names: **"Cleo (US)"** → **Cleo AI** (`CLEO_AI`; strips the `(US)` region
+suffix and pins the AI personal-finance chatbot, distinct from other companies named Cleo), and
+**"Verve"** → **Verve Group** (`VERVE_GROUP`; the board returns media-sales / ad-ops roles, so this is the
+ad-tech / mobile-advertising company, NOT the unrelated Verve Therapeutics biotech). All 13 derived
+enumKeys and classNames were verified collision-free against `site.enum.ts` and `packages/plugins/index.ts`
+before scaffolding.
+
+**Enrichment (parallel workflow):** descriptor prose (one-liner, sector, HQ, 2–3-sentence description,
+2–3 highlights, canonical displayName) for all 13 companies was produced by a **13-agent parallel
+`Workflow`** (one agent per company, each grounded STRICTLY on the live board name + sample job titles +
+role locations, schema-validated output; 375 K subagent tokens, 30 s wall-clock). Spec/plan/tasks + package
+files were materialised by the deterministic `scaffold-company-source.ts` generator and registered by the
+idempotent, replacement-function-based `wire-company-source.ts` helper (avoids the jest-config `$'`
+foot-gun).
+
+**Changes:**
+
+- **13 new source-company plugin packages** under `packages/plugins/source-company-{bitpanda,bvnk,chargepoint,
+  cleo,inceptive,momentous,newlimit,ozow,profluent,saatva,sumup,valencelabs,verve}/` — each with
+  `package.json`, `tsconfig.json`, `src/index.ts`, `src/<slug>.module.ts`, `src/<slug>.service.ts`,
+  `__tests__/<slug>.service.spec.ts`, and a 3-listing fixture. All mirror the canonical variant-2 + D-08
+  company-direct template (wire `company_name` pass-through; defensive D-10/D-11 title/department trim;
+  entity-decode-then-tag-strip descriptions; graceful degradation to `{ jobs: [] }` on transport error).
+- **13 new spec dirs** `.specify/specs/{683..695}-source-company-<slug>/` (spec.md, plan.md, tasks.md).
+- **Four wiring files** updated via `wire-company-source.ts`: `site.enum.ts` (+13 enum members, Phases
+  692–704), `packages/plugins/index.ts` (+13 `ALL_SOURCE_MODULES` entries), `tsconfig.base.json` (+13 path
+  aliases), `jest.config.js` (+13 moduleNameMapper entries).
+- **`docs/index.md`** — 13 new spec rows (683–695) + "Last revised" footer bumped to run #430.
+- **`docs/log.md`** — this entry.
+
+**Verification:** `tsc --noEmit -p tsconfig.base.json` clean (exit 0); the **13 new Jest suites pass**
+(13/13 suites, 143/143 tests green; the `status 500` ERROR lines in the output are the intentional
+graceful-degradation test cases asserting `{ jobs: [] }` on transport failure). `docs-lint` clean.
+
+---
+
 ## 2026-06-04 — Scheduled run #429 (**TWENTY new Greenhouse company-direct source plugins: On Running, Charlie Health, Two Chairs, Nexamp, firsthand Health, Atoms Tech, Form Health, Ilia Digital, Factorial Energy, Sidecar Health, Ownwell, Grove Collaborative, Patch Caregiving, Nanit, Nutrafol, Waymark Health, Seed Health, Unite Us, Banyan Infrastructure, Camus Energy** — Specs 663–682)
 
 **Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held

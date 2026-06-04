@@ -1519,6 +1519,32 @@ export enum Site {
   BANYAN_INFRASTRUCTURE = 'banyaninfrastructure',
   // Phase 691: Spec 682 — Source Company Plugin: Camus Energy
   CAMUS_ENERGY = 'camusenergy',
+  // Phase 692: Spec 683 — Source Company Plugin: Bitpanda
+  BITPANDA = 'bitpanda',
+  // Phase 693: Spec 684 — Source Company Plugin: BVNK
+  BVNK = 'bvnk',
+  // Phase 694: Spec 685 — Source Company Plugin: ChargePoint
+  CHARGEPOINT = 'chargepoint',
+  // Phase 695: Spec 686 — Source Company Plugin: Cleo AI
+  CLEO_AI = 'cleo',
+  // Phase 696: Spec 687 — Source Company Plugin: Inceptive
+  INCEPTIVE = 'inceptive',
+  // Phase 697: Spec 688 — Source Company Plugin: Momentous
+  MOMENTOUS = 'momentous',
+  // Phase 698: Spec 689 — Source Company Plugin: NewLimit
+  NEWLIMIT = 'newlimit',
+  // Phase 699: Spec 690 — Source Company Plugin: Ozow
+  OZOW = 'ozow',
+  // Phase 700: Spec 691 — Source Company Plugin: Profluent
+  PROFLUENT = 'profluent',
+  // Phase 701: Spec 692 — Source Company Plugin: Saatva
+  SAATVA = 'saatva',
+  // Phase 702: Spec 693 — Source Company Plugin: SumUp
+  SUMUP = 'sumup',
+  // Phase 703: Spec 694 — Source Company Plugin: Valence Labs
+  VALENCE_LABS = 'valencelabs',
+  // Phase 704: Spec 695 — Source Company Plugin: Verve Group
+  VERVE_GROUP = 'verve',
 }
 
 /**
