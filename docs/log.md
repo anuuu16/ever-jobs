@@ -15,6 +15,64 @@
 
 ---
 
+## 2026-06-10 — Scheduled run #432 (**SEVEN new Greenhouse company-direct source plugins: Hometap, Lightmatter, PsiQuantum, Quilt, Riverlane, Self Financial, Xendit** — Specs 701–707)
+
+**Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held
+**565 `source-company-*` plugins / 848 source plugin packages / 854 plugin packages / 700 last spec /
+last enum Phase 709 (Spec 700, StackBlitz)**. All three OTHERS reference repos were `git pull`-ed and
+reported **no upstream changes** (`Ats-scrapers`, `JobSpy`, `Jobspy-api` — all "Already up to date").
+The prior run's CI was green and `origin/develop` held `9498fb20` with a clean working tree, so this run
+started from a clean, fully-pushed baseline. `docs-lint` was confirmed clean at run start.
+
+This run ships **7 new large-company Greenhouse-direct source plugins** (Specs 701–707, enum Phases
+710–716) via the established deterministic pipeline (`probe → enrich → assemble → scaffold → wire`).
+
+**Candidate discovery (live probe):** a **188-slug** candidate list (deduped against the 565 existing
+company slugs) was assembled across consumer fintech / credit-building, neo-bank & BNPL, quantum
+computing, photonic/semiconductor compute, climate/home-electrification, insurance, health, food/DTC,
+and SE-Asia payments verticals, then probed concurrently via `scripts/probe-company-source.ts` (16-way)
+against the public Greenhouse Job-Board API. **7 survived** the ≥ 3-roles + brand-match gate:
+Hometap (12), Lightmatter (44), PsiQuantum (96), Quilt (3), Riverlane (18), Self Financial (3),
+Xendit (22). Real probed listings (id / title / location / updated_at) were used to build each plugin's
+3-listing fixture so the unit suites assert against real-world wire shapes.
+
+**Disambiguation guards (2):** (1) the `quilt` board resolved to the **Redwood-City home-electrification
+/ ductless-heat-pump** company Quilt (anchored on board name + Redwood City HQ + role mix), distinct from
+any unrelated same-name textile/software firms. (2) `selffinancial` resolved to **Self Financial, Inc.**
+(Austin credit-builder fintech; enumKey `SELF_FINANCIAL`). All 7 derived enumKeys (`HOMETAP`,
+`LIGHTMATTER`, `PSIQUANTUM`, `QUILT`, `RIVERLANE`, `SELF_FINANCIAL`, `XENDIT`) and classNames were
+verified collision-free against `site.enum.ts` before scaffolding.
+
+**Enrichment (parallel workflow):** descriptor prose (one-liner, sector, HQ, 2–3-sentence description,
+2–3 highlights, canonical displayName) for all 7 companies was produced by a **7-agent parallel
+`Workflow`** (one agent per company, each grounded STRICTLY on the live board name + sample job titles +
+role locations, schema-validated output; ~158 K subagent tokens, ~23 s wall-clock). Spec/plan/tasks +
+package files were materialised by the deterministic `scaffold-company-source.ts` generator and registered
+by the idempotent, replacement-function-based `wire-company-source.ts` helper (avoids the jest-config `$'`
+foot-gun).
+
+**Changes:**
+
+- **7 new source-company plugin packages** under `packages/plugins/source-company-{hometap,lightmatter,
+  psiquantum,quilt,riverlane,selffinancial,xendit}/` — each with `package.json`, `tsconfig.json`,
+  `src/index.ts`, `src/<slug>.module.ts`, `src/<slug>.service.ts`, `__tests__/<slug>.service.spec.ts`,
+  and a 3-listing fixture. All mirror the canonical variant-2 + D-08 company-direct template (wire
+  `company_name` pass-through; defensive D-10/D-11 title/department trim; entity-decode-then-tag-strip
+  descriptions; graceful degradation to `{ jobs: [] }` on transport error).
+- **7 new spec dirs** `.specify/specs/{701..707}-source-company-<slug>/` (spec.md, plan.md, tasks.md).
+- **Four wiring files** updated via `wire-company-source.ts`: `site.enum.ts` (+7 enum members, Phases
+  710–716), `packages/plugins/index.ts` (+7 `ALL_SOURCE_MODULES` entries), `tsconfig.base.json` (+7 path
+  aliases), `jest.config.js` (+7 moduleNameMapper entries).
+- **`docs/index.md`** — 7 new spec rows (701–707) + "Last revised" footer bumped to run #432.
+- **`docs/log.md`** — this entry.
+
+**Verification:** `tsc --noEmit -p tsconfig.base.json` clean (exit 0); the **7 new Jest suites pass**
+(77 tests, 7 suites; the logged `500` errors are the expected graceful-degradation test cases asserting
+`{ jobs: [] }` on transport failure). `docs-lint` clean (exit 0). Corpus now holds **572
+`source-company-*` plugins** / **855 source plugin packages** / **707 last spec** / **last enum Phase 716**.
+
+---
+
 ## 2026-06-04 — Scheduled run #431 (**FIVE new Greenhouse company-direct source plugins: Amperity, Keeper Security, mabl, Proton, StackBlitz** — Specs 696–700)
 
 **Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held

@@ -1555,6 +1555,20 @@ export enum Site {
   PROTON = 'proton',
   // Phase 709: Spec 700 — Source Company Plugin: StackBlitz
   STACKBLITZ = 'stackblitz',
+  // Phase 710: Spec 701 — Source Company Plugin: Hometap
+  HOMETAP = 'hometap',
+  // Phase 711: Spec 702 — Source Company Plugin: Lightmatter
+  LIGHTMATTER = 'lightmatter',
+  // Phase 712: Spec 703 — Source Company Plugin: PsiQuantum
+  PSIQUANTUM = 'psiquantum',
+  // Phase 713: Spec 704 — Source Company Plugin: Quilt
+  QUILT = 'quilt',
+  // Phase 714: Spec 705 — Source Company Plugin: Riverlane
+  RIVERLANE = 'riverlane',
+  // Phase 715: Spec 706 — Source Company Plugin: Self Financial
+  SELF_FINANCIAL = 'selffinancial',
+  // Phase 716: Spec 707 — Source Company Plugin: Xendit
+  XENDIT = 'xendit',
 }
 
 /**

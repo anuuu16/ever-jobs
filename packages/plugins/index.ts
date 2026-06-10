@@ -854,6 +854,13 @@ import { KeeperSecurityModule } from './source-company-keepersecurity';
 import { MablModule } from './source-company-mabl';
 import { ProtonModule } from './source-company-proton';
 import { StackBlitzModule } from './source-company-stackblitz';
+import { HometapModule } from './source-company-hometap';
+import { LightmatterModule } from './source-company-lightmatter';
+import { PsiQuantumModule } from './source-company-psiquantum';
+import { QuiltModule } from './source-company-quilt';
+import { RiverlaneModule } from './source-company-riverlane';
+import { SelfFinancialModule } from './source-company-selffinancial';
+import { XenditModule } from './source-company-xendit';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1701,4 +1708,11 @@ export const ALL_SOURCE_MODULES = [
   MablModule,
   ProtonModule,
   StackBlitzModule,
+  HometapModule,
+  LightmatterModule,
+  PsiQuantumModule,
+  QuiltModule,
+  RiverlaneModule,
+  SelfFinancialModule,
+  XenditModule,
 ];
