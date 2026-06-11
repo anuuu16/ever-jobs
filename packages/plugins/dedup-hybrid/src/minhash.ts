@@ -31,27 +31,26 @@ export interface MinHasherOptions {
 const FNV_OFFSET = 0x811c9dc5;
 const FNV_PRIME = 0x01000193;
 
+/**
+ * Module-scope binding for `Math.imul` (Spec 722 / FR-1).
+ *
+ * Hosts that execute code inside a `vm` context (test runners included) give
+ * it a *contextified* global object whose named-property loads go through a
+ * C++ interceptor instead of V8's global-load inline caches. A per-call
+ * `Math.imul` lookup in the signature hot loop (3 lookups × ~79 M calls on a
+ * 10 K-job batch) measured at ~61 s self-time under such a host — 72.7 % of
+ * the whole run. A closure-variable load is realm-independent and stays fast
+ * everywhere, so hot paths below must reference `imul`, never `Math.imul`.
+ */
+const imul = Math.imul;
+
 /** 32-bit FNV-1a hash of a UTF-16 code-unit stream. */
 function fnv1a(s: string): number {
   let h = FNV_OFFSET;
   for (let i = 0; i < s.length; i++) {
     h ^= s.charCodeAt(i);
-    h = Math.imul(h, FNV_PRIME);
+    h = imul(h, FNV_PRIME);
   }
-  return h >>> 0;
-}
-
-/**
- * Murmur-style 32-bit affine + finaliser. Used as the i-th permutation in the
- * MinHash signature. The (a, b) pair is unique per permutation.
- */
-function permute(x: number, a: number, b: number): number {
-  let h = (Math.imul(x, a) + b) >>> 0;
-  h ^= h >>> 16;
-  h = Math.imul(h, 0x85ebca6b) >>> 0;
-  h ^= h >>> 13;
-  h = Math.imul(h, 0xc2b2ae35) >>> 0;
-  h ^= h >>> 16;
   return h >>> 0;
 }
 
@@ -65,10 +64,10 @@ function makeCoeffs(size: number, seed: number): { a: Uint32Array; b: Uint32Arra
   const b = new Uint32Array(size);
   let s = seed >>> 0;
   for (let i = 0; i < size; i++) {
-    s = (Math.imul(s ^ (s >>> 15), 0x9e3779b1) + 0x6d2b79f5) >>> 0;
+    s = (imul(s ^ (s >>> 15), 0x9e3779b1) + 0x6d2b79f5) >>> 0;
     // OR with 1 forces an odd multiplier (full-period in mod 2^32 arithmetic).
     a[i] = (s | 1) >>> 0;
-    s = (Math.imul(s ^ (s >>> 13), 0x85ebca6b) + 0xc2b2ae35) >>> 0;
+    s = (imul(s ^ (s >>> 13), 0x85ebca6b) + 0xc2b2ae35) >>> 0;
     b[i] = s >>> 0;
   }
   return { a, b };
@@ -146,25 +145,43 @@ export class MinHasher {
    * as un-MinHashable.
    */
   signature(text: string): Uint32Array | null {
-    const shingles = shingleHashes(text, this.shingleSize);
-    if (shingles.size === 0) return null;
+    const shingleSet = shingleHashes(text, this.shingleSize);
+    if (shingleSet.size === 0) return null;
+
+    // Materialise the Set once — the hot loop below must iterate a typed
+    // array, not invoke a closure per element (Spec 722 / FR-2).
+    const shingles = new Uint32Array(shingleSet.size);
+    let w = 0;
+    for (const s of shingleSet) shingles[w++] = s;
 
     const sig = new Uint32Array(this.signatureSize);
-    sig.fill(0xffffffff);
-
     const a = this.aCoeffs;
     const b = this.bCoeffs;
     const n = this.signatureSize;
+    const m = shingles.length;
 
-    // Hot loop: for each shingle hash, take min over all permutations.
-    // Iterating the Set once, then the permutation array per shingle, keeps
-    // memory access patterns sequential for V8's typed-array fast paths.
-    shingles.forEach((s) => {
-      for (let i = 0; i < n; i++) {
-        const v = permute(s, a[i], b[i]);
-        if (v < sig[i]) sig[i] = v;
+    // Hot loop, permutation-major: hoists the (a, b) pair into locals and
+    // inlines the murmur-style affine + finaliser (formerly `permute()`)
+    // so the innermost loop performs no function calls at all. The mixing
+    // constants and fold order are unchanged — signatures stay byte-identical
+    // to the pre-722 implementation (golden-tested).
+    for (let i = 0; i < n; i++) {
+      const ai = a[i];
+      const bi = b[i];
+      let min = 0xffffffff;
+      for (let j = 0; j < m; j++) {
+        let h = (imul(shingles[j], ai) + bi) >>> 0;
+        h ^= h >>> 16;
+        h = imul(h, 0x85ebca6b) >>> 0;
+        h ^= h >>> 13;
+        h = imul(h, 0xc2b2ae35) >>> 0;
+        // The final fold must renormalise to unsigned: `^` yields a SIGNED
+        // int32, and a negative h would corrupt the unsigned min-comparison.
+        h = (h ^ (h >>> 16)) >>> 0;
+        if (h < min) min = h;
       }
-    });
+      sig[i] = min;
+    }
 
     return sig;
   }

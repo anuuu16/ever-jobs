@@ -120,6 +120,25 @@ describe('MinHasher', () => {
     expect(() => new MinHasher({ signatureSize: 0 })).toThrow();
     expect(() => new MinHasher({ shingleSize: 0 })).toThrow();
   });
+
+  it('matches the pre-722 golden signature byte-for-byte (Spec 722 / FR-2)', () => {
+    // Captured from the implementation as it stood before the Spec 722 hot-loop
+    // restructure (default options: signatureSize 128, shingleSize 3, seed
+    // 0xCAFEBABE). The refactor inlined the permutation arithmetic and swapped
+    // the loop order; the constants and fold order are unchanged, so these
+    // values must never drift. If this test fails, signatures — and therefore
+    // every persisted LSH bucket and similarity verdict — changed semantics.
+    const sig = new MinHasher({}).signature(
+      'We are hiring a Senior Software Engineer to join our backend platform team. ' +
+        'You will design, build, and operate distributed systems running on Kubernetes.',
+    )!;
+    expect(sig.length).toBe(128);
+    expect(Array.from(sig.slice(0, 8))).toEqual([
+      339505291, 692446097, 461289395, 326757424, 129337285, 250433582, 300526700, 16184326,
+    ]);
+    expect(sig[64]).toBe(567718026);
+    expect(sig[127]).toBe(221719532);
+  });
 });
 
 describe('lshBandKeys', () => {

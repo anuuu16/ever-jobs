@@ -1,5 +1,6 @@
 import { JobPostDto, Site } from '@ever-jobs/models';
-import { MinHashStrategy } from '../src/strategies/minhash-strategy';
+import { MinHasher } from '../src/minhash';
+import { MinHashStrategy, deriveBands } from '../src/strategies/minhash-strategy';
 import { PreparedJob } from '../src/types';
 
 const LONG_DESCRIPTION =
@@ -36,7 +37,54 @@ describe('MinHashStrategy', () => {
   });
 
   it('rejects invalid signature/band configurations', () => {
+    // Also proves an explicit `bands` value wins over derivation — the
+    // derivation only ever returns divisors, so the throw can only come from
+    // the explicit (100, 7) combination being used as-is.
     expect(() => new MinHashStrategy({ signatureSize: 100, bands: 7 })).toThrow();
+  });
+
+  it('derives LSH banding from the similarity threshold (Spec 722 / FR-3, FR-4)', () => {
+    // recall(s) = 1-(1-s^R)^B must be >= 0.95 at s = threshold; smallest
+    // qualifying divisor wins. Defaults (128, 0.85) must keep the historical
+    // B=16 split (back-compat, FR-4).
+    expect(deriveBands(128, 0.85)).toBe(16);
+    expect(deriveBands(128, 0.6)).toBe(32);
+    expect(deriveBands(128, 0.95)).toBe(8);
+  });
+
+  it('computes one signature per distinct text and groups identical texts (Spec 722 / FR-5)', () => {
+    const spy = jest.spyOn(MinHasher.prototype, 'signature');
+    try {
+      const out = new MinHashStrategy().cluster([
+        prepared({ index: 0, description: LONG_DESCRIPTION }),
+        prepared({ index: 1, description: LONG_DESCRIPTION }),
+        prepared({ index: 2, description: LONG_DESCRIPTION }),
+        prepared({
+          index: 3,
+          description:
+            'Looking for a UX designer fluent in Figma and design-system stewardship. ' +
+            'Strong portfolio required, with experience in mobile-first interfaces.',
+        }),
+      ]);
+      // Two distinct texts -> exactly two signature computations.
+      expect(spy).toHaveBeenCalledTimes(2);
+      expect(out.clusters).toHaveLength(1);
+      expect([...out.clusters[0]].sort((a, b) => a - b)).toEqual([0, 1, 2]);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('emits transitively connected jobs as a single merged component (Spec 722 / FR-6)', () => {
+    const tailA = ' Visa sponsorship and relocation included.';
+    const tailB = ' Visa sponsorship and relocation included. Apply directly today.';
+    const out = new MinHashStrategy().cluster([
+      prepared({ index: 0, description: LONG_DESCRIPTION }),
+      prepared({ index: 1, description: LONG_DESCRIPTION + tailA }),
+      prepared({ index: 2, description: LONG_DESCRIPTION + tailB }),
+    ]);
+    expect(out.clusters).toHaveLength(1);
+    expect([...out.clusters[0]].sort((a, b) => a - b)).toEqual([0, 1, 2]);
   });
 
   it('returns no clusters for empty input', () => {
@@ -141,11 +189,18 @@ describe('MinHashStrategy', () => {
     const out = strategy.cluster(inputs);
     const elapsed = Date.now() - start;
 
-    // Each variant 0..49 has 10 copies; pairs within a variant should land
-    // in the same cluster pair-set. We expect at least 50*45 = 2 250 verified
-    // pairs (bounded by maxBucketSize). A loose lower bound keeps the test
-    // resilient to MinHash variance.
-    expect(out.clusters.length).toBeGreaterThan(50);
+    // 50 distinct variant texts × 10 identical copies each. Since Spec 722
+    // the strategy emits merged components (not one 2-element cluster per
+    // verified pair), so the partition itself is the assertion surface:
+    // every input index must be covered (each copy-group alone guarantees
+    // its members cluster), and every emitted cluster must be a real merge.
+    const covered = new Set<number>();
+    for (const cluster of out.clusters) {
+      expect(cluster.length).toBeGreaterThanOrEqual(2);
+      for (const idx of cluster) covered.add(idx);
+    }
+    expect(covered.size).toBe(500);
+    expect(out.clusters.length).toBeGreaterThanOrEqual(1);
     expect(elapsed).toBeLessThan(500);
   });
 });

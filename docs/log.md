@@ -75,7 +75,7 @@ boards; the AI/dev-tools round confirmed the prior finding that pure AI/dev-infr
 
 ---
 
-## 2026-06-11 — Ad-hoc session — Source-coverage parity sweep (Specs 718–721)
+## 2026-06-11 — Ad-hoc session — Source-coverage parity sweep + dedup-hybrid follow-ups (Specs 718–722)
 
 **Scope:** Ad-hoc interactive session (not a numbered scheduled run). A review of the public
 job-source landscape identified **one previously uncovered public-API job board** and **three
@@ -146,12 +146,62 @@ capability gaps** in existing scrapers; all four were closed this session as Spe
   perf budgets and two minhash-strategy cases) surfaced while scoping the test run are **not**
   caused by this session: the package is untouched, the failures are flagged as known
   follow-ups in its last commit (`008ed8a6`, 2026-04-26), and no CI job runs dedup-hybrid
-  (the only plugin-test CI pattern is `packages/plugins/source-`).
+  (the only plugin-test CI pattern is `packages/plugins/source-`). **Closed later in this same
+  session as Spec 722 — see the follow-up section below.**
 - Zero source-file fixes were needed after the test pass; every suite covering the actual
   change surface is green.
 - Entry placement: doc-lint's same-date ordering treats run-numbered entries as newer than
   non-numbered ones, so this ad-hoc entry sits directly below the run #433 entry (both
   2026-06-11) to keep `lint:docs` green.
+
+### Same-session follow-up — Spec 722: dedup-hybrid performance gates + adaptive LSH banding
+
+**Scope:** Closes the four dedup-hybrid follow-ups flagged in commit `008ed8a6` and the run #11
+log: NFR-1 (1 000 jobs, observed **6 127 ms** vs 250 ms budget), NFR-2 (10 000 jobs, observed
+**60 287 ms** vs 2 500 ms), the 500-input MinHash sub-budget (**3 510 ms** vs 500 ms), and the
+lenient-threshold clustering bug (0 clusters at `similarityThreshold: 0.6` for a Jaccard ≈ 0.7
+pair).
+
+**Root causes (measured, not guessed — full evidence in spec §10):**
+
+- A V8 CPU profile of the Jest run attributed **72.7 % of self-time (~61 s) to `permute()`** in
+  `minhash.ts`: per-call `Math.imul` property loads (3 × ~79 M calls per 10 K batch) go through
+  the `vm`-contextified global's named-property interceptor under Jest, defeating V8's
+  global-load inline caches. The identical code under plain `ts-node` ran the 10 K batch in
+  ~883 ms — already inside budget.
+- LSH banding was fixed at B=16/R=8 (candidate cutoff ≈ 0.71) regardless of the configured
+  verification threshold, so a Jaccard-0.7 pair deterministically never surfaced as a candidate
+  at threshold 0.6 — the lenient knob only relaxed verification, never candidate generation.
+
+**Changes:**
+
+- `minhash.ts`: `Math.imul` hoisted to a module-scope `imul` const; `MinHasher.signature()`
+  rewritten permutation-major over a materialised `Uint32Array` of shingles with the mixing
+  arithmetic inlined (no per-shingle closure, no innermost-loop function calls). Signatures are
+  byte-identical to the previous implementation — locked by a new golden regression test (which
+  caught a missing final `>>> 0` renormalisation during the rewrite: `^` yields a signed int32
+  that would have corrupted the unsigned min-comparison).
+- `minhash-strategy.ts`: new exported `deriveBands(signatureSize, threshold)` picks the
+  smallest divisor whose LSH recall at the threshold is ≥ 0.95 when `bands` is not explicitly
+  configured (defaults still derive the historical B=16; threshold 0.6 derives B=32); identical
+  texts now share one signature computation via slot grouping; an internal Union-Find skips
+  verification for already-connected candidates and the strategy emits merged components
+  instead of one 2-element cluster per verified pair (the service unioned those anyway, so
+  end-to-end results are unchanged while duplicate-heavy batches drop from quadratic to
+  near-linear verification work).
+- `.github/workflows/ci.yml`: new **Test (Feature Plugins)** job runs the hermetic
+  `dedup-hybrid` / `merge-default` / `store-memory` / `liveness-http` suites on every push/PR
+  with CI-relaxed perf ceilings (`DEDUP_PERF_NFR1_MS=1000`, `DEDUP_PERF_NFR2_MS=8000`) so this
+  class of rot can no longer accumulate invisibly.
+
+**Verification:**
+
+- `npx jest packages/plugins/dedup-hybrid --silent` → **6 suites / 62 tests passed at the
+  original default budgets** (250 ms / 2 500 ms / 500 ms), including the four previously
+  failing tests and the new golden/banding/grouping/transitive-merge unit tests.
+- `npx jest packages/plugins/merge-default packages/plugins/store-memory
+  packages/plugins/liveness-http --silent` → **4 suites / 133 tests passed** (the remaining
+  suites of the new CI job, verified green before wiring the job).
 
 ---
 
