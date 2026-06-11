@@ -1569,6 +1569,26 @@ export enum Site {
   SELF_FINANCIAL = 'selffinancial',
   // Phase 716: Spec 707 — Source Company Plugin: Xendit
   XENDIT = 'xendit',
+  // Phase 717: Spec 708 — Source Company Plugin: BetterHelp
+  BETTERHELP = 'betterhelp',
+  // Phase 718: Spec 709 — Source Company Plugin: Bybit
+  BYBIT = 'bybit',
+  // Phase 719: Spec 710 — Source Company Plugin: FalconX
+  FALCONX = 'falconx',
+  // Phase 720: Spec 711 — Source Company Plugin: OKX
+  OKX = 'okx',
+  // Phase 721: Spec 712 — Source Company Plugin: Prove
+  PROVE = 'prove',
+  // Phase 722: Spec 713 — Source Company Plugin: Securitize
+  SECURITIZE = 'securitize',
+  // Phase 723: Spec 714 — Source Company Plugin: Solid Power
+  SOLID_POWER = 'solidpower',
+  // Phase 724: Spec 715 — Source Company Plugin: CoreWeave
+  COREWEAVE = 'coreweave',
+  // Phase 725: Spec 716 — Source Company Plugin: Nebius
+  NEBIUS = 'nebius',
+  // Phase 726: Spec 717 — Source Company Plugin: Udio
+  UDIO = 'udio',
 }
 
 /**

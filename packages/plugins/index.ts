@@ -861,6 +861,16 @@ import { QuiltModule } from './source-company-quilt';
 import { RiverlaneModule } from './source-company-riverlane';
 import { SelfFinancialModule } from './source-company-selffinancial';
 import { XenditModule } from './source-company-xendit';
+import { BetterHelpModule } from './source-company-betterhelp';
+import { BybitModule } from './source-company-bybit';
+import { FalconXModule } from './source-company-falconx';
+import { OKXModule } from './source-company-okx';
+import { ProveModule } from './source-company-prove';
+import { SecuritizeModule } from './source-company-securitize';
+import { SolidPowerModule } from './source-company-solidpower';
+import { CoreWeaveModule } from './source-company-coreweave';
+import { NebiusModule } from './source-company-nebius';
+import { UdioModule } from './source-company-udio';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1715,4 +1725,14 @@ export const ALL_SOURCE_MODULES = [
   RiverlaneModule,
   SelfFinancialModule,
   XenditModule,
+  BetterHelpModule,
+  BybitModule,
+  FalconXModule,
+  OKXModule,
+  ProveModule,
+  SecuritizeModule,
+  SolidPowerModule,
+  CoreWeaveModule,
+  NebiusModule,
+  UdioModule,
 ];

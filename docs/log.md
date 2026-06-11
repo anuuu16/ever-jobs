@@ -15,6 +15,66 @@
 
 ---
 
+## 2026-06-11 — Scheduled run #433 (**TEN new Greenhouse company-direct source plugins: BetterHelp, Bybit, FalconX, OKX, Prove, Securitize, Solid Power, CoreWeave, Nebius, Udio** — Specs 708–717)
+
+**Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held
+**572 `source-company-*` plugins / 861 source plugin packages / 700–707 last specs /
+last enum Phase 716 (Spec 707, Xendit)**. All three OTHERS reference repos were `git pull`-ed and
+reported **no upstream changes** (`Ats-scrapers`, `JobSpy`, `Jobspy-api` — all "Already up to date").
+The prior run's CI was green and `origin/develop` held `5c8bfc0f` with a clean working tree (0 commits
+ahead), so this run started from a clean, fully-pushed baseline. `docs-lint` was confirmed clean.
+
+This run ships **10 new large-company Greenhouse-direct source plugins** (Specs 708–717, enum Phases
+717–726) via the established deterministic pipeline (`probe → enrich → assemble → scaffold → wire`).
+
+**Candidate discovery (live probe):** three deduped candidate batches (296 raw slugs → 218 after
+deduping against the 572 existing company slugs, plus a 78-slug AI/infra round) were probed concurrently
+(16-way) against the public Greenhouse Job-Board API. **10 survived** the ≥ 3-roles + brand-match gate:
+BetterHelp (262), Bybit (147), FalconX (18), OKX (257), Prove (4), Securitize (8), Solid Power (11),
+CoreWeave (260), Nebius (321), Udio (5). Real probed listings (id / title / location / updated_at) seeded
+each plugin's 3-listing fixture so the unit suites assert against real-world wire shapes.
+
+**Brand-match guard (1):** the `ess` candidate probed to a board named "cBEYONData + SMX" (not a brand
+match for the intended Energy Storage System / Form Energy peer); it was **dropped** at the survivor-review
+gate rather than scaffolded. No other disambiguation guards were required — all 13 derived enum keys and
+PascalCase class names were collision-checked clean against the existing corpus before assembly.
+
+**Verticals:** digital mental health (BetterHelp), crypto exchanges & prime brokerage (Bybit, OKX,
+FalconX), digital identity (Prove), real-world-asset tokenization (Securitize), solid-state batteries
+(Solid Power), and AI cloud / GPU infrastructure (CoreWeave, Nebius) plus generative-AI music (Udio).
+Consumer-fintech/crypto, health, climate-hardware, and AI-infra verticals continue to surface fresh
+boards; the AI/dev-tools round confirmed the prior finding that pure AI/dev-infra is largely mined out
+(3/78 hit rate) while big GPU-cloud names (CoreWeave, Nebius) remain.
+
+**Changes:**
+
+- Added **10 new source-company plugin packages** under `packages/plugins/source-company-{betterhelp,
+  bybit,falconx,okx,prove,securitize,solidpower,coreweave,nebius,udio}/` (100 files: package.json,
+  tsconfig.json, src/index.ts, src/*.module.ts, src/*.service.ts, __tests__/*.service.spec.ts,
+  __tests__/fixtures/*-jobs.json each).
+- Added **10 new specs** under `.specify/specs/708-717-source-company-*` (spec.md, plan.md, tasks.md each).
+- Wired all 10 into the four shared registration files (`site.enum.ts` Phases 717–726, `packages/plugins/
+  index.ts`, `tsconfig.base.json`, `jest.config.js`) via the idempotent `wire-company-source.ts`.
+- `docs/index.md` — appended rows 708–717 to the spec index (§7); doc-lint re-verified clean.
+- `docs/log.md` — this entry.
+
+**Verification:**
+
+- `npx jest betterhelp bybit falconx okx prove securitize solidpower coreweave nebius udio` →
+  **11 suites / 121 tests passed** (the HTTP-500 ERROR log lines are the negative-path tests asserting
+  graceful degradation, not failures).
+- `npx tsc --noEmit -p tsconfig.base.json` → **exit 0** (whole-project typecheck clean after wiring).
+- `npm run lint:docs` → **✓ no issues**.
+
+**Notes:**
+
+- Corpus after this run: **582 `source-company-*` plugins / 871 source plugin packages / last spec 717 /
+  last enum Phase 726**.
+- Nothing in the repo references competitors; external-research notes route to the parent-directory
+  watch file per the scheduled-task brief.
+
+---
+
 ## 2026-06-10 — Scheduled run #432 (**SEVEN new Greenhouse company-direct source plugins: Hometap, Lightmatter, PsiQuantum, Quilt, Riverlane, Self Financial, Xendit** — Specs 701–707)
 
 **Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held
