@@ -26,9 +26,40 @@ export interface AshbyCompensationComponent {
   label?: string | null;
 }
 
+/**
+ * Flat compensation component served by the public job-board API when
+ * `includeCompensation=true` is passed (live wire shape, probed 2026-06-11).
+ * Appears inside `summaryComponents[]` and `compensationTiers[].components[]`.
+ */
+export interface AshbyFlatCompensationComponent {
+  id?: string | null;
+  summary?: string | null;
+  compensationType?: string | null;
+  /** e.g. "1 YEAR", "1 HOUR", "NONE" */
+  interval?: string | null;
+  currencyCode?: string | null;
+  minValue?: number | null;
+  maxValue?: number | null;
+}
+
+/** A tier group on the public wire: a label plus flat components. */
+export interface AshbyCompensationTierGroup {
+  id?: string | null;
+  tierSummary?: string | null;
+  title?: string | null;
+  additionalInformation?: string | null;
+  components?: AshbyFlatCompensationComponent[] | null;
+}
+
 export interface AshbyCompensation {
   compensationComponents?: AshbyCompensationComponent[] | null;
-  summaryComponents?: AshbyCompensationComponent[] | null;
+  summaryComponents?:
+    | Array<AshbyCompensationComponent & AshbyFlatCompensationComponent>
+    | null;
+  /** Public wire shape (with includeCompensation=true). */
+  compensationTiers?: AshbyCompensationTierGroup[] | null;
+  compensationTierSummary?: string | null;
+  scrapeableCompensationSalarySummary?: string | null;
 }
 
 export interface AshbyJob {

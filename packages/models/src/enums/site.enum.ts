@@ -1589,6 +1589,8 @@ export enum Site {
   NEBIUS = 'nebius',
   // Phase 726: Spec 717 — Source Company Plugin: Udio
   UDIO = 'udio',
+  // Phase 727: Spec 718 — Source Job Board Plugin: Solid.Jobs (solid.jobs)
+  SOLIDJOBS = 'solidjobs',
 }
 
 /**

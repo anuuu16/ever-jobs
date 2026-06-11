@@ -41,3 +41,100 @@ export function parseWorkdaySlug(slug: string): {
 export function buildWorkdayUrl(company: string, wdNumber: string, site: string): string {
   return `https://${company}.wd${wdNumber}.myworkdayjobs.com/wday/cxs/${company}/${site}/jobs`;
 }
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * Format a Date as an ISO calendar date (YYYY-MM-DD, UTC).
+ * Returns null for an Invalid Date (e.g. a day offset that left the
+ * representable ECMAScript date range) instead of letting
+ * `.toISOString()` throw a RangeError.
+ */
+function toIsoDate(date: Date): string | null {
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString().split('T')[0];
+}
+
+/**
+ * ISO-shaped absolute date: `YYYY-MM-DD`, optionally followed by a time
+ * part (`T`/space separator, optional seconds, fraction and zone). Only
+ * this shape is accepted by the absolute-date fallback — `Date.parse`
+ * of non-ISO strings (e.g. "May 20, 2026") uses host-LOCAL time, which
+ * would make the result drift with the host timezone (NFR-1 / NFR-3).
+ */
+const ISO_DATE_RE =
+  /^(\d{4})-(\d{2})-(\d{2})(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/i;
+
+/**
+ * Validate that an ISO-shaped Y/M/D triple is a real calendar date
+ * (rejects e.g. 2026-02-30, which V8's legacy parser would otherwise
+ * roll over into March in local time). TZ-independent.
+ */
+function isRealUtcDate(year: number, month: number, day: number): boolean {
+  const utc = new Date(Date.UTC(year, month - 1, day));
+  return (
+    utc.getUTCFullYear() === year &&
+    utc.getUTCMonth() === month - 1 &&
+    utc.getUTCDate() === day
+  );
+}
+
+/**
+ * Parse Workday's `postedOn` field into an ISO calendar date (YYYY-MM-DD).
+ *
+ * The job-list endpoint returns relative human-readable labels rather than
+ * dates — live probe of the public API on 2026-06-11 confirmed the shapes
+ * "Posted Today", "Posted Yesterday", "Posted 3 Days Ago" and
+ * "Posted 30+ Days Ago". Matching is case-insensitive and tolerant of
+ * irregular whitespace. Day arithmetic is UTC-based off `now` (defaults to
+ * the current time) so results do not drift with the host timezone.
+ *
+ * - "Posted Today"        -> ISO date of `now`
+ * - "Posted Yesterday"    -> `now` minus 1 day
+ * - "Posted N Days Ago"   -> `now` minus N days (null if the offset leaves
+ *                            the representable ECMAScript date range)
+ * - "Posted N+ Days Ago"  -> null (open lower bound — a concrete date would
+ *                            fabricate precision the source never provided)
+ * - other strings         -> ISO-shaped absolute date (`YYYY-MM-DD`, optional
+ *                            time part) -> that calendar date as written;
+ *                            anything else -> null (non-ISO formats are
+ *                            host-TZ-dependent under `Date.parse`)
+ * - null/undefined/empty  -> null
+ *
+ * Never throws.
+ */
+export function parseWorkdayPostedOn(
+  postedOn?: string | null,
+  now: Date = new Date(),
+): string | null {
+  if (!postedOn) return null;
+
+  const normalized = postedOn.trim().replace(/\s+/g, ' ').toLowerCase();
+  if (!normalized) return null;
+
+  if (normalized === 'posted today') {
+    return toIsoDate(now);
+  }
+
+  if (normalized === 'posted yesterday') {
+    return toIsoDate(new Date(now.getTime() - MS_PER_DAY));
+  }
+
+  const relativeMatch = normalized.match(/^posted (\d+)(\+)? days? ago$/);
+  if (relativeMatch) {
+    // "N+ Days Ago" is a lower bound only — no exact date can be derived.
+    if (relativeMatch[2]) return null;
+    const days = parseInt(relativeMatch[1], 10);
+    return toIsoDate(new Date(now.getTime() - days * MS_PER_DAY));
+  }
+
+  const isoMatch = postedOn.trim().match(ISO_DATE_RE);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    if (isRealUtcDate(Number(year), Number(month), Number(day))) {
+      return `${year}-${month}-${day}`;
+    }
+  }
+
+  return null;
+}

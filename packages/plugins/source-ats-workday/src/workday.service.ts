@@ -21,6 +21,7 @@ import {
   WORKDAY_PAGE_SIZE,
   parseWorkdaySlug,
   buildWorkdayUrl,
+  parseWorkdayPostedOn,
 } from './workday.constants';
 import { WorkdayJobListItem, WorkdaySearchResponse } from './workday.types';
 
@@ -132,8 +133,8 @@ export class WorkdayService implements IScraper {
     // Remote detection
     const isRemote = locationStr?.toLowerCase().includes('remote') ?? false;
 
-    // Date from postedOn
-    const datePosted = listing.postedOn ?? null;
+    // Date from postedOn (relative labels like "Posted 3 Days Ago" -> ISO date or null)
+    const datePosted = parseWorkdayPostedOn(listing.postedOn);
 
     // Extract subtitle info (often contains category/department)
     const subtitleTexts = listing.subtitles
@@ -150,15 +151,7 @@ export class WorkdayService implements IScraper {
       companyName: company,
       jobUrl,
       location,
-      datePosted: datePosted
-        ? (() => {
-            try {
-              return new Date(datePosted).toISOString().split('T')[0];
-            } catch {
-              return datePosted;
-            }
-          })()
-        : null,
+      datePosted,
       isRemote,
       site: Site.WORKDAY,
       // ATS-specific fields

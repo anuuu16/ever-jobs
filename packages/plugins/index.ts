@@ -871,6 +871,7 @@ import { SolidPowerModule } from './source-company-solidpower';
 import { CoreWeaveModule } from './source-company-coreweave';
 import { NebiusModule } from './source-company-nebius';
 import { UdioModule } from './source-company-udio';
+import { SolidJobsModule } from './source-solidjobs';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1735,4 +1736,5 @@ export const ALL_SOURCE_MODULES = [
   CoreWeaveModule,
   NebiusModule,
   UdioModule,
+  SolidJobsModule,
 ];

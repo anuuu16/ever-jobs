@@ -3,6 +3,7 @@ export * from './field-with-provenance.interface';
 export * from './source-observation.interface';
 export * from './canonical-job.interface';
 export * from './dedup-engine.interface';
+export * from './liveness-checker.interface';
 export * from './merge-resolver.interface';
 export * from './circuit-breaker.interface';
 export * from './job-store-query.interface';

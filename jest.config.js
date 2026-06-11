@@ -34,6 +34,8 @@ module.exports = {
     '^@ever-jobs/source-ats-rippling$': '<rootDir>/packages/plugins/source-ats-rippling/src/index.ts',
     '^@ever-jobs/source-ats-workday$': '<rootDir>/packages/plugins/source-ats-workday/src/index.ts',
     '^@ever-jobs/source-company-udio$': '<rootDir>/packages/plugins/source-company-udio/src/index.ts',
+    '^@ever-jobs/source-solidjobs$': '<rootDir>/packages/plugins/source-solidjobs/src/index.ts',
+    '^@ever-jobs/liveness-http$': '<rootDir>/packages/plugins/liveness-http/src/index.ts',
     '^@ever-jobs/source-company-nebius$': '<rootDir>/packages/plugins/source-company-nebius/src/index.ts',
     '^@ever-jobs/source-company-coreweave$': '<rootDir>/packages/plugins/source-company-coreweave/src/index.ts',
     '^@ever-jobs/source-company-solidpower$': '<rootDir>/packages/plugins/source-company-solidpower/src/index.ts',

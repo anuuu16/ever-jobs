@@ -12,7 +12,7 @@
     "job_search": {
       "description": "Search for jobs across multiple job boards simultaneously",
       "supported_sites": {
-        "job_boards": ["linkedin", "indeed", "glassdoor", "zip_recruiter", "google", "bayt", "naukri", "bdjobs", "internshala", "exa", "upwork", "dice", "simplyhired", "wellfound", "stepstone", "monster", "careerbuilder", "builtin", "snagajob", "dribbble"],
+        "job_boards": ["linkedin", "indeed", "glassdoor", "zip_recruiter", "google", "bayt", "naukri", "bdjobs", "internshala", "exa", "upwork", "dice", "simplyhired", "wellfound", "stepstone", "monster", "careerbuilder", "builtin", "snagajob", "dribbble", "solidjobs"],
         "remote_boards": ["remoteok", "remotive", "weworkremotely", "jobicy", "himalayas", "arbeitnow"],
         "ats_platforms": ["greenhouse", "lever", "ashby", "workable", "smartrecruiters", "jobvite", "workday", "successfactors", "taleo", "icims", "adp", "ukg", "rippling", "recruitee", "teamtailor", "bamboohr", "personio", "jazzhr"],
         "company_pages": ["amazon", "apple", "microsoft", "nvidia", "tiktok", "uber", "cursor", "google_careers", "meta", "netflix", "stripe", "openai"],
@@ -30,6 +30,7 @@
         "Rate limiting",
         "Remote job filtering",
         "Job type filtering",
+        "HTTP job-posting liveness verification (active/expired/uncertain verdicts)",
         "Description format selection (markdown, html, plain)",
         "Analytics (summary stats, company intelligence, site comparison)",
         "MCP server for AI assistant integration"

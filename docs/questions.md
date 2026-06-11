@@ -10,6 +10,102 @@
 
 ---
 
+## Q-067 — Liveness checker integration point: where should the aggregator invoke `ILivenessChecker`?
+
+**Context.** Spec 721 (ad-hoc session 2026-06-11) ships the `liveness-http` feature plugin bound
+under `LIVENESS_CHECKER_TOKEN`, with the public contract (`ILivenessChecker`, `LivenessVerdict`)
+in `@ever-jobs/models`. The plugin is wired (tsconfig path alias + jest mapper) but nothing in the
+aggregation pipeline invokes it yet — the spec deliberately scopes out verdict persistence and
+re-check scheduling. The open question is where the checker should plug into the pipeline.
+
+**Options.**
+- **A — Opt-in post-aggregation step (chosen default).** Consumers (API callers, store maintenance
+  jobs) inject `LIVENESS_CHECKER_TOKEN` and call `checkBatch` explicitly on stored or returned
+  URLs. Zero impact on scrape latency; verdict handling stays caller-owned.
+- **B — Inline during aggregation.** Check every scraped URL before results are returned. Adds one
+  GET per job to every search (hundreds of extra requests, multi-second latency) for URLs that were
+  just fetched from the source and are almost certainly live.
+- **C — Persistence-layer hook.** Run liveness checks at write/refresh time inside the persistence
+  plugins. Couples feature plugins to each other (forbidden by the plugin architecture) unless a
+  new orchestration interface mediates.
+
+**Default (proceeding):** **A** — the plugin ships as an injectable capability with **no automatic
+invocation yet**; a later spec owns the maintenance-job consumer (store eviction for `expired`
+verdicts, retry cadence for `uncertain` ones).
+
+**Resolution.** _(pending human review — default A continues.)_
+
+---
+
+## Q-066 — Liveness checker: add a browser-rendering fallback for `bot_challenge` verdicts?
+
+**Context.** Spec 721's HTTP-only checker classifies anti-bot interstitials (Cloudflare
+"just a moment", hCaptcha, press-and-hold) as `uncertain`/`bot_challenge` — it never attempts to
+solve or render them (Spec 721 §3 non-goal). SPA-only boards that server-render nothing similarly
+land in `uncertain`/`no_apply_control`. A headless-browser fallback could resolve many of these to
+a definitive `active`/`expired` verdict, at a significant dependency and latency cost.
+
+**Options.**
+- **A — HTTP-only for now (chosen default).** Uncertain verdicts are **never treated as expired**
+  (Spec 721 NFR-5), so the worst case is a stale posting surviving until a later, smarter pass —
+  no false-positive evictions. Zero new runtime dependencies (NFR-3).
+- **B — Headless-browser fallback feature plugin.** A second plugin (e.g. `liveness-browser`)
+  re-checks `bot_challenge`/`uncertain` verdicts with real rendering. Heavy dependency, far slower,
+  and challenge pages may still block automation.
+- **C — Escalation queue.** Persist `uncertain` verdicts and re-check on a cadence with jittered
+  timing / rotated proxies before ever considering browser rendering.
+
+**Default (proceeding):** **A** — HTTP-only; uncertain verdicts stay non-destructive by contract.
+Revisit B/C only if a real consumer measures a material `bot_challenge` share on stored URLs.
+
+**Resolution.** _(pending human review — default A continues.)_
+
+---
+
+## Q-065 — solid.jobs division coverage: which divisions should `source-solidjobs` scrape by default?
+
+**Context.** The solid.jobs public API exposes eight live-verified divisions (probe 2026-06-11:
+`it` 500, `sales` 377, `finances` 237, `marketing` 202, `logistics` 155, `engineering` 137,
+`other` 126, `hr` 113 offers). Each configured division costs one HTTP request per scrape. Spec 718
+D-2 scopes the default to `it` only.
+
+**Options.**
+- **A — `it` only by default, env override (chosen default).** `SOLIDJOBS_DIVISIONS`
+  (comma-separated) widens coverage without a code change; fan-out via `Promise.allSettled` so one
+  failing division never blanks the rest.
+- **B — All eight divisions by default.** 8× the request volume per scrape, mostly for divisions
+  outside the aggregator's core tech focus.
+- **C — Hardcode a curated subset (e.g. `it,engineering`).** Picks winners without usage data and
+  still needs the env override for the rest.
+
+**Default (proceeding):** **A** — `it` only; operators opt into more divisions via the
+`SOLIDJOBS_DIVISIONS` env var.
+
+**Resolution.** _(pending human review — default A continues.)_
+
+---
+
+## Q-064 — Should `source-solidjobs` default `LocationDto.country` to "Poland" when a city is present?
+
+**Context.** Every offer in the solid.jobs snapshot probed 2026-06-11 lists Polish cities, but the
+wire payload carries no country field, and the board could list foreign locations later. Spec 718
+FR-6/Q-1 maps `location.city = locations[0]` and leaves `state`/`country` `null`.
+
+**Options.**
+- **A — City only; `country` stays `null` (chosen default).** No fabricated facts on the DTO;
+  downstream enrichment can geocode the city when a country is required.
+- **B — Default `country = "Poland"` whenever a city is present.** Correct for the probed snapshot
+  but silently wrong the day the board carries a non-Polish location.
+- **C — Polish-city allowlist.** Set the country only when the city matches a maintained list — a
+  maintenance burden disproportionate to the benefit.
+
+**Default (proceeding):** **A** — city only; `country` remains `null` until the wire payload
+provides evidence.
+
+**Resolution.** _(pending human review — default A continues.)_
+
+---
+
 ## Q-063 — Build method for Greenhouse company-direct source batches: deterministic main-loop probe vs. parallel research-agent workflow
 
 **Context.** Run #415 pivoted from generic ATS adapters back to company-direct sources, shipping 17

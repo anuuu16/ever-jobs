@@ -14,11 +14,23 @@ import {
 } from '@ever-jobs/models';
 import {
   createHttpClient,
+  HttpClient,
   htmlToPlainText,
   extractEmails,
 } from '@ever-jobs/common';
-import { ASHBY_API_URL, ASHBY_HEADERS } from './ashby.constants';
-import { AshbyJob, AshbyResponse, AshbyCompensationTier } from './ashby.types';
+import {
+  ASHBY_API_URL,
+  ASHBY_HEADERS,
+  ASHBY_INCLUDE_COMPENSATION_QUERY,
+  ASHBY_PUBLIC_MAX_RETRIES,
+  ASHBY_RETRY_BACKOFF,
+} from './ashby.constants';
+import {
+  AshbyJob,
+  AshbyResponse,
+  AshbyCompensationTier,
+  AshbyFlatCompensationComponent,
+} from './ashby.types';
 
 @SourcePlugin({
   site: Site.ASHBY,
@@ -57,11 +69,11 @@ export class AshbyService implements IScraper {
     });
     client.setHeaders(ASHBY_HEADERS);
 
-    const url = `${ASHBY_API_URL}/${encodeURIComponent(companySlug)}`;
+    const url = this.buildBoardUrl(companySlug);
 
     try {
       this.logger.log(`Fetching Ashby jobs for company: ${companySlug}`);
-      const response = await client.get(url);
+      const response = await this.getWithRetry(client, url);
       const data: AshbyResponse = response.data ?? { jobs: [] };
       const jobs = data.jobs ?? [];
 
@@ -110,7 +122,7 @@ export class AshbyService implements IScraper {
       timeout: input.requestTimeout,
     });
 
-    const url = `${ASHBY_API_URL}/${encodeURIComponent(companySlug)}`;
+    const url = this.buildBoardUrl(companySlug);
     const authToken = Buffer.from(`${apiKey}:`).toString('base64');
 
     const response = await client.post(url, undefined, {
@@ -147,6 +159,57 @@ export class AshbyService implements IScraper {
     }
 
     return new JobResponseDto(jobPosts);
+  }
+
+  /**
+   * Build the job-board URL for a company slug. Both the public GET and the
+   * authenticated POST hit the same endpoint; includeCompensation=true opts
+   * the response into the compensation payload (the public API omits it
+   * entirely otherwise) and is harmless on the authenticated path.
+   */
+  private buildBoardUrl(companySlug: string): string {
+    return `${ASHBY_API_URL}/${encodeURIComponent(companySlug)}?${ASHBY_INCLUDE_COMPENSATION_QUERY}`;
+  }
+
+  /**
+   * GET with a small retry loop for the public job-board endpoint, whose
+   * server-side latency can exceed client timeouts. Retries up to
+   * ASHBY_PUBLIC_MAX_RETRIES times on network errors/timeouts (no HTTP
+   * status) and HTTP 5xx; 4xx responses fail immediately. Backoff:
+   * baseDelayMs * 2^attempt + random(0..jitterMaxMs).
+   */
+  private async getWithRetry(
+    client: Pick<HttpClient, 'get'>,
+    url: string,
+    backoff: { baseDelayMs: number; jitterMaxMs: number } = ASHBY_RETRY_BACKOFF,
+  ): Promise<{ data?: AshbyResponse }> {
+    let lastError: any;
+    for (let attempt = 0; attempt <= ASHBY_PUBLIC_MAX_RETRIES; attempt++) {
+      try {
+        return await client.get(url);
+      } catch (err: any) {
+        lastError = err;
+        const status: number | undefined = err?.response?.status;
+        const retryable = status === undefined || status >= 500;
+        if (!retryable || attempt >= ASHBY_PUBLIC_MAX_RETRIES) {
+          throw err;
+        }
+        const delay =
+          backoff.baseDelayMs * Math.pow(2, attempt) +
+          Math.random() * backoff.jitterMaxMs;
+        this.logger.warn(
+          `Ashby public GET failed (attempt ${attempt + 1}/${
+            ASHBY_PUBLIC_MAX_RETRIES + 1
+          }): ${err?.message ?? err}. Retrying in ${Math.round(delay)}ms`,
+        );
+        await this.sleep(delay);
+      }
+    }
+    throw lastError;
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private processJob(
@@ -203,12 +266,28 @@ export class AshbyService implements IScraper {
   }
 
   /**
-   * Extract compensation from Ashby's nested tier structure.
-   * Ashby provides compensation as components with tiers (floor/ceiling).
+   * Extract compensation from an Ashby job. Two wire shapes are supported:
+   *
+   * 1. Tiered: `compensationComponents[].tiers[]` with
+   *    tierFloor/tierCeiling/interval/currency.
+   * 2. Flat (served by the public API with includeCompensation=true; live
+   *    probe 2026-06-11): `summaryComponents[]` and
+   *    `compensationTiers[].components[]` with
+   *    minValue/maxValue/interval/currencyCode.
    */
   private extractCompensation(job: AshbyJob): CompensationDto | null {
     const comp = job.compensation;
     if (!comp) return null;
+
+    return (
+      this.extractFromTieredComponents(job) ??
+      this.extractFromFlatComponents(job)
+    );
+  }
+
+  /** Tiered shape: compensationComponents[].tiers[] (tierFloor/tierCeiling). */
+  private extractFromTieredComponents(job: AshbyJob): CompensationDto | null {
+    const comp = job.compensation!;
 
     // Try compensationComponents first, then summaryComponents
     const components = comp.compensationComponents ?? comp.summaryComponents ?? [];
@@ -229,8 +308,7 @@ export class AshbyService implements IScraper {
     const tier: AshbyCompensationTier = tiers[0];
     if (tier.tierFloor == null && tier.tierCeiling == null) return null;
 
-    const rawInterval = tier.interval?.toLowerCase() ?? '';
-    const interval = getCompensationInterval(rawInterval);
+    const interval = this.resolveInterval(tier.interval);
 
     return new CompensationDto({
       interval: interval ?? undefined,
@@ -238,5 +316,44 @@ export class AshbyService implements IScraper {
       maxAmount: tier.tierCeiling ?? undefined,
       currency: tier.currency ?? 'USD',
     });
+  }
+
+  /** Flat shape: summaryComponents[] / compensationTiers[].components[]. */
+  private extractFromFlatComponents(job: AshbyJob): CompensationDto | null {
+    const comp = job.compensation!;
+
+    const candidates: AshbyFlatCompensationComponent[] = [
+      ...(comp.summaryComponents ?? []),
+      ...(comp.compensationTiers ?? []).flatMap((t) => t.components ?? []),
+    ].filter((c) => c.minValue != null || c.maxValue != null);
+    if (candidates.length === 0) return null;
+
+    // Prefer the base salary component; fall back to the first bounded one.
+    const salaryComponent =
+      candidates.find(
+        (c) =>
+          c.compensationType?.toLowerCase().includes('salary') ||
+          c.compensationType?.toLowerCase() === 'base',
+      ) ?? candidates[0];
+
+    const interval = this.resolveInterval(salaryComponent.interval);
+
+    return new CompensationDto({
+      interval: interval ?? undefined,
+      minAmount: salaryComponent.minValue ?? undefined,
+      maxAmount: salaryComponent.maxValue ?? undefined,
+      currency: salaryComponent.currencyCode ?? 'USD',
+    });
+  }
+
+  /**
+   * Normalize a wire interval to a CompensationInterval. The flat shape
+   * prefixes a count (e.g. "1 YEAR", "1 HOUR") — strip it before resolving.
+   */
+  private resolveInterval(raw: string | null | undefined) {
+    if (!raw) return null;
+    const normalized = raw.trim().replace(/^\d+\s*/, '').toLowerCase();
+    if (!normalized) return null;
+    return getCompensationInterval(normalized);
   }
 }

@@ -75,6 +75,86 @@ boards; the AI/dev-tools round confirmed the prior finding that pure AI/dev-infr
 
 ---
 
+## 2026-06-11 — Ad-hoc session — Source-coverage parity sweep (Specs 718–721)
+
+**Scope:** Ad-hoc interactive session (not a numbered scheduled run). A review of the public
+job-source landscape identified **one previously uncovered public-API job board** and **three
+capability gaps** in existing scrapers; all four were closed this session as Specs 718–721:
+
+- **solid.jobs** — Polish IT-focused job board with mandatory salary transparency and a free,
+  unauthenticated public JSON API. Live-probed 2026-06-11: **500+ live IT listings**; divisions
+  `it`, `engineering` and `finances` verified live (eight divisions respond in total).
+- **Ashby public path returned no compensation** — the public Job Posting API only serialises
+  `compensation` when `includeCompensation=true` is passed, and the live flat wire shape was
+  unmapped, so public-path `JobPostDto.compensation` silently stayed `null`.
+- **Workday relative `postedOn` labels** — strings like `"Posted 3 Days Ago"` leaked verbatim
+  into `datePosted` for every Workday job.
+- **No liveness signal** — the pipeline had no way to tell a live posting from a dead `jobUrl`
+  without a manual or browser-grade pass.
+
+**Changes:**
+
+- **Spec 718 — `source-solidjobs`** (new regional source plugin,
+  `packages/plugins/source-solidjobs/`): scrapes
+  `https://solid.jobs/public-api/offers/{division}?campaign=api`; default division `it`;
+  comma-separated `SOLIDJOBS_DIVISIONS` env override fanned out with `Promise.allSettled`;
+  maps PLN monthly salary ranges, contract time, locations, remote flag and HTML descriptions
+  into the canonical DTO. New `Site.SOLIDJOBS = 'solidjobs'` — distinct from the Brazilian ATS
+  `Site.SOLIDES`.
+- **Spec 719 — Ashby public compensation opt-in + bounded retry**
+  (`packages/plugins/source-ats-ashby/`): public GET (and authenticated POST) URLs now carry
+  `?includeCompensation=true`; the live flat compensation shape (`summaryComponents[]` /
+  `compensationTiers[].components[]`) maps into `CompensationDto` alongside the legacy tiered
+  shape; `"1 YEAR"`-style intervals are normalised; public GET retried ≤ 2 times on network
+  error/timeout/HTTP 5xx with exponential backoff + jitter (no retry on 4xx).
+- **Spec 720 — Workday relative posted-date parsing**
+  (`packages/plugins/source-ats-workday/`): new exported pure helper
+  `parseWorkdayPostedOn(postedOn?, now?)` converts "Posted Today" / "Posted Yesterday" /
+  "Posted N Days Ago" into UTC-correct ISO dates; "Posted N+ Days Ago" and unrecognised labels
+  map to `null`; the raw-label fallback in `processListing` is removed.
+- **Spec 721 — `liveness-http`** (new feature plugin, `packages/plugins/liveness-http/`,
+  dedup-engine style — no `Site` entry): `ILivenessChecker` / `LivenessVerdict` /
+  `LIVENESS_CHECKER_TOKEN` contract added to `@ever-jobs/models`; prioritised HTTP-status →
+  URL-marker → multilingual body-heuristic classification into `active`/`expired`/`uncertain`
+  verdicts with machine-readable codes; 403/503 and bot challenges are never marked `expired`;
+  `checkBatch` with bounded concurrency, optional jittered throttling and order-preserving
+  per-URL failure isolation.
+- Wiring: `site.enum.ts` (`SOLIDJOBS`), `packages/plugins/index.ts` barrel,
+  `tsconfig.base.json` path aliases and `jest.config.js` module mappers (the feature plugin
+  registers aliases/mappers only, per the feature-plugin convention).
+- Docs: `docs/index.md` spec-registry rows 718–721, `docs/questions.md` Q-064–Q-067,
+  `tool_manifest.json` (`solidjobs` site entry + liveness feature line), this entry.
+
+**Verification:**
+
+- `npx jest packages/plugins/source-solidjobs packages/plugins/liveness-http
+  packages/plugins/source-ats-ashby packages/plugins/source-ats-workday --silent` →
+  **8 suites / 130 tests passed** (ERROR log lines in the output are the expected
+  error-path fixtures: SolidJobs 500, Workday 500, Ashby 404/timeout).
+- `npx jest packages/models/ packages/plugin/ --silent` → **9 suites / 132 tests passed**
+  (core models + plugin core; the trailing slashes scope the jest path regex away from
+  `packages/plugins/**`).
+- `npx tsc --noEmit -p packages/plugins/source-solidjobs/tsconfig.json` and
+  `npx tsc --noEmit -p packages/plugins/liveness-http/tsconfig.json` → both **exit 0**.
+- Regression slice: `npx jest packages/plugins/source-ats-greenhouse --silent` →
+  **1 suite / 5 tests passed** (plugin registry unbroken by the new wiring).
+- `npm run lint:docs` → clean after this session's doc edits.
+
+**Notes:**
+
+- Pre-existing failures in `packages/plugins/dedup-hybrid` (2 suites / 4 tests: the NFR-1/NFR-2
+  perf budgets and two minhash-strategy cases) surfaced while scoping the test run are **not**
+  caused by this session: the package is untouched, the failures are flagged as known
+  follow-ups in its last commit (`008ed8a6`, 2026-04-26), and no CI job runs dedup-hybrid
+  (the only plugin-test CI pattern is `packages/plugins/source-`).
+- Zero source-file fixes were needed after the test pass; every suite covering the actual
+  change surface is green.
+- Entry placement: doc-lint's same-date ordering treats run-numbered entries as newer than
+  non-numbered ones, so this ad-hoc entry sits directly below the run #433 entry (both
+  2026-06-11) to keep `lint:docs` green.
+
+---
+
 ## 2026-06-10 — Scheduled run #432 (**SEVEN new Greenhouse company-direct source plugins: Hometap, Lightmatter, PsiQuantum, Quilt, Riverlane, Self Financial, Xendit** — Specs 701–707)
 
 **Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held
