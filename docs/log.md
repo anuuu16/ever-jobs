@@ -15,6 +15,60 @@
 
 ---
 
+## 2026-06-12 — Scheduled run #434 (**NINE new Greenhouse company-direct source plugins: Agility Robotics, Arc Institute, Mesh Payments, Xaira Therapeutics, Zola, Cerebras Systems, Parloa, QphoX, Zencoder** — Specs 723–731)
+
+**Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held
+**582 `source-company-*` plugins / 873 source plugin packages / last spec 722 (dedup-hybrid perf) /
+last enum Phase 727 (Spec 718, Solid.Jobs)**. All four OTHERS reference repos were `git fetch`-ed and
+reported **no upstream changes** (`Ats-scrapers`, `JobSpy`, `Jobspy-api`, `career-ops` — all 0 commits
+behind their remote HEAD). The prior run's CI (run #433, commit `1e80448d`) was **green** and
+`origin/develop` was clean with 0 commits ahead, so this run started from a clean, fully-pushed baseline.
+`docs-lint` was confirmed clean before and after.
+
+This run ships **9 new large-company Greenhouse-direct source plugins** (Specs 723–731, enum Phases
+728–736) via the established deterministic pipeline (`probe → enrich → assemble → scaffold → wire`).
+
+**Candidate discovery (live probe):** two deduped candidate batches were probed concurrently (16-way)
+against the public Greenhouse Job-Board API:
+- Batch A — 121 candidates (consumer fintech / food / energy / health / e-commerce / comp-bio /
+  robotics verticals; 13 already-existing slugs removed): **5 survived** — Agility Robotics (44),
+  Arc Institute (26), Mesh Payments / board "Mesh" (22), Xaira Therapeutics (16), Zola (3).
+- Batch B — 114 candidates (AI-infra / AI dev-tools / AI hardware / quantum verticals): **4 survived** —
+  Cerebras Systems (99), Parloa (50), QphoX (4), Zencoder (4).
+
+Real probed listings (id / title / location / updated_at) seeded each plugin's 3-listing fixture so the
+unit suites assert against real-world wire shapes. The low hit rate (9/235) confirms the prior finding
+that pure AI/dev-infra and crypto are largely mined out; humanoid robotics, biomedical research, quantum
+hardware and AI-chip names still surface fresh boards.
+
+**Disambiguation guard (1):** the `mesh` candidate probed to a board named simply "Mesh"; the canonical
+`displayName` was disambiguated to **"Mesh Payments"** (enumKey `MESH_PAYMENTS`, class `MeshPayments`)
+before assembly to avoid a generic single-word identifier. All 9 derived enum keys and PascalCase class
+names were collision-checked clean against the existing corpus.
+
+**Verticals:** humanoid robotics (Agility Robotics), nonprofit biomedical research (Arc Institute),
+corporate spend-management fintech (Mesh Payments), AI drug discovery (Xaira Therapeutics), wedding tech
+(Zola), wafer-scale AI hardware (Cerebras Systems), conversational-AI contact centers (Parloa), quantum
+networking (QphoX), and AI developer tools (Zencoder).
+
+**Changes:**
+
+- Added **9 new source-company plugin packages** under `packages/plugins/source-company-{agilityrobotics,
+  arcinstitute,mesh,xairatherapeutics,zola,cerebrassystems,parloa,qphox,zencoder}/` (90 files:
+  package.json, tsconfig.json, src/index.ts, src/*.module.ts, src/*.service.ts,
+  __tests__/*.service.spec.ts, __tests__/fixtures/*-jobs.json each).
+- Added **9 new specs** under `.specify/specs/723-731-source-company-*` (spec.md, plan.md, tasks.md each).
+- Wired all 9 into the four shared registration files (`site.enum.ts` Phases 728–736, `packages/plugins/
+  index.ts`, `tsconfig.base.json`, `jest.config.js`) via the idempotent `wire-company-source.ts`.
+- `docs/index.md` — appended rows 723–731 to the spec index (§7); doc-lint re-verified clean.
+- `docs/log.md` — this entry.
+
+**Verification:** all 9 new plugin test suites pass (`9 passed, 99 tests`); the logged HTTP 500 lines are
+the mocked error-path assertions exercising graceful degradation. `docs-lint` clean. CI awaited green
+post-push.
+
+---
+
 ## 2026-06-11 — Scheduled run #433 (**TEN new Greenhouse company-direct source plugins: BetterHelp, Bybit, FalconX, OKX, Prove, Securitize, Solid Power, CoreWeave, Nebius, Udio** — Specs 708–717)
 
 **Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held

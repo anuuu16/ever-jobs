@@ -872,6 +872,15 @@ import { CoreWeaveModule } from './source-company-coreweave';
 import { NebiusModule } from './source-company-nebius';
 import { UdioModule } from './source-company-udio';
 import { SolidJobsModule } from './source-solidjobs';
+import { AgilityRoboticsModule } from './source-company-agilityrobotics';
+import { ArcInstituteModule } from './source-company-arcinstitute';
+import { MeshPaymentsModule } from './source-company-mesh';
+import { XairaTherapeuticsModule } from './source-company-xairatherapeutics';
+import { ZolaModule } from './source-company-zola';
+import { CerebrasSystemsModule } from './source-company-cerebrassystems';
+import { ParloaModule } from './source-company-parloa';
+import { QphoXModule } from './source-company-qphox';
+import { ZencoderModule } from './source-company-zencoder';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1737,4 +1746,13 @@ export const ALL_SOURCE_MODULES = [
   NebiusModule,
   UdioModule,
   SolidJobsModule,
+  AgilityRoboticsModule,
+  ArcInstituteModule,
+  MeshPaymentsModule,
+  XairaTherapeuticsModule,
+  ZolaModule,
+  CerebrasSystemsModule,
+  ParloaModule,
+  QphoXModule,
+  ZencoderModule,
 ];

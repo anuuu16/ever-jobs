@@ -1591,6 +1591,24 @@ export enum Site {
   UDIO = 'udio',
   // Phase 727: Spec 718 — Source Job Board Plugin: Solid.Jobs (solid.jobs)
   SOLIDJOBS = 'solidjobs',
+  // Phase 728: Spec 723 — Source Company Plugin: Agility Robotics
+  AGILITY_ROBOTICS = 'agilityrobotics',
+  // Phase 729: Spec 724 — Source Company Plugin: Arc Institute
+  ARC_INSTITUTE = 'arcinstitute',
+  // Phase 730: Spec 725 — Source Company Plugin: Mesh Payments
+  MESH_PAYMENTS = 'mesh',
+  // Phase 731: Spec 726 — Source Company Plugin: Xaira Therapeutics
+  XAIRA_THERAPEUTICS = 'xairatherapeutics',
+  // Phase 732: Spec 727 — Source Company Plugin: Zola
+  ZOLA = 'zola',
+  // Phase 733: Spec 728 — Source Company Plugin: Cerebras Systems
+  CEREBRAS_SYSTEMS = 'cerebrassystems',
+  // Phase 734: Spec 729 — Source Company Plugin: Parloa
+  PARLOA = 'parloa',
+  // Phase 735: Spec 730 — Source Company Plugin: QphoX
+  QPHOX = 'qphox',
+  // Phase 736: Spec 731 — Source Company Plugin: Zencoder
+  ZENCODER = 'zencoder',
 }
 
 /**
