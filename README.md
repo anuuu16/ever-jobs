@@ -1045,14 +1045,14 @@ All other brand and product names are trademarks, registered trademarks, or serv
 
 ## 💪 Thanks to our Contributors
 
-See our contributors list in [CONTRIBUTORS.md](https://github.com/ever-co/ever-jobs/blob/develop/.github/CONTRIBUTORS.md).
-You can also view a full list of our [contributors tracked by GitHub](https://github.com/ever-co/ever-jobs/graphs/contributors).
+See our contributors list in [CONTRIBUTORS.md](https://github.com/ever-jobs/ever-jobs/blob/develop/.github/CONTRIBUTORS.md).
+You can also view a full list of our [contributors tracked by GitHub](https://github.com/ever-jobs/ever-jobs/graphs/contributors).
 
-<img src="https://contributors-img.web.app/image?repo=ever-co/ever-jobs" />
+<img src="https://contributors-img.web.app/image?repo=ever-jobs/ever-jobs" />
 
 ## ⭐ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=ever-co/ever-jobs&type=Date)](https://star-history.com/#ever-co/ever-jobs&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=ever-jobs/ever-jobs&type=Date)](https://star-history.com/#ever-jobs/ever-jobs&Date)
 
 ## Credits
 

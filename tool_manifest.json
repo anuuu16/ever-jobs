@@ -6,7 +6,7 @@
   "version": "0.1.0",
   "author": "Ever Co",
   "license": "MIT",
-  "repository": "https://github.com/ever-co/ever-jobs",
+  "repository": "https://github.com/ever-jobs/ever-jobs",
 
   "capabilities": {
     "job_search": {
