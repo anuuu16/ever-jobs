@@ -6,6 +6,8 @@ import {
   Query,
   Res,
   StreamableFile,
+  Optional,
+  Inject,
 } from '@nestjs/common';
 import {
   ApiOperation,
@@ -18,6 +20,11 @@ import {
   ScraperInputDto,
   JobPostDto,
   JobAnalysisDto,
+  LIVENESS_CHECKER_TOKEN,
+  LEGITIMACY_CHECKER_TOKEN,
+  type ILivenessChecker,
+  type ILegitimacyChecker,
+  type LegitimacyInput,
 } from '@ever-jobs/models';
 import { JobsService } from './jobs.service';
 import { JobsAggregator } from './jobs.aggregator';
@@ -34,6 +41,14 @@ export class JobsController {
     private readonly aggregator: JobsAggregator,
     private readonly analyticsService: AnalyticsService,
     private readonly cacheService: CacheService,
+    // Spec 740 — opt-in corpus signals. Optional so the controller boots even if a checker
+    // module isn't wired; enrichment is simply skipped when the binding is absent.
+    @Optional()
+    @Inject(LIVENESS_CHECKER_TOKEN)
+    private readonly livenessChecker?: ILivenessChecker,
+    @Optional()
+    @Inject(LEGITIMACY_CHECKER_TOKEN)
+    private readonly legitimacyChecker?: ILegitimacyChecker,
   ) {}
 
   /**
@@ -75,6 +90,8 @@ export class JobsController {
     @Query('page') pageRaw?: string,
     @Query('page_size') pageSizeRaw?: string,
     @Query('dedup') dedupRaw?: string,
+    @Query('liveness') livenessRaw?: string,
+    @Query('legitimacy') legitimacyRaw?: string,
     @Res({ passthrough: true }) res?: Response,
   ) {
     this.logger.log(
@@ -118,6 +135,14 @@ export class JobsController {
     this.logger.log(
       `Returning ${jobs.length} jobs (raw=${aggregated.rawCount}, deduped=${aggregated.deduped}, cached=${fromCache})`,
     );
+
+    // ── Corpus signals (Spec 740) — opt-in; zero work on the default path ──
+    if (parseBool(livenessRaw) && this.livenessChecker) {
+      await this.enrichLiveness(jobs);
+    }
+    if (parseBool(legitimacyRaw) && this.legitimacyChecker) {
+      this.enrichLegitimacy(jobs);
+    }
 
     // ── CSV output ────────────────────────
     if (format?.toLowerCase() === 'csv') {
@@ -186,6 +211,53 @@ export class JobsController {
     const analysis = this.analyticsService.analyze(jobs);
     this.logger.log(`Analysis complete: ${analysis.summary.totalJobs} jobs, ${analysis.companies.length} companies`);
     return analysis;
+  }
+
+  // ── Corpus-signal enrichment (Spec 740) ──
+
+  /**
+   * Attach per-posting liveness (active/expired/uncertain) by probing each result URL via the
+   * `ILivenessChecker` (Spec 721). Best-effort: any failure degrades the whole batch to
+   * `uncertain` and never aborts the request.
+   */
+  private async enrichLiveness(jobs: JobPostDto[]): Promise<void> {
+    try {
+      const verdicts = await this.livenessChecker!.checkBatch(
+        jobs.map((j) => j.jobUrl),
+      );
+      jobs.forEach((job, i) => {
+        const v = verdicts[i];
+        job.liveness = v
+          ? { state: v.result, checkedAt: v.checkedAt }
+          : { state: 'uncertain' };
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Liveness enrichment failed; defaulting to uncertain: ${err instanceof Error ? err.message : err}`,
+      );
+      for (const job of jobs) job.liveness = { state: 'uncertain' };
+    }
+  }
+
+  /**
+   * Attach per-posting legitimacy (verified/likely/uncertain) via the deterministic
+   * `ILegitimacyChecker` (Spec 740). Pure + in-memory; derives its input from already-present
+   * fields. Folds in the liveness off-platform redirect when liveness ran first.
+   */
+  private enrichLegitimacy(jobs: JobPostDto[]): void {
+    const inputs: LegitimacyInput[] = jobs.map((job) => ({
+      hasCompensation: job.compensation != null,
+      sourceCount: 1,
+      isFromAts: !!job.atsType,
+      hasCompanyLogo: !!job.companyLogo,
+      descriptionLength: job.description?.length ?? 0,
+      redirectsOffPlatform: job.liveness?.state === 'expired' ? true : undefined,
+    }));
+    const verdicts = this.legitimacyChecker!.assessBatch(inputs);
+    jobs.forEach((job, i) => {
+      const v = verdicts[i]!;
+      job.legitimacy = { state: v.state, reasons: v.reasons };
+    });
   }
 
   // ── CSV helper ──────────────────────────

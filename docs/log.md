@@ -15,6 +15,22 @@
 
 ---
 
+## 2026-06-15 — Spec 740: corpus signals on the public DTO (liveness + legitimacy)
+
+**Scope:** Surfaced two **opt-in** corpus-level trust signals on the public `JobPostDto` so the
+candidate-side consumer can warn on dead listings and possible ghost jobs (orthogonally to fit).
+(1) **liveness** — reuse the Spec 721 `liveness-http` checker, mapped onto the DTO via `?liveness=true`.
+(2) **legitimacy** — new deterministic `legitimacy-detector` feature plugin (`LEGITIMACY_CHECKER`
+token; `verified|likely|uncertain` with explainable `reasons`; off-platform-redirect override),
+mapped via `?legitimacy=true`. Both **off by default** — no change to the default payload or latency.
+New: `packages/models` interface + `JobPostDto` fields; `packages/plugins/legitimacy-detector`
+(service + module + 7 unit tests); `JobsController` opt-in enrichment + 3 integration tests; path
+alias + jest mapper. `npm run build` green (api+cli+mcp); 10 new tests green. Spec/plan/tasks under
+`.specify/specs/740-corpus-signals-dto/`. Built in an isolated git worktree to avoid racing the
+hourly scheduled task.
+
+---
+
 ## 2026-06-12 — Scheduled run #434 (**NINE new Greenhouse company-direct source plugins: Agility Robotics, Arc Institute, Mesh Payments, Xaira Therapeutics, Zola, Cerebras Systems, Parloa, QphoX, Zencoder** — Specs 723–731)
 
 **Scope:** Direct continuation of the company-direct Greenhouse direction. At run start the corpus held

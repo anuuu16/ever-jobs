@@ -4,6 +4,8 @@ import { ALL_SOURCE_MODULES } from '@ever-jobs/plugin-sources';
 import { AnalyticsModule } from '@ever-jobs/analytics';
 import { DedupHybridModule } from '@ever-jobs/dedup-hybrid';
 import { MergeDefaultModule } from '@ever-jobs/merge-default';
+import { LivenessHttpModule } from '@ever-jobs/liveness-http';
+import { LegitimacyDetectorModule } from '@ever-jobs/legitimacy-detector';
 import { JobsService } from './jobs.service';
 import { JobsAggregator } from './jobs.aggregator';
 import { JobsController } from './jobs.controller';
@@ -24,6 +26,11 @@ import { HealthSnapshotCron } from './health-snapshot.cron';
     // same token (FR-1 / FR-4).
     DedupHybridModule,
     MergeDefaultModule,
+    // Spec 740 — opt-in corpus signals (liveness reused from Spec 721; legitimacy net-new).
+    // Bound under LIVENESS_CHECKER_TOKEN / LEGITIMACY_CHECKER_TOKEN; the controller injects
+    // them @Optional() and only enriches when ?liveness=true / ?legitimacy=true.
+    LivenessHttpModule,
+    LegitimacyDetectorModule,
     // Spec 005 / T04 — bind the circuit-breaker service + interceptor so
     // `JobsService` can wrap each per-source `scrape()` call. The
     // underlying engine is swappable by replacing this module (the
