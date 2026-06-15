@@ -45,6 +45,7 @@ module.exports = {
     '^@ever-jobs/source-company-udio$': '<rootDir>/packages/plugins/source-company-udio/src/index.ts',
     '^@ever-jobs/source-solidjobs$': '<rootDir>/packages/plugins/source-solidjobs/src/index.ts',
     '^@ever-jobs/liveness-http$': '<rootDir>/packages/plugins/liveness-http/src/index.ts',
+    '^@ever-jobs/legitimacy-detector$': '<rootDir>/packages/plugins/legitimacy-detector/src/index.ts',
     '^@ever-jobs/source-company-nebius$': '<rootDir>/packages/plugins/source-company-nebius/src/index.ts',
     '^@ever-jobs/source-company-coreweave$': '<rootDir>/packages/plugins/source-company-coreweave/src/index.ts',
     '^@ever-jobs/source-company-solidpower$': '<rootDir>/packages/plugins/source-company-solidpower/src/index.ts',

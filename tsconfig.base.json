@@ -59,6 +59,7 @@
       "@ever-jobs/source-company-udio": ["packages/plugins/source-company-udio/src/index.ts"],
       "@ever-jobs/source-solidjobs": ["packages/plugins/source-solidjobs/src/index.ts"],
       "@ever-jobs/liveness-http": ["packages/plugins/liveness-http/src/index.ts"],
+      "@ever-jobs/legitimacy-detector": ["packages/plugins/legitimacy-detector/src/index.ts"],
       "@ever-jobs/source-company-nebius": ["packages/plugins/source-company-nebius/src/index.ts"],
       "@ever-jobs/source-company-coreweave": ["packages/plugins/source-company-coreweave/src/index.ts"],
       "@ever-jobs/source-company-solidpower": ["packages/plugins/source-company-solidpower/src/index.ts"],

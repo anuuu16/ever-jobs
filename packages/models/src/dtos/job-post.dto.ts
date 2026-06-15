@@ -60,6 +60,17 @@ export class JobPostDto {
   // Site identifier (filled in during aggregation)
   site?: string | null;
 
+  // Corpus signals (Spec 740) — opt-in via ?liveness=true / ?legitimacy=true; absent by default.
+  // Shapes mirror what the Hust frontend already consumes (forward-compatible).
+  liveness?: {
+    state: 'active' | 'expired' | 'uncertain';
+    checkedAt?: string;
+  } | null;
+  legitimacy?: {
+    state: 'verified' | 'likely' | 'uncertain';
+    reasons?: string[];
+  } | null;
+
   constructor(partial?: Partial<JobPostDto>) {
     Object.assign(this, partial);
   }
