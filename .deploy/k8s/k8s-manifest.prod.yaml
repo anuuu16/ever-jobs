@@ -25,7 +25,7 @@ kind: Deployment
 metadata:
   name: ever-jobs-api
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: ever-jobs-api
@@ -52,6 +52,9 @@ spec:
               value: "production"
             - name: PORT
               value: "3001"
+            # Raise V8 heap — aggregating 160+ sources per search builds a large heap.
+            - name: NODE_OPTIONS
+              value: "--max-old-space-size=3584"
             # Cluster-internal only (ClusterIP, no ingress) → no API-key auth / rate limit needed.
             - name: ENABLE_API_KEY_AUTH
               value: "false"
@@ -65,11 +68,11 @@ spec:
               value: "*"
           resources:
             requests:
-              cpu: "150m"
-              memory: "512Mi"
-            # Live job-board scraping is memory-heavy — generous ceiling to avoid OOMKills.
+              cpu: "200m"
+              memory: "1Gi"
+            # Aggregating 160+ sources builds a large V8 heap — generous ceiling (matches NODE_OPTIONS).
             limits:
-              memory: "2Gi"
+              memory: "4Gi"
           readinessProbe:
             httpGet:
               path: /health
