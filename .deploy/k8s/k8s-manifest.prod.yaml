@@ -1,0 +1,88 @@
+# Ever Jobs — INTERNAL deployment on do-sfo2-k8s-gauzy. ClusterIP only, NO Ingress:
+# the API is reachable only inside the cluster (Hust's pods call it at
+# http://ever-jobs-api.default.svc.cluster.local:3001). Not exposed to the public internet.
+#
+# Image ghcr.io/ever-jobs/ever-jobs:latest (built by docker-build-publish.yml).
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ever-jobs-api
+  labels:
+    app: ever-jobs-api
+spec:
+  type: ClusterIP
+  selector:
+    app: ever-jobs-api
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3001
+      targetPort: 3001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ever-jobs-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ever-jobs-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: ever-jobs-api
+    spec:
+      containers:
+        - name: ever-jobs-api
+          image: ghcr.io/ever-jobs/ever-jobs:latest
+          imagePullPolicy: Always
+          command: ["node", "dist/apps/api/main.js"]
+          ports:
+            - containerPort: 3001
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3001"
+            # Cluster-internal only (ClusterIP, no ingress) → no API-key auth / rate limit needed.
+            - name: ENABLE_API_KEY_AUTH
+              value: "false"
+            - name: RATE_LIMIT_ENABLED
+              value: "false"
+            - name: ENABLE_CACHE
+              value: "true"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: CORS_ORIGINS
+              value: "*"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              memory: "768Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+      # GHCR package ghcr.io/ever-jobs/ever-jobs is public — no imagePullSecret needed.
