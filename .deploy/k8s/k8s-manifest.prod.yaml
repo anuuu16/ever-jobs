@@ -25,7 +25,7 @@ kind: Deployment
 metadata:
   name: ever-jobs-api
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: ever-jobs-api
@@ -65,10 +65,11 @@ spec:
               value: "*"
           resources:
             requests:
-              cpu: "100m"
-              memory: "256Mi"
+              cpu: "150m"
+              memory: "512Mi"
+            # Live job-board scraping is memory-heavy — generous ceiling to avoid OOMKills.
             limits:
-              memory: "768Mi"
+              memory: "2Gi"
           readinessProbe:
             httpGet:
               path: /health
