@@ -23,6 +23,8 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import express from 'express';
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -380,7 +382,55 @@ Use compare_sources to see all available sources grouped by type.
 `;
 
 // ── Main ─────────────────────────────────────────────────────────────
+/**
+ * Streamable-HTTP mode (MCP_TRANSPORT=http) — serves the MCP over HTTP so it can run as a
+ * network service (e.g. an internal k8s deployment). Stateless: a fresh Server + transport per
+ * request, which scales horizontally and needs no session store. Stdio stays the default for
+ * CLI/desktop use.
+ */
+async function startHttp(): Promise<void> {
+  const app = express();
+  app.use(express.json({ limit: '1mb' }));
+
+  app.get('/health', (_req, res) => {
+    res.json({ status: 'healthy', transport: 'http', server: SERVER_NAME, version: SERVER_VERSION });
+  });
+
+  app.post('/mcp', async (req, res) => {
+    const server = createServer();
+    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+    res.on('close', () => {
+      void transport.close();
+      void server.close();
+    });
+    try {
+      await server.connect(transport);
+      await transport.handleRequest(req, res, req.body);
+    } catch (err) {
+      console.error('MCP HTTP request error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ jsonrpc: '2.0', error: { code: -32603, message: 'Internal error' }, id: null });
+      }
+    }
+  });
+
+  // Stateless server: no long-lived SSE stream / session to GET or DELETE.
+  const notAllowed = (_req: express.Request, res: express.Response) =>
+    res.status(405).json({ jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed (stateless server).' }, id: null });
+  app.get('/mcp', notAllowed);
+  app.delete('/mcp', notAllowed);
+
+  const port = Number(process.env.PORT ?? 3002);
+  app.listen(port, () => {
+    console.error(`Ever Jobs MCP Server v${SERVER_VERSION} started (HTTP/streamable mode) on :${port}`);
+  });
+}
+
 async function main(): Promise<void> {
+  if (process.env.MCP_TRANSPORT === 'http') {
+    await startHttp();
+    return;
+  }
   const server = createServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);

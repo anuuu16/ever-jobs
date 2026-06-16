@@ -90,3 +90,80 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 3
       # GHCR package ghcr.io/ever-jobs/ever-jobs is public — no imagePullSecret needed.
+---
+# Ever Jobs MCP server — INTERNAL only (ClusterIP, no Ingress). Streamable-HTTP transport;
+# reachable inside the cluster at http://ever-jobs-mcp.default.svc.cluster.local:3002/mcp.
+kind: Service
+apiVersion: v1
+metadata:
+  name: ever-jobs-mcp
+  labels:
+    app: ever-jobs-mcp
+spec:
+  type: ClusterIP
+  selector:
+    app: ever-jobs-mcp
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3002
+      targetPort: 3002
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ever-jobs-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ever-jobs-mcp
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: ever-jobs-mcp
+    spec:
+      containers:
+        - name: ever-jobs-mcp
+          image: ghcr.io/ever-jobs/ever-jobs-mcp:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3002
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: MCP_TRANSPORT
+              value: "http"
+            - name: PORT
+              value: "3002"
+            # The MCP proxies to the internal Ever Jobs API over the cluster network.
+            - name: EVER_JOBS_API_URL
+              value: "http://ever-jobs-api.default.svc.cluster.local:3001"
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 8
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
