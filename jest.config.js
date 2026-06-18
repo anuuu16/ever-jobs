@@ -668,6 +668,7 @@ module.exports = {
     '^@ever-jobs/source-ats-gupy$': '<rootDir>/packages/plugins/source-ats-gupy/src/index.ts',
     '^@ever-jobs/source-ats-wttj$': '<rootDir>/packages/plugins/source-ats-wttj/src/index.ts',
     '^@ever-jobs/source-ats-mokahr$': '<rootDir>/packages/plugins/source-ats-mokahr/src/index.ts',
+    '^@ever-jobs/source-ats-beisen$': '<rootDir>/packages/plugins/source-ats-beisen/src/index.ts',
     '^@ever-jobs/source-ats-elmo$': '<rootDir>/packages/plugins/source-ats-elmo/src/index.ts',
     '^@ever-jobs/source-ats-isolved$': '<rootDir>/packages/plugins/source-ats-isolved/src/index.ts',
     '^@ever-jobs/source-ats-beesite$': '<rootDir>/packages/plugins/source-ats-beesite/src/index.ts',

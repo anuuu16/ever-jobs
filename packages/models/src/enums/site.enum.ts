@@ -1609,6 +1609,8 @@ export enum Site {
   QPHOX = 'qphox',
   // Phase 736: Spec 731 — Source Company Plugin: Zencoder
   ZENCODER = 'zencoder',
+  // Phase 737: Spec 741 — Source ATS Plugin: Beisen (北森 / iTalent, zhiye.com)
+  BEISEN = 'beisen',
 }
 
 /**

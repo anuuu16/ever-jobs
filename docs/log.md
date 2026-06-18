@@ -15,6 +15,62 @@
 
 ---
 
+## 2026-06-18 — Scheduled run #435 (**new Source ATS Plugin: Beisen / iTalent** — Spec 741)
+
+**Scope:** Add a generic, multi-tenant **Beisen (北森 / "iTalent")** ATS source adapter — the
+largest enterprise cloud-HR SaaS in the China region, powering the public career sites of a large
+roster of major China-operating employers at `https://{slug}.zhiye.com`. This is a sibling to the
+existing China-region adapter MokaHR (Spec 387 / `Site.MOKAHR`) and a distinct, larger platform.
+One adapter → thousands of tenants, consistent with the per-platform (not per-company) ATS strategy.
+
+**Baseline at run start:** `origin/develop` clean, 0 ahead / 0 behind; the prior CI run
+(`4549ef3a`, "fix(mcp): add tslib") was **green**. Last spec was 740; last enum phase 736 (Spec 731).
+All five external reference repos under the parent `OTHERS/` directory (outside this repo) were
+`git fetch`-ed for situational awareness: three were unchanged; two had upstream movement, noted
+only in the parent-directory research watch file **outside this repo** — never named here. None of
+that intel is referenced in-repo; the Beisen public surface is documented purely on its own merits.
+
+**Public surface (researched 2026-06-18, no auth — `verified=false`):** a deterministic two-step,
+fully-anonymous flow:
+1. **GET** `https://{slug}.zhiye.com/portal/registerSystemInfo` → HTML inlining
+   `var BSGlobal = { Key, Name, PortalId, Code }`. The adapter extracts `PortalId` (required) and
+   the branded `Name` via a **string/escape-aware balanced-brace JSON scan** (handles nested config),
+   plus the numeric tenant id from `stcms.beisen.com/image/{id}` CDN URLs (provenance only).
+2. **POST** `https://{slug}.zhiye.com/api/Jobad/GetJobAdPageList` with `{ PageIndex, PageSize:50,
+   KeyWords:"", SpecialType:0, PortalId, DisplayFields:[…] }` → `{ Code, Count, Data:[ { JobAdId,
+   JobAdName, LocNames[], Duty, Require, Salary, Category, ChangeDate, PostDate } ] }`, paged via
+   `PageIndex` until a page is empty / short / yields no new roles, or the cumulative count reaches
+   the envelope `Count` (hard `MAX_PAGES=100` ceiling).
+
+**Mapping:** `JobAdId` → `beisen-{id}` + canonical URL `…/portal/jobs/{id}`; `JobAdName` → title;
+`LocNames[]` → `LocationDto` (first part city, remainder state) + free-text for remote detection;
+joined `Duty`+`Require` (fallback `Description`) → formatted description (HTML/Markdown/Plain);
+`Category` → department; `Salary` captured; `ChangeDate`/`PostDate` → `datePosted` with Beisen's
+`0001-01-01` unset sentinel ignored. Remote detection covers EN + ZH (`远程`/`居家办公`/`远程办公`).
+Tenant resolves from `companySlug` (bare subdomain `mengniu`, or a full `*.zhiye.com` URL) or
+`companyUrl`. Every failure mode — legacy portal with no `BSGlobal`, missing `PortalId`, HTTP
+4xx/5xx, DNS/transport failure, malformed body, empty board, WAF gating — degrades to an
+empty/partial result; `scrape()` never throws.
+
+**Changes:**
+
+- Added **`packages/plugins/source-ats-beisen/`** (8 files): `package.json`, `tsconfig.json`,
+  `src/{index,beisen.constants,beisen.types,beisen.module,beisen.service}.ts`,
+  `__tests__/beisen.service.spec.ts` (19 mocked-HTTP unit cases),
+  `__tests__/beisen.e2e-spec.ts` (tolerant live probe), and fixtures
+  `__tests__/fixtures/{beisen-register.html,beisen-jobs.json}`.
+- Added **Spec 741** under `.specify/specs/741-source-ats-beisen/` (spec.md, plan.md, tasks.md).
+- Wired into the four shared registration files: `site.enum.ts` (Phase 737 → `BEISEN = 'beisen'`),
+  `packages/plugins/index.ts` (import + `ALL_SOURCE_MODULES`), `tsconfig.base.json` (path alias),
+  `jest.config.js` (moduleNameMapper).
+- `docs/index.md` — appended row 741 to the spec index (§7).
+- `docs/log.md` — this entry.
+
+**Verification:** `npx jest packages/plugins/source-ats-beisen` → **19 passed**; `npm run build`
+(api + cli + mcp) → **green**. CI awaited green post-push.
+
+---
+
 ## 2026-06-15 — Spec 740: corpus signals on the public DTO (liveness + legitimacy)
 
 **Scope:** Surfaced two **opt-in** corpus-level trust signals on the public `JobPostDto` so the

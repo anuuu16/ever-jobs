@@ -683,6 +683,7 @@
       "@ever-jobs/source-ats-gupy": ["packages/plugins/source-ats-gupy/src/index.ts"],
       "@ever-jobs/source-ats-wttj": ["packages/plugins/source-ats-wttj/src/index.ts"],
       "@ever-jobs/source-ats-mokahr": ["packages/plugins/source-ats-mokahr/src/index.ts"],
+      "@ever-jobs/source-ats-beisen": ["packages/plugins/source-ats-beisen/src/index.ts"],
       "@ever-jobs/source-ats-elmo": ["packages/plugins/source-ats-elmo/src/index.ts"],
       "@ever-jobs/source-ats-isolved": ["packages/plugins/source-ats-isolved/src/index.ts"],
       "@ever-jobs/source-ats-beesite": ["packages/plugins/source-ats-beesite/src/index.ts"],

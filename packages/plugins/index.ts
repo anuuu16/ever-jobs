@@ -135,6 +135,7 @@ import { EmplyModule } from './source-ats-emply';
 import { GupyModule } from './source-ats-gupy';
 import { WelcomeToTheJungleModule } from './source-ats-wttj';
 import { MokaHrModule } from './source-ats-mokahr';
+import { BeisenModule } from './source-ats-beisen';
 import { ElmoModule } from './source-ats-elmo';
 import { IsolvedModule } from './source-ats-isolved';
 import { BeeSiteModule } from './source-ats-beesite';
@@ -1010,6 +1011,7 @@ export const ALL_SOURCE_MODULES = [
   GupyModule,
   WelcomeToTheJungleModule,
   MokaHrModule,
+  BeisenModule,
   ElmoModule,
   IsolvedModule,
   BeeSiteModule,
