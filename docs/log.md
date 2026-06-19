@@ -15,6 +15,89 @@
 
 ---
 
+## 2026-06-19 — Scheduled run #436 (**fourteen new Source Company Plugins** — Specs 742–755)
+
+**Scope:** Expand the corpus with **14 new Greenhouse-backed company-direct source plugins**,
+discovered and gated entirely through the deterministic, conflict-free company-source pipeline
+(`probe → enrich → assemble → scaffold → wire`). One plugin per real, brand-matched employer board
+that exposed **≥ 3 live roles** at probe time. Consistent with the per-company strategy for
+employers that run their own Greenhouse board rather than appearing only via an aggregator.
+
+**Baseline at run start:** `origin/develop` clean, 0 ahead / 0 behind; the prior CI run
+(`324b3254`, Spec 741 Beisen) was **green**. Last spec was 741; last enum phase 737 (Spec 741).
+All five external reference repos under the parent `OTHERS/` directory (outside this repo) were
+`git fetch`-ed for situational awareness; any upstream movement is recorded only in the
+parent-directory research watch file **outside this repo** — never named here. No competitor intel
+is referenced in-repo; every board below is documented purely on its own public merits.
+
+**Discovery (live, 2026-06-19, `verified=false` — unauthenticated public Job-Board API):** 282
+candidate slugs across consumer-fintech, food/grocery, energy/climate, health/biotech, e-commerce,
+robotics, EdTech and fleet-safety verticals were probed against
+`https://boards-api.greenhouse.io/v1/boards/<slug>` (board name) +
+`…/<slug>/jobs` (listings) at concurrency 16. The gate (`MIN_JOBS = 3` live roles **and** a
+non-empty board `name`) admitted **14 survivors**. Brand metadata for each survivor was produced by
+a **14-way parallel enrichment workflow** (one verification agent per board), each agent forbidden
+from referencing competitors and instructed to keep disambiguating qualifiers on collision-prone
+brand words (e.g. board `Figure Lending` → `displayName = "Figure Lending"`, enum `FIGURE_LENDING`,
+distinct from the pre-existing `source-company-figureai` / Figure AI robotics plugin).
+
+**Shipped plugins (Spec / enum Phase / slug / board name / live roles at probe):**
+
+| Spec | Phase | Slug | Display name | Sector | HQ | Roles |
+| ---- | ----- | ---- | ------------ | ------ | -- | ----- |
+| 742 | 738 | `butterflynetwork` | Butterfly Network | Medical Devices / Digital Health | Burlington, MA, USA | 19 |
+| 743 | 739 | `figure` | Figure Lending | Fintech / Lending | San Francisco, CA, USA | 22 |
+| 744 | 740 | `goguardian` | GoGuardian | EdTech / K-12 | El Segundo, CA, USA | 10 |
+| 745 | 741 | `highradius` | HighRadius | Fintech / Office-of-the-CFO SaaS | Houston, TX, USA | 72 |
+| 746 | 742 | `khanacademy` | Khan Academy | EdTech / Nonprofit | Mountain View, CA, USA | 22 |
+| 747 | 743 | `locusrobotics` | Locus Robotics | Robotics / Warehouse Automation | Wilmington, MA, USA | 18 |
+| 748 | 744 | `motional` | Motional | Autonomous Vehicles / Robotics | Boston, MA, USA | 103 |
+| 749 | 745 | `nauto` | Nauto | Automotive / Fleet Safety AI | Palo Alto, CA, USA | 4 |
+| 750 | 746 | `netradyne` | Netradyne | Fleet Safety / Video Telematics | San Diego, CA, USA | 70 |
+| 751 | 747 | `newsela` | Newsela | EdTech / K-12 Content | New York, NY, USA | 16 |
+| 752 | 748 | `offerup` | OfferUp | Marketplace / E-commerce | Bellevue, WA, USA | 9 |
+| 753 | 749 | `ophelos` | Ophelos | Fintech / Debt Resolution | London, UK | 4 |
+| 754 | 750 | `oportun` | Oportun | Fintech / Consumer Lending | San Carlos, CA, USA | 32 |
+| 755 | 751 | `udacity` | Udacity | EdTech / Online Learning | Mountain View, CA, USA | 14 |
+
+**Per-plugin shape (uniform Greenhouse company-direct template):** each `*.service.ts` fetches
+`https://api.greenhouse.io/v1/boards/<slug>/jobs?content=true`, maps each Greenhouse job to a
+`JobPostDto` with `id` prefixed `<slug>-`, `site === Site.<ENUMKEY>`, canonical URL
+`https://job-boards.greenhouse.io/<slug>/jobs/<id>`, decoded HTML content, location and department
+parsing, and `category: 'company'`. Every failure mode (HTTP 4xx/5xx, transport/DNS error,
+malformed body, empty board) degrades to an empty result — `scrape()` never throws.
+
+**Changes:**
+
+- Added **14 plugin packages** under `packages/plugins/source-company-<slug>/` (10 files each =
+  **140 files**): `package.json`, `tsconfig.json`, `src/{index,<slug>.module,<slug>.service}.ts`,
+  `__tests__/<slug>.service.spec.ts`, fixtures, per the deterministic scaffolder
+  (`scripts/scaffold-company-source.ts`).
+- Added **Specs 742–755** under `.specify/specs/<NNN>-source-company-<slug>/` (spec/plan/tasks).
+- Wired all 14 into the four shared registration files via the idempotent
+  `scripts/wire-company-source.ts`: `packages/models/src/enums/site.enum.ts` (Phases 738–751),
+  `packages/plugins/index.ts` (imports + `ALL_SOURCE_MODULES`), `tsconfig.base.json` (path aliases),
+  `jest.config.js` (moduleNameMapper).
+- `docs/index.md` — appended 14 rows to the spec index (§7) + refreshed the footer.
+- `docs/log.md` — this entry.
+
+**Verification:** `npx jest` over the 14 packages → **165 passed / 15 suites** (the 15th suite is the
+pre-existing `source-company-figureai`, matched by the `source-company-figure` path prefix — no
+collision; distinct slug + enum key). `nx build api,cli,@ever-jobs/mcp` → **green** (the api/mcp
+barrels import the full `ALL_SOURCE_MODULES`, so a green build validates all 14 plugins compile and
+register). CI awaited green post-push.
+
+**Notes:**
+
+- Greenhouse remains the highest-yield uniform public API for company-direct discovery, but the
+  yield rate has dropped (≈ 14 / 282 ≈ 5%) as AI/dev-infra employers migrate to Ashby/Lever — the
+  surviving verticals this run were medical-device, fintech-lending, EdTech, robotics and
+  fleet-safety. Future runs should keep broadening the consumer/health/industrial candidate pool
+  and consider an Ashby/Lever company-direct probe variant.
+- Brand enrichment was produced by a bounded parallel agent workflow (14 agents) rather than the
+  full "100s of agents" envelope, because the gated survivor set is small; the parallelism scales
+  with survivor count, not candidate count.
+
 ## 2026-06-18 — Scheduled run #435 (**new Source ATS Plugin: Beisen / iTalent** — Spec 741)
 
 **Scope:** Add a generic, multi-tenant **Beisen (北森 / "iTalent")** ATS source adapter — the

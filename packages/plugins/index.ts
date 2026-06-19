@@ -882,6 +882,20 @@ import { CerebrasSystemsModule } from './source-company-cerebrassystems';
 import { ParloaModule } from './source-company-parloa';
 import { QphoXModule } from './source-company-qphox';
 import { ZencoderModule } from './source-company-zencoder';
+import { ButterflyNetworkModule } from './source-company-butterflynetwork';
+import { FigureLendingModule } from './source-company-figure';
+import { GoGuardianModule } from './source-company-goguardian';
+import { HighRadiusModule } from './source-company-highradius';
+import { KhanAcademyModule } from './source-company-khanacademy';
+import { LocusRoboticsModule } from './source-company-locusrobotics';
+import { MotionalModule } from './source-company-motional';
+import { NautoModule } from './source-company-nauto';
+import { NetradyneModule } from './source-company-netradyne';
+import { NewselaModule } from './source-company-newsela';
+import { OfferUpModule } from './source-company-offerup';
+import { OphelosModule } from './source-company-ophelos';
+import { OportunModule } from './source-company-oportun';
+import { UdacityModule } from './source-company-udacity';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1757,4 +1771,18 @@ export const ALL_SOURCE_MODULES = [
   ParloaModule,
   QphoXModule,
   ZencoderModule,
+  ButterflyNetworkModule,
+  FigureLendingModule,
+  GoGuardianModule,
+  HighRadiusModule,
+  KhanAcademyModule,
+  LocusRoboticsModule,
+  MotionalModule,
+  NautoModule,
+  NetradyneModule,
+  NewselaModule,
+  OfferUpModule,
+  OphelosModule,
+  OportunModule,
+  UdacityModule,
 ];

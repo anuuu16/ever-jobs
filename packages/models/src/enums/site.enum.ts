@@ -1611,6 +1611,34 @@ export enum Site {
   ZENCODER = 'zencoder',
   // Phase 737: Spec 741 — Source ATS Plugin: Beisen (北森 / iTalent, zhiye.com)
   BEISEN = 'beisen',
+  // Phase 738: Spec 742 — Source Company Plugin: Butterfly Network
+  BUTTERFLY_NETWORK = 'butterflynetwork',
+  // Phase 739: Spec 743 — Source Company Plugin: Figure Lending
+  FIGURE_LENDING = 'figure',
+  // Phase 740: Spec 744 — Source Company Plugin: GoGuardian
+  GOGUARDIAN = 'goguardian',
+  // Phase 741: Spec 745 — Source Company Plugin: HighRadius
+  HIGHRADIUS = 'highradius',
+  // Phase 742: Spec 746 — Source Company Plugin: Khan Academy
+  KHAN_ACADEMY = 'khanacademy',
+  // Phase 743: Spec 747 — Source Company Plugin: Locus Robotics
+  LOCUS_ROBOTICS = 'locusrobotics',
+  // Phase 744: Spec 748 — Source Company Plugin: Motional
+  MOTIONAL = 'motional',
+  // Phase 745: Spec 749 — Source Company Plugin: Nauto
+  NAUTO = 'nauto',
+  // Phase 746: Spec 750 — Source Company Plugin: Netradyne
+  NETRADYNE = 'netradyne',
+  // Phase 747: Spec 751 — Source Company Plugin: Newsela
+  NEWSELA = 'newsela',
+  // Phase 748: Spec 752 — Source Company Plugin: OfferUp
+  OFFERUP = 'offerup',
+  // Phase 749: Spec 753 — Source Company Plugin: Ophelos
+  OPHELOS = 'ophelos',
+  // Phase 750: Spec 754 — Source Company Plugin: Oportun
+  OPORTUN = 'oportun',
+  // Phase 751: Spec 755 — Source Company Plugin: Udacity
+  UDACITY = 'udacity',
 }
 
 /**
