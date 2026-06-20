@@ -135,7 +135,7 @@ describe('WorkdayService — Spec 720 / T05', () => {
       expect(job?.companyName).toBe('tesla');
       expect(job?.site).toBe(Site.WORKDAY);
       expect(job?.jobUrl).toBe(
-        'https://tesla.wd5.myworkdayjobs.com/job/Austin-TX/Software-Engineer_R-101/12345',
+        'https://tesla.wd5.myworkdayjobs.com/en-US/Tesla/job/Austin-TX/Software-Engineer_R-101/12345',
       );
       expect(job?.location?.city).toBe('Austin, TX');
       expect(job?.department).toBe('Engineering');

@@ -118,11 +118,24 @@ export class WorkdayService implements IScraper {
     const title = listing.title;
     if (!title) return null;
 
-    // Extract job path for URL construction
+    // Extract job path for URL construction. Workday's CXS `externalPath` is
+    // site-relative (e.g. "/job/Austin-TX/Software-Engineer_R-101/12345"); the
+    // public careers page lives under "/en-US/{site}" — without that prefix
+    // Workday answers 404. Guard against double-prefixing for tenants whose
+    // externalPath already carries a locale/site segment.
     const externalPath = listing.externalPath ?? '';
-    const jobUrl = externalPath
-      ? `https://${company}.wd${wdNumber}.myworkdayjobs.com${externalPath.startsWith('/') ? '' : '/'}${externalPath}`
-      : `https://${company}.wd${wdNumber}.myworkdayjobs.com/en-US/${site}/details/${encodeURIComponent(title)}`;
+    const host = `https://${company}.wd${wdNumber}.myworkdayjobs.com`;
+    const sitePrefix = `/en-US/${site}`;
+    let jobUrl: string;
+    if (externalPath) {
+      const path = externalPath.startsWith('/') ? externalPath : `/${externalPath}`;
+      jobUrl =
+        path.startsWith(sitePrefix) || path.startsWith('/en-US/')
+          ? `${host}${path}`
+          : `${host}${sitePrefix}${path}`;
+    } else {
+      jobUrl = `${host}${sitePrefix}/details/${encodeURIComponent(title)}`;
+    }
 
     // Location
     const locationStr = listing.locationsText ?? null;
