@@ -1,0 +1,17 @@
+packages:
+  - apps/*
+  - packages/*
+onlyBuiltDependencies:
+  - '@apollo/protobufjs'
+  - '@nestjs/core'
+  - '@prisma/client'
+  - '@prisma/engines'
+  - better-sqlite3
+  - cpu-features
+  - esbuild
+  - nx
+  - playwright
+  - prisma
+  - protobufjs
+  - ssh2
+  - unrs-resolver
