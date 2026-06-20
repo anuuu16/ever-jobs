@@ -1639,6 +1639,38 @@ export enum Site {
   OPORTUN = 'oportun',
   // Phase 751: Spec 755 — Source Company Plugin: Udacity
   UDACITY = 'udacity',
+  // Phase 752: Spec 756 — Source Company Plugin: Absci
+  ABSCI = 'absci',
+  // Phase 753: Spec 757 — Source Company Plugin: Astranis
+  ASTRANIS = 'astranis',
+  // Phase 754: Spec 758 — Source Company Plugin: AST SpaceMobile
+  AST_SPACEMOBILE = 'astspacemobile',
+  // Phase 755: Spec 759 — Source Company Plugin: BlackSky Technology
+  BLACKSKY_TECHNOLOGY = 'blacksky',
+  // Phase 756: Spec 760 — Source Company Plugin: Elation Health
+  ELATION_HEALTH = 'elationhealth',
+  // Phase 757: Spec 761 — Source Company Plugin: Flatiron Health
+  FLATIRON_HEALTH = 'flatironhealth',
+  // Phase 758: Spec 762 — Source Company Plugin: Form Bio
+  FORM_BIO = 'formbio',
+  // Phase 759: Spec 763 — Source Company Plugin: HawkEye 360
+  HAWKEYE_360 = 'hawkeye360',
+  // Phase 760: Spec 764 — Source Company Plugin: Hubble Network
+  HUBBLE_NETWORK = 'hubblenetwork',
+  // Phase 761: Spec 765 — Source Company Plugin: Komodo Health
+  KOMODO_HEALTH = 'komodohealth',
+  // Phase 762: Spec 766 — Source Company Plugin: Ophelia Health
+  OPHELIA_HEALTH = 'ophelia',
+  // Phase 763: Spec 767 — Source Company Plugin: Peak Energy
+  PEAK_ENERGY = 'peakenergy',
+  // Phase 764: Spec 768 — Source Company Plugin: Qventus
+  QVENTUS = 'qventus',
+  // Phase 765: Spec 769 — Source Company Plugin: Sila Nanotechnologies
+  SILA_NANOTECHNOLOGIES = 'silananotechnologies',
+  // Phase 766: Spec 770 — Source Company Plugin: Suki AI
+  SUKI_AI = 'suki',
+  // Phase 767: Spec 771 — Source Company Plugin: Twist Bioscience
+  TWIST_BIOSCIENCE = 'twistbioscience',
 }
 
 /**

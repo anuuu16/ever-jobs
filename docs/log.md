@@ -15,6 +15,94 @@
 
 ---
 
+## 2026-06-20 — Scheduled run #437 (**sixteen new Source Company Plugins** — Specs 756–771)
+
+**Scope:** Expand the corpus with **16 new Greenhouse-backed company-direct source plugins**,
+discovered and gated entirely through the deterministic, conflict-free company-source pipeline
+(`probe → enrich → assemble → scaffold → wire`). One plugin per real, brand-matched employer board
+that exposed **≥ 3 live roles** at probe time. This run leaned into SpaceTech / satellite,
+HealthTech (clinical EHR / oncology data / telehealth / clinical-AI), BioTech / synthetic-biology,
+and CleanTech / battery verticals — sectors the probe history shows still surface fresh employer
+boards, in contrast to the mined-out AI/dev-infra slice (now mostly on Ashby/Lever).
+
+**Baseline at run start:** `origin/develop` clean, 0 ahead / 0 behind; the prior CI run
+(`b28b03ec`, Specs 742–755) was **green**. Last spec was 755; last enum phase 751. The five
+external reference repos under the parent `OTHERS/` directory (outside this repo) were
+`git fetch`-ed for situational awareness; upstream movement (career-ops v1.12.0 readme work,
+ats-scrapers company-entry fix branches) is recorded only in the parent-directory research watch
+file **outside this repo** — never named here. No competitor intel is referenced in-repo; every
+board below is documented purely on its own public merits.
+
+**Discovery (live, 2026-06-20, `verified=false` — unauthenticated public Job-Board API):** 295
+candidate slugs across consumer-fintech, health/biotech, food/ag, space/satellite, energy/climate
+and EV/AV verticals were probed against `https://boards-api.greenhouse.io/v1/boards/<slug>` (board
+name) + `…/<slug>/jobs` (listings) at concurrency 16, in two batches. The gate (`MIN_JOBS = 3`
+live roles **and** a non-empty board `name`) admitted **17 survivors**; one (`ess`) was **dropped**
+during review because its board name (`cBEYONData + SMX`) did not brand-match the intended
+employer — leaving **16** shipped. Brand metadata for each survivor was produced by a **16-way
+parallel enrichment workflow** (one verification agent per board), each agent forbidden from
+referencing competitors and instructed to keep disambiguating qualifiers on collision-prone brand
+words: board `Sila` → `displayName = "Sila Nanotechnologies"` (silicon-anode battery materials);
+board `BlackSky` → `"BlackSky Technology"`; board `Ophelia` → `"Ophelia Health"` (distinct from
+the run-#436 `source-company-ophelos` / Ophelos plugin); board `Suki` → `"Suki AI"`.
+
+**Shipped plugins (Spec / enum Phase / slug / display name / sector / HQ / live roles at probe):**
+
+| Spec | Phase | Slug | Display name | Sector | HQ | Roles |
+| ---- | ----- | ---- | ------------ | ------ | -- | ----- |
+| 756 | 752 | `absci` | Absci | BioTech / AI Drug Discovery | Vancouver, Washington, United States | 3 |
+| 757 | 753 | `astranis` | Astranis | Space / Satellite Communications | San Francisco, California, USA | 89 |
+| 758 | 754 | `astspacemobile` | AST SpaceMobile | Space / Satellite Telecommunications | Midland, Texas, United States | 223 |
+| 759 | 755 | `blacksky` | BlackSky Technology | SpaceTech / Geospatial Intelligence | Herndon, Virginia, USA | 31 |
+| 760 | 756 | `elationhealth` | Elation Health | HealthTech / Clinical EHR | San Francisco, California, United States | 16 |
+| 761 | 757 | `flatironhealth` | Flatiron Health | HealthTech / Oncology Real-World Data | New York, New York, USA | 22 |
+| 762 | 758 | `formbio` | Form Bio | BioTech / Computational Life Sciences | Dallas, Texas, United States | 3 |
+| 763 | 759 | `hawkeye360` | HawkEye 360 | SpaceTech / RF Geospatial Analytics | Herndon, Virginia, USA | 13 |
+| 764 | 760 | `hubblenetwork` | Hubble Network | Space / IoT Connectivity | Seattle, Washington, United States | 8 |
+| 765 | 761 | `komodohealth` | Komodo Health | HealthTech / Healthcare Data & Analytics | San Francisco, California, United States | 36 |
+| 766 | 762 | `ophelia` | Ophelia Health | HealthTech / Telehealth (Addiction Treatment) | New York, New York, United States | 19 |
+| 767 | 763 | `peakenergy` | Peak Energy | CleanTech / Energy Storage | Broomfield, Colorado, USA | 30 |
+| 768 | 764 | `qventus` | Qventus | HealthTech / AI Operations | Mountain View, California, United States | 19 |
+| 769 | 765 | `silananotechnologies` | Sila Nanotechnologies | Battery Materials / CleanTech | Alameda, California, USA | 27 |
+| 770 | 766 | `suki` | Suki AI | HealthTech / Clinical AI | Redwood City, California, United States | 8 |
+| 771 | 767 | `twistbioscience` | Twist Bioscience | Synthetic Biology / Genomics | South San Francisco, California, USA | 27 |
+
+**Per-plugin shape (uniform Greenhouse company-direct template):** each `*.service.ts` fetches
+`https://api.greenhouse.io/v1/boards/<slug>/jobs?content=true`, maps each Greenhouse job to a
+`JobPostDto` with `id` prefixed `<slug>-`, `site === Site.<ENUMKEY>`, canonical URL
+`https://job-boards.greenhouse.io/<slug>/jobs/<id>`, decoded HTML content, location and department
+parsing, and `category: 'company'`. Every failure mode (HTTP 4xx/5xx, transport/DNS error,
+malformed body, empty board) degrades to an empty result — `scrape()` never throws.
+
+**Changes:**
+
+- Added **16 plugin packages** under `packages/plugins/source-company-<slug>/` (10 files each =
+  **160 files**): `package.json`, `tsconfig.json`, `src/{index,<slug>.module,<slug>.service}.ts`,
+  `__tests__/<slug>.service.spec.ts`, fixtures, per the deterministic scaffolder
+  (`scripts/scaffold-company-source.ts`).
+- Added **Specs 756–771** under `.specify/specs/<NNN>-source-company-<slug>/` (spec/plan/tasks).
+- Wired all 16 into the four shared registration files via the idempotent
+  `scripts/wire-company-source.ts`: `packages/models/src/enums/site.enum.ts` (Phases 752–767),
+  `packages/plugins/index.ts` (imports + `ALL_SOURCE_MODULES`), `tsconfig.base.json` (path aliases),
+  `jest.config.js` (moduleNameMapper).
+- Linked all 48 new spec docs from `docs/index.md` (docs-lint green).
+
+**Verification:**
+
+- `jest` over the 16 new suites — **16 suites / 176 tests green** (the `status 500` ERROR lines are
+  the mocked failure-degradation path asserting `scrape()` returns `[]` rather than throwing).
+- `scripts/docs-lint.ts` — **passed, no issues** after index linking.
+- Full build + CI validated on push (watched to green before run close).
+
+**Notes:**
+
+- Discovery + enrichment run under `tmp/run437/` (scratch, gitignored; not committed).
+- Probe is read-only and never mutates the repo; all repo writes go through the deterministic
+  scaffolder/wirer so naming is single-sourced from `displayName` and collision-free.
+
+---
+
+
 ## 2026-06-19 — Scheduled run #436 (**fourteen new Source Company Plugins** — Specs 742–755)
 
 **Scope:** Expand the corpus with **14 new Greenhouse-backed company-direct source plugins**,

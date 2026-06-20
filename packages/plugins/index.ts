@@ -896,6 +896,22 @@ import { OfferUpModule } from './source-company-offerup';
 import { OphelosModule } from './source-company-ophelos';
 import { OportunModule } from './source-company-oportun';
 import { UdacityModule } from './source-company-udacity';
+import { AbsciModule } from './source-company-absci';
+import { AstranisModule } from './source-company-astranis';
+import { ASTSpaceMobileModule } from './source-company-astspacemobile';
+import { BlackSkyTechnologyModule } from './source-company-blacksky';
+import { ElationHealthModule } from './source-company-elationhealth';
+import { FlatironHealthModule } from './source-company-flatironhealth';
+import { FormBioModule } from './source-company-formbio';
+import { HawkEye360Module } from './source-company-hawkeye360';
+import { HubbleNetworkModule } from './source-company-hubblenetwork';
+import { KomodoHealthModule } from './source-company-komodohealth';
+import { OpheliaHealthModule } from './source-company-ophelia';
+import { PeakEnergyModule } from './source-company-peakenergy';
+import { QventusModule } from './source-company-qventus';
+import { SilaNanotechnologiesModule } from './source-company-silananotechnologies';
+import { SukiAIModule } from './source-company-suki';
+import { TwistBioscienceModule } from './source-company-twistbioscience';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1785,4 +1801,20 @@ export const ALL_SOURCE_MODULES = [
   OphelosModule,
   OportunModule,
   UdacityModule,
+  AbsciModule,
+  AstranisModule,
+  ASTSpaceMobileModule,
+  BlackSkyTechnologyModule,
+  ElationHealthModule,
+  FlatironHealthModule,
+  FormBioModule,
+  HawkEye360Module,
+  HubbleNetworkModule,
+  KomodoHealthModule,
+  OpheliaHealthModule,
+  PeakEnergyModule,
+  QventusModule,
+  SilaNanotechnologiesModule,
+  SukiAIModule,
+  TwistBioscienceModule,
 ];
