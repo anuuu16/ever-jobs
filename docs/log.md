@@ -15,6 +15,101 @@
 
 ---
 
+## 2026-06-21 — Scheduled run #438 (**fifteen new Source Company Plugins** — Specs 772–786)
+
+**Scope:** Expand the corpus with **15 new Greenhouse-backed company-direct source plugins**,
+discovered and gated entirely through the deterministic, conflict-free company-source pipeline
+(`probe → enrich → assemble → scaffold → wire`). One plugin per real, brand-matched employer board
+that exposed **≥ 3 live roles** at probe time. This run leaned into **defense-tech / aerospace**
+(air-defense & CUAS sensing, European defense AI, orbital intelligence), **industrial &
+agricultural robotics** (autonomous welding, laser weeding, Robots-as-a-Service), **AI silicon**
+(transformer-inference ASICs, reconfigurable-dataflow systems), **healthtech** (clinical
+intelligence, employee benefits, pediatric neuro-developmental care) and **agbio / gene-therapy**
+verticals — sectors the probe history shows still surface fresh employer boards, in contrast to the
+mined-out generic AI/dev-infra slice (now mostly on Ashby/Lever).
+
+**Baseline at run start:** `origin/develop` clean, 0 ahead / 0 behind; the prior CI run
+(`9ceeeb20`, Specs 756–771) was **green**. Last spec was 771; last enum phase 767. The five
+external reference repos under the parent `OTHERS/` directory (outside this repo) were
+`git fetch`-ed for situational awareness; upstream movement (career-ops dashboard column-picker +
+CV/PDF i18n fixes, ats-scrapers Eightfold company-list additions, a JobSpy LinkedIn date-parse
+fallback) is non-actionable for our sourcing corpus and is recorded only in the parent-directory
+research watch file **outside this repo** — never named here. No competitor intel is referenced
+in-repo; every board below is documented purely on its own public merits.
+
+**Discovery (live, 2026-06-21, `verified=false` — unauthenticated public Job-Board API):** 245
+candidate slugs across defense/space, industrial & ag robotics, AI-silicon, healthtech, biotech and
+agbio verticals were probed against `https://boards-api.greenhouse.io/v1/boards/<slug>` (board name)
++ `…/<slug>/jobs` (listings) at concurrency 16, across two batches (a hyphenated-guess batch of 166
+and a hyphen-stripped + fresh batch of 79). The gate (`MIN_JOBS = 3` live roles **and** a non-empty
+board `name`) admitted **15 survivors**. Brand metadata for each survivor was produced by a **15-way
+parallel enrichment workflow** (one verification agent per board), each agent forbidden from
+referencing competitors and instructed to keep disambiguating context out of the canonical
+`displayName` (which single-sources the `className` / `enumKey` / `serviceName`): board `Etched`
+→ `displayName = "Etched"` (transformer-inference ASIC startup); board `Cortica` → `"Cortica"`
+(pediatric neuro-developmental care, distinct from any homonym); board `Carbon Robotics` →
+`"Carbon Robotics"` (enumKey `CARBON_ROBOTICS`, distinct from the existing `source-company-carbon`
+plugin); board `Path Robotics` → `"Path Robotics"` (distinct from the existing `source-company-pathai`).
+
+**Shipped plugins (Spec / enum Phase / slug / display name / sector / HQ / live roles at probe):**
+
+| Spec | Phase | Slug | Display name | Sector | HQ | Roles |
+| ---- | ----- | ---- | ------------ | ------ | -- | ----- |
+| 772 | 768 | `carbonrobotics` | Carbon Robotics | Robotics / Agriculture (AgTech) | Seattle, Washington, USA | 23 |
+| 773 | 769 | `chaosindustries` | CHAOS Industries | Defense Tech / Aerospace | El Segundo, California, United States | 155 |
+| 774 | 770 | `coherehealth` | Cohere Health | Health Tech / Clinical Intelligence | Boston, Massachusetts, USA | 62 |
+| 775 | 771 | `cortica` | Cortica | Healthcare / Pediatric Neurodevelopmental Care | San Diego, California, United States | 66 |
+| 776 | 772 | `dynotherapeutics` | Dyno Therapeutics | Biotech / Gene Therapy | Watertown, Massachusetts, United States | 3 |
+| 777 | 773 | `eikontherapeutics` | Eikon Therapeutics | Biotechnology / Drug Discovery | Millbrae, California, USA | 21 |
+| 778 | 774 | `etchedai` | Etched | Semiconductors / AI Hardware | Cupertino, California, United States | 25 |
+| 779 | 775 | `formic` | Formic | Robotics / Manufacturing Automation | Chicago, Illinois, USA | 31 |
+| 780 | 776 | `garnerhealth` | Garner Health | Health Tech / Employee Benefits | New York, New York, USA | 49 |
+| 781 | 777 | `helsing` | Helsing | Defense Tech / AI | Munich, Bavaria, Germany | 134 |
+| 782 | 778 | `pathrobotics` | Path Robotics | Robotics / Industrial Automation | Columbus, Ohio, USA | 42 |
+| 783 | 779 | `pivotbio` | Pivot Bio | AgTech / Agricultural Biotechnology | Berkeley, California, USA | 18 |
+| 784 | 780 | `sambanovasystems` | SambaNova Systems | AI Hardware / Semiconductors | San Jose, California, United States | 19 |
+| 785 | 781 | `slingshotaerospace` | Slingshot Aerospace | Space Tech / Defense / AI | El Segundo, California, USA | 35 |
+| 786 | 782 | `soundagriculture` | Sound Agriculture | AgTech / Agricultural Biotechnology | Emeryville, California, USA | 4 |
+**Per-plugin shape (uniform Greenhouse company-direct template):** each `*.service.ts` fetches
+`https://api.greenhouse.io/v1/boards/<slug>/jobs?content=true`, maps each Greenhouse job to a
+`JobPostDto` with `id` prefixed `<slug>-`, `site === Site.<ENUMKEY>`, canonical URL
+`https://job-boards.greenhouse.io/<slug>/jobs/<id>`, decoded HTML content, location and department
+parsing, and `category: 'company'`. Every failure mode (HTTP 4xx/5xx, transport/DNS error,
+malformed body, empty board) degrades to an empty result — `scrape()` never throws.
+
+**Changes:**
+
+- Added **15 plugin packages** under `packages/plugins/source-company-<slug>/` (10 files each =
+  **150 files**): `package.json`, `tsconfig.json`, `src/{index,<slug>.module,<slug>.service}.ts`,
+  `__tests__/<slug>.service.spec.ts`, and `__tests__/fixtures/<slug>-jobs.json`.
+- Added **15 spec packages** under `.specify/specs/<772..786>-source-company-<slug>/`
+  (`spec.md`, `plan.md`, `tasks.md`).
+- Wired all 15 into the four shared registration files (idempotent `wire-company-source.ts`):
+  `packages/models/src/enums/site.enum.ts` (Phases 768–782), `packages/plugins/index.ts`
+  (`ALL_SOURCE_MODULES`), `tsconfig.base.json` (path aliases), `jest.config.js`
+  (`moduleNameMapper`).
+- Linked all 15 specs from `docs/index.md` (§ Source Company Plugins); `docs/log.md` (this entry);
+  external competitor sync recorded in the parent-directory watch file (outside this repo).
+
+**Verification:**
+
+- `npx jest --testPathPatterns "source-company-(…15 slugs…)"` → **15 suites / 165 tests green**
+  (the `status 500` lines in output are the intentional negative-path cases asserting graceful
+  degradation to an empty result).
+- `npm run lint:docs` → **✓ Doc-lint passed — no issues** (all 45 new spec docs linked).
+- No competitor name appears anywhere in-repo; brand metadata is documented on each employer's own
+  public merits.
+
+**Notes:**
+
+- Corpus now stands at **636 company-direct source plugins** (621 → 636) and **921 total source
+  plugins**; Site enum at **921 members** (Phase 782).
+- The hyphenated-slug batch confirmed (again) that Greenhouse board slugs are overwhelmingly
+  hyphen-free, lowercased concatenations — only 4/166 hyphenated guesses survived vs 11/79 in the
+  hyphen-stripped batch. Future probe candidate lists should default to hyphen-stripped forms.
+
+---
+
 ## 2026-06-20 — Scheduled run #437 (**sixteen new Source Company Plugins** — Specs 756–771)
 
 **Scope:** Expand the corpus with **16 new Greenhouse-backed company-direct source plugins**,

@@ -912,6 +912,21 @@ import { QventusModule } from './source-company-qventus';
 import { SilaNanotechnologiesModule } from './source-company-silananotechnologies';
 import { SukiAIModule } from './source-company-suki';
 import { TwistBioscienceModule } from './source-company-twistbioscience';
+import { CHAOSIndustriesModule } from './source-company-chaosindustries';
+import { CorticaModule } from './source-company-cortica';
+import { FormicModule } from './source-company-formic';
+import { HelsingModule } from './source-company-helsing';
+import { CarbonRoboticsModule } from './source-company-carbonrobotics';
+import { CohereHealthModule } from './source-company-coherehealth';
+import { DynoTherapeuticsModule } from './source-company-dynotherapeutics';
+import { EikonTherapeuticsModule } from './source-company-eikontherapeutics';
+import { EtchedModule } from './source-company-etchedai';
+import { GarnerHealthModule } from './source-company-garnerhealth';
+import { PathRoboticsModule } from './source-company-pathrobotics';
+import { PivotBioModule } from './source-company-pivotbio';
+import { SambaNovaSystemsModule } from './source-company-sambanovasystems';
+import { SlingshotAerospaceModule } from './source-company-slingshotaerospace';
+import { SoundAgricultureModule } from './source-company-soundagriculture';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1817,4 +1832,19 @@ export const ALL_SOURCE_MODULES = [
   SilaNanotechnologiesModule,
   SukiAIModule,
   TwistBioscienceModule,
+  CHAOSIndustriesModule,
+  CorticaModule,
+  FormicModule,
+  HelsingModule,
+  CarbonRoboticsModule,
+  CohereHealthModule,
+  DynoTherapeuticsModule,
+  EikonTherapeuticsModule,
+  EtchedModule,
+  GarnerHealthModule,
+  PathRoboticsModule,
+  PivotBioModule,
+  SambaNovaSystemsModule,
+  SlingshotAerospaceModule,
+  SoundAgricultureModule,
 ];

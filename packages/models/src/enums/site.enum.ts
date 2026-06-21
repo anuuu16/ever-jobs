@@ -1671,6 +1671,36 @@ export enum Site {
   SUKI_AI = 'suki',
   // Phase 767: Spec 771 — Source Company Plugin: Twist Bioscience
   TWIST_BIOSCIENCE = 'twistbioscience',
+  // Phase 769: Spec 773 — Source Company Plugin: CHAOS Industries
+  CHAOS_INDUSTRIES = 'chaosindustries',
+  // Phase 771: Spec 775 — Source Company Plugin: Cortica
+  CORTICA = 'cortica',
+  // Phase 775: Spec 779 — Source Company Plugin: Formic
+  FORMIC = 'formic',
+  // Phase 777: Spec 781 — Source Company Plugin: Helsing
+  HELSING = 'helsing',
+  // Phase 768: Spec 772 — Source Company Plugin: Carbon Robotics
+  CARBON_ROBOTICS = 'carbonrobotics',
+  // Phase 770: Spec 774 — Source Company Plugin: Cohere Health
+  COHERE_HEALTH = 'coherehealth',
+  // Phase 772: Spec 776 — Source Company Plugin: Dyno Therapeutics
+  DYNO_THERAPEUTICS = 'dynotherapeutics',
+  // Phase 773: Spec 777 — Source Company Plugin: Eikon Therapeutics
+  EIKON_THERAPEUTICS = 'eikontherapeutics',
+  // Phase 774: Spec 778 — Source Company Plugin: Etched
+  ETCHED = 'etchedai',
+  // Phase 776: Spec 780 — Source Company Plugin: Garner Health
+  GARNER_HEALTH = 'garnerhealth',
+  // Phase 778: Spec 782 — Source Company Plugin: Path Robotics
+  PATH_ROBOTICS = 'pathrobotics',
+  // Phase 779: Spec 783 — Source Company Plugin: Pivot Bio
+  PIVOT_BIO = 'pivotbio',
+  // Phase 780: Spec 784 — Source Company Plugin: SambaNova Systems
+  SAMBANOVA_SYSTEMS = 'sambanovasystems',
+  // Phase 781: Spec 785 — Source Company Plugin: Slingshot Aerospace
+  SLINGSHOT_AEROSPACE = 'slingshotaerospace',
+  // Phase 782: Spec 786 — Source Company Plugin: Sound Agriculture
+  SOUND_AGRICULTURE = 'soundagriculture',
 }
 
 /**
