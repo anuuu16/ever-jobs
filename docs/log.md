@@ -97,30 +97,6 @@ Repurposed `manatal.e2e-spec.ts` into a `RUN_NETWORK_E2E`-gated network smoke.
 
 **Spec:** `.specify/specs/5021-manatal-careers-page-rework/{spec,plan,tasks}.md`.
 
-## 2026-06-23 — Spec 787 (**fork spec-number range reservation**)
-
-**Scope:** Add a code-enforced scheme so each fork reserves a disjoint band of spec numbers and
-fork numbering never collides under bidirectional merges (the failure mode behind the earlier
-742–759 duplicate-number clash).
-
-**Changes:**
-
-- New `.specify/ranges.json` — committed, append-only registry mapping each fork's `origin` repo to
-  an inclusive `[start, end]` band (`ever-jobs/ever-jobs` → 1–4999, `MakeDeeply/ever-jobs` →
-  5000–5999). One row per fork keyed by distinct repo, so appends never merge-conflict.
-- New `scripts/spec-ranges.ts` — shared, dependency-free helpers (load/parse registry, normalise a
-  git remote URL to `owner/repo`, band lookup, overlap detection, band-scoped next-number).
-- New `scripts/next-spec-number.ts` (+ `npm run spec:next`) — derives the local fork from
-  `git remote get-url origin` (override `SPEC_FORK_REPO`), prints `max(n in my band)+1`; errors on
-  unregistered fork / exhausted band.
-- Extended `scripts/docs-lint.ts` — two new CI-enforced checks: registered bands must be pairwise
-  non-overlapping, and every spec directory's number must fall inside some band. Checks are skipped
-  when `.specify/ranges.json` is absent (backwards compatible).
-- Tests: new `scripts/__tests__/spec-ranges.spec.ts`; extended `scripts/__tests__/docs-lint.spec.ts`.
-- Spec triad under `.specify/specs/787-fork-spec-range-reservation/`; indexed in `docs/index.md` §7.
-
-`npm run build`, `npm run lint:docs`, and `npm run test:scripts` all green.
-
 ## 2026-06-23 — Run #456 — Spec 5020 — Paylocity board-page scrape (replace dead feed API)
 
 **Scope:** The Paylocity plugin depended on the JSON feed endpoint
@@ -557,6 +533,30 @@ locations and combines explicit `isRemote` with remote location labels.
 TypeScript checks passed for models, common, and Ashby. The private ATS field investigator now
 uses the repository's interval and location normalizers for canonical comparison and reported zero
 differences and zero errors across `antaresindustries.com` and `reliable.co`.
+
+## 2026-06-23 — Spec 787 (**fork spec-number range reservation**)
+
+**Scope:** Add a code-enforced scheme so each fork reserves a disjoint band of spec numbers and
+fork numbering never collides under bidirectional merges (the failure mode behind the earlier
+742–759 duplicate-number clash).
+
+**Changes:**
+
+- New `.specify/ranges.json` — committed, append-only registry mapping each fork's `origin` repo to
+  an inclusive `[start, end]` band (`ever-jobs/ever-jobs` → 1–4999, `MakeDeeply/ever-jobs` →
+  5000–5999). One row per fork keyed by distinct repo, so appends never merge-conflict.
+- New `scripts/spec-ranges.ts` — shared, dependency-free helpers (load/parse registry, normalise a
+  git remote URL to `owner/repo`, band lookup, overlap detection, band-scoped next-number).
+- New `scripts/next-spec-number.ts` (+ `npm run spec:next`) — derives the local fork from
+  `git remote get-url origin` (override `SPEC_FORK_REPO`), prints `max(n in my band)+1`; errors on
+  unregistered fork / exhausted band.
+- Extended `scripts/docs-lint.ts` — two new CI-enforced checks: registered bands must be pairwise
+  non-overlapping, and every spec directory's number must fall inside some band. Checks are skipped
+  when `.specify/ranges.json` is absent (backwards compatible).
+- Tests: new `scripts/__tests__/spec-ranges.spec.ts`; extended `scripts/__tests__/docs-lint.spec.ts`.
+- Spec triad under `.specify/specs/787-fork-spec-range-reservation/`; indexed in `docs/index.md` §7.
+
+`npm run build`, `npm run lint:docs`, and `npm run test:scripts` all green.
 
 ## 2026-06-22 — Run #441 — Spec 748: Lever complete public descriptions
 
