@@ -10,6 +10,116 @@
 
 ---
 
+## Q-071 — source-jsonld: how should the generic JSON-LD harvester enumerate jobs from a single page?
+
+**Context:** Spec 5022. The generic `source-jsonld` plugin is a last-resort
+harvester for sites with no recognised ATS. It is given one careers/job URL
+(`companyUrl`) and reads the `JobPosting` ld+json blocks on **that page**. Some
+sites embed every posting's ld+json on the careers index (an `ItemList` of
+`JobPosting`s), others only embed a single `JobPosting` on each per-job detail
+page and list jobs via JS/links the harvester can't enumerate.
+
+**Options:**
+
+- **A. Single-page only (current).** Parse whatever `JobPosting` blocks exist on
+  the supplied URL — an `ItemList`/`@graph` index yields many jobs, a detail
+  page yields one. No crawling. Deterministic, cheap, no link-following
+  heuristics; but misses sites that paginate via links rather than embedding an
+  index.
+- **B. Follow on-page job links one level deep** and parse each target's
+  ld+json. Recovers link-driven boards, but adds N fetches per page, link-intent
+  heuristics, and concurrency/robots concerns — overlaps the fetch1
+  apply-link-discovery work.
+- **C. Require the caller to pass each job URL** (treat the plugin as a pure
+  per-URL extractor). Simplest contract, but pushes enumeration entirely
+  upstream.
+
+**Default (proceeding):** **A.** Keep the harvester a single-page extractor:
+it covers the embedded-`ItemList` and per-detail-page cases with zero crawl
+risk, and link-following enumeration belongs in the dedicated fetch1 discovery
+spec, not the ever-jobs source plugin.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-070 — Manatal: how should the omitted pay interval be derived from careers-page.com salary fields?
+
+**Context:** Spec 5021. The careers-page.com JSON API exposes `salary_min` /
+`salary_max` (decimal strings, only when `is_salary_visible`) and a
+`currency_code`, but **no pay interval** (hourly/monthly/yearly). Real data
+mixes scales: castelion-corporation has both $40–$50 (hourly) and $140k–$180k
+(yearly) bands, both flagged visible.
+
+**Options:**
+
+- **A. Infer the interval from the amount magnitude** using the same thresholds
+  as the shared text parser (`< 350` hourly, `< 30000` monthly, else yearly).
+  Consistent with `extractSalary`; correct on all observed data.
+- **B. Always assume yearly.** Simplest, but mislabels hourly roles (the
+  castelion $40–$50 bands would read as $40–$50/yr).
+- **C. Omit the interval entirely when the API doesn't state it.** Avoids any
+  guess, but `CompensationDto` needs an interval and downstream consumers expect
+  one; loses normalization.
+
+**Default (proceeding):** **A.** Magnitude inference with the shared thresholds
+keeps Manatal consistent with every other plugin's text path and is correct on
+all captured fixtures; the structured min/max remain exact regardless.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-069 — Should the Paylocity plugin keep chasing the JSON feed endpoint, or commit to board-page HTML?
+
+**Context:** Spec 5020. The plugin relied on
+`/recruiting/api/feed/jobs/{GUID}`, which returns HTTP 500 (by GUID) or 400 (by
+numeric ModuleId) for every tested company. The board page itself never calls
+that feed — jobs are server-rendered into `window.pageData` — so the feed is a
+separate syndication endpoint that appears disabled/partner-key-gated. The IDs
+are not the blocker; the endpoint is.
+
+**Options:**
+
+- **A. Commit to the board page + per-job detail page (HTML).** Proven for all
+  tested boards; one detail fetch per job (bounded concurrency).
+- **B. Keep using the feed, gated behind a Paylocity partner API key.** Requires
+  credentials we don't have and that the public board never uses.
+- **C. Board page only (no detail overlay).** Cheaper, but the board's per-job
+  `Description` is empty and Job Type / compensation live only on the detail
+  page — would lose description, jobType, and text-fallback compensation.
+
+**Default (proceeding):** **A.** The board + detail HTML is the only reliable,
+key-free public source and yields the full field set. If Paylocity later exposes
+a keyed feed, the structured-first `resolveCompensation` contract and the typed
+layer make re-adding it incremental.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-068 — How should one `LocationDto` represent a multi-location Workday job?
+
+**Context.** Workday's list endpoint may collapse geography to `"2 Locations"`; its detail
+endpoint exposes a primary `location` and `additionalLocations[]`. The shared `JobPostDto` accepts
+only one `LocationDto`, and `LocationDto` has scalar `city`, `state`, and `country` fields rather
+than a location array. Spec 5004 must preserve every concrete label without changing the public DTO.
+
+**Options.**
+
+- **A — Join concrete labels in `city` with `; ` (chosen default).** Lossless within the existing
+  contract, deterministic, human-readable, and distinguishable from commas inside each location.
+- **B — Emit only the primary location.** Structurally pure but silently discards valid cities.
+- **C — Add `locations: LocationDto[]` to `JobPostDto`.** Best long-term shape, but broadens a
+  targeted Workday bug fix into a public cross-source contract migration.
+
+**Default (proceeding):** **A** — deduplicate case-insensitively, keep source order, and join with
+`; `. A future DTO-versioning spec may adopt C across all multi-location sources.
+
+**Resolution.** _(pending human review — default A continues.)_
+
+---
+
 ## Q-067 — Liveness checker integration point: where should the aggregator invoke `ILivenessChecker`?
 
 **Context.** Spec 721 (ad-hoc session 2026-06-11) ships the `liveness-http` feature plugin bound

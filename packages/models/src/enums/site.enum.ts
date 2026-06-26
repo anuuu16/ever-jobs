@@ -60,6 +60,8 @@ export enum Site {
   OPENAI = 'openai',
   // Phase 6: New ATS integrations
   BREEZYHR = 'breezyhr',
+  // Generic schema.org JobPosting (JSON-LD) harvester — aggregator bucket, not an ATS.
+  JSONLD = 'jsonld',
   COMEET = 'comeet',
   PINPOINT = 'pinpoint',
   // Phase 7: Additional job boards
@@ -690,6 +692,7 @@ export enum Site {
   AMYLYX = 'amylyx',
   // Phase 277: Spec 267 — Source Company Plugin: Anaplan
   ANAPLAN = 'anaplan',
+  ANATAR = 'anatar',
   // Phase 278: Spec 268 — Source Company Plugin: Anchanto
   ANCHANTO = 'anchanto',
   // Phase 279: Spec 269 — Source Company Plugin: Schwarzman Animal Medical Center

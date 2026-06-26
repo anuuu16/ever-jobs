@@ -15,6 +15,88 @@
 
 ---
 
+## 2026-06-24 — Run #458 — Spec 5022 — Shared schema.org JobPosting (JSON-LD) extraction
+
+**Scope:** schema.org `JobPosting` JSON-LD parsing was duplicated/private in
+breezyhr, available-but-ignored in paylocity, and missing as a generic source.
+Promotes the parsing into a shared `@ever-jobs/common` helper and adopts it in
+breezyhr + paylocity, plus a new generic aggregator-bucket plugin.
+
+**Common (`packages/common/src/utils/jsonld.ts`, new):**
+- `parseJobPostingLd(html)` — finds every `<script type="application/ld+json">`
+  block, parses defensively (malformed skipped), unwraps single / array /
+  `@graph` / `ItemList`(`ListItem.item`) shapes, accepts `@type` as a string or
+  array, and flattens into `JobPostingLd[]` (title←title|name, description,
+  datePosted, validThrough, employmentType (`, `-joined when array),
+  hiringOrganizationName/Url, url, applyUrl (←`potentialAction` ApplyAction),
+  remote (←`jobLocationType === 'TELECOMMUTE'`), locations[], baseSalary).
+- Companions `extractLdJsonBlocks(html)` and
+  `jobPostingLdToCompensation(salary)` (→ `CompensationDto`). Barrelled via
+  `packages/common/src/utils/index.ts`.
+
+**breezyhr (`source-ats-breezyhr`):** removed the private `descriptionFromHtml()`
+and `BreezyJobPostingLd` type; description now comes from the first posting with
+a non-empty `description` via the shared helper. Behaviour unchanged.
+
+**paylocity (`source-ats-paylocity`):** detail overlay is JSON-LD-first — prefers
+the ld+json `description`, still parses the detail HTML for Job Type (ld+json
+lacks it), falls back to the HTML description when no ld+json. Board-page spine
+(enumeration + location/remote/department from `window.pageData`) unchanged.
+
+**source-jsonld (new, aggregator bucket):** generic last-resort harvester — given
+a careers/job URL (`companyUrl`) it fetches the HTML and emits one `JobPostDto`
+per `JobPosting` block. Applies the ATS checklist: structured-first→text-fallback
+compensation (`resolveCompensation`), underscore/multi-value job-type mapping
+(`FULL_TIME` → `getJobTypeFromString`), structured location, remote, description
+HTML/markdown/plain, `extractEmails`, companyUrl/jobUrl/applyUrl. Registered in
+all four places (`Site.JSONLD`, `ALL_SOURCE_MODULES`, tsconfig paths, jest
+moduleNameMapper).
+
+**Tests:** `packages/common/__tests__/jsonld.spec.ts` (shapes, malformed,
+@type variance, name fallback, multi-location, baseSalary, applyUrl,
+compensation) + `packages/plugins/source-jsonld/__tests__/jsonld.service.spec.ts`
+(mapping, structured-salary preference, resultsWanted, remote, no-block /
+fetch-failure, url fallback). breezyhr + paylocity suites stay green.
+`npm run build` (tsc via nx) green.
+
+---
+
+## 2026-06-24 — Run #457 — Spec 5021 — Manatal rework to careers-page.com JSON API
+
+**Scope:** The Manatal plugin fetched `api.manatal.com/open/v1/career-page/{slug}/jobs/`,
+which now returns the SPA HTML shell (not JSON) for real customers (e.g.
+castelion-corporation, 135 jobs) — so it returned 0 jobs everywhere. Manatal
+hosts its public career pages on the white-label domain `careers-page.com`,
+whose JSON API (`/api/v1.0/c/{slug}/jobs/`) is the working data layer the Vue
+front-end itself consumes. Repointed the plugin there and applied the full ATS
+checklist (`docs_fetch1/ats-plugin-feature-checklist-SPEC.md`).
+
+**Plugin rework (`packages/plugins/source-ats-manatal`):**
+- `manatal.constants.ts` — replaced the dead `api.manatal.com` endpoint with
+  `MANATAL_API_BASE` (`https://www.careers-page.com/api/v1.0`) + `MANATAL_SITE_BASE`
+  and builders `manatalListUrl(slug, page?)`, `manatalCompanyUrl(slug)`,
+  `manatalJobUrl(slug, hash)`; added `MANATAL_MAX_PAGES = 50`.
+- `manatal.types.ts` — rewrote to the careers-page.com shapes `ManatalResponse`
+  (`count`/`next`/`results[]`) and `ManatalJob` (`hash`, structured location,
+  `is_salary_visible`, decimal-string `salary_min`/`salary_max`, `currency_code`).
+- `manatal.service.ts` — `scrape()` follows the `next` pagination chain (no
+  detail fetch — the list is self-contained), mapping title, structured
+  location (city/state/country, `parseLocationText` fallback), description
+  (HTML/markdown/plain), structured-first→text-fallback compensation via the
+  shared `resolveCompensation` (interval inferred by magnitude when the API
+  omits it: 350 hourly / 30000 monthly thresholds), `salarySource`, emails, and
+  companyUrl/jobUrl. Never fabricates employment_type/jobFunction/datePosted
+  (absent from the payload).
+
+**Tests:** new `manatal.service.spec.ts` driven by 4 real captured fixtures
+(ghostwerks, calqulate, castelion p1+p2), mocked HTTP routed by URL — 13 unit
+tests (mapping, structured-wins, text-fallback, hourly/yearly interval
+inference, pagination + cap, remote inference, emails, format, empty-slug/throw).
+Repurposed `manatal.e2e-spec.ts` into a `RUN_NETWORK_E2E`-gated network smoke.
+`npm run build` + `lint:docs` green; common + manatal suites green.
+
+**Spec:** `.specify/specs/5021-manatal-careers-page-rework/{spec,plan,tasks}.md`.
+
 ## 2026-06-23 — Spec 787 (**fork spec-number range reservation**)
 
 **Scope:** Add a code-enforced scheme so each fork reserves a disjoint band of spec numbers and
@@ -39,7 +121,519 @@ fork numbering never collides under bidirectional merges (the failure mode behin
 
 `npm run build`, `npm run lint:docs`, and `npm run test:scripts` all green.
 
+## 2026-06-23 — Run #456 — Spec 5020 — Paylocity board-page scrape (replace dead feed API)
+
+**Scope:** The Paylocity plugin depended on the JSON feed endpoint
+`/recruiting/api/feed/jobs/{GUID}`, which is disabled/partner-gated and returns
+5xx/4xx for every tested company (sendcutsend, fermi, shine, blacksea). The
+reliable public source is the server-rendered board page plus a per-job detail
+page. Reworked the plugin to that source and applied the same comprehensive
+field extraction as the other ATS plugins.
+
+**Plugin rework (`packages/plugins/source-ats-paylocity`):**
+- `paylocity.constants.ts` — replaced the feed base with `PAYLOCITY_BASE`,
+  `paylocityBoardUrl(guid)` (`/recruiting/jobs/All/{GUID}`) and
+  `paylocityDetailUrl(guid, jobId)` (`/recruiting/jobs/Details/{JobId}/{GUID}`);
+  added `PAYLOCITY_DETAIL_CONCURRENCY = 5`.
+- `paylocity.types.ts` — replaced the feed schema with `PaylocityPageData`
+  (`ModuleTitle`, `Jobs[]`), `PaylocityListJob`, `PaylocityJobLocation`, and the
+  parsed `PaylocityJobDetail` (`description`, `jobType`).
+- `paylocity.service.ts` — `scrape()` fetches the board, parses `window.pageData`
+  with a string-aware brace matcher, slices to `resultsWanted`, then overlays
+  each job's detail page under bounded `Promise.allSettled` for the full
+  description + Job Type. Maps title, company (`ModuleTitle`), structured
+  location (`JobLocation`, `Remote` fallback), department (`HiringDepartment`),
+  jobType (detail Job Type via `getJobTypeFromString`), isRemote/workFromHomeType
+  (`IsRemote`/`IndeedRemoteType` + hybrid text inference), datePosted
+  (`PublishedDate`), description, text-fallback compensation via the shared
+  `resolveCompensation`, and emails. Fail-safe: a failed detail still maps the
+  board-level fields.
+
+**Tests:** new `paylocity.service.spec.ts` driven by 4 real captured fixtures
+(sendcutsend + fermi boards, one detail each), mocked HTTP routed by URL — 9
+unit tests (mapping, detail overlay, remote, compensation text-fallback,
+fail-safe, resultsWanted, empty-slug/empty-board/throw). Repurposed
+`paylocity.e2e-spec.ts` into a `RUN_NETWORK_E2E`-gated network smoke (skipped by
+default). `npm run build` + `lint:docs` green.
+
+**Spec:** `.specify/specs/5020-paylocity-board-page-scrape/{spec,plan,tasks}.md`.
+
+## 2026-06-23 — Run #455 — Spec 5019 — Multi-tier compensation aggregation
+
+**Scope:** Postings that list pay bands across several tiers (per geography,
+level, or work mode) were collapsing to a single tier. Promoted the
+`payRangeDetails[]` collapse Rippling already hand-rolled into a shared helper so
+every plugin that exposes multiple bands reports the true overall envelope.
+
+**Helper added (`packages/common/src/utils/helpers.ts`):**
+- `CompensationRange` interface + `aggregateCompensation(ranges)` — folds many
+  bounded ranges into `min(floors)…max(ceilings)`. The first bounded range sets
+  the basis currency+interval; only ranges sharing that basis contribute, so a
+  stray EUR or hourly band is excluded (never converted). Returns `null` when no
+  range carries a bounded amount.
+
+**Plugins refactored onto the helper:**
+- ashby — tiered path now folds every tier of the chosen base/salary component
+  (was `tiers[0]`); flat path folds every component sharing the chosen salary's
+  `compensationType` (equity/bonus rows stay out). New overall-range behavior.
+- rippling — `extractCompensation` calls `aggregateCompensation` instead of inline
+  `Math.min`/`Math.max`; per-band `salarySource` logic unchanged. Behavior-preserving.
+
+**Tests:** +5 common unit tests (fold, single-band, currency+interval guard,
+one-sided bands, empty→null); +2 ashby fixtures (tiered SF/NYC/remote, flat
+multi-band + equity); +1 rippling fixture (3+ bands, mismatched currency
+excluded). All prior fixtures green; 321 tests across common + ATS suites (+8).
+
+**Docs:** `docs/index.md` row for 5019; this entry. Spec/plan/tasks under
+`.specify/specs/5019-multi-tier-compensation-aggregation/`.
+
 ---
+
+## 2026-06-23 — Run #454 — Spec 5018 — Shared structured-first compensation resolution
+
+**Scope:** Promoted the rippling-discovered compensation precedence (structured
+wire data first, then `extractSalary(description)` fallback) into three shared
+`@ever-jobs/common` helpers and applied them across all eight ATS plugins touched
+this cycle.
+
+**Helpers added (`packages/common/src/utils/helpers.ts`):**
+- `compensationFromSalary(result)` — maps an `ExtractSalaryResult` envelope to a
+  `CompensationDto` (null when no bounded amount; interval via `getCompensationInterval`).
+- `salaryToCompensation(text, options?)` — `extractSalary` + `compensationFromSalary`;
+  the text-fallback half.
+- `resolveCompensation({ structured, text, options })` — canonical precedence:
+  prefer structured, fall back to text only when structured is absent.
+
+**Plugins wired with the description fallback (previously structured-only / none):**
+ashby, greenhouse (public + Harvest), lever, workable.
+
+**Plugins refactored onto the helper (removing four near-identical inline mappings):**
+rippling, workday, breezyhr, bamboohr.
+
+**Currency policy:** structured sources keep their reported currency; text-parsed
+results default to USD via the `CompensationDto` constructor. Behavior-preserving —
+all prior fixtures stay green.
+
+**Tests:** 10 new common-package unit tests + collocated structured-wins /
+text-fallback / null cases for the four newly-wired plugins. `npm run build`,
+`npm run lint:docs`, and the affected jest suites all green (313 tests across
+common + 8 ATS plugins).
+
+---
+
+## 2026-06-23 — Run #453 — Renumber MakeDeeply fork specs 742–759 → 5001–5017
+
+**Scope:** Moved all 17 MakeDeeply-authored specs out of the 742–759 range into
+a reserved **5000–5999** MakeDeeply namespace, eliminating the duplicate spec
+numbers introduced when the upstream merge (Run #436 / PR #11) added 45
+`source-company-*` plugins that independently minted 742–786. Upstream's specs
+are left untouched; only our fork's specs move.
+
+**Mapping (dense, order-preserving):** 742→5001, 743→5002, 744→5003, 745→5004,
+747→5005, 748→5006, 749→5007, 750→5008, 751→5009, 752→5010, 753→5011, 754→5012,
+755→5013, 756→5014, 757→5015, 758→5016, 759→5017. The full table and rationale
+live in the fetch1 design doc `docs_fetch1/ever-jobs-spec-renumber-SPEC.md`.
+
+**Changes:**
+
+- Renamed the 17 spec dirs under `.specify/specs/` (slug preserved, only the
+  numeric prefix changed); updated each `spec.md` / `plan.md` / `tasks.md` H1,
+  `Spec ID` row, and intra-fork `Related specs` references.
+- Added a `(formerly Spec 7xx)` note to each renamed spec's H1 for historical
+  traceability (commit history and merged PR titles still cite the old numbers).
+- Updated `docs/index.md`: the 17 leading number cells and all spec/plan/tasks
+  links now point at the new dirs.
+- Swept bare `Spec 7xx` references in our own files only — the ATS plugin test
+  descriptions (`source-ats-ashby`, `source-ats-greenhouse`, `source-ats-workday`)
+  and `docs/questions.md`. `site.enum.ts` and upstream spec dirs were not touched
+  (their 742–759 mentions refer to upstream company plugins).
+
+**Verification:** `npm run lint:docs` green; `npm run build` green; the three
+affected ATS plugin suites pass (77/77). Pure metadata renumber — no plugin
+behavior change.
+
+---
+
+## 2026-06-23 — Run #452 — Spec 759: Allen Control Systems repoint to Ashby via registry delegation
+
+**Scope:** Repointed the `source-company-allencontrolsystems` company plugin
+from its stale, hardcoded Greenhouse board
+(`api.greenhouse.io/v1/boards/allencontrolsystems/jobs` + ~80 lines of inlined
+Greenhouse field-mapping) to the company's **live, canonical Ashby board**
+(`allen-control-systems`, `jobs.ashbyhq.com/allen-control-systems`). Independent
+ATS discovery (`find-company-ats.py`) flagged the Ashby board with a different
+job count, and the company website was manually verified — Ashby is current, the
+Greenhouse board is out of date.
+
+**Approach (A2 — registry delegation, not a peer import).** Rather than
+re-implement Ashby parsing inline (which would re-create the same drift against
+`source-ats-ashby`), or `import { AshbyService }` directly (forbidden by AGENTS.md
+Rule #4 / CLAUDE.md "Reach across plugins"), the service now resolves the Ashby
+source plugin at runtime through the core `PluginRegistry`:
+
+- `constructor(@Optional() registry?: PluginRegistry)` → `registry?.getScraper(Site.ASHBY)`.
+- Delegates `ashby.scrape({ ...input, companySlug: 'allen-control-systems' })`,
+  so every Ashby field fix (e.g. spec 750) is inherited automatically and
+  `resultsWanted`/`searchTerm` pass through.
+- **Re-stamps the company identity** onto each returned job:
+  `site → Site.ALLENCONTROLSYSTEMS`, `companyName → 'Allen Control Systems'`,
+  `id`'s leading `ashby-` prefix → `allencontrolsystems-`. All other fields flow
+  through untouched.
+- **Fail-safe:** no registry / no Ashby registered → `Logger.error` + empty
+  `JobResponseDto` (direct `new AllencontrolsystemsService()` still works).
+
+**Tests:** rewrote the suite (10 cases) — DI scaffolding; happy path via a real
+`AshbyService` registered in a `PluginRegistry` with a mocked HTTP client and an
+Ashby-shaped fixture (replacing the old Greenhouse fixture), asserting the
+re-stamp and that `api.ashbyhq.com` is hit for `allen-control-systems` (not
+Greenhouse); input pass-through + id-prefix edge via a fake `IScraper`;
+no-registry / no-Ashby resilience; `resultsWanted` cap. `npx jest
+source-company-allencontrolsystems` green; clean `api:build` compiles.
+
+**Files:** spec triad `.specify/specs/759-allencontrolsystems-ashby-delegation/`;
+`source-company-allencontrolsystems` service + fixture + test rewritten. No
+change to `source-ats-ashby`, `@ever-jobs/common`, or `@ever-jobs/models`.
+
+## 2026-06-23 — Run #451 — Spec 758: BambooHR detail-fetch overlay + work-mode, compensation, jobType, type-shape fixes
+
+**Scope:** Added a detail-fetch overlay and several field mappings to the
+**public** path of `source-ats-bamboohr`, measured against a fresh 9-board
+harvest (atkinsonaeronautics 12, avidbots 13, geospectrum 24, satellogic 16,
+cleanenergycounsel 4, ppcsolar 4, carolinasolarservices 3, keyindustries 1,
+deepisolation 1 — 78 jobs; the 20 owner-supplied test URLs minus 11 that no
+longer serve a public board). The public `mapJob` read `job.description`,
+`job.compensation`, and `job.minimumExperience` straight off `/careers/list`, but
+the live list payload omits those keys entirely — they exist only on the per-job
+`/careers/{id}/detail` endpoint (`result.jobOpening`), which the plugin never
+fetched, so description/datePosted/compensation were null on 100%. The plugin now
+overlays each job (the `resultsWanted` slice) with its detail payload under
+bounded concurrency (`BAMBOOHR_DETAIL_CONCURRENCY = 5`, `Promise.allSettled`,
+index-aligned, fail-safe — a failed/empty detail nulls only that index and the
+job still maps from the list). From the detail it maps **description** (rendered
+per the previously accepted-but-ignored `descriptionFormat`), **datePosted** (ISO
+`YYYY-MM-DD`), and **compensation** (free text via the shared `extractSalary` +
+`getCompensationInterval`; `$120,000 - $140,000` yearly, `$19.00 - $27.00 / hr`
+hourly; 29% carry a parseable range). **workFromHomeType/isRemote** now derive
+from `locationType` (0=on-site 55, 1=remote 10, 2=hybrid 13 across the harvest;
+`isRemote` was previously hardcoded `false` because the list `isRemote` boolean is
+null in practice). **jobType/employmentType** map from `employmentStatusLabel` via
+`getJobTypeFromString`. Type-shape bugs fixed: `BambooHRJob.id` was typed `number`
+but the live value is a string (`"13"`); the dead `description`/`compensation`/
+`minimumExperience` list reads were dropped; `location` was typed with a `country`
+that is always null on the list (country lives in `atsLocation.country`), so the
+type was split into `BambooHRLocation` (`city`/`state`) + `BambooHRAtsLocation`
+(`country`). Location is mapped structurally (not via `parseLocationList`) because
+BambooHR returns full state names (`North Carolina`, not `NC`) and a separate
+`atsLocation.country` that the shared `City, ST` parser would collapse into
+`city`; remote-only jobs get `city='Remote'`. The authenticated
+`scrapeWithApi`/`mapApiJobOpening` path (which already maps these correctly but
+needs `BAMBOOHR_API_KEY`) is untouched, as are all other ATS plugins. New
+constants (`bamboohrListUrl`/`bamboohrDetailUrl`/`BAMBOOHR_DETAIL_CONCURRENCY`)
+and detail types added. No change to `@ever-jobs/common` or `@ever-jobs/models`.
+
+**Files:** `packages/plugins/source-ats-bamboohr/src/bamboohr.constants.ts`,
+`bamboohr.types.ts`, `bamboohr.service.ts`,
+`__tests__/bamboohr.service.spec.ts` (15 new tests),
+`.specify/specs/758-bamboohr-detail-fields-mappings/{spec,plan,tasks}.md`,
+`docs/index.md`, `docs/log.md`.
+
+**Verification:** `npx jest source-ats-bamboohr` green (18 total, 15 new + 3
+existing e2e), `npm run build` + `npm run lint:docs` pass.
+
+---
+
+## 2026-06-23 — Run #450 — Spec 757: BreezyHR location fix + detail-page description, compensation, jobType
+
+**Scope:** Fixed one bug and three missing field mappings in `source-ats-breezyhr`,
+found from a fresh 3-board harvest (ondas-networks 1, vvater-llc 24, zeno-power 22
+— 47 jobs) gap-checked against `makedeeply`. (1) **Location bug:** the plugin
+pushed `listing.location.state` and `.country` onto a string array, but on the
+public `/json` list those are `{id,name}` objects — the join produced
+`"Austin, [object Object], [object Object]"` crammed into `LocationDto.city`
+(`state`/`country` never set). Now reads the structured pieces (object-or-string
+tolerant) and routes labels through the shared `parseLocationList`. (2)
+**description** was null on 100% of jobs; the list endpoint carries no body, so
+the plugin now overlays each job with the schema.org `JobPosting` `description`
+parsed from its public detail page (`/p/{friendly_id}`) under bounded concurrency
+(`BREEZYHR_DETAIL_CONCURRENCY = 5`, `Promise.allSettled`, fail-safe per
+Rippling/Workable), rendered via the previously accepted-but-ignored
+`descriptionFormat`. (3) **compensation** now parses the list's free-text
+`salary` (`$105k - $125k`, `$19.00 - $27.00 / hr`) via the shared `extractSalary`
+honoring the real interval (yearly/hourly). (4) **jobType/employmentType** now
+mapped from `type` (`getJobTypeFromString(type.id ?? type.name)`; `employmentType`
+= `type.name`). workFromHomeType / isRemote-broadening / multi-location are
+documented non-goals (no structured work-mode source; `is_remote` false and only
+single-location across the harvest). No change to `@ever-jobs/common` or
+`@ever-jobs/models`.
+
+**Verification:** `npx jest source-ats-breezyhr` green (9 service tests),
+`npm run build` and `npm run lint:docs` pass. Spec triad
+`757-breezyhr-location-detail-description`. No change to other ATS plugins (per owner).
+
+---
+
+## 2026-06-23 — Run #449 — Spec 756: Workable v2 detail fetch — description, workFromHomeType, jobFunction, isRemote
+
+**Scope:** Fixed two field-mapping gaps in `source-ats-workable`, found from a
+fresh 3-board harvest (shift-robotics 4, elastium 2; looking-glass-factory
+genuinely empty) gap-checked against `makedeeply`. Both share one root cause: the
+plugin reads only the v1 widget list (`/api/v1/widget/accounts/{slug}`), which
+carries no body text and no work-mode. (1) **description** was null on 100% of
+jobs; the plugin now overlays each job with its public **v2 per-job detail**
+(`/api/v2/accounts/{slug}/jobs/{shortcode}`) under bounded concurrency
+(`WORKABLE_DETAIL_CONCURRENCY = 5`, `Promise.allSettled`, fail-safe per
+Rippling/Workday) and concatenates the detail's `description` + `requirements` +
+`benefits` (ever-jobs has no distinct fields), rendered via the previously
+accepted-but-ignored `descriptionFormat`. (2) **workFromHomeType** is now derived
+from the v2 `workplace` enum (`hybrid` → `Hybrid`, `remote` → `Remote`,
+`on_site` → none). Plus: **jobFunction** now carries the widget `function`
+job-family taxonomy (owner's call to populate the otherwise LinkedIn-only field
+rather than discard it), and **isRemote** is broadened to union the widget
+`telecommuting` with the v2 `remote` boolean and `workplace === 'remote'`.
+Compensation and department are documented non-goals (no source in v1 or v2;
+0/6 jobs carry a body-text range). No change to `@ever-jobs/common` or
+`@ever-jobs/models`.
+
+**Verification:** `npx jest source-ats-workable` green (7 new service tests),
+`npm run build` and `npm run lint:docs` pass. Spec triad
+`756-workable-detail-fetch-fields`. No change to other ATS plugins (per owner).
+
+---
+
+## 2026-06-23 — Run #448 — Spec 755: Workday compensation, workFromHomeType, multi-location, country, datePosted
+
+**Scope:** Fixed five field-mapping gaps in `source-ats-workday`, found from a
+fresh 2754-job / 7-board harvest (1116 with CXS detail) gap-checked against
+`makedeeply`. (1) **Compensation** was null on 100% of jobs; unlike
+Rippling/Lever the Workday CXS API has **no structured pay field**, so the only
+salary signal is the pay-transparency range in the description body — the plugin
+now runs the shared `extractSalary` over the body text and maps the result into
+`CompensationDto`, honoring the real interval. (2) **workFromHomeType** is now
+derived from `remoteType` (Hybrid/Fully Remote/Remote Eligible/Field-Customer
+Site → `Hybrid`/`Remote`/none), else from parsed labels. (3) **Multi-location**
+now routes `[location, ...additionalLocations, locationsText]` through the shared
+`parseLocationList` (dropping the bare "N Locations" count) instead of merging
+everything into one `city` string. (4) **Country** folds
+`jobRequisitionLocation.country.alpha2Code` into `LocationDto.country` via the
+zero-dep `regionNameFromCode` helper (Spec 752) when the parser left it bare.
+(5) **datePosted** now prefers the absolute `startDate` (drift-free, recovers the
+"30+ Days Ago" nulls) over the lossy relative `postedOn` label. Department is
+left as-is (Workday CXS exposes none on these boards; `jobFamily`/subtitle reads
+stay for other tenants). No change to `@ever-jobs/common` or `@ever-jobs/models`.
+
+**Verification:** `npx jest source-ats-workday` green (45 tests, 10 new),
+`npm run build` and `npm run lint:docs` pass. Spec triad
+`755-workday-field-mappings`. No change to other ATS plugins (per owner).
+
+---
+
+## 2026-06-23 — Run #447 — Spec 754: Rippling compensation, workFromHomeType, multi-location
+
+**Scope:** Fixed three field-mapping gaps in `source-ats-rippling`, found from a
+fresh 246-job / 15-board harvest gap-checked against `makedeeply`. (1)
+**Compensation** was null on 100% of jobs, broken two ways: `enrichJobFromDetail`
+never copied `payRangeDetails` from the detail payload, and `extractCompensation`
++ the `RipplingPayRangeDetail` type read the wrong field names
+(`min_value`/`max_value`/`interval` vs the live `rangeStart`/`rangeEnd`/
+`frequency`). The rewrite reads structured `payRangeDetails` first, collapses
+multiple bands into a min–max envelope, and preserves per-band detail in
+`salarySource` (semicolon-joined, e.g. `Oakland, CA 130,000–200,000; Sandy, UT
+115,000–155,000`) when the bands carry distinct ranges; when no structured range
+exists it falls back to the shared `extractSalary` over the description body
+(pay-transparency text). (2) **workFromHomeType** is now derived from the
+per-location `workplaceType` (HYBRID/REMOTE/both), else from parsed labels. (3)
+**Multi-location** now routes all location labels through the shared
+`parseLocationList` instead of using `locations[0]` only. Also copies
+`locations`/`workLocations` from the detail payload. No change to
+`@ever-jobs/common` or `@ever-jobs/models` (reuses `extractSalary`,
+`parseLocationList`, `getCompensationInterval`).
+
+**Verification:** `npx jest source-ats-rippling` green (26 tests, 10 new),
+`npm run build` and `npm run lint:docs` pass. Spec triad
+`754-rippling-compensation-workfromhometype`. No text-fallback for the other
+ATS plugins in this PR (separate follow-up, per owner).
+
+---
+
+## 2026-06-23 — Run #446 — Spec 753: Fix stateful remote-token regex in normalizeLocation
+
+**Scope:** Fixed a pre-existing bug in `packages/common/src/normalize.ts`:
+`LOCATION_REMOTE_TOKENS` carried the global (`/g`) flag but is consumed by
+`RegExp.prototype.test`, which makes the shared module-level regex stateful —
+each match advances `lastIndex`, so consecutive `.test()` calls alternated
+match/no-match by call order. This caused `normalizeLocation('Anywhere')` →
+`'anywhere'` and `normalizeLocation('Remote, US')` → `'remote us'` instead of
+`'remote'`, and broke Remote-vs-Anywhere dedup in `canonicalKey`. The fix drops
+the `/g` flag (detection is a boolean match, never a global replace) and adds a
+regression test that calls `normalizeLocation` on remote inputs repeatedly and
+asserts a stable `'remote'`. Inherited from upstream `develop`; unrelated to any
+ATS plugin change.
+
+**Verification:** `npx jest packages/common` green (141 tests; the 3 previously
+failing `normalize.spec`/`canonical-key.spec` cases now pass), `npm run build`
+passes.
+
+---
+
+## 2026-06-23 — Run #445 — Spec 752: Lever compensation, department, multi-location, workFromHomeType, country
+
+**Scope:** Fixed four fields the Lever public path
+(`https://api.lever.co/v0/postings/{slug}?mode=json`) carries but never mapped,
+found from a 1116-job harvest across 21 boards. (1) `salaryRange`
+`{min, max, currency, interval}` (832/1116 jobs) now maps to `CompensationDto`,
+honoring the real interval — the `per-<unit>-<kind>` token (e.g.
+`per-year-salary`, `per-hour-wage`, `per-month-salary`) is resolved through the
+shared `getCompensationInterval` rather than coerced to yearly. (2)
+`categories.department` (1035/1116) now maps to `department`, independent of
+`team`. (3) Location now flows through the shared `parseLocationList`, preferring
+the multi-site `categories.allLocations` (171 jobs) over the single
+`categories.location`, so `location`, `isRemote`, and `workFromHomeType` come
+from the shared helper. (4) `workFromHomeType` is set from `workplaceType`
+(hybrid=226, remote=21) merged with the parser's inference. Lever's ISO-3166
+alpha-2 `country` code is folded into `LocationDto.country` via a new
+zero-dependency `regionNameFromCode` helper in `@ever-jobs/common` (native
+`Intl.DisplayNames`, `fallback: 'none'`, guarded), only when the parser left the
+country bare. Both the public and authenticated paths share one `buildJobPost`.
+
+**Verification:** Focused Lever Jest suite passed: 12 cases (9 new Spec 752 cases
+for compensation interval honoring, the no-compensation path, department vs team,
+multi-site location joining, hybrid/remote `workFromHomeType` + `isRemote`, and
+resolvable/unresolvable country folding, plus existing e2e coverage). The
+TypeScript build passed. The private ATS field investigator was updated to emit
+Lever `department` and `compensation`. (Two pre-existing `@ever-jobs/common`
+failures in `normalize.spec`/`canonical-key.spec` around `Remote`/`Anywhere`
+normalization are unrelated to this change and present on `makedeeply`.)
+
+## 2026-06-23 — Run #444 — Spec 751: Greenhouse entity content and locations
+
+**Scope:** Fixed three gaps in the Greenhouse plugin found from a 1359-job
+harvest across 31 boards. (1) The public board returns `content` as HTML
+entity-encoded HTML (`&lt;div&gt;&lt;p&gt;…`), so the shared `htmlToPlainText`
+(which decodes entities only after stripping tags) left literal `<div>`/`<p>`
+markup in 100% of descriptions. The plugin now detects entity-encoding per job
+(no literal block tags but present entity-encoded block tags) and decodes the
+entity layer first, leaving real HTML untouched. (2) Location now flows through
+the shared `parseLocationList` — `location.name` is split on `;`/` or `/newlines
+into discrete labels, setting `location`, `isRemote`, and `workFromHomeType`;
+`location.name` stays the single source (offices used only as fallback). (3)
+Company-defined `metadata[]` is mapped by `value_type`: `currency_range` →
+yearly `CompensationDto`, `Employment Type` → `employmentType`. The description
+and location helpers also apply to the authenticated Harvest path.
+
+**Verification:** Focused Greenhouse Jest suite passed: 11 cases (6 new Spec 751
+cases for entity decoding, real-HTML pass-through, multi-site location parsing,
+remote inference, metadata mapping, and the no-metadata path, plus existing
+e2e coverage). The TypeScript build passed. The private ATS field investigator
+was updated to decode entity-encoded Greenhouse content before comparison.
+
+## 2026-06-23 — Run #443 — Spec 750: Ashby field-name fallbacks
+
+**Scope:** Fixed the Ashby plugin's public path, which mapped `datePosted`,
+`department`, and `team` by their authenticated Posting API names
+(`publishedDate`, `departmentName`, `teamName`). The unauthenticated job-board
+payload uses `publishedAt`, `department`, and `team`, so every public-path job
+emitted `null` for all three. The mapper now reads the public name first and
+falls back to the authenticated name; the `AshbyJob` type documents both
+variants. The private ATS field investigator was aligned to read the same public
+names with authenticated fallbacks so comparisons no longer agree on a false
+`null`.
+
+**Verification:** Focused Ashby Jest suite passed: 21 cases (3 new field-name
+fallback cases plus existing coverage). The TypeScript build passed. A 1789-job
+harvest across 39 live Ashby boards motivated the change (100% null rate on all
+three fields before the fix).
+
+## 2026-06-23 — Run #442 — Spec 749: shared interval and multi-location normalization
+
+**Scope:** Moved Ashby's unambiguous `"1 YEAR"` compensation interval behavior into the shared
+`getCompensationInterval()` helper without dropping arbitrary leading digits; multi-count forms
+such as `"2 weeks"` remain unmapped. Added a shared multi-location parser that deduplicates
+equivalent US city/state labels, suppresses broad country-only labels when concrete locations are
+present, keeps remote/workplace signals, and emits a semicolon-separated singular-DTO fallback for
+multiple concrete locations. Ashby now uses the shared location helper for primary and secondary
+locations and combines explicit `isRemote` with remote location labels.
+
+**Verification:** Focused model/common/Ashby Jest suites passed: 36 cases. Package-focused
+TypeScript checks passed for models, common, and Ashby. The private ATS field investigator now
+uses the repository's interval and location normalizers for canonical comparison and reported zero
+differences and zero errors across `antaresindustries.com` and `reliable.co`.
+
+## 2026-06-22 — Run #441 — Spec 748: Lever complete public descriptions
+
+**Scope:** Fixed the Lever public mapper so descriptions include every source-authored component
+returned by the public postings payload: combined opening/body text, fallback split opening/body
+fields, each `lists[]` heading and HTML-stripped body, and optional additional/closing text. The
+same builder now serves public and authenticated paths. This addresses the Enigma (`crgo`) field
+investigation findings where Responsibilities, Desired Qualifications, and Great to have
+Qualifications and Skills were absent from plugin descriptions.
+
+**Verification:** Focused Lever suite, package-focused TypeScript validation, doc-lint, private
+field-investigator verification, and `git diff --check` were run for this change.
+
+## 2026-06-22 — Run #440 — Spec 747: Rippling authoritative detail fields
+
+**Scope:** Corrected three incremental Rippling list/detail mismatches identified on Boom
+Supersonic (`boom-supersonic`). Every admitted, deduplicated selected job now fetches its public
+detail record in ordered batches of five, even when the list already contains a description.
+Non-empty detail values authoritatively overlay company identity, creation timestamp, and
+employment type while absent, malformed, or failed detail fields independently retain list
+fallbacks. `datePosted` now preserves Rippling's complete offset-bearing `createdOn` string.
+`employmentType` always preserves the raw label, while recognized labels additionally populate
+normalized `jobType`. Boom now emits `Boom Technology, Inc.`,
+`2025-09-30T14:03:21.450000-07:00`, and `SALARIED_FT` from the detail response.
+
+**Verification:** Focused Rippling Jest suite passed: 17 cases. Package-focused TypeScript check
+and doc-lint passed. The private investigator sampled the live Boom board and reported zero field
+differences and zero execution errors. `git diff --check` passed.
+
+## 2026-06-22 — Run #439 — Spec 745: Workday job-detail enrichment
+
+**Scope:** Fixed the Workday source's summary-only mapping. Selected list records now fetch their
+public CXS detail endpoints in ordered batches of five, supplying full descriptions, expanded and
+deduplicated multi-location labels, requisition IDs, employment types, departments, remote flags,
+and canonical job URLs. Description output honors HTML, Markdown, and plain formats. A failed or
+unavailable detail request preserves the corresponding summary job, and pagination failures retain
+already-listed partial results. X-energy (`xenergy:5:X-energyUS`) was the live reproduction: its
+list endpoint omitted descriptions and collapsed some geography to counts, while its detail
+endpoint exposed the full fields. The mapper also consumes top-level `hiringOrganization.name`, so
+X-energy now emits the source-authored `X-Energy, LLC` instead of the tenant slug `xenergy`; missing,
+blank, or failed detail identity retains the slug fallback.
+
+**Verification:** Workday Jest suite passed: 35 cases across 2 suites. Package-focused TypeScript
+check passed. A live private-investigator comparison against X-energy matched the sampled company
+name with zero field differences and zero execution errors. `git diff --check` passed.
+
+## 2026-06-22 — Run #438 — Spec 744: Rippling pagination and job details
+
+**Scope:** Extended the upstream Rippling source with zero-based multi-page retrieval, stable-ID
+deduplication, strict rejection of dehydrated filter records, and complete job descriptions from
+the public `/api/v2/board/{slug}/jobs/{id}` detail endpoint. Detail enrichment is bounded to five
+simultaneous requests and isolated per job. Final output also supports requested description
+formats and complete type, URL, email, and location mapping.
+
+**Verification:** Focused Rippling suite passed: 16 cases. Package-focused TypeScript check
+passed.
+
+## 2026-06-22 — Run #437 — Spec 743: source company plugin for Anatar
+
+**Scope:** Added the complete Anatar company-source package for its first-party Next.js careers
+site. The plugin performs bounded Next Flight parsing with semantic rendered-card fallback,
+produces stable IDs and deep links, applies shared job-type and email helpers, supports standard
+filters and result limits, degrades safely, and is registered in all four required locations.
+Spec 742 normalizes Anatar geography while retaining hybrid and remote workplace meaning.
+
+**Verification:** Focused Anatar suite, package-focused TypeScript check, and doc-lint passed.
+
+## 2026-06-22 — Run #436 — Spec 742: shared job-location parser
+
+**Scope:** Added a dependency-free `@ever-jobs/common` parser for conservative US `City, ST`
+normalization. It recognizes case-insensitive hybrid and remote qualifiers in parentheses or
+slash-delimited components on either side of the geography, returns canonical
+`workFromHomeType` values and a remote signal, and preserves the complete input when parsing is
+unsafe.
+
+**Verification:** Focused common-package suite, package-focused TypeScript check, and doc-lint
+passed.
 
 ## 2026-06-21 — Scheduled run #438 (**fifteen new Source Company Plugins** — Specs 772–786)
 
