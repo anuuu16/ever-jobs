@@ -1706,6 +1706,38 @@ export enum Site {
   SLINGSHOT_AEROSPACE = 'slingshotaerospace',
   // Phase 782: Spec 786 — Source Company Plugin: Sound Agriculture
   SOUND_AGRICULTURE = 'soundagriculture',
+  // Phase 783: Spec 788 — Source Company Plugin: AIR COMPANY
+  AIR_COMPANY = 'aircompany',
+  // Phase 784: Spec 789 — Source Company Plugin: Arbor Energy
+  ARBOR_ENERGY = 'arborenergy',
+  // Phase 785: Spec 790 — Source Company Plugin: Aurora Innovation
+  AURORA_INNOVATION = 'aurorainnovation',
+  // Phase 786: Spec 791 — Source Company Plugin: EarnIn
+  EARNIN = 'earnin',
+  // Phase 787: Spec 792 — Source Company Plugin: Faraday Future
+  FARADAY_FUTURE = 'faradayfuture',
+  // Phase 788: Spec 793 — Source Company Plugin: FastSpring
+  FASTSPRING = 'fastspring',
+  // Phase 789: Spec 794 — Source Company Plugin: Gravity R&D
+  GRAVITY_R_D = 'gravity',
+  // Phase 790: Spec 795 — Source Company Plugin: Runwise
+  RUNWISE = 'runwise',
+  // Phase 791: Spec 796 — Source Company Plugin: SES AI
+  SES_AI = 'sesai',
+  // Phase 792: Spec 797 — Source Company Plugin: Solaris
+  SOLARIS = 'solarisbank',
+  // Phase 793: Spec 798 — Source Company Plugin: Stack AV
+  STACK_AV = 'stackav',
+  // Phase 794: Spec 799 — Source Company Plugin: tastytrade
+  TASTYTRADE = 'tastytrade',
+  // Phase 795: Spec 800 — Source Company Plugin: Torc Robotics
+  TORC_ROBOTICS = 'torcrobotics',
+  // Phase 796: Spec 801 — Source Company Plugin: Ursa Major
+  URSA_MAJOR = 'ursamajor',
+  // Phase 797: Spec 802 — Source Company Plugin: Via
+  VIA = 'via',
+  // Phase 798: Spec 803 — Source Company Plugin: Zuora
+  ZUORA = 'zuora',
 }
 
 /**

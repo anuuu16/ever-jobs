@@ -930,6 +930,22 @@ import { PivotBioModule } from './source-company-pivotbio';
 import { SambaNovaSystemsModule } from './source-company-sambanovasystems';
 import { SlingshotAerospaceModule } from './source-company-slingshotaerospace';
 import { SoundAgricultureModule } from './source-company-soundagriculture';
+import { AIRCOMPANYModule } from './source-company-aircompany';
+import { ArborEnergyModule } from './source-company-arborenergy';
+import { AuroraInnovationModule } from './source-company-aurorainnovation';
+import { EarnInModule } from './source-company-earnin';
+import { FaradayFutureModule } from './source-company-faradayfuture';
+import { FastSpringModule } from './source-company-fastspring';
+import { GravityRDModule } from './source-company-gravity';
+import { RunwiseModule } from './source-company-runwise';
+import { SESAIModule } from './source-company-sesai';
+import { SolarisModule } from './source-company-solarisbank';
+import { StackAVModule } from './source-company-stackav';
+import { TastytradeModule } from './source-company-tastytrade';
+import { TorcRoboticsModule } from './source-company-torcrobotics';
+import { UrsaMajorModule } from './source-company-ursamajor';
+import { ViaModule } from './source-company-via';
+import { ZuoraModule } from './source-company-zuora';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -1853,4 +1869,20 @@ export const ALL_SOURCE_MODULES = [
   SambaNovaSystemsModule,
   SlingshotAerospaceModule,
   SoundAgricultureModule,
+  AIRCOMPANYModule,
+  ArborEnergyModule,
+  AuroraInnovationModule,
+  EarnInModule,
+  FaradayFutureModule,
+  FastSpringModule,
+  GravityRDModule,
+  RunwiseModule,
+  SESAIModule,
+  SolarisModule,
+  StackAVModule,
+  TastytradeModule,
+  TorcRoboticsModule,
+  UrsaMajorModule,
+  ViaModule,
+  ZuoraModule,
 ];

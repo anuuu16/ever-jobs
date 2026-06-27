@@ -15,6 +15,105 @@
 
 ---
 
+## 2026-06-27 — Scheduled run #439 (**sixteen new Source Company Plugins** — Specs 788–803)
+
+**Scope:** Expand the corpus with **16 new Greenhouse-backed company-direct source plugins**,
+discovered and gated entirely through the deterministic, conflict-free company-source pipeline
+(`probe → enrich → assemble → scaffold → wire`). One plugin per real, brand-matched employer board
+that exposed **≥ 3 live roles** at probe time (`MIN_JOBS = 3`). This run leaned into **climate /
+carbon-removal & synthetic fuels** (carbon-to-fuel, BECCS baseload power, smart-building energy),
+**autonomous trucking** (three independent self-driving-freight stacks), **fintech** (earned-wage
+access, banking-as-a-service, merchant-of-record commerce, subscription billing, online brokerage),
+**aerospace/defense propulsion**, **EV / battery**, **transit software** and **adtech** — sectors the
+probe history shows still surface fresh employer boards, in contrast to the mined-out generic
+AI/dev-infra slice (now mostly on Ashby/Lever).
+
+| Spec | Phase | Slug | Enum | Display name | Sector | HQ | Roles |
+| ---- | ----- | ---- | ---- | ------------ | ------ | -- | ----- |
+| 788 | 783 | `aircompany` | AIR_COMPANY | AIR COMPANY | Climate Tech / Carbon Conversion & Synthetic Fuels | Brooklyn, New York, United States | 4 |
+| 789 | 784 | `arborenergy` | ARBOR_ENERGY | Arbor Energy | Climate Tech / Carbon-Negative Power (BECCS) | El Segundo, California, USA | 19 |
+| 790 | 785 | `aurorainnovation` | AURORA_INNOVATION | Aurora Innovation | Autonomous Vehicles / Self-Driving Trucking | Pittsburgh, Pennsylvania, USA | 147 |
+| 791 | 786 | `earnin` | EARNIN | EarnIn | Fintech / Earned-Wage Access | Mountain View, California, United States | 44 |
+| 792 | 787 | `faradayfuture` | FARADAY_FUTURE | Faraday Future | Automotive / Electric Vehicles | El Segundo, California, United States | 62 |
+| 793 | 788 | `fastspring` | FASTSPRING | FastSpring | Fintech / Merchant-of-Record Commerce & Subscription Billing | Santa Barbara, California, United States | 5 |
+| 794 | 789 | `gravity` | GRAVITY_R_D | Gravity R&D | AdTech / Recommendation & Personalization Software | Budapest, Hungary | 4 |
+| 795 | 790 | `runwise` | RUNWISE | Runwise | Climate Tech / Smart Building Energy Management | New York, New York, USA | 7 |
+| 796 | 791 | `sesai` | SES_AI | SES AI | Battery Technology / EV Energy Storage (Li-Metal) | Woburn, Massachusetts, USA | 43 |
+| 797 | 792 | `solarisbank` | SOLARIS | Solaris | Fintech / Banking-as-a-Service (Embedded Finance) | Berlin, Germany | 16 |
+| 798 | 793 | `stackav` | STACK_AV | Stack AV | Autonomous Vehicles / Self-Driving Trucking | Pittsburgh, Pennsylvania, USA | 22 |
+| 799 | 794 | `tastytrade` | TASTYTRADE | tastytrade | Fintech / Online Brokerage (Options & Futures Trading) | Chicago, Illinois, USA | 7 |
+| 800 | 795 | `torcrobotics` | TORC_ROBOTICS | Torc Robotics | Autonomous Vehicles / Self-Driving Trucking | Blacksburg, Virginia, USA | 58 |
+| 801 | 796 | `ursamajor` | URSA_MAJOR | Ursa Major | Aerospace & Defense / Rocket Propulsion | Berthoud, Colorado, USA | 43 |
+| 802 | 797 | `via` | VIA | Via | TransitTech / Mobility Software (SaaS + Operations) | New York City, New York, USA | 165 |
+| 803 | 798 | `zuora` | ZUORA | Zuora | Enterprise SaaS / Subscription Billing & Quote-to-Cash | Redwood City, California, USA | 34 |
+
+**Baseline at run start:** Local `develop` was 7 commits behind `origin/develop`; fast-forwarded
+to `d2a95cc8` (NestJS 11 + Apollo Server 5 upgrade) before any work — the prior CI run was
+**green**. Next spec number per the band-aware allocator (`scripts/next-spec-number.ts`, band
+`ever-jobs/ever-jobs` = 1–4999) was **788**; last enum phase was 782. The four external reference
+repos under the parent `OTHERS/` directory (outside this repo) were `git pull`-ed for situational
+awareness; upstream movement (new foreign-board scrapers, tracker tooling) is non-actionable for our
+sourcing corpus and is recorded only in the parent-directory research watch file **outside this
+repo** — never named here. No competitor intel is referenced in-repo; every board below is
+documented purely on its own public merits.
+
+**Discovery (live, 2026-06-27, `verified=false` — unauthenticated public Greenhouse Job-Board
+API):** 247 candidate slugs across fintech, climate/energy, mobility/robotics, aerospace/defense and
+consumer/SaaS verticals (generated as no-space + hyphenated variants and pre-filtered against the 637
+existing company slugs) were probed against `https://boards-api.greenhouse.io/v1/boards/<slug>`
+(board name) + `…/<slug>/jobs` (listings) at concurrency 16. The gate (`MIN_JOBS = 3` live roles
+**and** a non-empty board `name`) admitted **17 survivors**; one (`ess` → board "cBEYONData + SMX")
+was dropped at review as a brand mismatch (the slug did not resolve to ESS energy), leaving **16**.
+
+**Enrichment:** a **16-way parallel verification workflow** (one web-research agent per board,
+`claude-opus-4-8[1m]`, 572k tokens, 60 tool calls, ~93 s wall-clock) produced factual brand metadata
+for each survivor. Each agent was forbidden from referencing competitors, required to cross-check the
+slug / board name / sample roles / sample locations against the web, and instructed to keep
+disambiguating context **out** of the canonical `displayName` (which single-sources
+`className` / `enumKey` / `serviceName`). All 16 returned `confident=true`. Disambiguation lived in
+the descriptions, not the names: board `Gravity` → `displayName = "Gravity R&D"` (Budapest adtech /
+recommendation vendor, distinct from any homonym); board `SES` (slug `sesai`) → `"SES AI"` (Li-Metal
+battery maker, distinct from the SES satellite operator); board `AIRCO` (slug `aircompany`) →
+`"AIR COMPANY"` (carbon-to-fuel). `displayName`-derived identifiers were collision-checked against
+the existing enum and service classes — all clear.
+
+**Per-plugin shape (uniform Greenhouse company-direct template):** each `*.service.ts` fetches
+`https://api.greenhouse.io/v1/boards/<slug>/jobs?content=true`, maps each Greenhouse job to a
+`JobPostDto` with `id` prefixed `<slug>-`, `site === Site.<ENUMKEY>`, canonical URL
+`https://job-boards.greenhouse.io/<slug>/jobs/<id>`, decoded HTML content, location and department
+parsing, and `category: 'company'`. Every failure mode (HTTP 4xx/5xx, transport/DNS error, malformed
+body, empty board) degrades to an empty result — `scrape()` never throws.
+
+**Changes:**
+
+- Added **16 plugin packages** under `packages/plugins/source-company-<slug>/` (10 files each =
+  **160 files**): `package.json`, `tsconfig.json`, `src/{index,<slug>.module,<slug>.service}.ts`,
+  `__tests__/<slug>.service.spec.ts`, and `__tests__/fixtures/<slug>-jobs.json`.
+- Added **16 spec packages** under `.specify/specs/<788..803>-source-company-<slug>/`
+  (`spec.md`, `plan.md`, `tasks.md`) via the scaffolder.
+- Wired all 16 into the four shared registration files (idempotent `wire-company-source.ts`):
+  `packages/models/src/enums/site.enum.ts` (Phases 783–798), `packages/plugins/index.ts`
+  (`ALL_SOURCE_MODULES`), `tsconfig.base.json` (path aliases), `jest.config.js`
+  (`moduleNameMapper`).
+- `docs/index.md` — +16 spec rows (one per plugin, linking spec/plan/tasks).
+- `docs/COMPANY_SLUG_DIRECTORY.md` — +16 Greenhouse company rows + date bump.
+
+**Verification:** all 16 new suites green — `npx jest source-company-{16 slugs}` →
+**16 suites / 176 tests passed**. `npx tsx scripts/docs-lint.ts` → **passed, no issues**. A
+project-wide `tsc --noEmit` surfaced only 3 pre-existing, environment-only errors in
+`apps/api/src/cache/*` (`cacheable` / `@keyv/redis` not installed in the sandbox — both are declared
+in `package.json` deps and resolve under a fresh CI install); zero errors touch the new plugins or
+the wired shared files.
+
+**Notes:**
+
+- The probe deliberately over-generates candidate variants (no-space + hyphenated) and pre-filters
+  against the existing slug set so the survivor list is duplicate-free before enrichment.
+- The makedeeply fork (band 5000–5999) continues to land specs 50xx in parallel; this run's
+  ever-jobs-band specs (788–803) are disjoint by construction, enforced by `docs-lint` band guards.
+
+---
+
 ## 2026-06-24 — Run #459 — Spec 5023 — `source-ats-workatastartup` plugin
 
 **Scope:** YC Work at a Startup (WaaS) was newly detected in fetch1 (both the
