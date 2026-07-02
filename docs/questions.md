@@ -10,6 +10,61 @@
 
 ---
 
+## Q-ASHBY-1 — Ashby has no board-name anchor: where do we enforce brand-match?
+
+**Context:** Spec 975. The Greenhouse company-source probe gates partly on the
+board's `name` field (`https://boards-api.greenhouse.io/v1/boards/<slug>` →
+`{ name }`) as a brand-match anchor. The **public Ashby Posting API**
+(`https://api.ashbyhq.com/posting-api/job-board/<slug>`) returns only
+`{ apiVersion, jobs[] }` — **no board/org display name** — so that anchor does
+not exist on the wire.
+
+**Options:**
+
+- **A. Gate on job-count only; enforce brand-match at descriptor-assembly time**
+  (the verified `displayName` + `companySlug` pair supplied by discovery, which
+  already confirmed the slug maps to the real company).
+- **B. Additionally cross-check the company's careers page / a job's `jobUrl`
+  host to confirm the slug belongs to the claimed brand.**
+- **C. Use the authenticated Posting API (returns org metadata) — requires a
+  per-company API key; not viable for public discovery.**
+
+**Default (proceeding):** **A.** The probe gate is purely count-based
+(`jobs.length >= 3`, title-bearing); brand-match is a discovery-time
+responsibility (the researcher confirms the slug↔company mapping before the slug
+enters the batch). B is a cheap future hardening; C is out of scope (no keys).
+
+**Resolution:** _pending review._
+
+---
+
+## Q-ASHBY-2 — Ashby slug vs. plugin-dir/enum naming for hyphenated slugs
+
+**Context:** Spec 975. Ashby board slugs frequently contain hyphens
+(`allen-control-systems`), but plugin directories, `Site` enum values, and
+`JobPostDto` id prefixes in this repo use hyphen-free identifiers
+(`allencontrolsystems`). The Greenhouse pipeline conflated the two (board slug
+== plugin slug). The Ashby descriptor therefore needs two fields.
+
+**Options:**
+
+- **A. Carry both: `companySlug` (real Ashby board slug, hyphens allowed) +
+  `slug` (hyphen-free plugin dir / enum value / id prefix, derived from the
+  display name).**
+- **B. Keep hyphens everywhere (dir `source-company-allen-control-systems`,
+  enum value `'allen-control-systems'`).**
+- **C. Strip hyphens from the Ashby slug (it then 404s — the board no longer
+  resolves).**
+
+**Default (proceeding):** **A.** Matches the existing
+`source-company-allencontrolsystems` precedent (dir/enum hyphen-free, board slug
+`allen-control-systems`), keeps enum members clean, and never breaks the live
+fetch. C is wrong (breaks resolution); B diverges from precedent.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-072 — workatastartup: harvest the YC public mirror or the canonical WaaS board?
 
 **Context:** Spec 5023. YC Work at a Startup exposes the same board at two URL

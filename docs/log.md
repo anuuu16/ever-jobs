@@ -15,6 +15,65 @@
 
 ---
 
+## 2026-07-02 — Scheduled run #441 (**Ashby company-source pipeline foundation** — Spec 975)
+
+**Scope:** Opened a new, deterministic **Ashby-backed** company-source pipeline — the sibling of the
+existing Greenhouse pipeline — to correct a structural skew in the corpus: of the ~829 company-direct
+plugins, **~97 % (803) are Greenhouse** and only a handful (`allencontrolsystems`, `openai`) delegate
+to **Ashby**. Many well-funded modern startups (AI/ML, developer-tools/infra, fintech, crypto,
+data-infra, security) host their careers on Ashby (`jobs.ashbyhq.com/<slug>`) and are therefore
+**invisible to the Greenhouse-only discovery gate**. This run built and validated the reusable
+plumbing that makes those companies discoverable; a first Ashby company batch lands under Specs 976+.
+
+**Baseline at run start:** Local `develop` even with `origin/develop` at `3ca794cf` (run #440, 170
+Greenhouse plugins), CI **green**, working tree clean. Next spec number per the band-aware allocator
+(`scripts/next-spec-number.ts`, band `ever-jobs/ever-jobs` = 1–4999) was **975**. The four external
+reference repos under the parent `OTHERS/` directory (outside this repo) were `git pull`-ed for
+situational awareness — `career-ops` had upstream movement (Ashby/Teamtailor/HigherEdJobs provider
+activity), tracked **outside** this repo per the no-competitor-references rule.
+
+**What shipped (all TypeScript, additive — nothing removed):**
+
+- **`scripts/probe-ashby-company-source.ts`** — deterministic discovery probe for the **public,
+  zero-auth Ashby Posting API** (`https://api.ashbyhq.com/posting-api/job-board/<slug>` →
+  `{ apiVersion, jobs[] }`). Unlike Greenhouse, Ashby's public payload exposes **no board display
+  name**, so the gate is purely count-based (`jobs.length >= MIN_JOBS (3)`, each title-bearing).
+  Network I/O isolated in `probeOne`; the decision surface (`gateBoard`, `extractListings`) is pure
+  and unit-tested. Bounded-concurrency worker pool (16); `extractListings` tolerates both public
+  (`departmentName`/`publishedDate`) and authenticated (`department`/`publishedAt`) field names.
+- **`scripts/__tests__/probe-ashby-company-source.spec.ts`** — **11 unit tests**, no live network
+  (pins `gateBoard`/`extractListings`). Green.
+- **`scripts/scaffold-ashby-company-source.ts`** — pure, conflict-free file emitter that materialises,
+  per descriptor, the full `source-company-<slug>` package (package.json, tsconfig, index, module,
+  **registry-delegation service**, generic mocked test, Ashby job-board fixture) **and** the
+  `.specify/specs/<specNo>-source-company-<slug>/` spec/plan/tasks. The generated service is the
+  proven `source-company-allencontrolsystems` pattern parametrised: resolve `Site.ASHBY` from the
+  `PluginRegistry`, delegate `scrape({ ...input, companySlug })`, re-stamp `site`/`companyName`/`id`
+  (`ashby-`→`<slug>-`), fail-safe empty on unavailability. Never touches shared wiring files.
+- **`scripts/wire-company-source.ts`** — confirmed **backend-agnostic** and reused **unchanged**; the
+  Ashby batch descriptor is field-compatible (`slug`/`moduleName`/`enumKey`/`displayName`/`specNo`/
+  `phaseNo`). The descriptor additionally carries a distinct **`companySlug`** (the live Ashby board
+  slug, which may contain hyphens) separate from **`slug`** (hyphen-free plugin dir / enum value / id
+  prefix), per Q-ASHBY-2.
+
+**Validation:** Probe unit suite **11/11 green**. End-to-end smoke test: scaffolded a throwaway
+descriptor → wired it into the four shared files → `jest` on the generated plugin **9/9 green** →
+**fully reverted** (`git checkout` on the four shared files, `rm -rf` on the throwaway package + spec
+dir; `git status` clean). This proves the emitter, the generated test, and the wiring are correct
+against a known-good template before any real batch is generated.
+
+**Discovery (in flight this run):** A **parallel multi-agent workflow** (12 sector-specialist agents)
+web-discovers candidate Ashby boards and **self-verifies** each against the public Posting API (≥ 3
+live jobs) before returning it; the merged set is re-probed **centrally** through the deterministic
+`probe-ashby-company-source.ts` gate, collision-checked against the existing registry, then scaffolded
++ wired. The first verified Ashby company batch lands under **Specs 976+** (this run or the next).
+
+**Docs:** Added Spec 975 (spec/plan/tasks); indexed it in `docs/index.md`; recorded **Q-ASHBY-1**
+(no board-name brand anchor → brand-match enforced at assembly time) and **Q-ASHBY-2** (dual
+`companySlug`/`slug` naming) in `docs/questions.md`. No competitor intel in-repo.
+
+---
+
 ## 2026-06-28 — Scheduled run #440 (**170 new Source Company Plugins** — Specs 804–974)
 
 **Scope:** Largest single-run corpus expansion to date — **170 new Greenhouse-backed
