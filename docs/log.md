@@ -62,11 +62,35 @@ descriptor → wired it into the four shared files → `jest` on the generated p
 dir; `git status` clean). This proves the emitter, the generated test, and the wiring are correct
 against a known-good template before any real batch is generated.
 
-**Discovery (in flight this run):** A **parallel multi-agent workflow** (12 sector-specialist agents)
-web-discovers candidate Ashby boards and **self-verifies** each against the public Posting API (≥ 3
-live jobs) before returning it; the merged set is re-probed **centrally** through the deterministic
-`probe-ashby-company-source.ts` gate, collision-checked against the existing registry, then scaffolded
-+ wired. The first verified Ashby company batch lands under **Specs 976+** (this run or the next).
+**First Ashby company batch — 218 new plugins (Specs 976–1193):** A **parallel multi-agent workflow**
+(12 sector-specialist agents; 755k subagent tokens, 403 tool calls) web-discovered **270** candidate
+Ashby boards across twelve sectors (AI/ML, dev-tools/infra, fintech, crypto, data-infra, security,
+health/biotech, robotics/hardware, climate, B2B SaaS, e-commerce/marketplaces, aerospace/defense) and
+**self-verified** each against the public Ashby Posting API (≥ 3 live jobs) before returning it. The
+merged set was slug-normalised, deduped against the existing corpus (14 already present, e.g. OpenAI /
+ClickHouse / Cerebras), leaving **229** unique candidates. Those were re-probed **centrally** through
+the deterministic `scripts/probe-ashby-company-source.ts` gate (the authoritative source of truth) —
+**222/229 survived** (≥ 3 live roles). Descriptor assembly derived `className` / `moduleName` /
+`enumKey` / plugin-`slug` from each canonical `displayName` and **collision-checked** every one against
+the live `site.enum.ts` + `packages/plugins/index.ts`: **4 rejected** (`1Password`, `0G Labs` — TS enum
+members cannot begin with a digit; `Etched`, `Mercor` — enumKey/module collisions with existing
+plugins), leaving **218** clean descriptors (Specs 976–1193; phases 970–1187), scaffolded via
+`scripts/scaffold-ashby-company-source.ts` and wired via the backend-agnostic
+`scripts/wire-company-source.ts`. Each plugin is a thin **registry-delegation** service (resolve
+`Site.ASHBY`, delegate `scrape({ ...input, companySlug })`, re-stamp identity) — inheriting every Ashby
+field fix, no bespoke parsing. Top boards by live-role count: Airwallex (593), Renuity (407), Enpal
+(354), Crusoe (350), Harvey (321), Saronic Technologies (269), Applied Intuition (248), Lightspeed
+Commerce (208). This lifts the Ashby-backed company-direct count from **2 → 220** and the total
+company-direct corpus to **1041**. The remaining ~4 collision-rejected + non-surviving candidates are
+recorded in the run scratch (not committed) for future disambiguation. Per-company enrichment prose is
+strictly factual (company-only, no competitor references); `verified=false` until authenticated.
+
+**Batch validation:** Full-project `tsc --noEmit` **clean** for all 218 plugins + the four wired
+files (only residual errors are the pre-existing, unrelated `apps/api/src/cache` `cacheable` /
+`@keyv/redis` type decls, resolved by CI's `npm ci`). The **218 generated mocked unit suites — 1962
+tests — all green** (`jest`, 544 s; each suite pins DI resolution, the `Site` enum value, the
+delegation happy-path, input pass-through, resilience, and the `resultsWanted` cap). Doc-lint clean
+(all 654 new spec/plan/tasks files indexed in `docs/index.md`).
 
 **Docs:** Added Spec 975 (spec/plan/tasks); indexed it in `docs/index.md`; recorded **Q-ASHBY-1**
 (no board-name brand anchor → brand-match enforced at assembly time) and **Q-ASHBY-2** (dual

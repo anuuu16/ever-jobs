@@ -466,7 +466,18 @@ describe('${d.serviceName} — Ashby delegation', () => {
 }
 
 function specMd(d: AshbyCompanyDescriptor): string {
-  return `# Spec ${d.specNo} — Source Company Plugin: ${d.displayName}
+  return `# Spec: ${d.specNo} — Source Company Plugin: ${d.displayName}
+
+| Field | Value |
+| --- | --- |
+| Spec ID | ${d.specNo} |
+| Slug | source-company-${d.slug} |
+| Status | accepted |
+| Owner | claude (run #441) |
+| Created | 2026-07-02 |
+| Last updated | 2026-07-02 |
+| Supersedes | (none) |
+| Related specs | 975, 5017 |
 
 ## Summary
 
@@ -517,7 +528,13 @@ ${d.highlights.map((h) => `- ${h}`).join('\n')}
 }
 
 function planMd(d: AshbyCompanyDescriptor): string {
-  return `# Plan — Spec ${d.specNo}: ${d.displayName} (Ashby company-direct)
+  return `# Plan: ${d.specNo} — Source Company Plugin: ${d.displayName} (Ashby company-direct)
+
+| Field | Value |
+| --- | --- |
+| Spec | spec.md |
+| Created | 2026-07-02 |
+| Last updated | 2026-07-02 |
 
 ## Approach
 

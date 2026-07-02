@@ -1116,6 +1116,224 @@ import { WildlifeStudiosModule } from './source-company-wildlifestudios';
 import { WizModule } from './source-company-wizinc';
 import { WurlModule } from './source-company-wurljobs';
 import { ZyngaModule } from './source-company-zyngacareers';
+import { AirwallexModule } from './source-company-airwallex';
+import { RenuityModule } from './source-company-renuity';
+import { EnpalModule } from './source-company-enpal';
+import { CrusoeModule } from './source-company-crusoe';
+import { HarveyModule } from './source-company-harvey';
+import { SaronicTechnologiesModule } from './source-company-saronictechnologies';
+import { AppliedIntuitionModule } from './source-company-appliedintuition';
+import { LightspeedCommerceModule } from './source-company-lightspeedcommerce';
+import { DeliverooModule } from './source-company-deliveroo';
+import { TalkiatryModule } from './source-company-talkiatry';
+import { BasePowerCompanyModule } from './source-company-basepowercompany';
+import { SailorHealthModule } from './source-company-sailorhealth';
+import { NotionModule } from './source-company-notion';
+import { ElevenLabsModule } from './source-company-elevenlabs';
+import { SierraModule } from './source-company-sierra';
+import { HarmattanAIModule } from './source-company-harmattanai';
+import { SonderMindModule } from './source-company-sondermind';
+import { CohereModule } from './source-company-cohere';
+import { NeoFinancialModule } from './source-company-neofinancial';
+import { RampModule } from './source-company-ramp';
+import { HopperModule } from './source-company-hopper';
+import { HadrianModule } from './source-company-hadrian';
+import { SkydioModule } from './source-company-skydio';
+import { DecagonModule } from './source-company-decagon';
+import { TRMLabsModule } from './source-company-trmlabs';
+import { CursorAnysphereModule } from './source-company-cursoranysphere';
+import { VantaModule } from './source-company-vanta';
+import { LangChainModule } from './source-company-langchain';
+import { TheExplorationCompanyModule } from './source-company-theexplorationcompany';
+import { ReplitModule } from './source-company-replit';
+import { SocureModule } from './source-company-socure';
+import { FinniHealthModule } from './source-company-finnihealth';
+import { KongIncModule } from './source-company-konginc';
+import { MachIndustriesModule } from './source-company-machindustries';
+import { SprinterHealthModule } from './source-company-sprinterhealth';
+import { RadiantIndustriesModule } from './source-company-radiantindustries';
+import { ClayModule } from './source-company-clay';
+import { PerplexityModule } from './source-company-perplexity';
+import { CognitionModule } from './source-company-cognition';
+import { HingeHealthModule } from './source-company-hingehealth';
+import { SynthesiaModule } from './source-company-synthesia';
+import { ClickUpModule } from './source-company-clickup';
+import { BasetenModule } from './source-company-baseten';
+import { DelineaModule } from './source-company-delinea';
+import { RothySModule } from './source-company-rothys';
+import { CodeRabbitModule } from './source-company-coderabbit';
+import { NorthwoodSpaceModule } from './source-company-northwoodspace';
+import { ReliableRoboticsModule } from './source-company-reliablerobotics';
+import { DeepgramModule } from './source-company-deepgram';
+import { SunoModule } from './source-company-suno';
+import { AbbyCareModule } from './source-company-abbycare';
+import { LendableModule } from './source-company-lendable';
+import { PolymarketModule } from './source-company-polymarket';
+import { AbridgeModule } from './source-company-abridge';
+import { TemporalTechnologiesModule } from './source-company-temporaltechnologies';
+import { TENEXAIModule } from './source-company-tenexai';
+import { SupabaseModule } from './source-company-supabase';
+import { EncordModule } from './source-company-encord';
+import { ConfluentModule } from './source-company-confluent';
+import { CowboySpaceCorpModule } from './source-company-cowboyspacecorp';
+import { WriterModule } from './source-company-writer';
+import { SentryModule } from './source-company-sentry';
+import { ServeRoboticsModule } from './source-company-serverobotics';
+import { BlockstreamModule } from './source-company-blockstream';
+import { ChainalysisModule } from './source-company-chainalysis';
+import { RepRallyModule } from './source-company-reprally';
+import { EquipHealthModule } from './source-company-equiphealth';
+import { GammaModule } from './source-company-gamma';
+import { CandidHealthModule } from './source-company-candidhealth';
+import { SentiLinkModule } from './source-company-sentilink';
+import { AntaresIndustriesModule } from './source-company-antaresindustries';
+import { AeroVectModule } from './source-company-aerovect';
+import { MunichElectrificationModule } from './source-company-munichelectrification';
+import { Dash0Module } from './source-company-dash0';
+import { AntaresAntaresIndustriesModule } from './source-company-antaresantaresindustries';
+import { LambdaModule } from './source-company-lambda';
+import { MiroModule } from './source-company-miro';
+import { ProximaFusionModule } from './source-company-proximafusion';
+import { SardineModule } from './source-company-sardine';
+import { MeshyModule } from './source-company-meshy';
+import { SPANModule } from './source-company-span';
+import { CartesiaModule } from './source-company-cartesia';
+import { ModalModule } from './source-company-modal';
+import { RobCoModule } from './source-company-robco';
+import { RulaModule } from './source-company-rula';
+import { BedrockRoboticsModule } from './source-company-bedrockrobotics';
+import { OnePayModule } from './source-company-onepay';
+import { QualifiedHealthModule } from './source-company-qualifiedhealth';
+import { ReonicModule } from './source-company-reonic';
+import { SwapModule } from './source-company-swap';
+import { TaptapSendModule } from './source-company-taptapsend';
+import { BRINCModule } from './source-company-brinc';
+import { VentiTechnologiesModule } from './source-company-ventitechnologies';
+import { OscilarModule } from './source-company-oscilar';
+import { SemperisModule } from './source-company-semperis';
+import { WorkOSModule } from './source-company-workos';
+import { DroydModule } from './source-company-droyd';
+import { SemgrepModule } from './source-company-semgrep';
+import { OmniModule } from './source-company-omni';
+import { StandardBotsModule } from './source-company-standardbots';
+import { AIMIntelligentMachinesModule } from './source-company-aimintelligentmachines';
+import { LinearModule } from './source-company-linear';
+import { SanityModule } from './source-company-sanity';
+import { VerticalAerospaceModule } from './source-company-verticalaerospace';
+import { BrigitModule } from './source-company-brigit';
+import { HackerOneModule } from './source-company-hackerone';
+import { ObservableSpaceModule } from './source-company-observablespace';
+import { RenderModule } from './source-company-render';
+import { HiveHealthModule } from './source-company-hivehealth';
+import { IncidentIoModule } from './source-company-incidentio';
+import { MindRoboticsModule } from './source-company-mindrobotics';
+import { PeriodicLabsModule } from './source-company-periodiclabs';
+import { AsporaModule } from './source-company-aspora';
+import { GeckoRoboticsModule } from './source-company-geckorobotics';
+import { PostHogModule } from './source-company-posthog';
+import { BicaraTherapeuticsModule } from './source-company-bicaratherapeutics';
+import { SigNozModule } from './source-company-signoz';
+import { DustModule } from './source-company-dust';
+import { FuseEnergyModule } from './source-company-fuseenergy';
+import { HavocAIModule } from './source-company-havocai';
+import { SE3LabsModule } from './source-company-se3labs';
+import { TigerDataTimescaleModule } from './source-company-tigerdatatimescale';
+import { ArloModule } from './source-company-arlo';
+import { BlueEnergyModule } from './source-company-blueenergy';
+import { CharacterAIModule } from './source-company-characterai';
+import { FoundryRoboticsModule } from './source-company-foundryrobotics';
+import { LeadBankModule } from './source-company-leadbank';
+import { ZapierModule } from './source-company-zapier';
+import { ColumnModule } from './source-company-column';
+import { GorgiasModule } from './source-company-gorgias';
+import { NotableModule } from './source-company-notable';
+import { TapcartModule } from './source-company-tapcart';
+import { TrustWalletModule } from './source-company-trustwallet';
+import { AdaptiveSecurityModule } from './source-company-adaptivesecurity';
+import { MintlifyModule } from './source-company-mintlify';
+import { NetspendModule } from './source-company-netspend';
+import { TARModule } from './source-company-tar';
+import { AirbyteModule } from './source-company-airbyte';
+import { AlliumModule } from './source-company-allium';
+import { BlossomHealthModule } from './source-company-blossomhealth';
+import { GenomicsPlcModule } from './source-company-genomicsplc';
+import { InsitroModule } from './source-company-insitro';
+import { LaurelModule } from './source-company-laurel';
+import { MethodFinancialModule } from './source-company-methodfinancial';
+import { OrbModule } from './source-company-orb';
+import { PylonModule } from './source-company-pylon';
+import { AnagramModule } from './source-company-anagram';
+import { AxleEnergyModule } from './source-company-axleenergy';
+import { OpenEvidenceModule } from './source-company-openevidence';
+import { SecfixModule } from './source-company-secfix';
+import { TheBotCompanyModule } from './source-company-thebotcompany';
+import { ChargeRoboticsModule } from './source-company-chargerobotics';
+import { CommonRoomModule } from './source-company-commonroom';
+import { CompaModule } from './source-company-compa';
+import { FiddlerAIModule } from './source-company-fiddlerai';
+import { Healthtech1Module } from './source-company-healthtech1';
+import { MindpeakModule } from './source-company-mindpeak';
+import { TempoModule } from './source-company-tempo';
+import { ZeroMarkModule } from './source-company-zeromark';
+import { NamespaceModule } from './source-company-namespace';
+import { OPLabsModule } from './source-company-oplabs';
+import { OverviewEnergyModule } from './source-company-overviewenergy';
+import { RailwayModule } from './source-company-railway';
+import { UnitModule } from './source-company-unit';
+import { AstraSecurityModule } from './source-company-astrasecurity';
+import { CodesHealthModule } from './source-company-codeshealth';
+import { GridCAREModule } from './source-company-gridcare';
+import { HighbeamModule } from './source-company-highbeam';
+import { InfisicalModule } from './source-company-infisical';
+import { MatiaModule } from './source-company-matia';
+import { MonteCarloModule } from './source-company-montecarlo';
+import { ResendModule } from './source-company-resend';
+import { WindRangerLabsModule } from './source-company-windrangerlabs';
+import { AssuredModule } from './source-company-assured';
+import { AuroraSolarModule } from './source-company-aurorasolar';
+import { DaveModule } from './source-company-dave';
+import { EscapeModule } from './source-company-escape';
+import { FiducialModule } from './source-company-fiducial';
+import { FinModule } from './source-company-fin';
+import { NeonModule } from './source-company-neon';
+import { OsoModule } from './source-company-oso';
+import { PikaModule } from './source-company-pika';
+import { ProphetSecurityModule } from './source-company-prophetsecurity';
+import { RealityDefenderModule } from './source-company-realitydefender';
+import { RekaModule } from './source-company-reka';
+import { KeyrockModule } from './source-company-keyrock';
+import { LindusHealthModule } from './source-company-lindushealth';
+import { MaterialSecurityModule } from './source-company-materialsecurity';
+import { MotherDuckModule } from './source-company-motherduck';
+import { PaxosLabsModule } from './source-company-paxoslabs';
+import { SpeakeasyModule } from './source-company-speakeasy';
+import { ElectricAirModule } from './source-company-electricair';
+import { FinaryModule } from './source-company-finary';
+import { GravityClimateModule } from './source-company-gravityclimate';
+import { InspirationCommerceGroupModule } from './source-company-inspirationcommercegroup';
+import { IsometricModule } from './source-company-isometric';
+import { LightsparkModule } from './source-company-lightspark';
+import { NewOrbitSpaceModule } from './source-company-neworbitspace';
+import { PrefectModule } from './source-company-prefect';
+import { ReflectOrbitalModule } from './source-company-reflectorbital';
+import { StytchModule } from './source-company-stytch';
+import { TOMSModule } from './source-company-toms';
+import { TwelveModule } from './source-company-twelve';
+import { HimsHersYouHealthModule } from './source-company-himshersyouhealth';
+import { AsimovModule } from './source-company-asimov';
+import { DopplerModule } from './source-company-doppler';
+import { LotusHealthModule } from './source-company-lotushealth';
+import { MediCircleModule } from './source-company-medicircle';
+import { RebuyModule } from './source-company-rebuy';
+import { StandardSubseaModule } from './source-company-standardsubsea';
+import { SyndicaModule } from './source-company-syndica';
+import { WeaviateModule } from './source-company-weaviate';
+import { ContoroRoboticsModule } from './source-company-contororobotics';
+import { DatafoldModule } from './source-company-datafold';
+import { DataStealthModule } from './source-company-datastealth';
+import { ReadMeModule } from './source-company-readme';
+import { StargateFoundationModule } from './source-company-stargatefoundation';
+import { SvixModule } from './source-company-svix';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -2225,4 +2443,222 @@ export const ALL_SOURCE_MODULES = [
   WizModule,
   WurlModule,
   ZyngaModule,
+  AirwallexModule,
+  RenuityModule,
+  EnpalModule,
+  CrusoeModule,
+  HarveyModule,
+  SaronicTechnologiesModule,
+  AppliedIntuitionModule,
+  LightspeedCommerceModule,
+  DeliverooModule,
+  TalkiatryModule,
+  BasePowerCompanyModule,
+  SailorHealthModule,
+  NotionModule,
+  ElevenLabsModule,
+  SierraModule,
+  HarmattanAIModule,
+  SonderMindModule,
+  CohereModule,
+  NeoFinancialModule,
+  RampModule,
+  HopperModule,
+  HadrianModule,
+  SkydioModule,
+  DecagonModule,
+  TRMLabsModule,
+  CursorAnysphereModule,
+  VantaModule,
+  LangChainModule,
+  TheExplorationCompanyModule,
+  ReplitModule,
+  SocureModule,
+  FinniHealthModule,
+  KongIncModule,
+  MachIndustriesModule,
+  SprinterHealthModule,
+  RadiantIndustriesModule,
+  ClayModule,
+  PerplexityModule,
+  CognitionModule,
+  HingeHealthModule,
+  SynthesiaModule,
+  ClickUpModule,
+  BasetenModule,
+  DelineaModule,
+  RothySModule,
+  CodeRabbitModule,
+  NorthwoodSpaceModule,
+  ReliableRoboticsModule,
+  DeepgramModule,
+  SunoModule,
+  AbbyCareModule,
+  LendableModule,
+  PolymarketModule,
+  AbridgeModule,
+  TemporalTechnologiesModule,
+  TENEXAIModule,
+  SupabaseModule,
+  EncordModule,
+  ConfluentModule,
+  CowboySpaceCorpModule,
+  WriterModule,
+  SentryModule,
+  ServeRoboticsModule,
+  BlockstreamModule,
+  ChainalysisModule,
+  RepRallyModule,
+  EquipHealthModule,
+  GammaModule,
+  CandidHealthModule,
+  SentiLinkModule,
+  AntaresIndustriesModule,
+  AeroVectModule,
+  MunichElectrificationModule,
+  Dash0Module,
+  AntaresAntaresIndustriesModule,
+  LambdaModule,
+  MiroModule,
+  ProximaFusionModule,
+  SardineModule,
+  MeshyModule,
+  SPANModule,
+  CartesiaModule,
+  ModalModule,
+  RobCoModule,
+  RulaModule,
+  BedrockRoboticsModule,
+  OnePayModule,
+  QualifiedHealthModule,
+  ReonicModule,
+  SwapModule,
+  TaptapSendModule,
+  BRINCModule,
+  VentiTechnologiesModule,
+  OscilarModule,
+  SemperisModule,
+  WorkOSModule,
+  DroydModule,
+  SemgrepModule,
+  OmniModule,
+  StandardBotsModule,
+  AIMIntelligentMachinesModule,
+  LinearModule,
+  SanityModule,
+  VerticalAerospaceModule,
+  BrigitModule,
+  HackerOneModule,
+  ObservableSpaceModule,
+  RenderModule,
+  HiveHealthModule,
+  IncidentIoModule,
+  MindRoboticsModule,
+  PeriodicLabsModule,
+  AsporaModule,
+  GeckoRoboticsModule,
+  PostHogModule,
+  BicaraTherapeuticsModule,
+  SigNozModule,
+  DustModule,
+  FuseEnergyModule,
+  HavocAIModule,
+  SE3LabsModule,
+  TigerDataTimescaleModule,
+  ArloModule,
+  BlueEnergyModule,
+  CharacterAIModule,
+  FoundryRoboticsModule,
+  LeadBankModule,
+  ZapierModule,
+  ColumnModule,
+  GorgiasModule,
+  NotableModule,
+  TapcartModule,
+  TrustWalletModule,
+  AdaptiveSecurityModule,
+  MintlifyModule,
+  NetspendModule,
+  TARModule,
+  AirbyteModule,
+  AlliumModule,
+  BlossomHealthModule,
+  GenomicsPlcModule,
+  InsitroModule,
+  LaurelModule,
+  MethodFinancialModule,
+  OrbModule,
+  PylonModule,
+  AnagramModule,
+  AxleEnergyModule,
+  OpenEvidenceModule,
+  SecfixModule,
+  TheBotCompanyModule,
+  ChargeRoboticsModule,
+  CommonRoomModule,
+  CompaModule,
+  FiddlerAIModule,
+  Healthtech1Module,
+  MindpeakModule,
+  TempoModule,
+  ZeroMarkModule,
+  NamespaceModule,
+  OPLabsModule,
+  OverviewEnergyModule,
+  RailwayModule,
+  UnitModule,
+  AstraSecurityModule,
+  CodesHealthModule,
+  GridCAREModule,
+  HighbeamModule,
+  InfisicalModule,
+  MatiaModule,
+  MonteCarloModule,
+  ResendModule,
+  WindRangerLabsModule,
+  AssuredModule,
+  AuroraSolarModule,
+  DaveModule,
+  EscapeModule,
+  FiducialModule,
+  FinModule,
+  NeonModule,
+  OsoModule,
+  PikaModule,
+  ProphetSecurityModule,
+  RealityDefenderModule,
+  RekaModule,
+  KeyrockModule,
+  LindusHealthModule,
+  MaterialSecurityModule,
+  MotherDuckModule,
+  PaxosLabsModule,
+  SpeakeasyModule,
+  ElectricAirModule,
+  FinaryModule,
+  GravityClimateModule,
+  InspirationCommerceGroupModule,
+  IsometricModule,
+  LightsparkModule,
+  NewOrbitSpaceModule,
+  PrefectModule,
+  ReflectOrbitalModule,
+  StytchModule,
+  TOMSModule,
+  TwelveModule,
+  HimsHersYouHealthModule,
+  AsimovModule,
+  DopplerModule,
+  LotusHealthModule,
+  MediCircleModule,
+  RebuyModule,
+  StandardSubseaModule,
+  SyndicaModule,
+  WeaviateModule,
+  ContoroRoboticsModule,
+  DatafoldModule,
+  DataStealthModule,
+  ReadMeModule,
+  StargateFoundationModule,
+  SvixModule,
 ];

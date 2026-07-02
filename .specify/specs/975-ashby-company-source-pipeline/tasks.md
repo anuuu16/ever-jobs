@@ -12,9 +12,11 @@
 - [x] T5 — End-to-end smoke validation (scaffold → wire → jest 9/9 → revert). ✔
 - [x] T6 — Document the pipeline (this spec/plan/tasks) + `docs/index.md`,
   `docs/log.md`, `docs/questions.md` (Q-ASHBY-1, Q-ASHBY-2). ✔
-- [ ] T7 — (Follow-up) Discover + verify a first Ashby company batch across
-  sectors, assemble descriptors, scaffold + wire, land green. (First batch
-  produced this run under Specs 976+.)
+- [x] T7 — Discover + verify a first Ashby company batch across sectors,
+  assemble descriptors, scaffold + wire, land green. ✔ **218 plugins**
+  (Specs 976–1193) landed run #441: 270 discovered → 229 unique → 222 survived
+  the live gate → 4 collision-rejected → 218 scaffolded + wired; `tsc` clean,
+  **1962 unit tests green**.
 - [ ] T8 — (Future) Promote the inline assembly into a dedicated
   `scripts/assemble-ashby-company-batch.ts` mirroring `assemble-company-batch.ts`.
 - [ ] T9 — (Future) Optional authenticated-verification step to flip `verified`.
