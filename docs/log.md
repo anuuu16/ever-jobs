@@ -15,6 +15,93 @@
 
 ---
 
+## 2026-07-03 — Scheduled run #442 (**Lever company-source pipeline foundation + first 180-plugin batch** — Specs 1194, 1195–1374)
+
+**Scope:** Opened a third, deterministic **Lever-backed** company-source pipeline — the sibling of the
+Greenhouse and Ashby (Spec 975) pipelines — to continue diversifying the company-direct backend mix.
+The `source-ats-lever` plugin already ships and is registered under `Site.LEVER`, but no company-direct
+plugin delegated to it, so the large population of scale-ups and mid-market companies hosting careers
+on **Lever** (`jobs.lever.co/<slug>`, public Postings API `api.lever.co/v0/postings/<slug>?mode=json`)
+was invisible to both the Greenhouse and Ashby discovery gates. This run built and validated the
+reusable Lever plumbing **and** landed a first 180-company batch on top of it.
+
+**Baseline at run start:** Local `develop` even with `origin/develop` at `378bf201` (run #441, 218
+Ashby plugins), CI **green**, working tree clean. Next spec number per the band-aware allocator
+(`scripts/next-spec-number.ts`, band `ever-jobs/ever-jobs` = 1–4999) was **1194**. The four external
+reference repos under the parent `OTHERS/` directory (outside this repo) were `git pull`-ed for
+situational awareness — `career-ops` had upstream movement (a new provider + a startup-boards registry
+entry + an experimental web UI), tracked **outside** this repo per the no-competitor-references rule.
+
+**What shipped (all TypeScript, additive — nothing removed):**
+
+- **`scripts/probe-lever-company-source.ts`** — deterministic discovery probe for the **public,
+  zero-auth Lever Postings API** (`https://api.lever.co/v0/postings/<slug>?mode=json` → a **bare JSON
+  array** of postings). Like Ashby (and unlike Greenhouse), the payload exposes **no board display
+  name**, so the gate is purely count-based (`jobs.length >= MIN_JOBS (3)`, each `text`-bearing).
+  Network I/O isolated in `probeOne`; the decision surface (`gateBoard`, `extractListings`) is pure
+  and unit-tested. Bounded-concurrency worker pool (16); `extractListings` prefers
+  `categories.allLocations[0]` over `categories.location`, falls back to `categories.team` for
+  department, and normalises the epoch-millis `createdAt`.
+- **`scripts/__tests__/probe-lever-company-source.spec.ts`** — **13 unit tests**, no live network
+  (pins `gateBoard`/`extractListings`). Green.
+- **`scripts/scaffold-lever-company-source.ts`** — pure, conflict-free file emitter that materialises,
+  per descriptor, the full `source-company-<slug>` package (package.json, tsconfig, index, module,
+  **registry-delegation service**, generic mocked test, Lever **bare-array** job-board fixture) **and**
+  the `.specify/specs/<specNo>-source-company-<slug>/` spec/plan/tasks. The generated service resolves
+  `Site.LEVER` from the `PluginRegistry`, delegates `scrape({ ...input, companySlug })`, and re-stamps
+  `site`/`companyName`/`id` (`lever-`→`<slug>-`). Never touches shared wiring files.
+- **`scripts/wire-company-source.ts`** — confirmed **backend-agnostic** and reused **unchanged**; the
+  Lever batch descriptor is field-compatible (`slug`/`moduleName`/`enumKey`/`displayName`/`specNo`/
+  `phaseNo`). The descriptor additionally carries a distinct **`companySlug`** (the live Lever slug,
+  which may contain hyphens/dots) separate from **`slug`** (hyphen-free plugin dir/enum value/id
+  prefix), per Q-LEVER-2.
+
+**Validation:** Probe unit suite **13/13 green**. End-to-end smoke test: scaffolded a throwaway
+descriptor → wired it into the four shared files → `jest` on the generated plugin **9/9 green** →
+**fully reverted** (`git checkout` on the four shared files, `rm -rf` on the throwaway package + spec
+dir; `git status` clean). This proves the emitter, the generated test, and the wiring are correct
+against a known-good template before any real batch is generated.
+
+**First Lever company batch — 180 new plugins (Specs 1195–1374):** A **parallel multi-agent workflow**
+(12 sector-specialist agents; ~831k subagent tokens, 574 tool calls) web-discovered **216** candidate
+Lever boards across twelve sectors (AI/ML, dev-tools/infra, fintech, crypto, data-infra, security,
+health/biotech, robotics/hardware, climate, B2B SaaS, e-commerce/marketplaces, gaming/media/education/
+logistics) and **self-verified** each against the public Lever Postings API (≥ 3 live postings) before
+returning it. The merged set was slug-normalised and deduped, then collision-checked against the live
+`site.enum.ts` + `packages/plugins/index.ts`: **23 rejected** (in-batch duplicate slugs; `enumKey`
+starting with a digit — `1inch`, `360learning`; one enum-key collision — `loopreturns`→`LOOP`),
+leaving **193** unique candidates. Those were re-probed **centrally** through the deterministic
+`scripts/probe-lever-company-source.ts` gate (the authoritative source of truth) — **180/193 survived**
+(≥ 3 live roles). Descriptors were assembled (className/moduleName/enumKey derived from each canonical
+`displayName`), scaffolded via `scripts/scaffold-lever-company-source.ts` and wired via the
+backend-agnostic `scripts/wire-company-source.ts`. Each plugin is a thin **registry-delegation** service
+(resolve `Site.LEVER`, delegate `scrape({ ...input, companySlug })`, re-stamp identity) — inheriting
+every Lever field fix (location parsing, structured-first compensation, remote/hybrid inference)
+automatically. Wiring is fully additive: **+180** jest mappers, **+180** tsconfig aliases, **+360** enum
+lines (comment + entry ×180), **+360** barrel lines (import + module entry ×180), zero deletions.
+Company-direct plugin count **1041 → 1221**.
+
+**Verification:** Probe suite 13/13. Sample of 6 generated plugins across the batch — including the
+edge-case slugs `arcteryxcom` (Arc'teryx, apostrophe-escaped className), `cscgeneration2`, `spearai`
+(dotted/suffixed/hyphen-stripped) — **54/54 tests green** via `jest`. `tsc --noEmit` surfaced only
+pre-existing `apps/api/src/cache` env-dep errors (`cacheable`/`@keyv/redis` absent in the sandbox),
+none in the new files. Full CI suite is the final gate on push.
+
+**Docs:** `docs/index.md` gained the 1194 pipeline row + 180 plugin rows (Specs 1195–1374) and a fresh
+`_Last revised_` footer; `docs/questions.md` gained **Q-LEVER-1** (no board-name anchor) and
+**Q-LEVER-2** (slug vs. plugin-dir naming), both resolving to the Ashby precedent; the Lever pipeline
+foundation is documented under `.specify/specs/1194-lever-company-source-pipeline/`.
+
+**Notes:**
+
+- Lever slugs are treated case-insensitively (lower-cased before probing); a handful of case-sensitive
+  boards that 404 lower-cased are simply among the 13 that did not survive the central gate — the gate
+  handled them correctly, no false positives shipped.
+- The competitor-watch note for `career-ops` v1.16.0 movement lives **outside** this repo (parent-dir
+  watch file), never here, per the no-competitor-references rule.
+
+---
+
 ## 2026-07-02 — Scheduled run #441 (**Ashby company-source pipeline foundation** — Spec 975)
 
 **Scope:** Opened a new, deterministic **Ashby-backed** company-source pipeline — the sibling of the

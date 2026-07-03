@@ -10,6 +10,54 @@
 
 ---
 
+## Q-LEVER-2 — Lever slug vs. plugin-dir naming for hyphenated/dotted slugs
+
+**Context:** Spec 1194. A live Lever slug may contain hyphens or dots (e.g.
+`spear-ai`, `arcteryx.com`, `cscgeneration-2`), but a plugin dir / `Site` enum
+value must be a clean, hyphen-free token, and the enum KEY must be a valid TS
+identifier (cannot begin with a digit).
+
+**Options:**
+
+- **A. Carry two fields:** `companySlug` (the live Lever slug, used on the wire)
+  and `slug` (the hyphen-free plugin dir / enum value / `id` prefix, derived by
+  lower-casing + stripping non-alphanumerics). Reject any candidate whose
+  display-name-derived `enumKey` starts with a digit.
+- **B. Force the plugin dir to equal the raw Lever slug** — breaks on dots and
+  collides with the enum-identifier rules.
+
+**Default (proceeding):** **A** — mirrors the Ashby resolution (Q-ASHBY-2). The
+scaffolder writes `Site.<ENUMKEY> = '<slug>'` and delegates
+`scrape({ ...input, companySlug })`.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-LEVER-1 — Lever has no board-name anchor: where do we enforce brand-match?
+
+**Context:** Spec 1194. Like the public Ashby Posting API (Q-ASHBY-1), the public
+Lever Postings API (`https://api.lever.co/v0/postings/<slug>?mode=json`) returns
+a **bare JSON array** of postings with **no board / org display name** — so the
+Greenhouse-style board-name brand anchor does not exist on the wire.
+
+**Options:**
+
+- **A. Gate on job-count only; enforce brand-match at descriptor-assembly time**
+  (the verified `displayName` + `companySlug` pair supplied by discovery).
+- **B. Cross-check a posting's `hostedUrl` host to confirm the slug belongs to
+  the claimed brand.**
+- **C. Use the authenticated Lever API (returns richer metadata) — requires a
+  per-company key; not viable for public discovery.**
+
+**Default (proceeding):** **A** — identical to the Ashby resolution. Discovery
+self-verified each slug against the live API (≥3 title-bearing postings), and the
+central deterministic probe re-gates every candidate before scaffolding.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-ASHBY-1 — Ashby has no board-name anchor: where do we enforce brand-match?
 
 **Context:** Spec 975. The Greenhouse company-source probe gates partly on the
