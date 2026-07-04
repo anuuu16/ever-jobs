@@ -15,6 +15,99 @@
 
 ---
 
+## 2026-07-04 — Scheduled run #443 (**SmartRecruiters company-source pipeline foundation + first 217-plugin batch** — Specs 1375, 1376–1592)
+
+**Scope:** Opened a fourth, deterministic **SmartRecruiters-backed** company-source pipeline — the
+sibling of the Greenhouse, Ashby (Spec 975), and Lever (Spec 1194) pipelines — to keep diversifying the
+company-direct backend mix, this time toward the **large-enterprise** segment that SmartRecruiters
+over-indexes on. The `source-ats-smartrecruiters` plugin already ships and is registered under
+`Site.SMARTRECRUITERS`, but no company-direct plugin delegated to it, so the substantial population of
+enterprise and mid-market brands hosting careers on **SmartRecruiters**
+(`https://jobs.smartrecruiters.com/<Identifier>`, public Posting API
+`https://api.smartrecruiters.com/v1/companies/<Identifier>/postings?limit=100`) was invisible to the
+Greenhouse, Ashby, and Lever discovery gates. This run built and validated the reusable
+SmartRecruiters plumbing **and** landed a first 217-company batch on top of it.
+
+**Baseline at run start:** Local `develop` even with `origin/develop` at `49d16362` (run #442, 180
+Lever plugins), CI **green**, working tree clean. Next spec number per the band-aware allocator
+(`scripts/next-spec-number.ts`, band `ever-jobs/ever-jobs` = 1–4999) was **1375**. The four external
+reference repos under the parent `OTHERS/` directory (outside this repo) were `git pull`-ed for
+situational awareness — `career-ops` had upstream movement (new SAP SuccessFactors / Amazon / Avature
+zero-token providers; all already covered by existing `source-ats-*` backends here). Tracked **outside**
+this repo per the no-competitor-references rule.
+
+**What shipped (all TypeScript, additive — nothing removed):**
+
+- **`scripts/probe-smartrecruiters-company-source.ts`** — deterministic discovery probe for the
+  **public, zero-auth SmartRecruiters Posting API**. Unlike Ashby/Lever (bare arrays), the payload is a
+  **`{ offset, limit, totalFound, content: [...] }` envelope**, so `gateBoard`/`extractListings` read the
+  `content` array. Each posting carries `company.name`, so — unlike Lever/Ashby — a board display name
+  IS on the wire and is captured into `boardName` (informational; the gate stays count-based:
+  `content.length >= MIN_JOBS (3)`, each `name`-bearing). Structured `location` is composed
+  (`fullLocation` → city/region/country → Remote). Network I/O isolated in `probeOne`; the decision
+  surface (`gateBoard`, `extractListings`) is pure and unit-tested. Bounded-concurrency worker pool (16).
+- **`scripts/__tests__/probe-smartrecruiters-company-source.spec.ts`** — **15 unit tests**, no live
+  network (pins `gateBoard`/`extractListings`, incl. envelope-shape, location composition, remote flag,
+  `function.label` department fallback, board-name capture). Green.
+- **`scripts/scaffold-smartrecruiters-company-source.ts`** — pure, conflict-free file emitter that
+  materialises, per descriptor, the full `source-company-<slug>` package (package.json, tsconfig, index,
+  module, **registry-delegation service**, generic mocked test, SmartRecruiters **`{content:[...]}`
+  envelope** fixture) **and** the `.specify/specs/<specNo>-source-company-<slug>/` spec/plan/tasks. The
+  generated service resolves `Site.SMARTRECRUITERS` from the `PluginRegistry`, delegates
+  `scrape({ ...input, companySlug })`, and re-stamps `site`/`companyName`/`id` (`sr-`→`<slug>-`). Never
+  touches shared wiring files.
+- **`scripts/assemble-smartrecruiters-batch.ts`** — deterministic descriptor assembler that joins the
+  probe survivors + enrichment (keyed by the case-sensitive `companySlug`) + a contiguous spec-number
+  range. Derives `slug`/`className`/`enumKey` from the canonical `displayName`; **rejects** candidates
+  whose derived `enumKey` starts with a digit or whose `slug`/`enumKey` collides with the live
+  `site.enum.ts` or an in-batch peer (never silently dropped — every rejection is logged).
+- **`scripts/process-sr-discovery.ts`** — marshals the discovery-workflow output into the enrichment +
+  candidate-slug files, decoding HTML entities (`&amp;` → `&`, numeric refs, …) that the web-discovery
+  agents emitted in prose fields.
+- **`scripts/wire-company-source.ts`** — confirmed **backend-agnostic** and reused **unchanged**; the
+  SmartRecruiters batch descriptor is field-compatible. The descriptor additionally carries a distinct
+  **`companySlug`** (the case-sensitive live SmartRecruiters identifier, which may contain mixed case /
+  trailing digits — e.g. `BoschGroup`, `ABInBev1`) separate from **`slug`** (hyphen-free lowercase
+  plugin dir/enum value/id prefix), per Q-SR-2.
+
+**Validation (foundation):** Probe unit suite **15/15 green**. End-to-end smoke test: scaffolded a
+throwaway descriptor → wired it into the four shared files → `jest` on the generated plugin **9/9 green**
+→ **fully reverted** (`git checkout` on the four shared files, `rm -rf` on the throwaway package + spec
+dir; `git status` clean). All three new pipeline scripts `tsc --noEmit` clean. Live endpoint confirmed
+against `Visa`, `BoschGroup` (4647 roles), `WesternDigital` (290), `ServiceNow` (396) — HTTP 200,
+`{ content: [...] }` envelope.
+
+**First SmartRecruiters company batch — 217 new plugins (Specs 1376–1592):** A **parallel multi-agent
+workflow** (14 sector-specialist agents; ~980k subagent tokens, 415 tool calls, ~740s wall-clock)
+web-discovered SmartRecruiters company boards across fourteen sectors (enterprise tech, industrial/auto,
+finance/fintech, retail/CPG, health/pharma, energy/climate, telecom/media/gaming, logistics/travel,
+professional services/staffing, food/agri, construction/real-estate, aerospace/defense/semis,
+education/public-sector, and European/UK enterprises) and **self-verified** each candidate's exact
+case-sensitive identifier against the public Posting API (≥ 3 live postings) before returning it —
+**223** unique verified candidates. Those were re-probed **centrally** through the deterministic
+`scripts/probe-smartrecruiters-company-source.ts` gate (the authoritative source of truth) —
+**220/223 survived** (≥ 3 live roles). Descriptors were assembled via
+`scripts/assemble-smartrecruiters-batch.ts` (className/moduleName/enumKey derived from each canonical
+`displayName`; **3 rejected** — `360 IT Professionals` for a digit-prefix enumKey, `AccorHotel` and
+`LinkedIn3` for `slug` collisions against `accor`/an existing `linkedin` plugin), leaving **217**.
+Those were scaffolded via `scripts/scaffold-smartrecruiters-company-source.ts` and wired via the
+backend-agnostic `scripts/wire-company-source.ts`. Each plugin is a thin **registry-delegation** service
+(resolve `Site.SMARTRECRUITERS`, delegate `scrape({ ...input, companySlug })`, re-stamp identity) —
+inheriting every SmartRecruiters field fix (structured location composition, department mapping, remote
+inference, description-section assembly) automatically. Wiring is fully additive: **+217** jest mappers,
+**+217** tsconfig aliases, **+217** enum members + barrel imports/module entries.
+
+**Validation (batch):** Sampled **10 generated plugin suites** (AbbVie, Abercrombie & Fitch, AB InBev,
+Accor, Visa, Wise + the last six specs) → **90/90 jest green**. Models package `tsc --noEmit` clean.
+The plugins **barrel** (`packages/plugins/index.ts`, now importing all 217 new modules) `tsc --noEmit`
+clean via an ephemeral entry tsconfig. Zero duplicate enum keys/values. Ephemeral batch files
+(`.sr-*.json`, `.sr-candidates.txt`) deleted pre-commit (not gitignored under the `.sr-` prefix).
+
+**Docs:** `docs/index.md` — added the Spec 1375 pipeline row + refreshed the footer. `docs/questions.md`
+— added **Q-SR-1** (count-only gate; brand-match deferred to descriptor assembly; `company.name`
+captured as informational `boardName`) and **Q-SR-2** (case-sensitive `companySlug` vs. lowercase plugin
+`slug`), both defaulted to option **A** (consistent with the Lever/Ashby resolutions).
+
 ## 2026-07-03 — Scheduled run #442 (**Lever company-source pipeline foundation + first 180-plugin batch** — Specs 1194, 1195–1374)
 
 **Scope:** Opened a third, deterministic **Lever-backed** company-source pipeline — the sibling of the

@@ -10,6 +10,59 @@
 
 ---
 
+## Q-SR-2 — SmartRecruiters case-sensitive identifier vs. plugin-dir naming
+
+**Context:** Spec 1375. The SmartRecruiters public Posting API is keyed on a
+**case-sensitive company identifier** (e.g. `BoschGroup`, `WesternDigital`,
+`Visa`), whereas a plugin dir / `Site` enum value must be a clean, hyphen-free,
+**lowercase** token and the enum KEY must be a valid TS identifier (cannot begin
+with a digit).
+
+**Options:**
+
+- **A. Carry two fields:** `companySlug` (the exact case-sensitive identifier,
+  used on the wire) and `slug` (the lowercase, alnum-only plugin dir / enum value
+  / `id` prefix, derived from the canonical display name). Reject any candidate
+  whose display-name-derived `enumKey` starts with a digit or collides with an
+  existing enum key/value.
+- **B. Lower-case the identifier for the wire too** — breaks, because the
+  SmartRecruiters API 404s / returns `totalFound: 0` on the wrong casing.
+
+**Default (proceeding):** **A** — mirrors the Lever/Ashby resolution
+(Q-LEVER-2 / Q-ASHBY-2). `assemble-smartrecruiters-batch.ts` derives `slug`,
+`className`, `enumKey` from the display name and preserves `companySlug` verbatim,
+with digit-prefix + collision rejection.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-SR-1 — SmartRecruiters board-name anchor: where do we enforce brand-match?
+
+**Context:** Spec 1375. Unlike Ashby/Lever (bare arrays, no board name), the
+public SmartRecruiters Posting API envelope
+(`https://api.smartrecruiters.com/v1/companies/<slug>/postings`) **does** expose
+`content[i].company.name`, so a board display name IS available on the wire.
+
+**Options:**
+
+- **A. Gate on job-count only; capture `company.name` as informational
+  `boardName`; enforce brand-match at descriptor-assembly time** (the verified
+  `displayName` + `companySlug` pair supplied by discovery).
+- **B. Hard brand-match the wire `company.name` against the claimed display name**
+  — brittle (legal-entity vs. brand mismatches: `BoschGroup` → "Bosch Group").
+- **C. Authenticated Customer API** — richer metadata but requires a per-company
+  key; not viable for public discovery.
+
+**Default (proceeding):** **A** — consistent with Q-LEVER-1 / Q-ASHBY-1.
+Discovery self-verified each identifier against the live API (≥3 title-bearing
+postings), and the central deterministic probe re-gates every candidate before
+scaffolding. `boardName` is retained for auditability only.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-LEVER-2 — Lever slug vs. plugin-dir naming for hyphenated/dotted slugs
 
 **Context:** Spec 1194. A live Lever slug may contain hyphens or dots (e.g.
