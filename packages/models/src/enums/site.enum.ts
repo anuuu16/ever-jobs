@@ -3308,6 +3308,172 @@ export enum Site {
   XPLOR_TECHNOLOGIES = 'xplortechnologies',
   // Phase 1592: Spec 1592 — Source Company Plugin: Zenith Talent
   ZENITH_TALENT = 'zenithtalent',
+  // Phase 1594: Spec 1594 — Source Company Plugin: Aikido Security
+  AIKIDO_SECURITY = 'aikidosecurity',
+  // Phase 1595: Spec 1595 — Source Company Plugin: Alphacomm
+  ALPHACOMM = 'alphacomm',
+  // Phase 1596: Spec 1596 — Source Company Plugin: Azumuta
+  AZUMUTA = 'azumuta',
+  // Phase 1597: Spec 1597 — Source Company Plugin: benuta
+  BENUTA = 'benuta',
+  // Phase 1598: Spec 1598 — Source Company Plugin: Bluecrux
+  BLUECRUX = 'bluecrux',
+  // Phase 1599: Spec 1599 — Source Company Plugin: bunq
+  BUNQ = 'bunq',
+  // Phase 1600: Spec 1600 — Source Company Plugin: cbs Corporate Business Solutions
+  CBS_CORPORATE_BUSINESS_SOLUTIONS = 'cbscorporatebusinesssolutions',
+  // Phase 1601: Spec 1601 — Source Company Plugin: Centreon
+  CENTREON = 'centreon',
+  // Phase 1602: Spec 1602 — Source Company Plugin: Centric
+  CENTRIC = 'centric',
+  // Phase 1603: Spec 1603 — Source Company Plugin: Channable
+  CHANNABLE = 'channable',
+  // Phase 1604: Spec 1604 — Source Company Plugin: CloudBilling
+  CLOUDBILLING = 'cloudbilling',
+  // Phase 1605: Spec 1605 — Source Company Plugin: constellr
+  CONSTELLR = 'constellr',
+  // Phase 1606: Spec 1606 — Source Company Plugin: Craftzing
+  CRAFTZING = 'craftzing',
+  // Phase 1607: Spec 1607 — Source Company Plugin: Creative Clicks
+  CREATIVE_CLICKS = 'creativeclicks',
+  // Phase 1608: Spec 1608 — Source Company Plugin: Cyber & Mason (PinDirect)
+  CYBER_MASON_PINDIRECT = 'cybermasonpindirect',
+  // Phase 1609: Spec 1609 — Source Company Plugin: Dealroom.co
+  DEALROOM_CO = 'dealroomco',
+  // Phase 1610: Spec 1610 — Source Company Plugin: DEMV Systems
+  DEMV_SYSTEMS = 'demvsystems',
+  // Phase 1611: Spec 1611 — Source Company Plugin: Distribusion Technologies
+  DISTRIBUSION_TECHNOLOGIES = 'distribusiontechnologies',
+  // Phase 1612: Spec 1612 — Source Company Plugin: Ecilia
+  ECILIA = 'ecilia',
+  // Phase 1613: Spec 1613 — Source Company Plugin: Ehrenkind
+  EHRENKIND = 'ehrenkind',
+  // Phase 1614: Spec 1614 — Source Company Plugin: Elephant Technologies
+  ELEPHANT_TECHNOLOGIES = 'elephanttechnologies',
+  // Phase 1615: Spec 1615 — Source Company Plugin: epilot
+  EPILOT = 'epilot',
+  // Phase 1616: Spec 1616 — Source Company Plugin: Faktion
+  FAKTION = 'faktion',
+  // Phase 1617: Spec 1617 — Source Company Plugin: FieldBuddy
+  FIELDBUDDY = 'fieldbuddy',
+  // Phase 1618: Spec 1618 — Source Company Plugin: Fietsenwinkel.nl
+  FIETSENWINKEL_NL = 'fietsenwinkelnl',
+  // Phase 1619: Spec 1619 — Source Company Plugin: Fixico
+  FIXICO = 'fixico',
+  // Phase 1620: Spec 1620 — Source Company Plugin: Floryn
+  FLORYN = 'floryn',
+  // Phase 1621: Spec 1621 — Source Company Plugin: GreenFlux
+  GREENFLUX = 'greenflux',
+  // Phase 1622: Spec 1622 — Source Company Plugin: gridscale
+  GRIDSCALE = 'gridscale',
+  // Phase 1623: Spec 1623 — Source Company Plugin: Gusti Leder
+  GUSTI_LEDER = 'gustileder',
+  // Phase 1624: Spec 1624 — Source Company Plugin: Helloprint
+  HELLOPRINT = 'helloprint',
+  // Phase 1625: Spec 1625 — Source Company Plugin: HEMERIA
+  HEMERIA = 'hemeria',
+  // Phase 1626: Spec 1626 — Source Company Plugin: Instant System
+  INSTANT_SYSTEM = 'instantsystem',
+  // Phase 1627: Spec 1627 — Source Company Plugin: Intescia
+  INTESCIA = 'intescia',
+  // Phase 1628: Spec 1628 — Source Company Plugin: Mistertemp' Group
+  MISTERTEMP_GROUP = 'mistertempgroup',
+  // Phase 1629: Spec 1629 — Source Company Plugin: Learned
+  LEARNED = 'learned',
+  // Phase 1630: Spec 1630 — Source Company Plugin: LegalFly
+  LEGALFLY = 'legalfly',
+  // Phase 1631: Spec 1631 — Source Company Plugin: LOAVIES
+  LOAVIES = 'loavies',
+  // Phase 1632: Spec 1632 — Source Company Plugin: Look Up Space
+  LOOK_UP_SPACE = 'lookupspace',
+  // Phase 1633: Spec 1633 — Source Company Plugin: Lucky Cart
+  LUCKY_CART = 'luckycart',
+  // Phase 1634: Spec 1634 — Source Company Plugin: Makersite
+  MAKERSITE = 'makersite',
+  // Phase 1635: Spec 1635 — Source Company Plugin: Matera
+  MATERA = 'matera',
+  // Phase 1636: Spec 1636 — Source Company Plugin: Mobiapps
+  MOBIAPPS = 'mobiapps',
+  // Phase 1637: Spec 1637 — Source Company Plugin: MobilityPlus
+  MOBILITYPLUS = 'mobilityplus',
+  // Phase 1638: Spec 1638 — Source Company Plugin: Monizze
+  MONIZZE = 'monizze',
+  // Phase 1639: Spec 1639 — Source Company Plugin: Mon-marché.fr
+  MON_MARCH_FR = 'monmarchfr',
+  // Phase 1640: Spec 1640 — Source Company Plugin: Natuvion
+  NATUVION = 'natuvion',
+  // Phase 1641: Spec 1641 — Source Company Plugin: Nmbrs
+  NMBRS = 'nmbrs',
+  // Phase 1642: Spec 1642 — Source Company Plugin: Novutech
+  NOVUTECH = 'novutech',
+  // Phase 1643: Spec 1643 — Source Company Plugin: Ockto
+  OCKTO = 'ockto',
+  // Phase 1644: Spec 1644 — Source Company Plugin: ON2IT
+  ON2IT = 'on2it',
+  // Phase 1645: Spec 1645 — Source Company Plugin: Online Payment Platform (OPP)
+  ONLINE_PAYMENT_PLATFORM_OPP = 'onlinepaymentplatformopp',
+  // Phase 1646: Spec 1646 — Source Company Plugin: Openclaims
+  OPENCLAIMS = 'openclaims',
+  // Phase 1647: Spec 1647 — Source Company Plugin: OPEN.nl Software Group
+  OPEN_NL_SOFTWARE_GROUP = 'opennlsoftwaregroup',
+  // Phase 1648: Spec 1648 — Source Company Plugin: Payflows
+  PAYFLOWS = 'payflows',
+  // Phase 1649: Spec 1649 — Source Company Plugin: Payter
+  PAYTER = 'payter',
+  // Phase 1650: Spec 1650 — Source Company Plugin: Peddler
+  PEDDLER = 'peddler',
+  // Phase 1651: Spec 1651 — Source Company Plugin: Peripass
+  PERIPASS = 'peripass',
+  // Phase 1652: Spec 1652 — Source Company Plugin: Poppy
+  POPPY = 'poppy',
+  // Phase 1653: Spec 1653 — Source Company Plugin: Prijsvrij Vakanties
+  PRIJSVRIJ_VAKANTIES = 'prijsvrijvakanties',
+  // Phase 1654: Spec 1654 — Source Company Plugin: Proforto
+  PROFORTO = 'proforto',
+  // Phase 1655: Spec 1655 — Source Company Plugin: QLF Brands (lampenlicht.nl)
+  QLF_BRANDS_LAMPENLICHT_NL = 'qlfbrandslampenlichtnl',
+  // Phase 1656: Spec 1656 — Source Company Plugin: Qualifyze
+  QUALIFYZE = 'qualifyze',
+  // Phase 1657: Spec 1657 — Source Company Plugin: Solutions 4 Delivery
+  SOLUTIONS_4_DELIVERY = 'solutions4delivery',
+  // Phase 1658: Spec 1658 — Source Company Plugin: Shop Manufaktur
+  SHOP_MANUFAKTUR = 'shopmanufaktur',
+  // Phase 1659: Spec 1659 — Source Company Plugin: Simvia
+  SIMVIA = 'simvia',
+  // Phase 1660: Spec 1660 — Source Company Plugin: Spread Group
+  SPREAD_GROUP = 'spreadgroup',
+  // Phase 1661: Spec 1661 — Source Company Plugin: Staxxer
+  STAXXER = 'staxxer',
+  // Phase 1662: Spec 1662 — Source Company Plugin: Superellipse
+  SUPERELLIPSE = 'superellipse',
+  // Phase 1663: Spec 1663 — Source Company Plugin: Superlinear
+  SUPERLINEAR = 'superlinear',
+  // Phase 1664: Spec 1664 — Source Company Plugin: Technica Engineering
+  TECHNICA_ENGINEERING = 'technicaengineering',
+  // Phase 1665: Spec 1665 — Source Company Plugin: TOPIC
+  TOPIC = 'topic',
+  // Phase 1666: Spec 1666 — Source Company Plugin: Trusted Shops
+  TRUSTED_SHOPS = 'trustedshops',
+  // Phase 1667: Spec 1667 — Source Company Plugin: UP42
+  UP42 = 'up42',
+  // Phase 1668: Spec 1668 — Source Company Plugin: UpSlide
+  UPSLIDE = 'upslide',
+  // Phase 1669: Spec 1669 — Source Company Plugin: VALUEZON
+  VALUEZON = 'valuezon',
+  // Phase 1670: Spec 1670 — Source Company Plugin: VertiGIS
+  VERTIGIS = 'vertigis',
+  // Phase 1671: Spec 1671 — Source Company Plugin: Vertuoza
+  VERTUOZA = 'vertuoza',
+  // Phase 1672: Spec 1672 — Source Company Plugin: VIKTOR
+  VIKTOR = 'viktor',
+  // Phase 1673: Spec 1673 — Source Company Plugin: WATCHVICE (Leingang E-Commerce)
+  WATCHVICE_LEINGANG_E_COMMERCE = 'watchviceleingangecommerce',
+  // Phase 1674: Spec 1674 — Source Company Plugin: WEBB Traders
+  WEBB_TRADERS = 'webbtraders',
+  // Phase 1675: Spec 1675 — Source Company Plugin: Weeztix
+  WEEZTIX = 'weeztix',
+  // Phase 1676: Spec 1676 — Source Company Plugin: XSARUS
+  XSARUS = 'xsarus',
 }
 
 /**

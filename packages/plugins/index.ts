@@ -1731,6 +1731,89 @@ import { WSHGroupModule } from './source-company-wshgroup';
 import { WynnResortsModule } from './source-company-wynnresorts';
 import { XplorTechnologiesModule } from './source-company-xplortechnologies';
 import { ZenithTalentModule } from './source-company-zenithtalent';
+import { AikidoSecurityModule } from './source-company-aikidosecurity';
+import { AlphacommModule } from './source-company-alphacomm';
+import { AzumutaModule } from './source-company-azumuta';
+import { BenutaModule } from './source-company-benuta';
+import { BluecruxModule } from './source-company-bluecrux';
+import { BunqModule } from './source-company-bunq';
+import { CbsCorporateBusinessSolutionsModule } from './source-company-cbscorporatebusinesssolutions';
+import { CentreonModule } from './source-company-centreon';
+import { CentricModule } from './source-company-centric';
+import { ChannableModule } from './source-company-channable';
+import { CloudBillingModule } from './source-company-cloudbilling';
+import { ConstellrModule } from './source-company-constellr';
+import { CraftzingModule } from './source-company-craftzing';
+import { CreativeClicksModule } from './source-company-creativeclicks';
+import { CyberMasonPinDirectModule } from './source-company-cybermasonpindirect';
+import { DealroomCoModule } from './source-company-dealroomco';
+import { DEMVSystemsModule } from './source-company-demvsystems';
+import { DistribusionTechnologiesModule } from './source-company-distribusiontechnologies';
+import { EciliaModule } from './source-company-ecilia';
+import { EhrenkindModule } from './source-company-ehrenkind';
+import { ElephantTechnologiesModule } from './source-company-elephanttechnologies';
+import { EpilotModule } from './source-company-epilot';
+import { FaktionModule } from './source-company-faktion';
+import { FieldBuddyModule } from './source-company-fieldbuddy';
+import { FietsenwinkelNlModule } from './source-company-fietsenwinkelnl';
+import { FixicoModule } from './source-company-fixico';
+import { FlorynModule } from './source-company-floryn';
+import { GreenFluxModule } from './source-company-greenflux';
+import { GridscaleModule } from './source-company-gridscale';
+import { GustiLederModule } from './source-company-gustileder';
+import { HelloprintModule } from './source-company-helloprint';
+import { HEMERIAModule } from './source-company-hemeria';
+import { InstantSystemModule } from './source-company-instantsystem';
+import { IntesciaModule } from './source-company-intescia';
+import { MistertempGroupModule } from './source-company-mistertempgroup';
+import { LearnedModule } from './source-company-learned';
+import { LegalFlyModule } from './source-company-legalfly';
+import { LOAVIESModule } from './source-company-loavies';
+import { LookUpSpaceModule } from './source-company-lookupspace';
+import { LuckyCartModule } from './source-company-luckycart';
+import { MakersiteModule } from './source-company-makersite';
+import { MateraModule } from './source-company-matera';
+import { MobiappsModule } from './source-company-mobiapps';
+import { MobilityPlusModule } from './source-company-mobilityplus';
+import { MonizzeModule } from './source-company-monizze';
+import { MonMarchFrModule } from './source-company-monmarchfr';
+import { NatuvionModule } from './source-company-natuvion';
+import { NmbrsModule } from './source-company-nmbrs';
+import { NovutechModule } from './source-company-novutech';
+import { OcktoModule } from './source-company-ockto';
+import { ON2ITModule } from './source-company-on2it';
+import { OnlinePaymentPlatformOPPModule } from './source-company-onlinepaymentplatformopp';
+import { OpenclaimsModule } from './source-company-openclaims';
+import { OPENNlSoftwareGroupModule } from './source-company-opennlsoftwaregroup';
+import { PayflowsModule } from './source-company-payflows';
+import { PayterModule } from './source-company-payter';
+import { PeddlerModule } from './source-company-peddler';
+import { PeripassModule } from './source-company-peripass';
+import { PoppyModule } from './source-company-poppy';
+import { PrijsvrijVakantiesModule } from './source-company-prijsvrijvakanties';
+import { ProfortoModule } from './source-company-proforto';
+import { QLFBrandsLampenlichtNlModule } from './source-company-qlfbrandslampenlichtnl';
+import { QualifyzeModule } from './source-company-qualifyze';
+import { Solutions4DeliveryModule } from './source-company-solutions4delivery';
+import { ShopManufakturModule } from './source-company-shopmanufaktur';
+import { SimviaModule } from './source-company-simvia';
+import { SpreadGroupModule } from './source-company-spreadgroup';
+import { StaxxerModule } from './source-company-staxxer';
+import { SuperellipseModule } from './source-company-superellipse';
+import { SuperlinearModule } from './source-company-superlinear';
+import { TechnicaEngineeringModule } from './source-company-technicaengineering';
+import { TOPICModule } from './source-company-topic';
+import { TrustedShopsModule } from './source-company-trustedshops';
+import { UP42Module } from './source-company-up42';
+import { UpSlideModule } from './source-company-upslide';
+import { VALUEZONModule } from './source-company-valuezon';
+import { VertiGISModule } from './source-company-vertigis';
+import { VertuozaModule } from './source-company-vertuoza';
+import { VIKTORModule } from './source-company-viktor';
+import { WATCHVICELeingangECommerceModule } from './source-company-watchviceleingangecommerce';
+import { WEBBTradersModule } from './source-company-webbtraders';
+import { WeeztixModule } from './source-company-weeztix';
+import { XSARUSModule } from './source-company-xsarus';
 export const ALL_SOURCE_MODULES = [
   FourDayWeekModule,
   AcademiccareersModule,
@@ -3455,4 +3538,87 @@ export const ALL_SOURCE_MODULES = [
   WynnResortsModule,
   XplorTechnologiesModule,
   ZenithTalentModule,
+  AikidoSecurityModule,
+  AlphacommModule,
+  AzumutaModule,
+  BenutaModule,
+  BluecruxModule,
+  BunqModule,
+  CbsCorporateBusinessSolutionsModule,
+  CentreonModule,
+  CentricModule,
+  ChannableModule,
+  CloudBillingModule,
+  ConstellrModule,
+  CraftzingModule,
+  CreativeClicksModule,
+  CyberMasonPinDirectModule,
+  DealroomCoModule,
+  DEMVSystemsModule,
+  DistribusionTechnologiesModule,
+  EciliaModule,
+  EhrenkindModule,
+  ElephantTechnologiesModule,
+  EpilotModule,
+  FaktionModule,
+  FieldBuddyModule,
+  FietsenwinkelNlModule,
+  FixicoModule,
+  FlorynModule,
+  GreenFluxModule,
+  GridscaleModule,
+  GustiLederModule,
+  HelloprintModule,
+  HEMERIAModule,
+  InstantSystemModule,
+  IntesciaModule,
+  MistertempGroupModule,
+  LearnedModule,
+  LegalFlyModule,
+  LOAVIESModule,
+  LookUpSpaceModule,
+  LuckyCartModule,
+  MakersiteModule,
+  MateraModule,
+  MobiappsModule,
+  MobilityPlusModule,
+  MonizzeModule,
+  MonMarchFrModule,
+  NatuvionModule,
+  NmbrsModule,
+  NovutechModule,
+  OcktoModule,
+  ON2ITModule,
+  OnlinePaymentPlatformOPPModule,
+  OpenclaimsModule,
+  OPENNlSoftwareGroupModule,
+  PayflowsModule,
+  PayterModule,
+  PeddlerModule,
+  PeripassModule,
+  PoppyModule,
+  PrijsvrijVakantiesModule,
+  ProfortoModule,
+  QLFBrandsLampenlichtNlModule,
+  QualifyzeModule,
+  Solutions4DeliveryModule,
+  ShopManufakturModule,
+  SimviaModule,
+  SpreadGroupModule,
+  StaxxerModule,
+  SuperellipseModule,
+  SuperlinearModule,
+  TechnicaEngineeringModule,
+  TOPICModule,
+  TrustedShopsModule,
+  UP42Module,
+  UpSlideModule,
+  VALUEZONModule,
+  VertiGISModule,
+  VertuozaModule,
+  VIKTORModule,
+  WATCHVICELeingangECommerceModule,
+  WEBBTradersModule,
+  WeeztixModule,
+  XSARUSModule,
 ];

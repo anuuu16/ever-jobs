@@ -15,6 +15,97 @@
 
 ---
 
+## 2026-07-05 — Scheduled run #444 (**Recruitee company-source pipeline foundation + first 83-plugin batch** — Specs 1593, 1594–1676)
+
+**Scope:** Opened a **fifth**, deterministic **Recruitee-backed** company-source pipeline — the
+sibling of the Greenhouse, Ashby (Spec 975), Lever (Spec 1194), and SmartRecruiters (Spec 1375)
+pipelines — to keep diversifying the company-direct backend mix, this time toward the **European
+(NL/DE/BE/FR) SMB and scale-up** segment that Recruitee over-indexes on. The `source-ats-recruitee`
+plugin already ships and is registered under `Site.RECRUITEE`, but no company-direct plugin delegated
+to it, so the substantial population of European companies hosting careers on **Recruitee**
+(`https://<slug>.recruitee.com`, public careers API `https://<slug>.recruitee.com/api/offers`) was
+invisible to the Greenhouse, Ashby, Lever, and SmartRecruiters discovery gates. This run built and
+validated the reusable Recruitee plumbing **and** landed a first 83-company batch on top of it.
+
+**Baseline at run start:** Local `develop` even with `origin/develop` at `983d1e7d` (run #443, 217
+SmartRecruiters plugins), CI **green**, working tree clean. Next spec number per the band-aware
+allocator (band `ever-jobs/ever-jobs` = 1–4999) was **1593**. The four external reference repos under
+the parent `OTHERS/` directory (outside this repo) were `git pull`-ed for situational awareness —
+`career-ops` had upstream movement (web/i18n/product only; the earlier-noted new SAP SuccessFactors /
+Amazon / Avature providers remain covered by existing `source-ats-*` backends here). Tracked **outside**
+this repo per the no-competitor-references rule.
+
+**What shipped (all TypeScript, additive — nothing removed):**
+
+- **`scripts/probe-recruitee-company-source.ts`** — deterministic discovery probe for the **public,
+  zero-auth Recruitee careers API**. Like SmartRecruiters (`{ content: [...] }`) and unlike Lever/Ashby
+  (bare arrays), the payload is an **`{ offers: [...] }` envelope**, so `gateBoard`/`extractListings`
+  read the `offers` array. The one operational wrinkle is the **per-company subdomain host model**: the
+  slug is interpolated into the DNS host via a `boardUrl(slug)` helper
+  (`https://<slug>.recruitee.com/api/offers`) rather than a shared-host path. Each offer carries
+  `company_name`, so a board display name IS on the wire and is captured into `boardName` (informational;
+  the gate stays count-based: `offers.length >= MIN_JOBS (3)`, each `title`-bearing). Location is
+  composed (`location` → `city/state/country` → Remote); the loose `"YYYY-MM-DD HH:MM:SS UTC"` timestamp
+  is normalised to ISO. Network I/O isolated in `probeOne`; the decision surface (`gateBoard`,
+  `extractListings`, `boardUrl`) is pure and unit-tested. Bounded-concurrency worker pool (16).
+- **`scripts/__tests__/probe-recruitee-company-source.spec.ts`** — **19 unit tests**, no live network
+  (pins `gateBoard`/`extractListings`/`boardUrl`, incl. envelope-shape, location composition, remote
+  flag, loose/ISO timestamp parsing, board-name capture, untitled-padding rejection). Green.
+- **`scripts/scaffold-recruitee-company-source.ts`** — pure, conflict-free file emitter that
+  materialises, per descriptor, the full `source-company-<slug>` package (package.json, tsconfig, index,
+  module, **registry-delegation service**, generic mocked test, Recruitee **`{offers:[...]}` envelope**
+  fixture) **and** the `.specify/specs/<specNo>-source-company-<slug>/` spec/plan/tasks. The generated
+  service resolves `Site.RECRUITEE` from the `PluginRegistry`, delegates `scrape({ ...input,
+  companySlug })`, and re-stamps `site`/`companyName`/`id` (`recruitee-`→`<slug>-`). Never touches shared
+  wiring files.
+- **`scripts/assemble-recruitee-batch.ts`** — deterministic descriptor assembler that joins the probe
+  survivors + enrichment (keyed by `companySlug`) + a contiguous spec-number range. Derives
+  `slug`/`className`/`enumKey` from the canonical `displayName`; **rejects** candidates whose derived
+  `enumKey` starts with a digit or whose `slug`/`enumKey` collides with the live `site.enum.ts` or an
+  in-batch peer (never silently dropped — every rejection is logged).
+- **`scripts/process-recruitee-discovery.ts`** — marshals the discovery-workflow output
+  (`{ result: { companies: [...] } }`) into the enrichment + candidate-slug files, decoding HTML
+  entities, deduping by case-insensitive `companySlug`, and merging any extra hand-written seed
+  enrichment files.
+- **`scripts/wire-company-source.ts`** — confirmed **backend-agnostic** and reused **unchanged**; the
+  Recruitee batch descriptor is field-compatible with it.
+
+**Foundation verification:** probe unit suite **19/19 green**; live endpoint confirmed against
+`channable` (34 roles) + `sendcloud` — HTTP 200, `{ offers: [...] }` carrying `company_name`; end-to-end
+smoke (scaffold throwaway `channable` descriptor → wire into the 4 shared files → generated plugin jest
+**9/9 green** → fully reverted, `git status` clean).
+
+**Discovery + first batch (Specs 1594–1676):** a 20-agent parallel discovery workflow (general-purpose
+agents, one per European segment: NL/DE/BE/FR/Nordic/UK e-commerce, SaaS, fintech, HR-tech, health-tech,
+mobility, gaming, energy, travel, edtech, agencies, proptech, cybersecurity, manufacturing) web-verified
+and returned **230 unique Recruitee subdomains** with factual enrichment. Marshaled + merged with a
+hand-probed seed list, then re-gated by the **central deterministic probe**: **84/230 survived**
+(≥3 live title-bearing offers — a ~37% survival rate, far above the ~5% of blind subdomain guessing).
+Assembly produced **83 descriptors** (1 rejected: `rebuy` — slug collides with an existing plugin).
+Scaffolded all 83 + wired into the four shared files (`site.enum.ts`, `packages/plugins/index.ts`,
+`tsconfig.base.json`, `jest.config.js`). Company-source plugin count **1438 → 1521**.
+
+**Tests:** all **83 generated suites green — 747 tests, 0 failures** (`jest --testPathPatterns`, ~9.5
+min). Probe unit suite 19/19. Docs lint (`npm run lint:docs`) green — every one of the 84 new specs is
+linked from `docs/index.md`.
+
+**Docs:** `docs/index.md` — added the Spec 1593 pipeline-foundation row + all 83 batch rows
+(1594–1676); footer bumped to run #444. `docs/questions.md` — added **Q-RECRUITEE-1** (count-only gate,
+brand-match deferred to descriptor assembly — consistent with Q-SR-1/Q-LEVER-1/Q-ASHBY-1) and
+**Q-RECRUITEE-2** (per-company subdomain host model). This `docs/log.md` entry.
+
+**Notes / decisions (autonomous):**
+
+- Chose Recruitee as the fifth backend because its `source-ats-recruitee` plugin already ships, its
+  public API is zero-auth and stable (`{ offers: [...] }`), and it opens an under-covered **European
+  SMB/scale-up** segment orthogonal to the enterprise-skewed SmartRecruiters corpus.
+- Preferred verified agent-discovery (each candidate web-checked) over blind slug guessing; the central
+  probe remains the source-of-truth gate, so hallucinated/dead subdomains are filtered deterministically.
+- `verified=false` on every generated plugin until an authenticated live harvest confirms field mapping
+  (same convention as the Greenhouse/Ashby/Lever/SmartRecruiters batches).
+
+---
+
 ## 2026-07-04 — Scheduled run #443 (**SmartRecruiters company-source pipeline foundation + first 217-plugin batch** — Specs 1375, 1376–1592)
 
 **Scope:** Opened a fourth, deterministic **SmartRecruiters-backed** company-source pipeline — the

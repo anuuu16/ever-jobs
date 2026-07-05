@@ -10,6 +10,55 @@
 
 ---
 
+## Q-RECRUITEE-2 — Recruitee per-company subdomain host model
+
+**Context:** Spec 1593. Unlike the four earlier backends (Greenhouse, Ashby,
+Lever, SmartRecruiters), which all serve every board from a **shared API host**
+with the company slug in a path segment, **Recruitee** hosts each board on its own
+**subdomain**: `https://<slug>.recruitee.com/api/offers`. The slug is therefore
+interpolated into the DNS host rather than a URL path.
+
+**Options:**
+
+- **A. Interpolate the slug into the host** via a small `boardUrl(slug)` helper
+  (`https://${encodeURIComponent(slug)}.recruitee.com/api/offers`), and keep the
+  usual `companySlug` (live subdomain) / `slug` (plugin dir/enum) split even though
+  Recruitee subdomains are conventionally lowercase and the two usually coincide.
+- **B. Assume slug == subdomain and drop `companySlug`** — loses parity with the
+  other four pipelines and breaks on any mixed-case / punctuated subdomain.
+
+**Default (proceeding):** **A** — one-line host builder, retains the
+`companySlug`/`slug` split for pipeline symmetry and forward-safety. The delegated
+`source-ats-recruitee` plugin already builds the same subdomain URL, so the probe
+and the runtime plugin agree.
+
+**Resolution:** _pending review._
+
+---
+
+## Q-RECRUITEE-1 — Recruitee board-name anchor: where do we enforce brand-match?
+
+**Context:** Spec 1593. Like SmartRecruiters (and unlike Ashby/Lever), each
+Recruitee offer carries `company_name` on the wire, so a board display name IS
+available from `https://<slug>.recruitee.com/api/offers`.
+
+**Options:**
+
+- **A. Gate on job-count only; capture `company_name` as informational
+  `boardName`; enforce brand-match at descriptor-assembly time** (the verified
+  `displayName` + `companySlug` pair supplied by discovery).
+- **B. Hard brand-match the wire `company_name` against the claimed display name**
+  — brittle (legal-entity vs. brand mismatches, localised names).
+
+**Default (proceeding):** **A** — consistent with Q-SR-1 / Q-LEVER-1 / Q-ASHBY-1.
+Discovery self-verifies each subdomain against the live API (≥3 title-bearing
+offers), and the central deterministic probe re-gates every candidate before
+scaffolding. `boardName` is retained for auditability only.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-SR-2 — SmartRecruiters case-sensitive identifier vs. plugin-dir naming
 
 **Context:** Spec 1375. The SmartRecruiters public Posting API is keyed on a
