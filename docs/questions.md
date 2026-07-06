@@ -10,6 +10,34 @@
 
 ---
 
+## Q-WORKABLE-1 — Workable board-name anchor + empty-but-real accounts
+
+**Context:** Spec 1677. The public Workable widget API
+(`https://apply.workable.com/api/v1/widget/accounts/<slug>`) returns HTTP 200 with
+a `{ name, description, jobs: [...] }` envelope for **every real account** — even
+ones with **zero open roles** (`jobs: []`) — while a non-existent slug returns a
+plain-text `Not Found`. The `name` field is usually just the account slug echoed
+back, not a polished brand name. Many well-known brands own a Workable account but
+currently host zero live roles (having paused hiring or migrated backends).
+
+**Options:**
+
+- **A. Gate on job-count only (`jobs.length >= MIN_JOBS = 3`, each title-bearing);
+  capture the envelope `name` as informational `boardName`; enforce brand-match at
+  descriptor-assembly time** (the verified `displayName` + `companySlug` pair
+  supplied by discovery). An empty-but-real account simply fails the gate.
+- **B. Hard brand-match the wire `name` against the claimed display name** —
+  useless here, because `name` is normally the slug, not the brand.
+
+**Default (proceeding):** **A** — consistent with
+Q-RECRUITEE-1 / Q-SR-1 / Q-LEVER-1 / Q-ASHBY-1. The count gate naturally excludes
+the many empty-but-real Workable accounts; `boardName` is retained for
+auditability only.
+
+**Resolution:** _pending review._
+
+---
+
 ## Q-RECRUITEE-2 — Recruitee per-company subdomain host model
 
 **Context:** Spec 1593. Unlike the four earlier backends (Greenhouse, Ashby,

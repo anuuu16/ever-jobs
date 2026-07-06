@@ -15,6 +15,79 @@
 
 ---
 
+## 2026-07-06 — Scheduled run #445 (**Workable company-source pipeline foundation** — Spec 1677; first batch deferred to next run by an external rate-limit)
+
+**Scope:** Opened a **sixth**, deterministic **Workable-backed** company-source pipeline — the
+sibling of the Greenhouse, Ashby (Spec 975), Lever (Spec 1194), SmartRecruiters (Spec 1375), and
+Recruitee (Spec 1593) pipelines — to keep diversifying the company-direct backend mix, this time
+toward the **very large global startup / SMB population** that Workable over-indexes on. The
+`source-ats-workable` plugin already ships and is registered under `Site.WORKABLE`, but no
+company-direct plugin delegated to it, so the large population of companies hosting careers on
+**Workable** (`https://apply.workable.com/api/v1/widget/accounts/<slug>`, public zero-auth widget
+careers API) was invisible to the five existing discovery gates. This run built and validated the
+reusable Workable plumbing **and** persisted a 382-company discovery corpus for the batch; the live
+discovery gate itself was blocked by an external Cloudflare rate-limit (see below), so the first
+plugin batch is deferred to the next run.
+
+**Baseline at run start:** Local `develop` even with `origin/develop` at `005aebc1` (run #444, 83
+Recruitee plugins), CI **green**, working tree clean. Next spec number per the band-aware allocator
+(band `ever-jobs/ever-jobs` = 1–4999) was **1677**. The four external reference repos under the
+parent `OTHERS/` directory (outside this repo) were reviewed for situational awareness; tracked
+**outside** this repo per the no-competitor-references rule.
+
+**What shipped (all TypeScript, additive — nothing removed):**
+
+- **`scripts/probe-workable-company-source.ts`** — deterministic discovery probe for the **public,
+  zero-auth Workable widget careers API**. Like Recruitee (`{ offers: [...] }`) and SmartRecruiters
+  (`{ content: [...] }`), the payload is a **`{ jobs: [...] }` envelope**; unlike Recruitee's
+  per-company subdomain host it is a **shared host** (`apply.workable.com`, slug in the path — same
+  model as Greenhouse). The stable per-job id is **`shortcode`** (fallback `code`), not `id`. The
+  envelope also carries a top-level `name` (usually the account slug echoed back), captured into
+  `boardName` for parity; the gate stays purely count-based (`jobs.length >= MIN_JOBS (3)`, each
+  `title`-bearing). Location is composed from the structured `locations[]` entry, then flat
+  `city/state/country`, then a `telecommuting` remote flag. Network I/O isolated in `probeOne`; the
+  decision surface (`gateBoard`, `extractListings`, `boardUrl`) is pure and unit-tested.
+  **Hardened against Cloudflare rate-limiting** (see the operational note): default concurrency **4**
+  with a **300 ms** inter-request delay and **exponential backoff on HTTP 429 / `error code: 1015`**
+  (`getJson` distinguishes a genuine miss from a rate-limit; `getJsonWithRetry` retries the latter).
+  All throttling knobs overridable via `PROBE_CONCURRENCY` / `PROBE_DELAY_MS` / `PROBE_MAX_RETRIES`.
+- **`scripts/__tests__/probe-workable-company-source.spec.ts`** — **21 unit tests**, no live network
+  (pins `gateBoard`/`extractListings`/`boardUrl`, incl. envelope-shape, `shortcode`/`code` id
+  fallback, structured-vs-flat location composition, remote flag, published_on/created_at timestamp
+  fallback, `name`-capture, untitled-padding rejection). Green.
+- **`scripts/scaffold-workable-company-source.ts`** — pure, conflict-free file emitter that
+  materialises, per descriptor, the full `source-company-<slug>` package (package.json, tsconfig,
+  index, module, **registry-delegation service**, generic mocked test, Workable **`{jobs:[...]}`
+  widget fixture**) **and** the `.specify/specs/<specNo>-source-company-<slug>/` spec/plan/tasks. The
+  generated service resolves `Site.WORKABLE` from the `PluginRegistry`, delegates `scrape({ ...input,
+  companySlug })`, and re-stamps `site`/`companyName`/`id` (`workable-`→`<slug>-`). Never touches
+  shared wiring files.
+- **`scripts/assemble-workable-batch.ts`** — deterministic descriptor join (survivors + factual
+  enrichment → batch), deriving `className`/`moduleName`/`serviceName`/`enumKey`/`slug` from the
+  display name and rejecting digit-prefix enumKeys + slug/enumKey collisions against `site.enum.ts`.
+- **`scripts/seeds/workable-candidates.json`** (+ `scripts/seeds/README.md`) — a **reusable
+  382-company Workable discovery corpus** (factual enrichment keyed by `companySlug`), brainstormed
+  this run by a 30-cell parallel sector×region discovery workflow (21 cells completed;
+  WebFetch-verified). Persisted so the next run live-probes the pool directly instead of re-running
+  the token-expensive brainstorm.
+- **`.specify/specs/1677-workable-company-source-pipeline/`** — spec/plan/tasks for the pipeline
+  foundation (constitution cross-check; backend-contract table across all six backends).
+
+**End-to-end smoke (proves the generator, no live network):** a throwaway descriptor was scaffolded
+→ wired into the four shared files (`site.enum.ts`, `packages/plugins/index.ts`, `tsconfig.base.json`,
+`jest.config.js`) → the generated plugin's mocked unit suite ran **9/9 green** → **fully reverted**
+(package + spec dirs removed, wiring files `git checkout`-restored; `grep` confirms zero residue).
+
+**Why the first batch is deferred (external blocker, honestly reported):** `apply.workable.com` sits
+behind **Cloudflare**, which returns **HTTP 429 / `error code: 1015`** on bursty traffic. The initial
+382-candidate live probe (concurrency 16) tripped the IP-wide rate-limit; a subsequent **gentle**
+re-probe (concurrency 4 + 300 ms delay + 1015 backoff) still returned **0 survivors** because the IP
+penalty was still active (a fresh single request confirmed HTTP 429). A Cloudflare-1015 burst penalty
+persists ~30–60 min, beyond this hourly run's time budget. Rather than fabricate `jobCount`s or ship
+empty-board plugins, the batch is deferred: the **next run** re-probes the persisted seed corpus with
+the now-default gentle probe (the penalty will have expired) and lands Specs 1678+. This is recorded
+as **Q-WORKABLE-1** in `docs/questions.md`.
+
 ## 2026-07-05 — Scheduled run #444 (**Recruitee company-source pipeline foundation + first 83-plugin batch** — Specs 1593, 1594–1676)
 
 **Scope:** Opened a **fifth**, deterministic **Recruitee-backed** company-source pipeline — the
