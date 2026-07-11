@@ -29,6 +29,19 @@ export interface IRunStateStore {
    * place so the next attempt re-covers the same window).
    */
   setLastRunAt(key: string, at: Date): Promise<void>;
+
+  /**
+   * Remove every persisted watermark (all keys), not just one. Intended
+   * for admin "clean all" resets — after this, the next run for every
+   * key behaves like a first-ever run (its lookback falls back to the
+   * first-run window rather than elapsed time).
+   *
+   * Named `resetAll` (not `clear`) because a single backend class
+   * implements `IJobStore` + `IExportedJobStore` + `IRunStateStore`
+   * simultaneously — each interface's bulk-wipe method needs a
+   * distinct name so one class body can satisfy all three.
+   */
+  resetAll(): Promise<void>;
 }
 
 /**
@@ -52,6 +65,7 @@ export function isRunStateStore(
   const c = candidate as Partial<IRunStateStore>;
   return (
     typeof c.getLastRunAt === 'function' &&
-    typeof c.setLastRunAt === 'function'
+    typeof c.setLastRunAt === 'function' &&
+    typeof c.resetAll === 'function'
   );
 }

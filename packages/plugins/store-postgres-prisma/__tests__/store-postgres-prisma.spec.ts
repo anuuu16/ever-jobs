@@ -784,6 +784,7 @@ function makeFakePrismaClient(): PrismaJobsClient {
         sources: [],
       }),
       count: jest.fn().mockResolvedValue(0),
+      deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
     },
     sourceObservation: {
       createMany: jest.fn().mockResolvedValue({ count: 0 }),
@@ -799,6 +800,7 @@ function makeFakePrismaClient(): PrismaJobsClient {
     runState: {
       findUnique: jest.fn().mockResolvedValue(null),
       upsert: jest.fn().mockResolvedValue({ key: 'fake', lastRunAt: new Date('2026-01-01T00:00:00.000Z') }),
+      deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
     },
     $transaction: jest.fn(async (fn) => {
       // Pass the same fake through so transactional calls hit the

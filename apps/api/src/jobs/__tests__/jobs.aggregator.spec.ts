@@ -409,6 +409,7 @@ describe('JobsAggregator', () => {
         listByQuery: jest.fn(),
         countByQuery: jest.fn(),
         delete: jest.fn(),
+        deleteAll: jest.fn(),
       };
       const jobsService = makeJobsServiceIncremental({
         [Site.INDEED]: [makeJob('1')],

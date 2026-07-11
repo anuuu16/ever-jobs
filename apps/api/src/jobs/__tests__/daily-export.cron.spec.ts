@@ -72,6 +72,7 @@ function makeExportedJobStore(): IExportedJobStore & {
   readonly markExported: jest.Mock;
   readonly prune: jest.Mock;
   readonly count: jest.Mock;
+  readonly clearAll: jest.Mock;
 } {
   const seen = new Map<string, Date>();
   return {
@@ -83,6 +84,11 @@ function makeExportedJobStore(): IExportedJobStore & {
     }),
     prune: jest.fn(async () => 0),
     count: jest.fn(async () => seen.size),
+    clearAll: jest.fn(async () => {
+      const n = seen.size;
+      seen.clear();
+      return n;
+    }),
   };
 }
 
@@ -90,12 +96,16 @@ function makeExportedJobStore(): IExportedJobStore & {
 function makeRunStateStore(): IRunStateStore & {
   readonly getLastRunAt: jest.Mock;
   readonly setLastRunAt: jest.Mock;
+  readonly resetAll: jest.Mock;
 } {
   const state = new Map<string, Date>();
   return {
     getLastRunAt: jest.fn(async (key: string) => state.get(key) ?? null),
     setLastRunAt: jest.fn(async (key: string, at: Date) => {
       state.set(key, at);
+    }),
+    resetAll: jest.fn(async () => {
+      state.clear();
     }),
   };
 }

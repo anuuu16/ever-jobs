@@ -220,6 +220,8 @@ export interface PrismaJobsClient {
       where: { canonicalJobId: string };
     }): Promise<PrismaCanonicalJobRow>;
 
+    deleteMany(args?: { where?: Record<string, unknown> }): Promise<{ count: number }>;
+
     count(args?: { where?: Record<string, unknown> }): Promise<number>;
   };
 
@@ -264,6 +266,8 @@ export interface PrismaJobsClient {
       create: PrismaRunStateRow;
       update: { lastRunAt: Date };
     }): Promise<PrismaRunStateRow>;
+
+    deleteMany(args?: { where?: Record<string, unknown> }): Promise<{ count: number }>;
   };
 
   /**
@@ -617,6 +621,13 @@ export class PostgresPrismaJobStore
     return true;
   }
 
+  async deleteAll(): Promise<number> {
+    // FK ON DELETE CASCADE drops attached observations automatically
+    // (Postgres enforces FKs unconditionally — no PRAGMA toggle).
+    const result = await this.client.canonicalJob.deleteMany();
+    return result.count;
+  }
+
   // ----------------------------------------------------------------------
   // IJobObservationStore
   // ----------------------------------------------------------------------
@@ -705,6 +716,11 @@ export class PostgresPrismaJobStore
     return this.client.exportedJob.count();
   }
 
+  async clearAll(): Promise<number> {
+    const result = await this.client.exportedJob.deleteMany({});
+    return result.count;
+  }
+
   // ----------------------------------------------------------------------
   // IRunStateStore
   // ----------------------------------------------------------------------
@@ -720,6 +736,10 @@ export class PostgresPrismaJobStore
       create: { key, lastRunAt: at },
       update: { lastRunAt: at },
     });
+  }
+
+  async resetAll(): Promise<void> {
+    await this.client.runState.deleteMany();
   }
 
   // ----------------------------------------------------------------------

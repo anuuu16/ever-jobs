@@ -92,6 +92,9 @@ describe('StoreModule.forActive (Spec 004 / T04)', () => {
     delete(): Promise<boolean> {
       return Promise.resolve(false);
     }
+    deleteAll(): Promise<number> {
+      return Promise.resolve(0);
+    }
     putAll(
       _id: string,
       _o: ReadonlyArray<SourceObservation>,

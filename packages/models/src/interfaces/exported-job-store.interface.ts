@@ -42,6 +42,19 @@ export interface IExportedJobStore {
    * admin surface show "N exported so far" without pulling every URL.
    */
   count(): Promise<number>;
+
+  /**
+   * Remove every exported-mark unconditionally (not just ones older
+   * than a cutoff, unlike {@link IExportedJobStore.prune}). Intended
+   * for admin "clean all" resets, not production request paths.
+   * Returns the number of marks removed.
+   *
+   * Named `clearAll` (not `clear`) because a single backend class
+   * implements `IJobStore` + `IExportedJobStore` + `IRunStateStore`
+   * simultaneously — each interface's bulk-wipe method needs a
+   * distinct name so one class body can satisfy all three.
+   */
+  clearAll(): Promise<number>;
 }
 
 /**
@@ -67,6 +80,7 @@ export function isExportedJobStore(
     typeof c.filterUnseen === 'function' &&
     typeof c.markExported === 'function' &&
     typeof c.prune === 'function' &&
-    typeof c.count === 'function'
+    typeof c.count === 'function' &&
+    typeof c.clearAll === 'function'
   );
 }

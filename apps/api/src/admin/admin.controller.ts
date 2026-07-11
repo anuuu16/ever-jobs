@@ -18,15 +18,23 @@ import {
   IExportedJobStore,
   IJobObservationStore,
   IJobStore,
+  IRunStateStore,
   JOB_OBSERVATION_STORE_TOKEN,
   JOB_STORE_TOKEN,
   JobStoreQuery,
+  RUN_STATE_STORE_TOKEN,
   ScraperInputDto,
   Site,
   SourceObservation,
 } from '@ever-jobs/models';
 import { PluginRegistry } from '@ever-jobs/plugin';
 import { JobsAggregator, PerSiteAggregateResult } from '../jobs/jobs.aggregator';
+import {
+  AdminBackgroundJobsService,
+  BackgroundJobName,
+  BackgroundJobProgress,
+  BackgroundJobStatus,
+} from './admin-background-jobs.service';
 import { ADMIN_UI_HTML } from './admin-ui.html';
 import { ATS_COMPANY_DIRECTORY, AtsCompanyEntry } from './ats-company-directory';
 
@@ -124,10 +132,13 @@ const CATEGORY_ORDER = [
  * `production` unless explicitly re-enabled) — this is a debugging tool,
  * not a hardened surface, and it is excluded from the Swagger/Scalar
  * docs (`@ApiExcludeController`) so it doesn't show up as a "real" API.
- * Read-only: it re-uses the existing `IJobStore.listByQuery` /
+ * Mostly read-only: it re-uses the existing `IJobStore.listByQuery` /
  * `getById` / `IJobObservationStore.listByCanonicalId` / the
  * `IExportedJobStore` capability added for `DailyExportCron` — no new
- * persistence surface.
+ * read-side persistence surface. The one write-capable escape hatch is
+ * `clearAll()` (a destructive full reset for local testing), which
+ * reuses `IJobStore.deleteAll` / `IExportedJobStore.clearAll` /
+ * `IRunStateStore.resetAll` rather than introducing a bespoke wipe path.
  */
 @ApiExcludeController()
 @Controller()
@@ -147,6 +158,11 @@ export class AdminController {
     private readonly aggregator?: JobsAggregator,
     @Optional()
     private readonly registry?: PluginRegistry,
+    @Optional()
+    @Inject(RUN_STATE_STORE_TOKEN)
+    private readonly runStateStore?: IRunStateStore | null,
+    @Optional()
+    private readonly backgroundJobs?: AdminBackgroundJobsService,
   ) {}
 
   @Get('admin')
@@ -199,6 +215,90 @@ export class AdminController {
     ]);
     const items = await this.withExportedStatus(page.items);
     return { items, nextCursor: page.nextCursor, total, totalExported };
+  }
+
+  /**
+   * Kick off a full reset — every canonical job (+ observations,
+   * cascaded), every exported-job mark, and every `IRunStateStore`
+   * watermark — so the next scrape behaves like a brand-new deployment.
+   * Destructive and irreversible; the admin UI gates this behind a
+   * type-to-confirm prompt before calling it.
+   *
+   * Runs via `AdminBackgroundJobsService` like `extractAll()` — in
+   * practice this finishes in milliseconds, but it shares the same
+   * start/poll contract so the UI has one status-polling mechanism for
+   * both destructive/long-running actions instead of two.
+   */
+  @Post('api/admin/jobs/clear-all')
+  clearAll(): BackgroundJobStatus {
+    this.assertEnabled();
+    if (!this.jobStore) {
+      throw new NotFoundException('No job store bound');
+    }
+    if (!this.backgroundJobs) {
+      throw new NotFoundException('No AdminBackgroundJobsService bound');
+    }
+
+    return this.backgroundJobs.start('clear-all', async () => this.runClearAll());
+  }
+
+  @Get('api/admin/jobs/background-status')
+  backgroundStatus(): Record<BackgroundJobName, BackgroundJobStatus> {
+    this.assertEnabled();
+    if (!this.backgroundJobs) {
+      return {
+        'extract-all': { name: 'extract-all', state: 'idle' },
+        'clear-all': { name: 'clear-all', state: 'idle' },
+      };
+    }
+    return this.backgroundJobs.getAll();
+  }
+
+  /**
+   * Kick off a background job that runs BOTH: (1) an extraction across
+   * every registered site (mirrors `run()` with no site filter), and
+   * (2) the ATS company batch across every platform × every known
+   * company in `ATS_COMPANY_DIRECTORY` (mirrors `runCompanies()`, run
+   * one platform at a time so it doesn't fan out across all ~530
+   * companies simultaneously). No manual selection — this is the "just
+   * get everything" button.
+   */
+  @Post('api/admin/jobs/extract-all')
+  extractAll(): BackgroundJobStatus {
+    this.assertEnabled();
+    if (!this.aggregator) {
+      throw new NotFoundException('No JobsAggregator bound');
+    }
+    if (!this.registry) {
+      throw new NotFoundException('No PluginRegistry bound');
+    }
+    if (!this.backgroundJobs) {
+      throw new NotFoundException('No AdminBackgroundJobsService bound');
+    }
+
+    return this.backgroundJobs.start('extract-all', (update) => this.runExtractAll(update));
+  }
+
+  // ── clearAll() / extractAll() background-job bodies ──────────────────
+
+  private async runClearAll(): Promise<{
+    deletedJobs: number;
+    deletedExportedMarks: number | null;
+    resetRunState: boolean;
+  }> {
+    const [deletedJobs, deletedExportedMarks] = await Promise.all([
+      this.jobStore!.deleteAll(),
+      this.exportedJobStore ? this.exportedJobStore.clearAll() : Promise.resolve(null),
+    ]);
+    if (this.runStateStore) {
+      await this.runStateStore.resetAll();
+    }
+
+    return {
+      deletedJobs,
+      deletedExportedMarks,
+      resetRunState: Boolean(this.runStateStore),
+    };
   }
 
   @Get('api/admin/sites')
@@ -260,22 +360,57 @@ export class AdminController {
       ? Math.min(body.resultsWanted, 100)
       : 20;
 
-    // One aggregate() call per company, fanned out concurrently — mirrors
-    // JobsService's own Promise.allSettled convention so one company's
-    // failure (dead slug, site down) never aborts the rest of the batch.
-    // `resultsWanted` applies PER company, not split across the batch —
-    // "10" means 10 jobs from each selected company.
+    const batch = await this.runCompanyBatch(site, companySlugs, {
+      searchTerm: body.searchTerm || undefined,
+      location: body.location || undefined,
+      isRemote: body.isRemote ?? false,
+      resultsWanted,
+      captureRawResponse: body.captureRawResponse ?? false,
+    });
+
+    return {
+      site,
+      companiesRequested: companySlugs.length,
+      ...batch,
+    };
+  }
+
+  /**
+   * One `aggregate()` call per company slug, fanned out concurrently —
+   * mirrors `JobsService`'s own `Promise.allSettled` convention so one
+   * company's failure (dead slug, site down) never aborts the rest of
+   * the batch. `resultsWanted` applies PER company, not split across the
+   * batch. Shared by `runCompanies()` (one platform, operator-picked
+   * companies) and `extractAll()`'s ATS phase (every platform, every
+   * known company) so the fan-out-and-tally logic isn't duplicated.
+   */
+  private async runCompanyBatch(
+    site: Site,
+    companySlugs: ReadonlyArray<string>,
+    options: {
+      readonly searchTerm?: string;
+      readonly location?: string;
+      readonly isRemote?: boolean;
+      readonly resultsWanted: number;
+      readonly captureRawResponse?: boolean;
+    },
+  ): Promise<{
+    rawCount: number;
+    outputCount: number;
+    companiesSucceeded: number;
+    companiesFailed: number;
+  }> {
     const settled = await Promise.allSettled(
       companySlugs.map((slug) =>
         this.aggregator!.aggregate(
           new ScraperInputDto({
             siteType: [site],
             companySlug: slug,
-            searchTerm: body.searchTerm || undefined,
-            location: body.location || undefined,
-            isRemote: body.isRemote ?? false,
-            resultsWanted,
-            captureRawResponse: body.captureRawResponse ?? false,
+            searchTerm: options.searchTerm,
+            location: options.location,
+            isRemote: options.isRemote ?? false,
+            resultsWanted: options.resultsWanted,
+            captureRawResponse: options.captureRawResponse ?? false,
           }),
         ),
       ),
@@ -294,14 +429,77 @@ export class AdminController {
         companiesFailed++;
       }
     }
+    return { rawCount, outputCount, companiesSucceeded, companiesFailed };
+  }
+
+  /**
+   * Body of the `extract-all` background job — see `extractAll()`'s doc
+   * comment for the two-phase shape. Platforms run sequentially (one
+   * `runCompanyBatch` at a time) so the whole operation never fans out
+   * across all ~530 known companies simultaneously; companies within a
+   * single platform still run concurrently via `runCompanyBatch`.
+   */
+  private async runExtractAll(
+    update: (progress: BackgroundJobProgress) => void,
+  ): Promise<{
+    sites: { rawCount: number; outputCount: number };
+    atsCompanies: {
+      platforms: number;
+      companiesSucceeded: number;
+      companiesFailed: number;
+      rawCount: number;
+      outputCount: number;
+    };
+  }> {
+    const validSites = new Set(Object.values(Site) as string[]);
+    const platforms = Object.entries(ATS_COMPANY_DIRECTORY).filter(([s]) =>
+      validSites.has(s),
+    ) as Array<[Site, AtsCompanyEntry[]]>;
+    const totalUnits = 1 + platforms.length;
+
+    update({ done: 0, total: totalUnits, label: 'Phase 1/2: full-site extraction (running)' });
+    const allSiteIds = this.registry!.listSources().map((s) => s.site);
+    const siteResult = await this.aggregator!.aggregateIncremental(
+      new ScraperInputDto({ siteType: allSiteIds.length ? allSiteIds : undefined }),
+    );
+
+    update({
+      done: 1,
+      total: totalUnits,
+      label: `Phase 2/2: ATS companies (0/${platforms.length} platforms)`,
+    });
+
+    let atsRawCount = 0;
+    let atsOutputCount = 0;
+    let companiesSucceeded = 0;
+    let companiesFailed = 0;
+    for (let i = 0; i < platforms.length; i++) {
+      const [site, companies] = platforms[i];
+      const batch = await this.runCompanyBatch(
+        site,
+        companies.map((c) => c.slug),
+        { resultsWanted: 20, isRemote: false, captureRawResponse: false },
+      );
+      atsRawCount += batch.rawCount;
+      atsOutputCount += batch.outputCount;
+      companiesSucceeded += batch.companiesSucceeded;
+      companiesFailed += batch.companiesFailed;
+      update({
+        done: 1 + i + 1,
+        total: totalUnits,
+        label: `Phase 2/2: ATS companies (${i + 1}/${platforms.length} platforms)`,
+      });
+    }
 
     return {
-      site,
-      companiesRequested: companySlugs.length,
-      companiesSucceeded,
-      companiesFailed,
-      rawCount,
-      outputCount,
+      sites: { rawCount: siteResult.rawCount, outputCount: siteResult.outputCount },
+      atsCompanies: {
+        platforms: platforms.length,
+        companiesSucceeded,
+        companiesFailed,
+        rawCount: atsRawCount,
+        outputCount: atsOutputCount,
+      },
     };
   }
 

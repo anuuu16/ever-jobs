@@ -329,6 +329,13 @@ export class InMemoryJobStore
     return existed;
   }
 
+  async deleteAll(): Promise<number> {
+    const count = this.canonicals.size;
+    this.canonicals.clear();
+    this.observations.clear();
+    return count;
+  }
+
   // ----------------------------------------------------------------------
   // IJobObservationStore
   // ----------------------------------------------------------------------
@@ -496,6 +503,12 @@ export class InMemoryJobStore
     return this.exportedJobs.size;
   }
 
+  async clearAll(): Promise<number> {
+    const count = this.exportedJobs.size;
+    this.exportedJobs.clear();
+    return count;
+  }
+
   // ----------------------------------------------------------------------
   // IRunStateStore
   // ----------------------------------------------------------------------
@@ -506,6 +519,10 @@ export class InMemoryJobStore
 
   async setLastRunAt(key: string, at: Date): Promise<void> {
     this.runState.set(key, at);
+  }
+
+  async resetAll(): Promise<void> {
+    this.runState.clear();
   }
 
   // ----------------------------------------------------------------------

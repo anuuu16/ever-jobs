@@ -440,6 +440,12 @@ export class SqliteDrizzleJobStore
     return result.changes > 0;
   }
 
+  async deleteAll(): Promise<number> {
+    // FK ON DELETE CASCADE drops attached observations automatically.
+    const result = this.db.delete(canonicalJob).run();
+    return result.changes;
+  }
+
   // ----------------------------------------------------------------------
   // IJobObservationStore
   // ----------------------------------------------------------------------
@@ -545,6 +551,11 @@ export class SqliteDrizzleJobStore
     return Number(rows[0]?.c ?? 0);
   }
 
+  async clearAll(): Promise<number> {
+    const result = this.db.delete(exportedJob).run();
+    return result.changes;
+  }
+
   // ----------------------------------------------------------------------
   // IRunStateStore
   // ----------------------------------------------------------------------
@@ -569,6 +580,10 @@ export class SqliteDrizzleJobStore
         set: { lastRunAt: at.toISOString() },
       })
       .run();
+  }
+
+  async resetAll(): Promise<void> {
+    this.db.delete(runState).run();
   }
 
   // ----------------------------------------------------------------------

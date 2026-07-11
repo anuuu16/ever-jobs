@@ -44,6 +44,30 @@ export const ADMIN_UI_HTML = `<!doctype html>
     gap: 0.4rem !important;
   }
   hr { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+  .bg-job-row { margin-bottom: 1rem; }
+  .bg-job-row:last-child { margin-bottom: 0; }
+  .bg-job-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+  button.danger { border-color: var(--bad); color: var(--bad); }
+  button.danger:hover:not(:disabled) { background: var(--bad); color: #fff; }
+  .confirm-inline {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.7rem;
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .confirm-inline.open { display: flex; }
+  .confirm-inline input {
+    font: inherit;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    min-width: 14rem;
+  }
+  .bg-job-progress { color: var(--muted); font-size: 0.8rem; }
   .filters {
     display: flex;
     flex-wrap: wrap;
@@ -248,6 +272,41 @@ export const ADMIN_UI_HTML = `<!doctype html>
   </div>
 
   <div class="run-panel">
+    <h2>Background jobs</h2>
+    <div class="sub">
+      These run automatically with no manual site or company selection, start in the
+      background (the request returns immediately), and their status is still visible
+      after a page refresh.
+    </div>
+
+    <div class="bg-job-row">
+      <div class="bg-job-controls">
+        <button type="button" id="btn-extract-all">Extract ALL sources</button>
+        <span class="hint">Runs every registered source AND every known ATS company (~530 companies) — can take a very long time.</span>
+      </div>
+      <div class="confirm-inline" id="confirm-extract-all">
+        <input type="text" id="confirm-extract-all-input" placeholder='Type "EXTRACT ALL" to confirm' />
+        <button type="button" class="primary" id="confirm-extract-all-btn" disabled>Confirm</button>
+        <button type="button" id="confirm-extract-all-cancel">Cancel</button>
+      </div>
+      <div class="status" id="extract-all-status"></div>
+    </div>
+
+    <div class="bg-job-row">
+      <div class="bg-job-controls">
+        <button type="button" id="btn-delete-all" class="danger">Delete ALL data</button>
+        <span class="hint">Wipes every canonical job, exported mark, and run watermark. Irreversible.</span>
+      </div>
+      <div class="confirm-inline" id="confirm-delete-all">
+        <input type="text" id="confirm-delete-all-input" placeholder='Type "DELETE ALL" to confirm' />
+        <button type="button" class="primary" id="confirm-delete-all-btn" disabled>Confirm</button>
+        <button type="button" id="confirm-delete-all-cancel">Cancel</button>
+      </div>
+      <div class="status" id="delete-all-status"></div>
+    </div>
+  </div>
+
+  <div class="run-panel">
     <h2>ATS company batch</h2>
     <div class="sub">
       Pick an ATS platform and scrape its known companies (or type a slug manually) without
@@ -412,6 +471,18 @@ export const ADMIN_UI_HTML = `<!doctype html>
     rRemote: document.getElementById('r-remote'),
     rCaptureRaw: document.getElementById('r-capture-raw'),
     btnRun: document.getElementById('btn-run'),
+    btnExtractAll: document.getElementById('btn-extract-all'),
+    confirmExtractAll: document.getElementById('confirm-extract-all'),
+    confirmExtractAllInput: document.getElementById('confirm-extract-all-input'),
+    confirmExtractAllBtn: document.getElementById('confirm-extract-all-btn'),
+    confirmExtractAllCancel: document.getElementById('confirm-extract-all-cancel'),
+    extractAllStatus: document.getElementById('extract-all-status'),
+    btnDeleteAll: document.getElementById('btn-delete-all'),
+    confirmDeleteAll: document.getElementById('confirm-delete-all'),
+    confirmDeleteAllInput: document.getElementById('confirm-delete-all-input'),
+    confirmDeleteAllBtn: document.getElementById('confirm-delete-all-btn'),
+    confirmDeleteAllCancel: document.getElementById('confirm-delete-all-cancel'),
+    deleteAllStatus: document.getElementById('delete-all-status'),
     runStatus: document.getElementById('run-status'),
     btnChooseSites: document.getElementById('btn-choose-sites'),
     sitesSummary: document.getElementById('sites-summary'),
@@ -650,16 +721,25 @@ export const ADMIN_UI_HTML = `<!doctype html>
     syncCategoryCheckboxes();
   }
 
-  function openSitesModal() {
-    els.sitesOverlay.classList.add('open');
-    if (siteCatalog) return;
-    fetch('/api/admin/sites')
+  // Fetches (once) and caches the full /api/admin/sites catalog.
+  function loadSiteCatalog() {
+    if (siteCatalog) return Promise.resolve(siteCatalog);
+    return fetch('/api/admin/sites')
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         return res.json();
       })
       .then(function (data) {
         siteCatalog = data;
+        return data;
+      });
+  }
+
+  function openSitesModal() {
+    els.sitesOverlay.classList.add('open');
+    if (siteCatalog) return;
+    loadSiteCatalog()
+      .then(function () {
         renderSiteCatalog();
       })
       .catch(function (err) {
@@ -934,6 +1014,151 @@ export const ADMIN_UI_HTML = `<!doctype html>
         els.btnRun.disabled = false;
       });
   });
+
+  // ── Background jobs: "Extract ALL sources" / "Delete ALL data" ──────
+
+  var bgPollTimer = null;
+
+  // Wires a type-to-confirm gate: clicking triggerBtn reveals panel (a text
+  // input + Confirm/Cancel button); confirmBtn stays disabled until the
+  // input's value exactly matches phrase. Confirming hides the panel,
+  // clears the input, and calls onConfirm.
+  function wireTypedConfirmation(triggerBtn, panel, input, confirmBtn, cancelBtn, phrase, onConfirm) {
+    triggerBtn.addEventListener('click', function () {
+      panel.classList.add('open');
+      input.value = '';
+      confirmBtn.disabled = true;
+      input.focus();
+    });
+    input.addEventListener('input', function () {
+      confirmBtn.disabled = input.value !== phrase;
+    });
+    confirmBtn.addEventListener('click', function () {
+      if (input.value !== phrase) return;
+      panel.classList.remove('open');
+      input.value = '';
+      onConfirm();
+    });
+    cancelBtn.addEventListener('click', function () {
+      panel.classList.remove('open');
+      input.value = '';
+    });
+  }
+
+  function formatBgResult(status) {
+    if (status.state === 'failed') {
+      return 'Failed: ' + (status.error || 'unknown error');
+    }
+    if (status.state !== 'done' || !status.result) return '';
+    var r = status.result;
+    if (status.name === 'extract-all' && r.sites && r.atsCompanies) {
+      return 'Done — sites: ' + r.sites.rawCount + ' raw / ' + r.sites.outputCount + ' after dedup; ' +
+        'ATS: ' + r.atsCompanies.platforms + ' platform(s), ' +
+        r.atsCompanies.companiesSucceeded + ' succeeded / ' + r.atsCompanies.companiesFailed + ' failed, ' +
+        r.atsCompanies.rawCount + ' raw / ' + r.atsCompanies.outputCount + ' after dedup.';
+    }
+    if (status.name === 'clear-all') {
+      return 'Done — deleted ' + r.deletedJobs + ' job(s)' +
+        (r.deletedExportedMarks === null ? '' : ', ' + r.deletedExportedMarks + ' exported mark(s)') +
+        (r.resetRunState ? ', reset run watermark' : '') + '.';
+    }
+    return 'Done.';
+  }
+
+  function renderBgStatus(statusEl, triggerBtn, status) {
+    if (!status || status.state === 'idle') {
+      statusEl.textContent = '';
+      triggerBtn.disabled = false;
+      return;
+    }
+    triggerBtn.disabled = status.state === 'running';
+    if (status.state === 'running') {
+      var label = status.progress ? status.progress.label : 'Running…';
+      var frac = status.progress ? ' (' + status.progress.done + '/' + status.progress.total + ')' : '';
+      statusEl.textContent = 'Running — ' + label + frac;
+      statusEl.style.color = 'var(--muted)';
+    } else {
+      statusEl.textContent = formatBgResult(status);
+      statusEl.style.color = status.state === 'failed' ? 'var(--bad)' : 'var(--ok)';
+    }
+  }
+
+  function pollBackgroundStatus() {
+    fetch('/api/admin/jobs/background-status')
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        renderBgStatus(els.extractAllStatus, els.btnExtractAll, data['extract-all']);
+        renderBgStatus(els.deleteAllStatus, els.btnDeleteAll, data['clear-all']);
+
+        var anyRunning = data['extract-all'].state === 'running' || data['clear-all'].state === 'running';
+        if (anyRunning) {
+          bgPollTimer = setTimeout(pollBackgroundStatus, 3000);
+        } else {
+          bgPollTimer = null;
+        }
+
+        // A background wipe/extraction just finished — the jobs table
+        // and stat tiles are stale until the next manual search, so
+        // refresh them automatically once.
+        if (data['clear-all'].state === 'done' || data['extract-all'].state === 'done') {
+          if (!anyRunning) {
+            cursorStack = [];
+            currentCursor = undefined;
+            load(undefined, false);
+          }
+        }
+      })
+      .catch(function () {
+        // Best-effort — a failed poll just tries again on the next tick
+        // if something is running, or silently gives up if idle.
+      });
+  }
+
+  wireTypedConfirmation(
+    els.btnExtractAll, els.confirmExtractAll, els.confirmExtractAllInput,
+    els.confirmExtractAllBtn, els.confirmExtractAllCancel, 'EXTRACT ALL',
+    function () {
+      fetch('/api/admin/jobs/extract-all', { method: 'POST' })
+        .then(function (res) {
+          if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || ('HTTP ' + res.status)); });
+          return res.json();
+        })
+        .then(function (status) {
+          renderBgStatus(els.extractAllStatus, els.btnExtractAll, status);
+          if (!bgPollTimer) bgPollTimer = setTimeout(pollBackgroundStatus, 3000);
+        })
+        .catch(function (err) {
+          els.extractAllStatus.textContent = 'Failed to start: ' + err.message;
+          els.extractAllStatus.style.color = 'var(--bad)';
+        });
+    },
+  );
+
+  wireTypedConfirmation(
+    els.btnDeleteAll, els.confirmDeleteAll, els.confirmDeleteAllInput,
+    els.confirmDeleteAllBtn, els.confirmDeleteAllCancel, 'DELETE ALL',
+    function () {
+      fetch('/api/admin/jobs/clear-all', { method: 'POST' })
+        .then(function (res) {
+          if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || ('HTTP ' + res.status)); });
+          return res.json();
+        })
+        .then(function (status) {
+          renderBgStatus(els.deleteAllStatus, els.btnDeleteAll, status);
+          if (!bgPollTimer) bgPollTimer = setTimeout(pollBackgroundStatus, 3000);
+        })
+        .catch(function (err) {
+          els.deleteAllStatus.textContent = 'Failed to start: ' + err.message;
+          els.deleteAllStatus.style.color = 'var(--bad)';
+        });
+    },
+  );
+
+  // Restores whatever is running/finished even across a page refresh.
+  pollBackgroundStatus();
 
   load(undefined, false);
 })();

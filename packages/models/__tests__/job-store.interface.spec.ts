@@ -99,6 +99,9 @@ describe('Spec 004 / T01 — store interfaces & constants', () => {
       async delete(_id: string): Promise<boolean> {
         return false;
       }
+      async deleteAll(): Promise<number> {
+        return 0;
+      }
     }
 
     it('compiles a stub against the interface (compile-time check)', async () => {

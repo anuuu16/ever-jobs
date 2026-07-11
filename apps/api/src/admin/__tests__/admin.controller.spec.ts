@@ -19,9 +19,16 @@
  */
 import 'reflect-metadata';
 import { NotFoundException } from '@nestjs/common';
-import { CanonicalJob, ScraperInputDto, SourceObservation } from '@ever-jobs/models';
+import { CanonicalJob, ScraperInputDto, Site, SourceObservation } from '@ever-jobs/models';
+import { AdminBackgroundJobsService } from '../admin-background-jobs.service';
 import { AdminController } from '../admin.controller';
 import { ADMIN_UI_HTML } from '../admin-ui.html';
+import { ATS_COMPANY_DIRECTORY } from '../ats-company-directory';
+
+/** Flushes pending microtasks — `clearAll()`/`extractAll()` fire their work without awaiting it. */
+function flushMicrotasks(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
 
 function makeJob(overrides: Partial<CanonicalJob> = {}): CanonicalJob {
   return {
@@ -66,6 +73,7 @@ function makeJobStore(jobs: CanonicalJob[] = []) {
     listByQuery: jest.fn().mockResolvedValue({ items: jobs }),
     countByQuery: jest.fn().mockResolvedValue(jobs.length),
     getById: jest.fn().mockImplementation(async (id: string) => jobs.find((j) => j.canonicalJobId === id) ?? null),
+    deleteAll: jest.fn().mockResolvedValue(jobs.length),
   };
 }
 
@@ -101,6 +109,15 @@ function makeExportedJobStore(exportedUrls: string[] = []) {
     markExported: jest.fn(),
     prune: jest.fn(),
     count: jest.fn().mockResolvedValue(exportedUrls.length),
+    clearAll: jest.fn().mockResolvedValue(exportedUrls.length),
+  };
+}
+
+function makeRunStateStore() {
+  return {
+    getLastRunAt: jest.fn().mockResolvedValue(null),
+    setLastRunAt: jest.fn(),
+    resetAll: jest.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -139,6 +156,21 @@ describe('AdminController', () => {
     it('runCompanies() throws NotFoundException', async () => {
       const controller = new AdminController(makeConfigService(false) as any);
       await expect(controller.runCompanies()).rejects.toThrow(NotFoundException);
+    });
+
+    it('clearAll() throws NotFoundException', () => {
+      const controller = new AdminController(makeConfigService(false) as any);
+      expect(() => controller.clearAll()).toThrow(NotFoundException);
+    });
+
+    it('extractAll() throws NotFoundException', () => {
+      const controller = new AdminController(makeConfigService(false) as any);
+      expect(() => controller.extractAll()).toThrow(NotFoundException);
+    });
+
+    it('backgroundStatus() throws NotFoundException', () => {
+      const controller = new AdminController(makeConfigService(false) as any);
+      expect(() => controller.backgroundStatus()).toThrow(NotFoundException);
     });
   });
 
@@ -549,5 +581,194 @@ describe('AdminController', () => {
         expect(input.resultsWanted).toBe(10);
       }
     });
+
+    it('clearAll() throws NotFoundException when no IJobStore is bound', () => {
+      const controller = new AdminController(makeConfigService(true) as any);
+      expect(() => controller.clearAll()).toThrow(NotFoundException);
+    });
+
+    it('clearAll() throws NotFoundException when no AdminBackgroundJobsService is bound', () => {
+      const jobStore = makeJobStore([makeJob()]);
+      const controller = new AdminController(makeConfigService(true) as any, jobStore as any);
+      expect(() => controller.clearAll()).toThrow(NotFoundException);
+    });
+
+    it('clearAll() runs in the background — returns "running" immediately, then "done" with counts', async () => {
+      const jobStore = makeJobStore([makeJob(), makeJob({ canonicalJobId: 'b' })]);
+      const exportedJobStore = makeExportedJobStore(['https://example.com/1', 'https://example.com/2']);
+      const runStateStore = makeRunStateStore();
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        jobStore as any,
+        undefined,
+        exportedJobStore as any,
+        undefined,
+        undefined,
+        runStateStore as any,
+        backgroundJobs,
+      );
+
+      const started = controller.clearAll();
+      expect(started.state).toBe('running');
+      expect(jobStore.deleteAll).toHaveBeenCalled(); // work fires synchronously, just not awaited
+
+      await flushMicrotasks();
+
+      const finished = backgroundJobs.getAll()['clear-all'];
+      expect(finished.state).toBe('done');
+      expect(exportedJobStore.clearAll).toHaveBeenCalled();
+      expect(runStateStore.resetAll).toHaveBeenCalled();
+      expect(finished.result).toEqual({
+        deletedJobs: 2,
+        deletedExportedMarks: 2,
+        resetRunState: true,
+      });
+    });
+
+    it('clearAll() reports null/false for capabilities that are not bound', async () => {
+      const jobStore = makeJobStore([makeJob()]);
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        jobStore as any,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+
+      controller.clearAll();
+      await flushMicrotasks();
+
+      expect(backgroundJobs.getAll()['clear-all'].result).toEqual({
+        deletedJobs: 1,
+        deletedExportedMarks: null,
+        resetRunState: false,
+      });
+    });
+
+    it('clearAll() called again while running is a no-op (does not re-trigger the wipe)', async () => {
+      const jobStore = makeJobStore([makeJob()]);
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        jobStore as any,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+
+      controller.clearAll();
+      controller.clearAll();
+      await flushMicrotasks();
+
+      expect(jobStore.deleteAll).toHaveBeenCalledTimes(1);
+    });
+
+    it('backgroundStatus() reflects both jobs — idle before anything runs', () => {
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+
+      expect(controller.backgroundStatus()).toEqual({
+        'extract-all': { name: 'extract-all', state: 'idle' },
+        'clear-all': { name: 'clear-all', state: 'idle' },
+      });
+    });
+
+    it('extractAll() throws NotFoundException when no JobsAggregator is bound', () => {
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+      expect(() => controller.extractAll()).toThrow(NotFoundException);
+    });
+
+    it('extractAll() throws NotFoundException when no PluginRegistry is bound', () => {
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const aggregator = makeAggregator();
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        undefined,
+        undefined,
+        undefined,
+        aggregator as any,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+      expect(() => controller.extractAll()).toThrow(NotFoundException);
+    });
+
+    it('extractAll() runs every registered site AND every known ATS company, reporting progress and a final summary', async () => {
+      const registry = makeRegistry([
+        { site: 'indeed', name: 'Indeed', category: 'job-board' },
+        { site: 'linkedin', name: 'LinkedIn', category: 'job-board' },
+      ]);
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const aggregateIncremental = jest.fn().mockResolvedValue({
+        jobs: [], rawCount: 10, outputCount: 8, deduped: true, perSite: [],
+      });
+      const aggregate = jest.fn().mockResolvedValue({ jobs: [], rawCount: 1, outputCount: 1, deduped: false });
+      const aggregator = { aggregate, aggregateIncremental };
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        undefined,
+        undefined,
+        undefined,
+        aggregator as any,
+        registry as any,
+        undefined,
+        backgroundJobs,
+      );
+
+      const started = controller.extractAll();
+      expect(started.state).toBe('running');
+
+      await flushMicrotasks();
+      // The ATS phase is a sequential per-platform loop over the full real
+      // directory (~170 platforms / ~530 companies) — give it a few more
+      // microtask turns to fully settle rather than assuming one flush.
+      for (let i = 0; i < 20; i++) await flushMicrotasks();
+
+      const finished = backgroundJobs.getAll()['extract-all'];
+      expect(finished.state).toBe('done');
+      expect(aggregateIncremental).toHaveBeenCalledWith(
+        expect.objectContaining({ siteType: ['indeed', 'linkedin'] }),
+      );
+
+      const validSites = new Set(Object.values(Site) as string[]);
+      const expectedPlatforms = Object.keys(ATS_COMPANY_DIRECTORY).filter((s) => validSites.has(s));
+      const expectedCompanyCalls = expectedPlatforms.reduce(
+        (sum, s) => sum + ATS_COMPANY_DIRECTORY[s].length,
+        0,
+      );
+      expect(aggregate).toHaveBeenCalledTimes(expectedCompanyCalls);
+      expect(finished.result).toMatchObject({
+        sites: { rawCount: 10, outputCount: 8 },
+        atsCompanies: { platforms: expectedPlatforms.length },
+      });
+    }, 30_000);
   });
 });

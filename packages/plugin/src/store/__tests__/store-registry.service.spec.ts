@@ -62,6 +62,9 @@ describe('StoreRegistry (Spec 004 / T03)', () => {
     delete(): Promise<boolean> {
       return Promise.resolve(false);
     }
+    deleteAll(): Promise<number> {
+      return Promise.resolve(0);
+    }
   }
 
   let registry: StoreRegistry;

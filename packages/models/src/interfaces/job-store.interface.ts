@@ -91,6 +91,15 @@ export interface IJobStore {
    * 012 will revisit retention policies.
    */
   delete(id: string): Promise<boolean>;
+
+  /**
+   * Bulk counterpart to {@link IJobStore.delete} — removes every
+   * canonical job (and cascades to `IJobObservationStore` rows exactly
+   * like `delete`) rather than one row at a time. Intended for admin
+   * "clean all" resets, not production request paths. Returns the
+   * number of canonical rows removed.
+   */
+  deleteAll(): Promise<number>;
 }
 
 /**
