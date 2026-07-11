@@ -2,6 +2,7 @@ import { Inject, Injectable, Optional } from '@nestjs/common';
 import {
   CanonicalJob,
   ERR_STORE_INVALID_CURSOR,
+  IExportedJobStore,
   IJobObservationStore,
   IJobStore,
   JOB_STORE_QUERY_DEFAULT_LIMIT,
@@ -18,7 +19,7 @@ import {
   BetterSQLite3Database,
   drizzle,
 } from 'drizzle-orm/better-sqlite3';
-import { canonicalJob, INITIAL_SCHEMA_SQL, sourceObservation } from '../drizzle/schema';
+import { canonicalJob, exportedJob, INITIAL_SCHEMA_SQL, sourceObservation } from '../drizzle/schema';
 
 /**
  * Canonical id under which this backend registers with `StoreRegistry`.
@@ -214,10 +215,13 @@ export const STORE_SQLITE_DRIZZLE_CONFIG = 'STORE_SQLITE_DRIZZLE_CONFIG';
   description: STORE_SQLITE_DRIZZLE_DESCRIPTION,
 })
 @Injectable()
-export class SqliteDrizzleJobStore implements IJobStore, IJobObservationStore {
+export class SqliteDrizzleJobStore
+  implements IJobStore, IJobObservationStore, IExportedJobStore
+{
   private readonly db: BetterSQLite3Database<{
     canonicalJob: typeof canonicalJob;
     sourceObservation: typeof sourceObservation;
+    exportedJob: typeof exportedJob;
   }>;
   private readonly client: Database.Database;
 
@@ -237,7 +241,7 @@ export class SqliteDrizzleJobStore implements IJobStore, IJobObservationStore {
       this.client.pragma('journal_mode = WAL');
     }
     this.db = drizzle(this.client, {
-      schema: { canonicalJob, sourceObservation },
+      schema: { canonicalJob, sourceObservation, exportedJob },
     });
     // Bootstrap the schema — idempotent thanks to `IF NOT EXISTS`.
     // Splits the multi-statement SQL on `;\n` because better-sqlite3
@@ -459,6 +463,7 @@ export class SqliteDrizzleJobStore implements IJobStore, IJobObservationStore {
           url: o.url,
           observedAt: o.observedAt,
           rawTitle: o.rawTitle ?? null,
+          rawResponse: o.rawResponse ?? null,
         }));
         this.db.insert(sourceObservation).values(rows).run();
       },
@@ -480,6 +485,7 @@ export class SqliteDrizzleJobStore implements IJobStore, IJobObservationStore {
       url: r.url,
       observedAt: r.observedAt,
       rawTitle: r.rawTitle ?? undefined,
+      rawResponse: r.rawResponse ?? undefined,
     }));
   }
 
@@ -487,6 +493,44 @@ export class SqliteDrizzleJobStore implements IJobStore, IJobObservationStore {
     const result = this.db
       .delete(sourceObservation)
       .where(eq(sourceObservation.canonicalJobId, canonicalJobId))
+      .run();
+    return result.changes;
+  }
+
+  // ----------------------------------------------------------------------
+  // IExportedJobStore
+  // ----------------------------------------------------------------------
+
+  async filterUnseen(jobUrls: ReadonlyArray<string>): Promise<string[]> {
+    if (jobUrls.length === 0) return [];
+    const seen = this.db
+      .select({ jobUrl: exportedJob.jobUrl })
+      .from(exportedJob)
+      .where(inArray(exportedJob.jobUrl, jobUrls as string[]))
+      .all();
+    const seenSet = new Set(seen.map((r) => r.jobUrl));
+    return jobUrls.filter((url) => !seenSet.has(url));
+  }
+
+  async markExported(jobUrls: ReadonlyArray<string>, at: Date): Promise<void> {
+    if (jobUrls.length === 0) return;
+    const iso = at.toISOString();
+    const tx = this.client.transaction((urls: ReadonlyArray<string>) => {
+      for (const jobUrl of urls) {
+        this.db
+          .insert(exportedJob)
+          .values({ jobUrl, exportedAt: iso })
+          .onConflictDoNothing()
+          .run();
+      }
+    });
+    tx(jobUrls);
+  }
+
+  async prune(olderThan: Date): Promise<number> {
+    const result = this.db
+      .delete(exportedJob)
+      .where(lt(exportedJob.exportedAt, olderThan.toISOString()))
       .run();
     return result.changes;
   }

@@ -24,4 +24,15 @@ export interface SourceObservation {
    * after normalisation.
    */
   readonly rawTitle?: string;
+  /**
+   * Opt-in raw HTTP response body the scraper received for this posting
+   * (HTML page, JSON payload, etc.), captured verbatim for debugging
+   * extraction issues — e.g. "why is `description` empty for this
+   * LinkedIn job?". Populated only when the caller sets
+   * `ScraperInputDto.captureRawResponse = true`; `undefined` otherwise.
+   * Not every scraper implements capture yet — absence does not imply
+   * the source has no raw response, only that this plugin hasn't wired
+   * it up.
+   */
+  readonly rawResponse?: string;
 }

@@ -44,7 +44,15 @@
 -- accelerate `ILIKE '%term%'` substring search. Without this, the
 -- B-tree fallback would degrade to seq scan on a million-row dataset
 -- and miss the Spec 004 / NFR-1 < 50 ms p95 budget.
-CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+--
+-- Explicitly installed `WITH SCHEMA public` (and referenced below as
+-- `public.gin_trgm_ops`, not bare `gin_trgm_ops`) because `DATABASE_URL`
+-- may carry a `?schema=<name>` param — Prisma sets the connection's
+-- `search_path` to exactly that schema (dropping `public`), so an
+-- unqualified `gin_trgm_ops` reference fails opclass resolution
+-- ("operator class gin_trgm_ops does not exist for access method gin")
+-- even though the extension itself installed fine.
+CREATE EXTENSION IF NOT EXISTS "pg_trgm" WITH SCHEMA public;
 
 -- =====================================================================
 -- 2. canonical_job
@@ -76,11 +84,11 @@ CREATE INDEX "idx_canonical_job_merged_at_id"
 -- substring search use the index — without the opclass, Postgres
 -- falls back to seq scan even when the GIN index exists.
 CREATE INDEX "idx_canonical_job_company_trgm"
-  ON "canonical_job" USING GIN ("company" gin_trgm_ops);
+  ON "canonical_job" USING GIN ("company" public.gin_trgm_ops);
 CREATE INDEX "idx_canonical_job_title_trgm"
-  ON "canonical_job" USING GIN ("title" gin_trgm_ops);
+  ON "canonical_job" USING GIN ("title" public.gin_trgm_ops);
 CREATE INDEX "idx_canonical_job_location_trgm"
-  ON "canonical_job" USING GIN ("location" gin_trgm_ops);
+  ON "canonical_job" USING GIN ("location" public.gin_trgm_ops);
 
 -- =====================================================================
 -- 3. source_observation

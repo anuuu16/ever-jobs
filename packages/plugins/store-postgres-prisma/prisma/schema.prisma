@@ -104,10 +104,22 @@ model SourceObservation {
   url            String   @db.Text
   observedAt     DateTime @map("observed_at") @db.Timestamptz(6)
   rawTitle       String?  @map("raw_title") @db.Text
+  rawResponse    String?  @map("raw_response") @db.Text
 
   canonicalJob CanonicalJob @relation(fields: [canonicalJobId], references: [canonicalJobId], onDelete: Cascade)
 
   @@id([canonicalJobId, site, sourceJobId])
   @@index([canonicalJobId], map: "idx_source_observation_canonical_job_id")
   @@map("source_observation")
+}
+
+/// `exported_job` — tracks job URLs already pushed by `DailyExportCron`
+/// so a re-run only surfaces genuinely new postings. Keyed by raw
+/// `jobUrl` (not `canonicalJobId`) since the export cron runs
+/// independent of dedup persistence.
+model ExportedJob {
+  jobUrl     String   @id @map("job_url") @db.Text
+  exportedAt DateTime @map("exported_at") @db.Timestamptz(6)
+
+  @@map("exported_job")
 }

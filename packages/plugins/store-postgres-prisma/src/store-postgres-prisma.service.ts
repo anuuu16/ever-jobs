@@ -2,6 +2,7 @@ import { Inject, Injectable, Optional } from '@nestjs/common';
 import {
   CanonicalJob,
   ERR_STORE_INVALID_CURSOR,
+  IExportedJobStore,
   IJobObservationStore,
   IJobStore,
   JOB_STORE_QUERY_DEFAULT_LIMIT,
@@ -161,6 +162,13 @@ interface PrismaSourceObservationRow {
   url: string;
   observedAt: Date;
   rawTitle: string | null;
+  rawResponse: string | null;
+}
+
+/** Row shape persisted to the `exported_job` table. */
+interface PrismaExportedJobRow {
+  jobUrl: string;
+  exportedAt: Date;
 }
 
 /**
@@ -216,6 +224,21 @@ export interface PrismaJobsClient {
     findMany(args: {
       where?: Record<string, unknown>;
     }): Promise<PrismaSourceObservationRow[]>;
+
+    deleteMany(args: {
+      where?: Record<string, unknown>;
+    }): Promise<{ count: number }>;
+  };
+
+  exportedJob: {
+    findMany(args: {
+      where?: Record<string, unknown>;
+    }): Promise<PrismaExportedJobRow[]>;
+
+    createMany(args: {
+      data: ReadonlyArray<PrismaExportedJobRow>;
+      skipDuplicates?: boolean;
+    }): Promise<{ count: number }>;
 
     deleteMany(args: {
       where?: Record<string, unknown>;
@@ -343,7 +366,9 @@ export const STORE_POSTGRES_PRISMA_CONFIG = 'STORE_POSTGRES_PRISMA_CONFIG';
   description: STORE_POSTGRES_PRISMA_DESCRIPTION,
 })
 @Injectable()
-export class PostgresPrismaJobStore implements IJobStore, IJobObservationStore {
+export class PostgresPrismaJobStore
+  implements IJobStore, IJobObservationStore, IExportedJobStore
+{
   private readonly client: PrismaJobsClient;
 
   constructor(
@@ -525,6 +550,7 @@ export class PostgresPrismaJobStore implements IJobStore, IJobObservationStore {
         url: o.url,
         observedAt: new Date(o.observedAt),
         rawTitle: o.rawTitle ?? null,
+        rawResponse: o.rawResponse ?? null,
       }));
       await tx.sourceObservation.createMany({ data });
     });
@@ -544,12 +570,43 @@ export class PostgresPrismaJobStore implements IJobStore, IJobObservationStore {
         ? r.observedAt.toISOString()
         : String(r.observedAt),
       rawTitle: r.rawTitle ?? undefined,
+      rawResponse: r.rawResponse ?? undefined,
     }));
   }
 
   async deleteByCanonicalId(canonicalJobId: string): Promise<number> {
     const result = await this.client.sourceObservation.deleteMany({
       where: { canonicalJobId },
+    });
+    return result.count;
+  }
+
+  // ----------------------------------------------------------------------
+  // IExportedJobStore
+  // ----------------------------------------------------------------------
+
+  async filterUnseen(jobUrls: ReadonlyArray<string>): Promise<string[]> {
+    if (jobUrls.length === 0) return [];
+    const seen = await this.client.exportedJob.findMany({
+      where: { jobUrl: { in: jobUrls as string[] } },
+    });
+    const seenSet = new Set(seen.map((r) => r.jobUrl));
+    return jobUrls.filter((url) => !seenSet.has(url));
+  }
+
+  async markExported(jobUrls: ReadonlyArray<string>, at: Date): Promise<void> {
+    if (jobUrls.length === 0) return;
+    await this.client.exportedJob.createMany({
+      data: jobUrls.map((jobUrl) => ({ jobUrl, exportedAt: at })),
+      // Two ticks racing on the same URL is a duplicate-mark, not a
+      // conflict worth surfacing — skip rather than throw.
+      skipDuplicates: true,
+    });
+  }
+
+  async prune(olderThan: Date): Promise<number> {
+    const result = await this.client.exportedJob.deleteMany({
+      where: { exportedAt: { lt: olderThan } },
     });
     return result.count;
   }

@@ -100,6 +100,12 @@ export class LinkedInService implements IScraper {
             job.companyIndustry = description.industry ?? job.companyIndustry;
             job.jobType = description.jobType ?? job.jobType;
             job.emails = extractEmails(description.text);
+            job.jobUrlDirect = description.jobUrlDirect ?? job.jobUrlDirect;
+            // Detail-page HTML is more useful for debugging than the list-card
+            // fragment captured below, so it takes precedence when both exist.
+            if (input.captureRawResponse) {
+              job.rawResponse = description.rawResponse ?? job.rawResponse;
+            }
           }
           await randomSleep(this.delay * 1000, (this.delay + this.bandDelay) * 1000);
         } catch (err: any) {
@@ -192,6 +198,10 @@ export class LinkedInService implements IScraper {
       datePosted: datePosted ? new Date(datePosted).toISOString().split('T')[0] : null,
       isRemote: remote,
       site: Site.LINKEDIN,
+      // Fallback capture — the list-card fragment, not the full search-results
+      // page. Overwritten with the (more useful) detail-page HTML below when
+      // `linkedinFetchDescription` also runs.
+      rawResponse: input.captureRawResponse ? $.html(card) ?? null : null,
     });
   }
 
@@ -199,7 +209,14 @@ export class LinkedInService implements IScraper {
     client: HttpClient,
     jobUrl: string,
     format?: DescriptionFormat,
-  ): Promise<{ text: string; jobLevel?: string; industry?: string; jobType?: any } | null> {
+  ): Promise<{
+    text: string;
+    jobLevel?: string;
+    industry?: string;
+    jobType?: any;
+    jobUrlDirect?: string;
+    rawResponse?: string;
+  } | null> {
     const response = await client.get(jobUrl);
     const $ = cheerio.load(response.data);
 
@@ -221,6 +238,21 @@ export class LinkedInService implements IScraper {
     const industry = parseCompanyIndustry($, criteriaSection);
     const jobType = parseJobType($, criteriaSection);
 
-    return { text, jobLevel: jobLevel ?? undefined, industry: industry ?? undefined, jobType };
+    // LinkedIn embeds the off-platform "Apply" redirect target (when the
+    // posting isn't Easy Apply) as a hidden `<code id="applyUrl">"<url>"</code>`
+    // element on the detail page — quoted, hence the slice off the wrapping `"`.
+    const applyUrlRaw = $('code#applyUrl').text().trim();
+    const jobUrlDirect = applyUrlRaw
+      ? applyUrlRaw.replace(/^"|"$/g, '') || undefined
+      : undefined;
+
+    return {
+      text,
+      jobLevel: jobLevel ?? undefined,
+      industry: industry ?? undefined,
+      jobType,
+      jobUrlDirect,
+      rawResponse: typeof response.data === 'string' ? response.data : undefined,
+    };
   }
 }

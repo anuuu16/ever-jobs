@@ -98,6 +98,7 @@ export const sourceObservation = sqliteTable(
     url: text('url').notNull(),
     observedAt: text('observed_at').notNull(),
     rawTitle: text('raw_title'),
+    rawResponse: text('raw_response'),
   },
   (t) => ({
     pk: primaryKey({
@@ -108,6 +109,17 @@ export const sourceObservation = sqliteTable(
     ),
   }),
 );
+
+/**
+ * `exported_job` — tracks `jobUrl`s already pushed by `DailyExportCron`
+ * (a separate concern from `canonical_job`: keyed by raw job URL, not
+ * `canonical_job_id`, since the export cron runs independent of dedup
+ * persistence). Append-only marks; `exported_at` backs `prune()`.
+ */
+export const exportedJob = sqliteTable('exported_job', {
+  jobUrl: text('job_url').primaryKey().notNull(),
+  exportedAt: text('exported_at').notNull(),
+});
 
 /**
  * Initial schema bootstrap statement bundled with the package so a fresh
@@ -149,6 +161,7 @@ export const INITIAL_SCHEMA_SQL = sql`
     url TEXT NOT NULL,
     observed_at TEXT NOT NULL,
     raw_title TEXT,
+    raw_response TEXT,
     PRIMARY KEY (canonical_job_id, site, source_job_id),
     FOREIGN KEY (canonical_job_id)
       REFERENCES canonical_job (canonical_job_id)
@@ -156,4 +169,8 @@ export const INITIAL_SCHEMA_SQL = sql`
   );
   CREATE INDEX IF NOT EXISTS idx_source_observation_canonical_job_id
     ON source_observation (canonical_job_id);
+  CREATE TABLE IF NOT EXISTS exported_job (
+    job_url TEXT PRIMARY KEY NOT NULL,
+    exported_at TEXT NOT NULL
+  );
 `;

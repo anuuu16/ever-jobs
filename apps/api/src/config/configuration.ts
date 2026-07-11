@@ -94,9 +94,58 @@ export default () => {
       dir: process.env.PLUGINS_DIR || null,
     },
 
+    // Daily job export — periodic push of freshly-seen jobs to a
+    // downstream platform (or, absent a target URL, a local file).
+    // Opt-in: a full fan-out across every registered source is
+    // expensive, so this stays off until an operator configures it.
+    // Cross-run "already exported" tracking lives in the active
+    // EVER_JOBS_STORE backend (EXPORTED_JOB_STORE_TOKEN), not on disk.
+    dailyExport: {
+      enabled: parseBool(process.env.ENABLE_DAILY_EXPORT, false),
+      intervalMs: parseInt(process.env.DAILY_EXPORT_INTERVAL_MS, 86_400_000),
+      // Empty by default — the cron falls back to `defaults.siteNames`
+      // (the curated job-board list) rather than fanning out across
+      // every registered source.
+      siteNames: parseList(process.env.DAILY_EXPORT_SITES),
+      searchTerm: process.env.DAILY_EXPORT_SEARCH_TERM || undefined,
+      location: process.env.DAILY_EXPORT_LOCATION || undefined,
+      isRemote: parseBool(process.env.DAILY_EXPORT_IS_REMOTE, false),
+      resultsWanted: parseInt(process.env.DAILY_EXPORT_RESULTS_WANTED, 100),
+      hoursOld: process.env.DAILY_EXPORT_HOURS_OLD
+        ? parseInt(process.env.DAILY_EXPORT_HOURS_OLD, 24)
+        : undefined,
+      retentionDays: parseInt(process.env.DAILY_EXPORT_RETENTION_DAYS, 30),
+      // Push target — your platform's ingest endpoint. When unset, the
+      // cron falls back to writing a local file instead.
+      targetUrl: process.env.DAILY_EXPORT_TARGET_URL || undefined,
+      targetMethod: (process.env.DAILY_EXPORT_TARGET_METHOD || 'POST').toUpperCase(),
+      targetHeaders: (() => {
+        try {
+          return JSON.parse(process.env.DAILY_EXPORT_TARGET_HEADERS || '{}');
+        } catch {
+          return {};
+        }
+      })(),
+      targetTimeoutMs: parseInt(process.env.DAILY_EXPORT_TARGET_TIMEOUT_MS, 30_000),
+      // Local-file fallback, used only when targetUrl is unset.
+      dir: process.env.DAILY_EXPORT_DIR || './exports',
+      format: (process.env.DAILY_EXPORT_FORMAT || 'json').toLowerCase(),
+    },
+
     // Logging
     logLevel: process.env.LOG_LEVEL || 'info',
     environment: process.env.NODE_ENV || 'development',
+
+    // Local admin UI — plain server-rendered table over the persisted job
+    // store (search/filter/paginate + full-detail view + export status).
+    // Defaults ON in dev/test, OFF in production unless explicitly
+    // re-enabled; this is a local debugging tool, not a hardened surface.
+    adminUi: {
+      enabled: parseBool(
+        process.env.ENABLE_ADMIN_UI,
+        (process.env.NODE_ENV || 'development') !== 'production',
+      ),
+    },
 
     // CORS
     cors: {

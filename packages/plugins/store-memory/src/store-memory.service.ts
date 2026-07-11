@@ -6,6 +6,7 @@ import {
   HEALTH_SNAPSHOT_QUERY_MAX_LIMIT,
   HealthSnapshotQuery,
   HealthSnapshotRow,
+  IExportedJobStore,
   IHealthSnapshotStore,
   IJobObservationStore,
   IJobStore,
@@ -192,10 +193,12 @@ function compareForListing(a: CanonicalJob, b: CanonicalJob): number {
 @StorePlugin({ id: STORE_MEMORY_ID, description: STORE_MEMORY_DESCRIPTION })
 @Injectable()
 export class InMemoryJobStore
-  implements IJobStore, IJobObservationStore, IHealthSnapshotStore
+  implements IJobStore, IJobObservationStore, IHealthSnapshotStore, IExportedJobStore
 {
   private readonly canonicals = new Map<string, CanonicalJob>();
   private readonly observations = new Map<string, SourceObservation[]>();
+  /** `jobUrl → exportedAt` marks written by {@link IExportedJobStore.markExported}. */
+  private readonly exportedJobs = new Map<string, Date>();
   /**
    * Append-only ring of `(ts, health)` rows ordered by insertion (== ts
    * ASC by construction — `HealthSnapshotCron` uses one fresh `Date()`
@@ -434,6 +437,33 @@ export class InMemoryJobStore
   }
 
   // ----------------------------------------------------------------------
+  // IExportedJobStore
+  // ----------------------------------------------------------------------
+
+  async filterUnseen(jobUrls: ReadonlyArray<string>): Promise<string[]> {
+    if (jobUrls.length === 0) return [];
+    return jobUrls.filter((url) => !this.exportedJobs.has(url));
+  }
+
+  async markExported(jobUrls: ReadonlyArray<string>, at: Date): Promise<void> {
+    if (jobUrls.length === 0) return;
+    for (const url of jobUrls) {
+      this.exportedJobs.set(url, at);
+    }
+  }
+
+  async prune(olderThan: Date): Promise<number> {
+    let removed = 0;
+    for (const [url, exportedAt] of this.exportedJobs) {
+      if (exportedAt < olderThan) {
+        this.exportedJobs.delete(url);
+        removed++;
+      }
+    }
+    return removed;
+  }
+
+  // ----------------------------------------------------------------------
   // Test / debug surface (not part of either interface contract).
   // ----------------------------------------------------------------------
 
@@ -456,6 +486,7 @@ export class InMemoryJobStore
     this.canonicals.clear();
     this.observations.clear();
     this.snapshots.length = 0;
+    this.exportedJobs.clear();
   }
 
   /**

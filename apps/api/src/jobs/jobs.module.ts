@@ -14,6 +14,7 @@ import { SourcesHealthController } from './health.controller';
 import { MetricsCircuitBreakerBridge } from './metrics-circuit-breaker.bridge';
 import { PluginPolicyBootstrapper } from './plugin-policy.bootstrapper';
 import { HealthSnapshotCron } from './health-snapshot.cron';
+import { DailyExportCron } from './daily-export.cron';
 
 @Module({
   imports: [
@@ -60,6 +61,12 @@ import { HealthSnapshotCron } from './health-snapshot.cron';
     // (uses `setInterval` rather than `@nestjs/schedule` per Q-020 /
     // Option A).
     HealthSnapshotCron,
+    // Periodic dump of freshly-seen jobs to a local file (opt-in via
+    // ENABLE_DAILY_EXPORT) so an operator can pick up newly-discovered
+    // postings and re-post them on a downstream platform without
+    // re-processing ones already exported. Disabled by default — a full
+    // fan-out across every registered source is expensive.
+    DailyExportCron,
   ],
   exports: [JobsService, JobsAggregator],
 })

@@ -1,7 +1,9 @@
 import 'reflect-metadata';
 import { DynamicModule, Module, Provider, Type } from '@nestjs/common';
 import {
+  EXPORTED_JOB_STORE_TOKEN,
   HEALTH_SNAPSHOT_STORE_TOKEN,
+  IExportedJobStore,
   IHealthSnapshotStore,
   IJobObservationStore,
   IJobStore,
@@ -9,6 +11,7 @@ import {
   JOB_OBSERVATION_STORE_TOKEN,
   JOB_STORE_TOKEN,
   STORE_PLUGIN_METADATA_KEY,
+  isExportedJobStore,
   isHealthSnapshotStore,
 } from '@ever-jobs/models';
 import { StoreRegistry } from './store-registry.service';
@@ -71,6 +74,37 @@ export interface StoreModuleForActiveOptions {
    * separately and disables the auto-binding).
    */
   readonly bindHealthSnapshotStore?: boolean;
+
+  /**
+   * Bind the chosen backend to {@link EXPORTED_JOB_STORE_TOKEN} as well,
+   * IF the active instance satisfies {@link isExportedJobStore}.
+   *
+   * Defaults to `true`. Mirrors `bindHealthSnapshotStore`'s optional-
+   * capability pattern: `DailyExportCron` `@Optional()`-injects this
+   * token and falls back to exporting without cross-run dedup when
+   * unbound.
+   */
+  readonly bindExportedJobStore?: boolean;
+
+  /**
+   * Extra providers registered alongside the backend classes — the
+   * mechanism for wiring a backend's own config token (e.g.
+   * `STORE_SQLITE_DRIZZLE_CONFIG`, `STORE_POSTGRES_PRISMA_CONFIG`) from
+   * the consumer's environment, since `forActive` only instantiates the
+   * classes listed in `backends` and has no other way to see
+   * consumer-supplied configuration.
+   *
+   * Example — binding the sqlite backend's on-disk path from an env var:
+   * ```typescript
+   * StoreModule.forActive('sqlite', {
+   *   backends: [SqliteDrizzleJobStore],
+   *   providers: [
+   *     { provide: STORE_SQLITE_DRIZZLE_CONFIG, useValue: { databaseUrl: process.env.EVER_JOBS_SQLITE_PATH } },
+   *   ],
+   * });
+   * ```
+   */
+  readonly providers?: ReadonlyArray<Provider>;
 }
 
 /**
@@ -184,6 +218,7 @@ export class StoreModule {
     const backends = options.backends ?? [];
     const bindObservationStore = options.bindObservationStore !== false;
     const bindHealthSnapshotStore = options.bindHealthSnapshotStore !== false;
+    const bindExportedJobStore = options.bindExportedJobStore !== false;
 
     // Pre-validate `backends` before NestJS even constructs them — a
     // missing `@StorePlugin()` decorator is a programmer error that
@@ -238,6 +273,7 @@ export class StoreModule {
 
     const providers: Provider[] = [
       StoreRegistry,
+      ...(options.providers ?? []),
       ...backendProviders,
       activeStoreProvider,
     ];
@@ -296,6 +332,22 @@ export class StoreModule {
       });
     }
 
+    if (bindExportedJobStore) {
+      /**
+       * Factory provider for {@link EXPORTED_JOB_STORE_TOKEN}. Same
+       * optional-capability shape as `HEALTH_SNAPSHOT_STORE_TOKEN`
+       * above: runtime type-guard via {@link isExportedJobStore},
+       * `null` for backends that don't implement it so `@Optional()`
+       * consumers see a clean bypass rather than a DI error.
+       */
+      providers.push({
+        provide: EXPORTED_JOB_STORE_TOKEN,
+        useFactory: (active: IJobStore): IExportedJobStore | null =>
+          isExportedJobStore(active) ? active : null,
+        inject: [JOB_STORE_TOKEN],
+      });
+    }
+
     const exports_: Array<string | symbol | Type<unknown>> = [
       JOB_STORE_TOKEN,
       StoreRegistry,
@@ -305,6 +357,9 @@ export class StoreModule {
     }
     if (bindHealthSnapshotStore) {
       exports_.push(HEALTH_SNAPSHOT_STORE_TOKEN);
+    }
+    if (bindExportedJobStore) {
+      exports_.push(EXPORTED_JOB_STORE_TOKEN);
     }
 
     return {

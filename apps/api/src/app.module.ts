@@ -1,10 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Module, Provider } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { StoreModule } from '@ever-jobs/plugin';
+import { STORE_SQLITE_DRIZZLE_CONFIG } from '@ever-jobs/store-sqlite-drizzle';
+import { STORE_POSTGRES_PRISMA_CONFIG } from '@ever-jobs/store-postgres-prisma';
 import { AppConfigModule } from './config/config.module';
 import { AppCacheModule } from './cache/cache.module';
 import { MetricsModule } from './metrics/metrics.module';
@@ -12,6 +14,7 @@ import { MetricsInterceptor } from './metrics/metrics.interceptor';
 
 import { HealthModule } from './health/health.module';
 import { JobsModule } from './jobs/jobs.module';
+import { AdminModule } from './admin/admin.module';
 import { ApiKeyGuard } from './auth/api-key.guard';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
@@ -33,6 +36,41 @@ import { resolveStoreBootstrap } from './jobs/store-bootstrap.factory';
  * `better-sqlite3` native bindings even in `memory` mode).
  */
 const ACTIVE_STORE = resolveStoreBootstrap();
+
+/**
+ * Per-backend config providers, wired from env vars at the same point
+ * `EVER_JOBS_STORE` is resolved. Without this, `EVER_JOBS_STORE=sqlite`
+ * silently falls back to an ephemeral `:memory:` database (no
+ * `STORE_SQLITE_DRIZZLE_CONFIG` bound) and `EVER_JOBS_STORE=postgres`
+ * throws at boot (`PostgresPrismaJobStore` fails fast when
+ * `STORE_POSTGRES_PRISMA_CONFIG` is unbound) — see each backend's own
+ * constructor JSDoc. Only the active backend's config is constructed
+ * (dynamic `require('@prisma/client')` inside the postgres branch) so
+ * memory/sqlite deployments never pay for a Prisma client they don't use.
+ */
+function resolveStoreProviders(id: string): Provider[] {
+  if (id === 'sqlite') {
+    return [
+      {
+        provide: STORE_SQLITE_DRIZZLE_CONFIG,
+        useValue: { databaseUrl: process.env.EVER_JOBS_SQLITE_PATH || undefined },
+      },
+    ];
+  }
+  if (id === 'postgres') {
+    return [
+      {
+        provide: STORE_POSTGRES_PRISMA_CONFIG,
+        useFactory: () => {
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const { PrismaClient } = require('@prisma/client');
+          return { client: new PrismaClient({ datasourceUrl: process.env.DATABASE_URL }) };
+        },
+      },
+    ];
+  }
+  return [];
+}
 
 @Module({
   imports: [
@@ -90,6 +128,7 @@ const ACTIVE_STORE = resolveStoreBootstrap();
     // against the bound provider rather than `undefined`.
     StoreModule.forActive(ACTIVE_STORE.id, {
       backends: [ACTIVE_STORE.backendClass],
+      providers: resolveStoreProviders(ACTIVE_STORE.id),
     }),
 
     // Job scraping
@@ -98,6 +137,9 @@ const ACTIVE_STORE = resolveStoreBootstrap();
     // Metrics tracking
     MetricsModule,
 
+    // Local-only admin UI over the persisted job store (search / filter /
+    // paginate / full-detail / export status). Gated by `adminUi.enabled`.
+    AdminModule,
 
   ],
   providers: [

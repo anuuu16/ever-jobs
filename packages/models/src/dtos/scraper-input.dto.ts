@@ -189,6 +189,18 @@ export class ScraperInputDto {
   @Type(() => ScraperAuthDto)
   auth?: ScraperAuthDto;
 
+  @ApiPropertyOptional({
+    description:
+      'Opt-in: capture the raw HTTP response each source plugin received (HTML page, JSON payload, etc.) onto ' +
+      'JobPostDto.rawResponse / SourceObservation.rawResponse, for validating extraction issues in the /admin ' +
+      'job detail view. Off by default — raw bodies can be tens of KB per posting. Not every source plugin ' +
+      'implements capture yet.',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  captureRawResponse?: boolean;
+
   constructor(partial?: Partial<ScraperInputDto>) {
     this.siteType = Object.values(Site);
     this.resultsWanted = 15;
@@ -200,6 +212,7 @@ export class ScraperInputDto {
     this.linkedinFetchDescription = false;
     this.requestTimeout = 60;
     this.maxConcurrentCompanies = 5;
+    this.captureRawResponse = false;
     Object.assign(this, partial);
   }
 }

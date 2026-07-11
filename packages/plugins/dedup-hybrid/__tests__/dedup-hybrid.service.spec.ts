@@ -34,6 +34,16 @@ describe('DedupHybridService', () => {
     expect(out.canonical[0].sources).toHaveLength(2);
   });
 
+  it('carries rawResponse through into the source observation when present', async () => {
+    const a = job({ id: '1', site: Site.GREENHOUSE, rawResponse: '<html>raw a</html>' });
+    const b = job({ id: '2', site: Site.LINKEDIN });
+    const out = await service.dedup([a, b]);
+
+    const bySite = Object.fromEntries(out.canonical[0].sources.map((s) => [s.site, s]));
+    expect(bySite[Site.GREENHOUSE].rawResponse).toBe('<html>raw a</html>');
+    expect(bySite[Site.LINKEDIN].rawResponse).toBeUndefined();
+  });
+
   it('collapses cosmetic-only company differences into one record', async () => {
     const a = job({ id: '1', companyName: 'Acme, Inc.', site: Site.GREENHOUSE });
     const b = job({ id: '2', companyName: 'ACME Inc', site: Site.LINKEDIN });

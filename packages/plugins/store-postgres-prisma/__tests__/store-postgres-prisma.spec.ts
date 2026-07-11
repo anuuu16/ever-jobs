@@ -194,32 +194,34 @@ describeIfPg('PostgresPrismaJobStore — Testcontainers-backed (RUN_PG_TESTS=1)'
     const databaseUrl = pgContainer.getConnectionUri();
     prisma = new PrismaClientCtor({ datasourceUrl: databaseUrl });
 
-    // Apply the schema. We replay `0_init/migration.sql` directly via
-    // raw exec rather than running `prisma migrate deploy` because the
+    // Apply the schema. We replay each migration's SQL directly via raw
+    // exec rather than running `prisma migrate deploy` because the
     // latter shells out to `npx prisma` which adds 5–10 s of cold-start
     // overhead per suite. Splitting on `;\s*\n` is safe for our
-    // migration — no embedded semicolons in literal strings.
-    const migrationPath = path.resolve(
-      __dirname,
-      '../prisma/migrations/0_init/migration.sql',
-    );
-    const migrationSql = fs.readFileSync(migrationPath, 'utf8');
-    const statements = migrationSql
-      .split(/;\s*\n/)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0 && !s.startsWith('--'));
-    for (const stmt of statements) {
-      // Strip leading line comments inside the statement so the SQL
-      // sent to Postgres is comment-free (defensive — Postgres tolerates
-      // line comments, but the explicit strip avoids a bad split that
-      // hands the driver a half-comment-half-statement).
-      const cleaned = stmt
-        .split('\n')
-        .filter((line) => !line.trim().startsWith('--'))
-        .join('\n')
-        .trim();
-      if (cleaned.length === 0) continue;
-      await prisma.$executeRawUnsafe(cleaned);
+    // migrations — no embedded semicolons in literal strings.
+    for (const migrationDir of ['0_init', '1_add_exported_job']) {
+      const migrationPath = path.resolve(
+        __dirname,
+        `../prisma/migrations/${migrationDir}/migration.sql`,
+      );
+      const migrationSql = fs.readFileSync(migrationPath, 'utf8');
+      const statements = migrationSql
+        .split(/;\s*\n/)
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0 && !s.startsWith('--'));
+      for (const stmt of statements) {
+        // Strip leading line comments inside the statement so the SQL
+        // sent to Postgres is comment-free (defensive — Postgres tolerates
+        // line comments, but the explicit strip avoids a bad split that
+        // hands the driver a half-comment-half-statement).
+        const cleaned = stmt
+          .split('\n')
+          .filter((line) => !line.trim().startsWith('--'))
+          .join('\n')
+          .trim();
+        if (cleaned.length === 0) continue;
+        await prisma.$executeRawUnsafe(cleaned);
+      }
     }
 
     prismaClient = prisma as PrismaJobsClient;
@@ -237,7 +239,7 @@ describeIfPg('PostgresPrismaJobStore — Testcontainers-backed (RUN_PG_TESTS=1)'
     // Fresh state per test. CASCADE so the FK from source_observation
     // doesn't block the truncate.
     await (prisma as any).$executeRawUnsafe(
-      'TRUNCATE TABLE "source_observation", "canonical_job" CASCADE',
+      'TRUNCATE TABLE "source_observation", "canonical_job", "exported_job" CASCADE',
     );
   });
 
@@ -596,6 +598,41 @@ describeIfPg('PostgresPrismaJobStore — Testcontainers-backed (RUN_PG_TESTS=1)'
       expect(await store.size()).toBe(1);
     });
   });
+
+  // ----------------------------------------------------------------------
+  // 8. IExportedJobStore — daily-export dedup tracking.
+  // ----------------------------------------------------------------------
+  describe('IExportedJobStore', () => {
+    it('filterUnseen returns [] for empty input without querying', async () => {
+      const store = new PostgresPrismaJobStore({ client: prismaClient });
+      expect(await store.filterUnseen([])).toEqual([]);
+    });
+
+    it('filterUnseen excludes previously-marked URLs', async () => {
+      const store = new PostgresPrismaJobStore({ client: prismaClient });
+      await store.markExported(['https://a', 'https://b'], new Date());
+      const unseen = await store.filterUnseen(['https://a', 'https://b', 'https://c']);
+      expect(unseen).toEqual(['https://c']);
+    });
+
+    it('markExported is idempotent (re-marking the same URL does not throw)', async () => {
+      const store = new PostgresPrismaJobStore({ client: prismaClient });
+      const at = new Date();
+      await store.markExported(['https://a'], at);
+      await expect(store.markExported(['https://a'], at)).resolves.toBeUndefined();
+      expect(await store.filterUnseen(['https://a'])).toEqual([]);
+    });
+
+    it('prune removes marks older than the given date', async () => {
+      const store = new PostgresPrismaJobStore({ client: prismaClient });
+      await store.markExported(['https://old'], new Date('2020-01-01T00:00:00.000Z'));
+      await store.markExported(['https://new'], new Date());
+      const removed = await store.prune(new Date('2021-01-01T00:00:00.000Z'));
+      expect(removed).toBe(1);
+      expect(await store.filterUnseen(['https://old'])).toEqual(['https://old']);
+      expect(await store.filterUnseen(['https://new'])).toEqual([]);
+    });
+  });
 });
 
 // =====================================================================
@@ -641,6 +678,11 @@ function makeFakePrismaClient(): PrismaJobsClient {
     sourceObservation: {
       createMany: jest.fn().mockResolvedValue({ count: 0 }),
       findMany: jest.fn().mockResolvedValue([]),
+      deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
+    exportedJob: {
+      findMany: jest.fn().mockResolvedValue([]),
+      createMany: jest.fn().mockResolvedValue({ count: 0 }),
       deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
     },
     $transaction: jest.fn(async (fn) => {

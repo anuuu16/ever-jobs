@@ -186,6 +186,7 @@ function jobToObservation(raw: JobPostDto): SourceObservation | null {
     url: raw.jobUrl,
     observedAt: typeof raw.datePosted === 'string' ? raw.datePosted : new Date().toISOString(),
     rawTitle: raw.title,
+    rawResponse: raw.rawResponse ?? undefined,
   };
 }
 

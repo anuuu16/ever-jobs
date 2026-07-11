@@ -71,6 +71,15 @@ export class JobPostDto {
     reasons?: string[];
   } | null;
 
+  /**
+   * Opt-in raw HTTP response body the scraper received for this posting
+   * (HTML page, JSON payload, etc.) — only populated when
+   * `ScraperInputDto.captureRawResponse` is `true` and the source plugin
+   * implements capture. Carried through to `SourceObservation.rawResponse`
+   * by the dedup engine so it's visible in the /admin job detail view.
+   */
+  rawResponse?: string | null;
+
   constructor(partial?: Partial<JobPostDto>) {
     Object.assign(this, partial);
   }

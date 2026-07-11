@@ -155,6 +155,23 @@ describe('StoreModule.forActive (Spec 004 / T04)', () => {
     readonly tag = 'undecorated';
   }
 
+  const CONFIGURABLE_STUB_CONFIG_TOKEN = 'CONFIGURABLE_STUB_CONFIG';
+
+  /**
+   * Backend whose constructor requires a config token — mirrors the
+   * real `SqliteDrizzleJobStore` / `PostgresPrismaJobStore` shape
+   * (`@Optional() @Inject(SOME_CONFIG_TOKEN)`), used to exercise the
+   * `providers` passthrough option on `forActive`.
+   */
+  @StorePlugin({ id: 'configurable', description: 'Config-requiring stub' })
+  @Injectable()
+  class ConfigurableStubStore extends StubJobStore {
+    readonly tag = 'configurable';
+    constructor(@Inject(CONFIGURABLE_STUB_CONFIG_TOKEN) readonly config: { value: string }) {
+      super();
+    }
+  }
+
   let testModule: TestingModule | undefined;
 
   afterEach(async () => {
@@ -535,6 +552,35 @@ describe('StoreModule.forActive (Spec 004 / T04)', () => {
       expect(caught).toBeInstanceOf(StoreRegistryError);
       expect((caught as StoreRegistryError).code).toBe(ERR_STORE_NOT_FOUND);
       expect((caught as StoreRegistryError).message).toContain('Registered ids: []');
+    });
+  });
+
+  describe('providers passthrough', () => {
+    it('makes extra providers available to a backend that requires config via DI', async () => {
+      testModule = await Test.createTestingModule({
+        imports: [
+          StoreModule.forActive('configurable', {
+            backends: [ConfigurableStubStore],
+            providers: [
+              { provide: CONFIGURABLE_STUB_CONFIG_TOKEN, useValue: { value: 'from-env' } },
+            ],
+          }),
+        ],
+      }).compile();
+
+      const store = testModule.get<ConfigurableStubStore>(JOB_STORE_TOKEN);
+      expect(store.config).toEqual({ value: 'from-env' });
+    });
+
+    it('defaults to no extra providers when the option is omitted', async () => {
+      testModule = await Test.createTestingModule({
+        imports: [
+          StoreModule.forActive('memory', { backends: [MemoryStubStore] }),
+        ],
+      }).compile();
+
+      const store = testModule.get<IJobStore>(JOB_STORE_TOKEN);
+      expect(store).toBeInstanceOf(MemoryStubStore);
     });
   });
 });
