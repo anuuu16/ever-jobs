@@ -15,6 +15,1511 @@
 
 ---
 
+## 2026-07-06 — Scheduled run #445 (**Workable company-source pipeline foundation** — Spec 1677; first batch deferred to next run by an external rate-limit)
+
+**Scope:** Opened a **sixth**, deterministic **Workable-backed** company-source pipeline — the
+sibling of the Greenhouse, Ashby (Spec 975), Lever (Spec 1194), SmartRecruiters (Spec 1375), and
+Recruitee (Spec 1593) pipelines — to keep diversifying the company-direct backend mix, this time
+toward the **very large global startup / SMB population** that Workable over-indexes on. The
+`source-ats-workable` plugin already ships and is registered under `Site.WORKABLE`, but no
+company-direct plugin delegated to it, so the large population of companies hosting careers on
+**Workable** (`https://apply.workable.com/api/v1/widget/accounts/<slug>`, public zero-auth widget
+careers API) was invisible to the five existing discovery gates. This run built and validated the
+reusable Workable plumbing **and** persisted a 382-company discovery corpus for the batch; the live
+discovery gate itself was blocked by an external Cloudflare rate-limit (see below), so the first
+plugin batch is deferred to the next run.
+
+**Baseline at run start:** Local `develop` even with `origin/develop` at `005aebc1` (run #444, 83
+Recruitee plugins), CI **green**, working tree clean. Next spec number per the band-aware allocator
+(band `ever-jobs/ever-jobs` = 1–4999) was **1677**. The four external reference repos under the
+parent `OTHERS/` directory (outside this repo) were reviewed for situational awareness; tracked
+**outside** this repo per the no-competitor-references rule.
+
+**What shipped (all TypeScript, additive — nothing removed):**
+
+- **`scripts/probe-workable-company-source.ts`** — deterministic discovery probe for the **public,
+  zero-auth Workable widget careers API**. Like Recruitee (`{ offers: [...] }`) and SmartRecruiters
+  (`{ content: [...] }`), the payload is a **`{ jobs: [...] }` envelope**; unlike Recruitee's
+  per-company subdomain host it is a **shared host** (`apply.workable.com`, slug in the path — same
+  model as Greenhouse). The stable per-job id is **`shortcode`** (fallback `code`), not `id`. The
+  envelope also carries a top-level `name` (usually the account slug echoed back), captured into
+  `boardName` for parity; the gate stays purely count-based (`jobs.length >= MIN_JOBS (3)`, each
+  `title`-bearing). Location is composed from the structured `locations[]` entry, then flat
+  `city/state/country`, then a `telecommuting` remote flag. Network I/O isolated in `probeOne`; the
+  decision surface (`gateBoard`, `extractListings`, `boardUrl`) is pure and unit-tested.
+  **Hardened against Cloudflare rate-limiting** (see the operational note): default concurrency **4**
+  with a **300 ms** inter-request delay and **exponential backoff on HTTP 429 / `error code: 1015`**
+  (`getJson` distinguishes a genuine miss from a rate-limit; `getJsonWithRetry` retries the latter).
+  All throttling knobs overridable via `PROBE_CONCURRENCY` / `PROBE_DELAY_MS` / `PROBE_MAX_RETRIES`.
+- **`scripts/__tests__/probe-workable-company-source.spec.ts`** — **21 unit tests**, no live network
+  (pins `gateBoard`/`extractListings`/`boardUrl`, incl. envelope-shape, `shortcode`/`code` id
+  fallback, structured-vs-flat location composition, remote flag, published_on/created_at timestamp
+  fallback, `name`-capture, untitled-padding rejection). Green.
+- **`scripts/scaffold-workable-company-source.ts`** — pure, conflict-free file emitter that
+  materialises, per descriptor, the full `source-company-<slug>` package (package.json, tsconfig,
+  index, module, **registry-delegation service**, generic mocked test, Workable **`{jobs:[...]}`
+  widget fixture**) **and** the `.specify/specs/<specNo>-source-company-<slug>/` spec/plan/tasks. The
+  generated service resolves `Site.WORKABLE` from the `PluginRegistry`, delegates `scrape({ ...input,
+  companySlug })`, and re-stamps `site`/`companyName`/`id` (`workable-`→`<slug>-`). Never touches
+  shared wiring files.
+- **`scripts/assemble-workable-batch.ts`** — deterministic descriptor join (survivors + factual
+  enrichment → batch), deriving `className`/`moduleName`/`serviceName`/`enumKey`/`slug` from the
+  display name and rejecting digit-prefix enumKeys + slug/enumKey collisions against `site.enum.ts`.
+- **`scripts/seeds/workable-candidates.json`** (+ `scripts/seeds/README.md`) — a **reusable
+  382-company Workable discovery corpus** (factual enrichment keyed by `companySlug`), brainstormed
+  this run by a 30-cell parallel sector×region discovery workflow (21 cells completed;
+  WebFetch-verified). Persisted so the next run live-probes the pool directly instead of re-running
+  the token-expensive brainstorm.
+- **`.specify/specs/1677-workable-company-source-pipeline/`** — spec/plan/tasks for the pipeline
+  foundation (constitution cross-check; backend-contract table across all six backends).
+
+**End-to-end smoke (proves the generator, no live network):** a throwaway descriptor was scaffolded
+→ wired into the four shared files (`site.enum.ts`, `packages/plugins/index.ts`, `tsconfig.base.json`,
+`jest.config.js`) → the generated plugin's mocked unit suite ran **9/9 green** → **fully reverted**
+(package + spec dirs removed, wiring files `git checkout`-restored; `grep` confirms zero residue).
+
+**Why the first batch is deferred (external blocker, honestly reported):** `apply.workable.com` sits
+behind **Cloudflare**, which returns **HTTP 429 / `error code: 1015`** on bursty traffic. The initial
+382-candidate live probe (concurrency 16) tripped the IP-wide rate-limit; a subsequent **gentle**
+re-probe (concurrency 4 + 300 ms delay + 1015 backoff) still returned **0 survivors** because the IP
+penalty was still active (a fresh single request confirmed HTTP 429). A Cloudflare-1015 burst penalty
+persists ~30–60 min, beyond this hourly run's time budget. Rather than fabricate `jobCount`s or ship
+empty-board plugins, the batch is deferred: the **next run** re-probes the persisted seed corpus with
+the now-default gentle probe (the penalty will have expired) and lands Specs 1678+. This is recorded
+as **Q-WORKABLE-1** in `docs/questions.md`.
+
+## 2026-07-05 — Scheduled run #444 (**Recruitee company-source pipeline foundation + first 83-plugin batch** — Specs 1593, 1594–1676)
+
+**Scope:** Opened a **fifth**, deterministic **Recruitee-backed** company-source pipeline — the
+sibling of the Greenhouse, Ashby (Spec 975), Lever (Spec 1194), and SmartRecruiters (Spec 1375)
+pipelines — to keep diversifying the company-direct backend mix, this time toward the **European
+(NL/DE/BE/FR) SMB and scale-up** segment that Recruitee over-indexes on. The `source-ats-recruitee`
+plugin already ships and is registered under `Site.RECRUITEE`, but no company-direct plugin delegated
+to it, so the substantial population of European companies hosting careers on **Recruitee**
+(`https://<slug>.recruitee.com`, public careers API `https://<slug>.recruitee.com/api/offers`) was
+invisible to the Greenhouse, Ashby, Lever, and SmartRecruiters discovery gates. This run built and
+validated the reusable Recruitee plumbing **and** landed a first 83-company batch on top of it.
+
+**Baseline at run start:** Local `develop` even with `origin/develop` at `983d1e7d` (run #443, 217
+SmartRecruiters plugins), CI **green**, working tree clean. Next spec number per the band-aware
+allocator (band `ever-jobs/ever-jobs` = 1–4999) was **1593**. The four external reference repos under
+the parent `OTHERS/` directory (outside this repo) were `git pull`-ed for situational awareness —
+`career-ops` had upstream movement (web/i18n/product only; the earlier-noted new SAP SuccessFactors /
+Amazon / Avature providers remain covered by existing `source-ats-*` backends here). Tracked **outside**
+this repo per the no-competitor-references rule.
+
+**What shipped (all TypeScript, additive — nothing removed):**
+
+- **`scripts/probe-recruitee-company-source.ts`** — deterministic discovery probe for the **public,
+  zero-auth Recruitee careers API**. Like SmartRecruiters (`{ content: [...] }`) and unlike Lever/Ashby
+  (bare arrays), the payload is an **`{ offers: [...] }` envelope**, so `gateBoard`/`extractListings`
+  read the `offers` array. The one operational wrinkle is the **per-company subdomain host model**: the
+  slug is interpolated into the DNS host via a `boardUrl(slug)` helper
+  (`https://<slug>.recruitee.com/api/offers`) rather than a shared-host path. Each offer carries
+  `company_name`, so a board display name IS on the wire and is captured into `boardName` (informational;
+  the gate stays count-based: `offers.length >= MIN_JOBS (3)`, each `title`-bearing). Location is
+  composed (`location` → `city/state/country` → Remote); the loose `"YYYY-MM-DD HH:MM:SS UTC"` timestamp
+  is normalised to ISO. Network I/O isolated in `probeOne`; the decision surface (`gateBoard`,
+  `extractListings`, `boardUrl`) is pure and unit-tested. Bounded-concurrency worker pool (16).
+- **`scripts/__tests__/probe-recruitee-company-source.spec.ts`** — **19 unit tests**, no live network
+  (pins `gateBoard`/`extractListings`/`boardUrl`, incl. envelope-shape, location composition, remote
+  flag, loose/ISO timestamp parsing, board-name capture, untitled-padding rejection). Green.
+- **`scripts/scaffold-recruitee-company-source.ts`** — pure, conflict-free file emitter that
+  materialises, per descriptor, the full `source-company-<slug>` package (package.json, tsconfig, index,
+  module, **registry-delegation service**, generic mocked test, Recruitee **`{offers:[...]}` envelope**
+  fixture) **and** the `.specify/specs/<specNo>-source-company-<slug>/` spec/plan/tasks. The generated
+  service resolves `Site.RECRUITEE` from the `PluginRegistry`, delegates `scrape({ ...input,
+  companySlug })`, and re-stamps `site`/`companyName`/`id` (`recruitee-`→`<slug>-`). Never touches shared
+  wiring files.
+- **`scripts/assemble-recruitee-batch.ts`** — deterministic descriptor assembler that joins the probe
+  survivors + enrichment (keyed by `companySlug`) + a contiguous spec-number range. Derives
+  `slug`/`className`/`enumKey` from the canonical `displayName`; **rejects** candidates whose derived
+  `enumKey` starts with a digit or whose `slug`/`enumKey` collides with the live `site.enum.ts` or an
+  in-batch peer (never silently dropped — every rejection is logged).
+- **`scripts/process-recruitee-discovery.ts`** — marshals the discovery-workflow output
+  (`{ result: { companies: [...] } }`) into the enrichment + candidate-slug files, decoding HTML
+  entities, deduping by case-insensitive `companySlug`, and merging any extra hand-written seed
+  enrichment files.
+- **`scripts/wire-company-source.ts`** — confirmed **backend-agnostic** and reused **unchanged**; the
+  Recruitee batch descriptor is field-compatible with it.
+
+**Foundation verification:** probe unit suite **19/19 green**; live endpoint confirmed against
+`channable` (34 roles) + `sendcloud` — HTTP 200, `{ offers: [...] }` carrying `company_name`; end-to-end
+smoke (scaffold throwaway `channable` descriptor → wire into the 4 shared files → generated plugin jest
+**9/9 green** → fully reverted, `git status` clean).
+
+**Discovery + first batch (Specs 1594–1676):** a 20-agent parallel discovery workflow (general-purpose
+agents, one per European segment: NL/DE/BE/FR/Nordic/UK e-commerce, SaaS, fintech, HR-tech, health-tech,
+mobility, gaming, energy, travel, edtech, agencies, proptech, cybersecurity, manufacturing) web-verified
+and returned **230 unique Recruitee subdomains** with factual enrichment. Marshaled + merged with a
+hand-probed seed list, then re-gated by the **central deterministic probe**: **84/230 survived**
+(≥3 live title-bearing offers — a ~37% survival rate, far above the ~5% of blind subdomain guessing).
+Assembly produced **83 descriptors** (1 rejected: `rebuy` — slug collides with an existing plugin).
+Scaffolded all 83 + wired into the four shared files (`site.enum.ts`, `packages/plugins/index.ts`,
+`tsconfig.base.json`, `jest.config.js`). Company-source plugin count **1438 → 1521**.
+
+**Tests:** all **83 generated suites green — 747 tests, 0 failures** (`jest --testPathPatterns`, ~9.5
+min). Probe unit suite 19/19. Docs lint (`npm run lint:docs`) green — every one of the 84 new specs is
+linked from `docs/index.md`.
+
+**Docs:** `docs/index.md` — added the Spec 1593 pipeline-foundation row + all 83 batch rows
+(1594–1676); footer bumped to run #444. `docs/questions.md` — added **Q-RECRUITEE-1** (count-only gate,
+brand-match deferred to descriptor assembly — consistent with Q-SR-1/Q-LEVER-1/Q-ASHBY-1) and
+**Q-RECRUITEE-2** (per-company subdomain host model). This `docs/log.md` entry.
+
+**Notes / decisions (autonomous):**
+
+- Chose Recruitee as the fifth backend because its `source-ats-recruitee` plugin already ships, its
+  public API is zero-auth and stable (`{ offers: [...] }`), and it opens an under-covered **European
+  SMB/scale-up** segment orthogonal to the enterprise-skewed SmartRecruiters corpus.
+- Preferred verified agent-discovery (each candidate web-checked) over blind slug guessing; the central
+  probe remains the source-of-truth gate, so hallucinated/dead subdomains are filtered deterministically.
+- `verified=false` on every generated plugin until an authenticated live harvest confirms field mapping
+  (same convention as the Greenhouse/Ashby/Lever/SmartRecruiters batches).
+
+---
+
+## 2026-07-04 — Scheduled run #443 (**SmartRecruiters company-source pipeline foundation + first 217-plugin batch** — Specs 1375, 1376–1592)
+
+**Scope:** Opened a fourth, deterministic **SmartRecruiters-backed** company-source pipeline — the
+sibling of the Greenhouse, Ashby (Spec 975), and Lever (Spec 1194) pipelines — to keep diversifying the
+company-direct backend mix, this time toward the **large-enterprise** segment that SmartRecruiters
+over-indexes on. The `source-ats-smartrecruiters` plugin already ships and is registered under
+`Site.SMARTRECRUITERS`, but no company-direct plugin delegated to it, so the substantial population of
+enterprise and mid-market brands hosting careers on **SmartRecruiters**
+(`https://jobs.smartrecruiters.com/<Identifier>`, public Posting API
+`https://api.smartrecruiters.com/v1/companies/<Identifier>/postings?limit=100`) was invisible to the
+Greenhouse, Ashby, and Lever discovery gates. This run built and validated the reusable
+SmartRecruiters plumbing **and** landed a first 217-company batch on top of it.
+
+**Baseline at run start:** Local `develop` even with `origin/develop` at `49d16362` (run #442, 180
+Lever plugins), CI **green**, working tree clean. Next spec number per the band-aware allocator
+(`scripts/next-spec-number.ts`, band `ever-jobs/ever-jobs` = 1–4999) was **1375**. The four external
+reference repos under the parent `OTHERS/` directory (outside this repo) were `git pull`-ed for
+situational awareness — `career-ops` had upstream movement (new SAP SuccessFactors / Amazon / Avature
+zero-token providers; all already covered by existing `source-ats-*` backends here). Tracked **outside**
+this repo per the no-competitor-references rule.
+
+**What shipped (all TypeScript, additive — nothing removed):**
+
+- **`scripts/probe-smartrecruiters-company-source.ts`** — deterministic discovery probe for the
+  **public, zero-auth SmartRecruiters Posting API**. Unlike Ashby/Lever (bare arrays), the payload is a
+  **`{ offset, limit, totalFound, content: [...] }` envelope**, so `gateBoard`/`extractListings` read the
+  `content` array. Each posting carries `company.name`, so — unlike Lever/Ashby — a board display name
+  IS on the wire and is captured into `boardName` (informational; the gate stays count-based:
+  `content.length >= MIN_JOBS (3)`, each `name`-bearing). Structured `location` is composed
+  (`fullLocation` → city/region/country → Remote). Network I/O isolated in `probeOne`; the decision
+  surface (`gateBoard`, `extractListings`) is pure and unit-tested. Bounded-concurrency worker pool (16).
+- **`scripts/__tests__/probe-smartrecruiters-company-source.spec.ts`** — **15 unit tests**, no live
+  network (pins `gateBoard`/`extractListings`, incl. envelope-shape, location composition, remote flag,
+  `function.label` department fallback, board-name capture). Green.
+- **`scripts/scaffold-smartrecruiters-company-source.ts`** — pure, conflict-free file emitter that
+  materialises, per descriptor, the full `source-company-<slug>` package (package.json, tsconfig, index,
+  module, **registry-delegation service**, generic mocked test, SmartRecruiters **`{content:[...]}`
+  envelope** fixture) **and** the `.specify/specs/<specNo>-source-company-<slug>/` spec/plan/tasks. The
+  generated service resolves `Site.SMARTRECRUITERS` from the `PluginRegistry`, delegates
+  `scrape({ ...input, companySlug })`, and re-stamps `site`/`companyName`/`id` (`sr-`→`<slug>-`). Never
+  touches shared wiring files.
+- **`scripts/assemble-smartrecruiters-batch.ts`** — deterministic descriptor assembler that joins the
+  probe survivors + enrichment (keyed by the case-sensitive `companySlug`) + a contiguous spec-number
+  range. Derives `slug`/`className`/`enumKey` from the canonical `displayName`; **rejects** candidates
+  whose derived `enumKey` starts with a digit or whose `slug`/`enumKey` collides with the live
+  `site.enum.ts` or an in-batch peer (never silently dropped — every rejection is logged).
+- **`scripts/process-sr-discovery.ts`** — marshals the discovery-workflow output into the enrichment +
+  candidate-slug files, decoding HTML entities (`&amp;` → `&`, numeric refs, …) that the web-discovery
+  agents emitted in prose fields.
+- **`scripts/wire-company-source.ts`** — confirmed **backend-agnostic** and reused **unchanged**; the
+  SmartRecruiters batch descriptor is field-compatible. The descriptor additionally carries a distinct
+  **`companySlug`** (the case-sensitive live SmartRecruiters identifier, which may contain mixed case /
+  trailing digits — e.g. `BoschGroup`, `ABInBev1`) separate from **`slug`** (hyphen-free lowercase
+  plugin dir/enum value/id prefix), per Q-SR-2.
+
+**Validation (foundation):** Probe unit suite **15/15 green**. End-to-end smoke test: scaffolded a
+throwaway descriptor → wired it into the four shared files → `jest` on the generated plugin **9/9 green**
+→ **fully reverted** (`git checkout` on the four shared files, `rm -rf` on the throwaway package + spec
+dir; `git status` clean). All three new pipeline scripts `tsc --noEmit` clean. Live endpoint confirmed
+against `Visa`, `BoschGroup` (4647 roles), `WesternDigital` (290), `ServiceNow` (396) — HTTP 200,
+`{ content: [...] }` envelope.
+
+**First SmartRecruiters company batch — 217 new plugins (Specs 1376–1592):** A **parallel multi-agent
+workflow** (14 sector-specialist agents; ~980k subagent tokens, 415 tool calls, ~740s wall-clock)
+web-discovered SmartRecruiters company boards across fourteen sectors (enterprise tech, industrial/auto,
+finance/fintech, retail/CPG, health/pharma, energy/climate, telecom/media/gaming, logistics/travel,
+professional services/staffing, food/agri, construction/real-estate, aerospace/defense/semis,
+education/public-sector, and European/UK enterprises) and **self-verified** each candidate's exact
+case-sensitive identifier against the public Posting API (≥ 3 live postings) before returning it —
+**223** unique verified candidates. Those were re-probed **centrally** through the deterministic
+`scripts/probe-smartrecruiters-company-source.ts` gate (the authoritative source of truth) —
+**220/223 survived** (≥ 3 live roles). Descriptors were assembled via
+`scripts/assemble-smartrecruiters-batch.ts` (className/moduleName/enumKey derived from each canonical
+`displayName`; **3 rejected** — `360 IT Professionals` for a digit-prefix enumKey, `AccorHotel` and
+`LinkedIn3` for `slug` collisions against `accor`/an existing `linkedin` plugin), leaving **217**.
+Those were scaffolded via `scripts/scaffold-smartrecruiters-company-source.ts` and wired via the
+backend-agnostic `scripts/wire-company-source.ts`. Each plugin is a thin **registry-delegation** service
+(resolve `Site.SMARTRECRUITERS`, delegate `scrape({ ...input, companySlug })`, re-stamp identity) —
+inheriting every SmartRecruiters field fix (structured location composition, department mapping, remote
+inference, description-section assembly) automatically. Wiring is fully additive: **+217** jest mappers,
+**+217** tsconfig aliases, **+217** enum members + barrel imports/module entries.
+
+**Validation (batch):** Sampled **10 generated plugin suites** (AbbVie, Abercrombie & Fitch, AB InBev,
+Accor, Visa, Wise + the last six specs) → **90/90 jest green**. Models package `tsc --noEmit` clean.
+The plugins **barrel** (`packages/plugins/index.ts`, now importing all 217 new modules) `tsc --noEmit`
+clean via an ephemeral entry tsconfig. Zero duplicate enum keys/values. Ephemeral batch files
+(`.sr-*.json`, `.sr-candidates.txt`) deleted pre-commit (not gitignored under the `.sr-` prefix).
+
+**Docs:** `docs/index.md` — added the Spec 1375 pipeline row + refreshed the footer. `docs/questions.md`
+— added **Q-SR-1** (count-only gate; brand-match deferred to descriptor assembly; `company.name`
+captured as informational `boardName`) and **Q-SR-2** (case-sensitive `companySlug` vs. lowercase plugin
+`slug`), both defaulted to option **A** (consistent with the Lever/Ashby resolutions).
+
+## 2026-07-03 — Scheduled run #442 (**Lever company-source pipeline foundation + first 180-plugin batch** — Specs 1194, 1195–1374)
+
+**Scope:** Opened a third, deterministic **Lever-backed** company-source pipeline — the sibling of the
+Greenhouse and Ashby (Spec 975) pipelines — to continue diversifying the company-direct backend mix.
+The `source-ats-lever` plugin already ships and is registered under `Site.LEVER`, but no company-direct
+plugin delegated to it, so the large population of scale-ups and mid-market companies hosting careers
+on **Lever** (`jobs.lever.co/<slug>`, public Postings API `api.lever.co/v0/postings/<slug>?mode=json`)
+was invisible to both the Greenhouse and Ashby discovery gates. This run built and validated the
+reusable Lever plumbing **and** landed a first 180-company batch on top of it.
+
+**Baseline at run start:** Local `develop` even with `origin/develop` at `378bf201` (run #441, 218
+Ashby plugins), CI **green**, working tree clean. Next spec number per the band-aware allocator
+(`scripts/next-spec-number.ts`, band `ever-jobs/ever-jobs` = 1–4999) was **1194**. The four external
+reference repos under the parent `OTHERS/` directory (outside this repo) were `git pull`-ed for
+situational awareness — `career-ops` had upstream movement (a new provider + a startup-boards registry
+entry + an experimental web UI), tracked **outside** this repo per the no-competitor-references rule.
+
+**What shipped (all TypeScript, additive — nothing removed):**
+
+- **`scripts/probe-lever-company-source.ts`** — deterministic discovery probe for the **public,
+  zero-auth Lever Postings API** (`https://api.lever.co/v0/postings/<slug>?mode=json` → a **bare JSON
+  array** of postings). Like Ashby (and unlike Greenhouse), the payload exposes **no board display
+  name**, so the gate is purely count-based (`jobs.length >= MIN_JOBS (3)`, each `text`-bearing).
+  Network I/O isolated in `probeOne`; the decision surface (`gateBoard`, `extractListings`) is pure
+  and unit-tested. Bounded-concurrency worker pool (16); `extractListings` prefers
+  `categories.allLocations[0]` over `categories.location`, falls back to `categories.team` for
+  department, and normalises the epoch-millis `createdAt`.
+- **`scripts/__tests__/probe-lever-company-source.spec.ts`** — **13 unit tests**, no live network
+  (pins `gateBoard`/`extractListings`). Green.
+- **`scripts/scaffold-lever-company-source.ts`** — pure, conflict-free file emitter that materialises,
+  per descriptor, the full `source-company-<slug>` package (package.json, tsconfig, index, module,
+  **registry-delegation service**, generic mocked test, Lever **bare-array** job-board fixture) **and**
+  the `.specify/specs/<specNo>-source-company-<slug>/` spec/plan/tasks. The generated service resolves
+  `Site.LEVER` from the `PluginRegistry`, delegates `scrape({ ...input, companySlug })`, and re-stamps
+  `site`/`companyName`/`id` (`lever-`→`<slug>-`). Never touches shared wiring files.
+- **`scripts/wire-company-source.ts`** — confirmed **backend-agnostic** and reused **unchanged**; the
+  Lever batch descriptor is field-compatible (`slug`/`moduleName`/`enumKey`/`displayName`/`specNo`/
+  `phaseNo`). The descriptor additionally carries a distinct **`companySlug`** (the live Lever slug,
+  which may contain hyphens/dots) separate from **`slug`** (hyphen-free plugin dir/enum value/id
+  prefix), per Q-LEVER-2.
+
+**Validation:** Probe unit suite **13/13 green**. End-to-end smoke test: scaffolded a throwaway
+descriptor → wired it into the four shared files → `jest` on the generated plugin **9/9 green** →
+**fully reverted** (`git checkout` on the four shared files, `rm -rf` on the throwaway package + spec
+dir; `git status` clean). This proves the emitter, the generated test, and the wiring are correct
+against a known-good template before any real batch is generated.
+
+**First Lever company batch — 180 new plugins (Specs 1195–1374):** A **parallel multi-agent workflow**
+(12 sector-specialist agents; ~831k subagent tokens, 574 tool calls) web-discovered **216** candidate
+Lever boards across twelve sectors (AI/ML, dev-tools/infra, fintech, crypto, data-infra, security,
+health/biotech, robotics/hardware, climate, B2B SaaS, e-commerce/marketplaces, gaming/media/education/
+logistics) and **self-verified** each against the public Lever Postings API (≥ 3 live postings) before
+returning it. The merged set was slug-normalised and deduped, then collision-checked against the live
+`site.enum.ts` + `packages/plugins/index.ts`: **23 rejected** (in-batch duplicate slugs; `enumKey`
+starting with a digit — `1inch`, `360learning`; one enum-key collision — `loopreturns`→`LOOP`),
+leaving **193** unique candidates. Those were re-probed **centrally** through the deterministic
+`scripts/probe-lever-company-source.ts` gate (the authoritative source of truth) — **180/193 survived**
+(≥ 3 live roles). Descriptors were assembled (className/moduleName/enumKey derived from each canonical
+`displayName`), scaffolded via `scripts/scaffold-lever-company-source.ts` and wired via the
+backend-agnostic `scripts/wire-company-source.ts`. Each plugin is a thin **registry-delegation** service
+(resolve `Site.LEVER`, delegate `scrape({ ...input, companySlug })`, re-stamp identity) — inheriting
+every Lever field fix (location parsing, structured-first compensation, remote/hybrid inference)
+automatically. Wiring is fully additive: **+180** jest mappers, **+180** tsconfig aliases, **+360** enum
+lines (comment + entry ×180), **+360** barrel lines (import + module entry ×180), zero deletions.
+Company-direct plugin count **1041 → 1221**.
+
+**Verification:** Probe suite 13/13. Sample of 6 generated plugins across the batch — including the
+edge-case slugs `arcteryxcom` (Arc'teryx, apostrophe-escaped className), `cscgeneration2`, `spearai`
+(dotted/suffixed/hyphen-stripped) — **54/54 tests green** via `jest`. `tsc --noEmit` surfaced only
+pre-existing `apps/api/src/cache` env-dep errors (`cacheable`/`@keyv/redis` absent in the sandbox),
+none in the new files. Full CI suite is the final gate on push.
+
+**Docs:** `docs/index.md` gained the 1194 pipeline row + 180 plugin rows (Specs 1195–1374) and a fresh
+`_Last revised_` footer; `docs/questions.md` gained **Q-LEVER-1** (no board-name anchor) and
+**Q-LEVER-2** (slug vs. plugin-dir naming), both resolving to the Ashby precedent; the Lever pipeline
+foundation is documented under `.specify/specs/1194-lever-company-source-pipeline/`.
+
+**Notes:**
+
+- Lever slugs are treated case-insensitively (lower-cased before probing); a handful of case-sensitive
+  boards that 404 lower-cased are simply among the 13 that did not survive the central gate — the gate
+  handled them correctly, no false positives shipped.
+- The competitor-watch note for `career-ops` v1.16.0 movement lives **outside** this repo (parent-dir
+  watch file), never here, per the no-competitor-references rule.
+
+---
+
+## 2026-07-02 — Scheduled run #441 (**Ashby company-source pipeline foundation** — Spec 975)
+
+**Scope:** Opened a new, deterministic **Ashby-backed** company-source pipeline — the sibling of the
+existing Greenhouse pipeline — to correct a structural skew in the corpus: of the ~829 company-direct
+plugins, **~97 % (803) are Greenhouse** and only a handful (`allencontrolsystems`, `openai`) delegate
+to **Ashby**. Many well-funded modern startups (AI/ML, developer-tools/infra, fintech, crypto,
+data-infra, security) host their careers on Ashby (`jobs.ashbyhq.com/<slug>`) and are therefore
+**invisible to the Greenhouse-only discovery gate**. This run built and validated the reusable
+plumbing that makes those companies discoverable; a first Ashby company batch lands under Specs 976+.
+
+**Baseline at run start:** Local `develop` even with `origin/develop` at `3ca794cf` (run #440, 170
+Greenhouse plugins), CI **green**, working tree clean. Next spec number per the band-aware allocator
+(`scripts/next-spec-number.ts`, band `ever-jobs/ever-jobs` = 1–4999) was **975**. The four external
+reference repos under the parent `OTHERS/` directory (outside this repo) were `git pull`-ed for
+situational awareness — `career-ops` had upstream movement (Ashby/Teamtailor/HigherEdJobs provider
+activity), tracked **outside** this repo per the no-competitor-references rule.
+
+**What shipped (all TypeScript, additive — nothing removed):**
+
+- **`scripts/probe-ashby-company-source.ts`** — deterministic discovery probe for the **public,
+  zero-auth Ashby Posting API** (`https://api.ashbyhq.com/posting-api/job-board/<slug>` →
+  `{ apiVersion, jobs[] }`). Unlike Greenhouse, Ashby's public payload exposes **no board display
+  name**, so the gate is purely count-based (`jobs.length >= MIN_JOBS (3)`, each title-bearing).
+  Network I/O isolated in `probeOne`; the decision surface (`gateBoard`, `extractListings`) is pure
+  and unit-tested. Bounded-concurrency worker pool (16); `extractListings` tolerates both public
+  (`departmentName`/`publishedDate`) and authenticated (`department`/`publishedAt`) field names.
+- **`scripts/__tests__/probe-ashby-company-source.spec.ts`** — **11 unit tests**, no live network
+  (pins `gateBoard`/`extractListings`). Green.
+- **`scripts/scaffold-ashby-company-source.ts`** — pure, conflict-free file emitter that materialises,
+  per descriptor, the full `source-company-<slug>` package (package.json, tsconfig, index, module,
+  **registry-delegation service**, generic mocked test, Ashby job-board fixture) **and** the
+  `.specify/specs/<specNo>-source-company-<slug>/` spec/plan/tasks. The generated service is the
+  proven `source-company-allencontrolsystems` pattern parametrised: resolve `Site.ASHBY` from the
+  `PluginRegistry`, delegate `scrape({ ...input, companySlug })`, re-stamp `site`/`companyName`/`id`
+  (`ashby-`→`<slug>-`), fail-safe empty on unavailability. Never touches shared wiring files.
+- **`scripts/wire-company-source.ts`** — confirmed **backend-agnostic** and reused **unchanged**; the
+  Ashby batch descriptor is field-compatible (`slug`/`moduleName`/`enumKey`/`displayName`/`specNo`/
+  `phaseNo`). The descriptor additionally carries a distinct **`companySlug`** (the live Ashby board
+  slug, which may contain hyphens) separate from **`slug`** (hyphen-free plugin dir / enum value / id
+  prefix), per Q-ASHBY-2.
+
+**Validation:** Probe unit suite **11/11 green**. End-to-end smoke test: scaffolded a throwaway
+descriptor → wired it into the four shared files → `jest` on the generated plugin **9/9 green** →
+**fully reverted** (`git checkout` on the four shared files, `rm -rf` on the throwaway package + spec
+dir; `git status` clean). This proves the emitter, the generated test, and the wiring are correct
+against a known-good template before any real batch is generated.
+
+**First Ashby company batch — 218 new plugins (Specs 976–1193):** A **parallel multi-agent workflow**
+(12 sector-specialist agents; 755k subagent tokens, 403 tool calls) web-discovered **270** candidate
+Ashby boards across twelve sectors (AI/ML, dev-tools/infra, fintech, crypto, data-infra, security,
+health/biotech, robotics/hardware, climate, B2B SaaS, e-commerce/marketplaces, aerospace/defense) and
+**self-verified** each against the public Ashby Posting API (≥ 3 live jobs) before returning it. The
+merged set was slug-normalised, deduped against the existing corpus (14 already present, e.g. OpenAI /
+ClickHouse / Cerebras), leaving **229** unique candidates. Those were re-probed **centrally** through
+the deterministic `scripts/probe-ashby-company-source.ts` gate (the authoritative source of truth) —
+**222/229 survived** (≥ 3 live roles). Descriptor assembly derived `className` / `moduleName` /
+`enumKey` / plugin-`slug` from each canonical `displayName` and **collision-checked** every one against
+the live `site.enum.ts` + `packages/plugins/index.ts`: **4 rejected** (`1Password`, `0G Labs` — TS enum
+members cannot begin with a digit; `Etched`, `Mercor` — enumKey/module collisions with existing
+plugins), leaving **218** clean descriptors (Specs 976–1193; phases 970–1187), scaffolded via
+`scripts/scaffold-ashby-company-source.ts` and wired via the backend-agnostic
+`scripts/wire-company-source.ts`. Each plugin is a thin **registry-delegation** service (resolve
+`Site.ASHBY`, delegate `scrape({ ...input, companySlug })`, re-stamp identity) — inheriting every Ashby
+field fix, no bespoke parsing. Top boards by live-role count: Airwallex (593), Renuity (407), Enpal
+(354), Crusoe (350), Harvey (321), Saronic Technologies (269), Applied Intuition (248), Lightspeed
+Commerce (208). This lifts the Ashby-backed company-direct count from **2 → 220** and the total
+company-direct corpus to **1041**. The remaining ~4 collision-rejected + non-surviving candidates are
+recorded in the run scratch (not committed) for future disambiguation. Per-company enrichment prose is
+strictly factual (company-only, no competitor references); `verified=false` until authenticated.
+
+**Batch validation:** Full-project `tsc --noEmit` **clean** for all 218 plugins + the four wired
+files (only residual errors are the pre-existing, unrelated `apps/api/src/cache` `cacheable` /
+`@keyv/redis` type decls, resolved by CI's `npm ci`). The **218 generated mocked unit suites — 1962
+tests — all green** (`jest`, 544 s; each suite pins DI resolution, the `Site` enum value, the
+delegation happy-path, input pass-through, resilience, and the `resultsWanted` cap). Doc-lint clean
+(all 654 new spec/plan/tasks files indexed in `docs/index.md`).
+
+**Docs:** Added Spec 975 (spec/plan/tasks); indexed it in `docs/index.md`; recorded **Q-ASHBY-1**
+(no board-name brand anchor → brand-match enforced at assembly time) and **Q-ASHBY-2** (dual
+`companySlug`/`slug` naming) in `docs/questions.md`. No competitor intel in-repo.
+
+---
+
+## 2026-06-28 — Scheduled run #440 (**170 new Source Company Plugins** — Specs 804–974)
+
+**Scope:** Largest single-run corpus expansion to date — **170 new Greenhouse-backed
+company-direct source plugins** (Specs 804–974; phases 799–969), discovered and gated through the
+deterministic, conflict-free company-source pipeline (`probe → discover → enrich → assemble →
+scaffold → wire`). Every plugin targets one real, brand-matched employer board that exposed **≥ 3
+live roles** at probe time (`MIN_JOBS = 3`). This run drew from **twenty sectors** — fintech /
+payments / neobanking, insurtech, digital health, biotech / gene-editing, climate / clean-energy /
+grid-storage, agtech / foodtech / restaurant-tech, robotics / industrial automation, aerospace /
+defense / space, e-commerce / retail, logistics / supply-chain / fulfillment, gaming studios,
+cybersecurity / identity / fraud, proptech / construction-tech, edtech, legaltech / regtech /
+govtech, HR-tech / recruiting / workforce, adtech / martech / creator-economy, mobility / EV /
+micromobility, applied / vertical AI, and hardware / semiconductors / IoT — the sectors where the
+public-board landscape still surfaces fresh employer boards.
+
+**Discovery method (this run):** Board discovery was run as a **parallel multi-agent workflow** —
+twenty sector-specialist agents each web-discovered candidate Greenhouse boards and **self-verified**
+each against the live public Greenhouse Job-Board API (board `name` brand-match + `≥ 3` live jobs)
+before returning it. The merged set (405 boards) was deduped against the existing 653-plugin corpus,
+re-probed **centrally** through `scripts/probe-company-source.ts` (the authoritative deterministic
+gate — 175/175 survived), then validated for **brand-match** and for `enumKey` / `className` /
+`moduleName` / slug-value **collisions** against the existing registry. Five candidates were rejected
+at validation: `2u` and `8451` (TS enum members cannot begin with a digit: `2U`, `84_51`),
+`gomotive` (`MOTIVE` already in `site.enum`), `workstream` (`WORKSTREAM` already in `site.enum`),
+and — caught at typecheck — `ziprecruiter` (`ZipRecruiterModule` collides with the existing
+search-board plugin `source-ziprecruiter`); **Spec 973 is intentionally left unused** as a result.
+Per-company enrichment prose (`oneLiner` / `description` / `highlights`) was generated
+**deterministically and locally** from the verified board metadata (display name, sector, HQ, live
+job count) — strictly factual, no fabricated claims, no external content.
+
+**Baseline at run start:** Local `develop` was even with `origin/develop` at `1ec54853` (run #439,
+16 plugins) with a **green** CI run; working tree clean. Next spec number per the band-aware
+allocator (`scripts/next-spec-number.ts`, band `ever-jobs/ever-jobs` = 1–4999) was **804**; last
+enum phase was 798. The four external reference repos under the parent `OTHERS/` directory (outside
+this repo) were `git pull`-ed for situational awareness — no upstream movement. No competitor intel
+is referenced in-repo; every board below is documented purely on its own public merits.
+
+**Validation:** Full-project `tsc --noEmit` is clean for all 170 plugins and the four wired files
+(the only residual `tsc` errors are pre-existing and unrelated — missing `cacheable` / `@keyv/redis`
+type decls in `apps/api/src/cache`, resolved by CI's `npm ci`). A 12-plugin sample of the generated
+mocked unit suites (spanning tricky name derivations — `C3 AI`, `dbt Labs`, `ID.me`, `K2 Space`,
+`The New York Times`, `PlayStation (Sony Interactive Entertainment)`, `The Pokémon Company
+International`, `Picnic Delivery`) was run locally: **132 tests green**.
+
+| Spec | Phase | Slug | Enum | Display name | Sector | HQ | Roles |
+| ---- | ----- | ---- | ---- | ------------ | ------ | -- | ----- |
+| 804 | 799 | `accela` | ACCELA | Accela | Govtech (government permitting/licensing SaaS) | San Ramon, California, USA | 16 |
+| 805 | 800 | `aevexaerospace` | AEVEX_AEROSPACE | AEVEX Aerospace | Defense aerospace (UAS, ISR, full-spectrum) | Solana Beach, California, USA | 86 |
+| 806 | 801 | `akayshaenergy` | AKAYSHA_ENERGY | Akaysha Energy | Grid/storage / grid-scale battery storage | Sydney, New South Wales, Australia | 5 |
+| 807 | 802 | `andurilindustries` | ANDURIL_INDUSTRIES | Anduril Industries | Defense technology (autonomous systems, C2, counter-UAS) | Costa Mesa, California, USA | 2128 |
+| 808 | 803 | `armissecurity` | ARMIS | Armis | Asset/IoT security | San Francisco, California, USA | 45 |
+| 809 | 804 | `atbayjobs` | AT_BAY | At-Bay | Cyber insurance / security | San Francisco, California, USA | 27 |
+| 810 | 805 | `atomicmachines` | ATOMIC_MACHINES | Atomic Machines | Robotics, industrial automation, warehouse/manufacturing automation | Berkeley, California, USA | 37 |
+| 811 | 806 | `augury` | AUGURY | Augury | Industrial IoT / machine-health sensors | New York, New York, USA | 21 |
+| 812 | 807 | `aura` | AURA | Aura | Consumer identity / fraud protection | Boston, Massachusetts, USA | 7 |
+| 813 | 808 | `avantus` | AVANTUS | Avantus | Clean energy / utility-scale solar & storage | San Diego, California, USA | 16 |
+| 814 | 809 | `avride` | AVRIDE | Avride | Robotics, industrial automation, warehouse/manufacturing automation | Austin, Texas, USA | 39 |
+| 815 | 810 | `axonius` | AXONIUS | Axonius | Cyber asset attack surface management | New York, New York, USA | 34 |
+| 816 | 811 | `beamtherapeutics` | BEAM_THERAPEUTICS | Beam Therapeutics | Gene editing | Cambridge, MA, USA | 27 |
+| 817 | 812 | `blockchain` | BLOCKCHAIN_COM | Blockchain.com | Fintech — crypto wallet / exchange | London, England, United Kingdom | 29 |
+| 818 | 813 | `botauto` | BOT_AUTO | Bot Auto | Autonomous trucking | Houston, Texas, USA | 21 |
+| 819 | 814 | `buildops` | BUILDOPS | BuildOps | Construction tech (commercial contractor management software) | Santa Monica, CA, USA | 37 |
+| 820 | 815 | `c3iot` | C3_AI | C3 AI | Enterprise applied AI applications | Redwood City, California, USA | 57 |
+| 821 | 816 | `cabify` | CABIFY | Cabify | Ride-hailing / mobility platform | Madrid, Spain | 56 |
+| 822 | 817 | `cargomatic` | CARGOMATIC | Cargomatic | Drayage / digital freight marketplace | Long Beach, California, USA | 20 |
+| 823 | 818 | `censys` | CENSYS | Censys | Security data / applied AI platform | Ann Arbor, Michigan, USA | 14 |
+| 824 | 819 | `charterup` | CHARTERUP | CharterUP | Group transportation / charter mobility platform | Austin, Texas, USA | 14 |
+| 825 | 820 | `checkbook` | CHECKBOOK | Checkbook | Fintech — digital payments / disbursements | San Mateo, California, USA | 3 |
+| 826 | 821 | `codepath` | CODEPATH | CodePath | Edtech / tech career upskilling | San Francisco, California, USA | 18 |
+| 827 | 822 | `cognitiv` | COGNITIV | Cognitiv | Adtech (AI/deep-learning ads) | Seattle, Washington, United States | 6 |
+| 828 | 823 | `collibra` | COLLIBRA | Collibra | Compliance / data governance | New York, New York, USA | 38 |
+| 829 | 824 | `colossalbiosciences` | COLOSSAL_BIOSCIENCES | Colossal Biosciences | Genomics / synthetic biology | Dallas, TX, USA | 7 |
+| 830 | 825 | `customerio` | CUSTOMER_IO | Customer.io | Martech (marketing automation/messaging) | Portland, Oregon, United States | 18 |
+| 831 | 826 | `cypresscreekrenewables` | CYPRESS_CREEK_RENEWABLES | Cypress Creek Renewables | Clean energy / utility-scale solar & storage | Santa Monica, California, USA | 28 |
+| 832 | 827 | `daybreakgames` | DAYBREAK_GAME_COMPANY | Daybreak Game Company | Gaming studios / interactive entertainment | San Diego, California, USA | 5 |
+| 833 | 828 | `dbtlabsinc` | DBT_LABS | dbt Labs | Data transformation / analytics engineering platform | Philadelphia, Pennsylvania, USA | 36 |
+| 834 | 829 | `dealpath` | DEALPATH | Dealpath | Proptech / commercial real estate (deal management & investment platform) | San Francisco, CA, USA | 14 |
+| 835 | 830 | `defenseunicorns` | DEFENSE_UNICORNS | Defense Unicorns | Defense software (mission infrastructure/DevSecOps) | Colorado Springs, Colorado, USA | 49 |
+| 836 | 831 | `digitalextremes` | DIGITAL_EXTREMES | Digital Extremes | Gaming studios / interactive entertainment | London, Ontario, Canada | 8 |
+| 837 | 832 | `dorsia` | DORSIA | Dorsia | Restaurant tech | New York, New York, USA | 11 |
+| 838 | 833 | `easyship` | EASYSHIP | Easyship | E-commerce enablement (shipping/fulfillment SaaS) | New York, New York, USA | 24 |
+| 839 | 834 | `eleventhhourgames` | ELEVENTH_HOUR_GAMES | Eleventh Hour Games | Gaming studios / interactive entertainment | Chicago, Illinois, USA | 10 |
+| 840 | 835 | `emarketer` | EMARKETER | EMARKETER | Martech/media (marketing research) | New York, New York, United States | 12 |
+| 841 | 836 | `emnify` | EMNIFY | emnify | IoT connectivity / cellular hardware-SIM platform | Berlin, Berlin, Germany | 9 |
+| 842 | 837 | `energysolutions` | ENERGY_SOLUTIONS | Energy Solutions | Clean energy / efficiency & decarbonization services | Oakland, California, USA | 33 |
+| 843 | 838 | `esusu` | ESUSU | Esusu | Fintech — rent reporting / credit building / consumer payments | New York, New York, USA | 9 |
+| 844 | 839 | `exiger` | EXIGER | Exiger | Regtech (supply-chain risk / AML / compliance) | New York, New York, USA | 48 |
+| 845 | 840 | `extrahopnetworks` | EXTRAHOP | ExtraHop | Network detection & response | Seattle, Washington, USA | 19 |
+| 846 | 841 | `federato` | FEDERATO | Federato | Insurtech and insurance technology | San Francisco, California, USA | 14 |
+| 847 | 842 | `feedzai` | FEEDZAI | Feedzai | Regtech (fraud / AML) | San Mateo, California, USA | 37 |
+| 848 | 843 | `fieldwire` | FIELDWIRE | Fieldwire | Construction tech (jobsite field management & coordination software) | San Francisco, CA, USA | 22 |
+| 849 | 844 | `flashfood` | FLASHFOOD | Flashfood | Foodtech / food waste | Toronto, Ontario, Canada | 5 |
+| 850 | 845 | `fleetio` | FLEETIO | Fleetio | Fleet management software / logistics | Birmingham, Alabama, USA | 10 |
+| 851 | 846 | `forbes` | FORBES | Forbes | Media (publishing) | Jersey City, New Jersey, United States | 11 |
+| 852 | 847 | `forter` | FORTER | Forter | Fraud prevention / risk | New York, New York, USA | 41 |
+| 853 | 848 | `freeformfuturecorp` | FREEFORM | Freeform | Aerospace & defense metal additive manufacturing | Hawthorne, California, USA | 55 |
+| 854 | 849 | `galvanizeclimatesolutions` | GALVANIZE_CLIMATE_SOLUTIONS | Galvanize Climate Solutions | Climate tech / climate investment firm | San Francisco, California, USA | 3 |
+| 855 | 850 | `gatikaiinc` | GATIK_AI | Gatik AI | Robotics, industrial automation, warehouse/manufacturing automation | Mountain View, California, USA | 61 |
+| 856 | 851 | `gleanwork` | GLEAN | Glean | Enterprise AI search & assistant (applied AI) | Palo Alto, California, USA | 155 |
+| 857 | 852 | `glossgenius` | GLOSSGENIUS | GlossGenius | Fintech — embedded payments / SMB platform | New York, New York, USA | 32 |
+| 858 | 853 | `goodwaygroup` | GOODWAY_GROUP | Goodway Group | Adtech/martech (digital media agency) | Westport, Connecticut, United States | 5 |
+| 859 | 854 | `gotion` | GOTION | Gotion | Grid/storage / EV & energy-storage lithium batteries | Fremont, California, USA | 148 |
+| 860 | 855 | `govtech` | GOVTECH_SINGAPORE_GOVERNMENT_TECHNOLOGY_AGENCY | GovTech Singapore (Government Technology Agency) | Govtech (government digital services) | Singapore, Singapore, Singapore | 265 |
+| 861 | 856 | `gsgcareers` | GHOST_STORY_GAMES | Ghost Story Games | Gaming studios / interactive entertainment | Westwood, Massachusetts, USA | 3 |
+| 862 | 857 | `hanwharenewables` | HANWHA_RENEWABLES | Hanwha Renewables | Clean energy / utility-scale solar & storage | Houston, Texas, USA | 4 |
+| 863 | 858 | `heraldapi` | HERALD | Herald | Insurtech and insurance technology | New York, New York, USA | 7 |
+| 864 | 859 | `homeward` | HOMEWARD | Homeward | Real estate tech (cash-offer home buying) | Austin, TX, USA | 4 |
+| 865 | 860 | `hyliion` | HYLIION | Hyliion | Electrified powertrain / clean transport | Cedar Park, Texas, USA | 11 |
+| 866 | 861 | `hyperproof` | HYPERPROOF | Hyperproof | Compliance / GRC (security compliance) | Seattle, Washington, USA | 7 |
+| 867 | 862 | `idme` | ID_ME | ID.me | Identity verification / fraud | McLean, Virginia, USA | 53 |
+| 868 | 863 | `inchargeenergy` | INCHARGE_ENERGY | InCharge Energy | Clean energy / fleet EV charging infrastructure | Santa Monica, California, USA | 20 |
+| 869 | 864 | `innovid` | INNOVID | Innovid | Adtech (ad serving/CTV) | New York, New York, United States | 15 |
+| 870 | 865 | `instawork` | INSTAWORK | Instawork | Workforce management - hourly / flexible staffing marketplace | San Francisco, California, USA | 64 |
+| 871 | 866 | `intrinsicrobotics` | INTRINSIC | Intrinsic | Robotics, industrial automation, warehouse/manufacturing automation | Mountain View, California, USA | 30 |
+| 872 | 867 | `isccareers` | INTEGRATED_SPECIALTY_COVERAGES | Integrated Specialty Coverages | Insurtech and insurance technology | Carlsbad, California, USA | 23 |
+| 873 | 868 | `itslogisticsllc` | ITS_LOGISTICS | ITS Logistics | 3PL / freight / warehousing | Sparks (Reno), Nevada, USA | 24 |
+| 874 | 869 | `k2spacecorporation` | K2_SPACE | K2 Space | Satellites (large GEO/MEO buses) | Los Angeles, California, USA | 147 |
+| 875 | 870 | `kasa` | KASA | Kasa | Proptech / real estate (tech-enabled hospitality & flexible accommodations) | San Francisco, CA, USA | 25 |
+| 876 | 871 | `khaerospace` | KH_AEROSPACE | KH Aerospace | Aerospace & defense (UAS manufacturing/training) | Hayward, California, USA | 4 |
+| 877 | 872 | `knowbe4` | KNOWBE4 | KnowBe4 | Compliance / security awareness training | Clearwater, Florida, USA | 98 |
+| 878 | 873 | `legion` | LEGION_TECHNOLOGIES | Legion Technologies | Workforce management software (scheduling / labor) | Palo Alto, California, USA | 16 |
+| 879 | 874 | `logicgate` | LOGICGATE | LogicGate | Compliance / GRC (risk management) | Chicago, Illinois, USA | 12 |
+| 880 | 875 | `mark43` | MARK43 | Mark43 | Govtech / public safety (police RMS/CAD) | New York, New York, USA | 38 |
+| 881 | 876 | `matic` | MATIC_INSURANCE | Matic Insurance | Insurtech and insurance technology | Columbus, Ohio, USA | 7 |
+| 882 | 877 | `maymobility` | MAY_MOBILITY | May Mobility | Autonomous vehicles / mobility | Ann Arbor, Michigan, USA | 44 |
+| 883 | 878 | `mediasmart` | MEDIASMART | mediasmart | Adtech (omnichannel/CTV/DOOH DSP) | Madrid, Spain | 8 |
+| 884 | 879 | `metropolis` | METROPOLIS_TECHNOLOGIES | Metropolis Technologies | Proptech / real estate (AI computer-vision parking & mobility platform) | Santa Monica, CA, USA | 129 |
+| 885 | 880 | `mobilityware` | MOBILITYWARE | MobilityWare | Mobile gaming / interactive entertainment | Irvine, California, USA | 4 |
+| 886 | 881 | `modernize` | MODERNIZE_HOME_SERVICES | Modernize Home Services | Proptech / home services (home improvement lead generation) | Austin, TX, USA | 7 |
+| 887 | 882 | `mrbeastyoutube` | MRBEAST_BEAST_INDUSTRIES | MrBeast (Beast Industries) | Creator economy (media/YouTube) | Greenville, North Carolina, United States | 80 |
+| 888 | 883 | `nabis` | NABIS | Nabis | Distribution / last-mile delivery | San Francisco, California, USA | 37 |
+| 889 | 884 | `nationalpublicradioinc` | NPR_NATIONAL_PUBLIC_RADIO | NPR (National Public Radio) | Media/streaming (public radio/podcasts) | Washington, District of Columbia, United States | 10 |
+| 890 | 885 | `neonaerospace` | NEON_AEROSPACE | Neon Aerospace | Aerospace (autonomous flight / propulsion) | San Francisco, California, USA | 16 |
+| 891 | 886 | `nerostechnologies` | NEROS_TECHNOLOGIES | Neros Technologies | Robotics, industrial automation, warehouse/manufacturing automation | El Segundo, California, USA | 63 |
+| 892 | 887 | `newleafenergy` | NEW_LEAF_ENERGY | New Leaf Energy | Clean energy / solar & storage development | Lowell, Massachusetts, USA | 42 |
+| 893 | 888 | `nex` | NEX | Nex | Gaming studios / interactive entertainment (motion gaming) | San Jose, California, USA | 44 |
+| 894 | 889 | `nextinsurance66` | NEXT_INSURANCE | Next Insurance | Insurtech and insurance technology | Palo Alto, California, USA | 31 |
+| 895 | 890 | `nimblerobotics` | NIMBLE_ROBOTICS | Nimble Robotics | Robotics, industrial automation, warehouse/manufacturing automation | San Francisco, California, USA | 19 |
+| 896 | 891 | `nmi` | NMI | NMI | Fintech — payments gateway / embedded payments | Schaumburg, Illinois, USA | 16 |
+| 897 | 892 | `northspyre` | NORTHSPYRE | Northspyre | Proptech / real estate (development project & cost management software) | New York, NY, USA | 8 |
+| 898 | 893 | `nothing` | NOTHING | Nothing | Consumer electronics (smartphones, earbuds) | London, England, United Kingdom | 17 |
+| 899 | 894 | `onetrust` | ONETRUST | OneTrust | Data privacy, security & governance | Atlanta, Georgia, USA | 91 |
+| 900 | 895 | `openspace` | OPENSPACE | OpenSpace | Construction tech (AI jobsite capture & reality mapping) | San Francisco, CA, USA | 10 |
+| 901 | 896 | `opentable` | OPENTABLE | OpenTable | Restaurant tech | San Francisco, California, USA | 41 |
+| 902 | 897 | `operationscareers` | VEO | Veo | Shared micromobility (bikes/scooters) | Santa Monica, California, USA | 49 |
+| 903 | 898 | `orcasecurity` | ORCA_SECURITY | Orca Security | Cloud security (CNAPP) | Portland, Oregon, USA | 4 |
+| 904 | 899 | `origisenergy` | ORIGIS_ENERGY | Origis Energy | Clean energy / utility-scale solar & storage | Miami, Florida, USA | 17 |
+| 905 | 900 | `osano` | OSANO | Osano | Compliance / data privacy | Austin, Texas, USA | 5 |
+| 906 | 901 | `pacvue` | PACVUE | Pacvue | E-commerce enablement / retail media SaaS | Seattle, Washington, USA | 13 |
+| 907 | 902 | `palmettocleantech` | PALMETTO_CLEAN_TECHNOLOGY | Palmetto Clean Technology | Clean energy / residential solar platform | Charleston, South Carolina, USA | 31 |
+| 908 | 903 | `pathward` | PATHWARD | Pathward | Fintech — banking-as-a-service / sponsor bank | Sioux Falls, South Dakota, USA | 34 |
+| 909 | 904 | `paynearmeinc` | PAYNEARME | PayNearMe | Fintech — bill pay / payments platform | Santa Clara, California, USA | 11 |
+| 910 | 905 | `payoneer` | PAYONEER | Payoneer | Fintech — cross-border payments | New York, New York, USA | 133 |
+| 911 | 906 | `pixability` | PIXABILITY | Pixability | Adtech (YouTube/CTV video ads) | Boston, Massachusetts, United States | 3 |
+| 912 | 907 | `pluspower` | PLUS_POWER | Plus Power | Grid/storage / standalone battery storage developer | Houston, Texas, USA | 8 |
+| 913 | 908 | `pokemoncareers` | THE_POK_MON_COMPANY_INTERNATIONAL | The Pokémon Company International | Gaming / interactive entertainment / esports | Bellevue, Washington, USA | 34 |
+| 914 | 909 | `primemedicine` | PRIME_MEDICINE | Prime Medicine | Gene editing | Cambridge, MA, USA | 7 |
+| 915 | 910 | `pubmatic` | PUBMATIC | PubMatic | Adtech (SSP) | Redwood City, California, United States | 66 |
+| 916 | 911 | `qualia` | QUALIA | Qualia | Real estate tech (digital closing / title & escrow platform) | San Francisco, CA, USA | 17 |
+| 917 | 912 | `razorpaysoftwareprivatelimited` | RAZORPAY | Razorpay | Fintech — payments gateway / banking-as-a-service | Bengaluru, Karnataka, India | 28 |
+| 918 | 913 | `recordedfuture` | RECORDED_FUTURE | Recorded Future | Threat intelligence | Boston, Massachusetts, USA | 43 |
+| 919 | 914 | `renaissancelearning-nam` | RENAISSANCE_LEARNING | Renaissance Learning | Edtech / pre-K-12 assessment & learning | Bloomington, Minnesota, USA | 14 |
+| 920 | 915 | `riskified` | RISKIFIED | Riskified | Fraud prevention / e-commerce risk | New York, New York, USA | 31 |
+| 921 | 916 | `rithum` | RITHUM | Rithum | E-commerce enablement / commerce network SaaS | Bethesda, Maryland, USA | 25 |
+| 922 | 917 | `rocketlawyer` | ROCKET_LAWYER | Rocket Lawyer | Legaltech (online legal services) | San Francisco, California, USA | 6 |
+| 923 | 918 | `roku` | ROKU | Roku | Media/streaming (CTV platform) | San Jose, California, United States | 230 |
+| 924 | 919 | `sanabiotech` | SANA_BIOTECHNOLOGY | Sana Biotechnology | Cell & gene therapy | Seattle, WA, USA | 13 |
+| 925 | 920 | `sayari` | SAYARI | Sayari | Regtech (corporate risk intelligence / AML) | Washington, DC, USA | 24 |
+| 926 | 921 | `scoutai` | SCOUT_AI | Scout AI | Defense robotics / autonomous drones | San Francisco, California, USA | 23 |
+| 927 | 922 | `securityscorecard` | SECURITYSCORECARD | SecurityScorecard | Compliance / cyber risk ratings | New York, New York, USA | 62 |
+| 928 | 923 | `seekout` | SEEKOUT | SeekOut | Recruiting tech - talent sourcing & talent intelligence AI | Bellevue, Washington, USA | 4 |
+| 929 | 924 | `seoulrobotics` | SEOUL_ROBOTICS | Seoul Robotics | Robotics, industrial automation, warehouse/manufacturing automation | Seoul, South Korea | 9 |
+| 930 | 925 | `shifttechnology` | SHIFT_TECHNOLOGY | Shift Technology | Insurtech and insurance technology | Paris, Ile-de-France, France | 27 |
+| 931 | 926 | `shipbobinc` | SHIPBOB | ShipBob | Fulfillment / 3PL | Chicago, Illinois, USA | 43 |
+| 932 | 927 | `shipmonk` | SHIPMONK | ShipMonk | Fulfillment / 3PL | Fort Lauderdale, Florida, USA | 54 |
+| 933 | 928 | `skillsoft` | SKILLSOFT | Skillsoft | HR tech - corporate learning & talent development | Nashua, New Hampshire, USA | 17 |
+| 934 | 929 | `smartrent` | SMARTRENT | SmartRent | Proptech (smart home & access automation for rental communities) | Scottsdale, AZ, USA | 14 |
+| 935 | 930 | `snorkelai` | SNORKEL_AI | Snorkel AI | Data-centric AI / data development platform | Redwood City, California, USA | 45 |
+| 936 | 931 | `soldejaneiro` | SOL_DE_JANEIRO | Sol de Janeiro | DTC beauty brand | New York, New York, USA | 32 |
+| 937 | 932 | `sonyinteractiveentertainmentglobal` | PLAYSTATION_SONY_INTERACTIVE_ENTERTAINMENT | PlayStation (Sony Interactive Entertainment) | Gaming / interactive entertainment | San Mateo, California, USA | 203 |
+| 938 | 933 | `speechify` | SPEECHIFY | Speechify | Edtech / assistive learning (text-to-speech) | Miami, Florida, USA | 1695 |
+| 939 | 934 | `spin` | SPIN | Spin | Shared micromobility (e-scooters) | San Francisco, California, USA | 28 |
+| 940 | 935 | `splice` | SPLICE | Splice | Creator economy (music creation platform) | New York, New York, United States | 7 |
+| 941 | 936 | `spothopper` | SPOTHOPPER | SpotHopper | Restaurant tech | Milwaukee, Wisconsin, USA | 30 |
+| 942 | 937 | `stackadapt` | STACKADAPT | StackAdapt | Adtech (programmatic DSP) | Toronto, Ontario, Canada | 92 |
+| 943 | 938 | `starfaceworld` | STARFACE_WORLD | Starface World | DTC beauty/skincare brand | New York, New York, USA | 3 |
+| 944 | 939 | `stokespacetechnologies` | STOKE_SPACE | Stoke Space | Space launch (reusable rockets) | Kent, Washington, USA | 53 |
+| 945 | 940 | `strandtherapeutics` | STRAND_THERAPEUTICS | Strand Therapeutics | mRNA / synthetic biology | Boston, MA, USA | 5 |
+| 946 | 941 | `sumologic` | SUMO_LOGIC | Sumo Logic | Security analytics (SIEM) | Redwood City, California, USA | 25 |
+| 947 | 942 | `taketwo` | TAKE_TWO_INTERACTIVE | Take-Two Interactive | Gaming studios / interactive entertainment | New York, New York, USA | 31 |
+| 948 | 943 | `tebra` | TEBRA | Tebra | Digital health (practice & telehealth software) | Newport Beach, California, USA | 19 |
+| 949 | 944 | `tegnainc` | TEGNA | TEGNA | Media/streaming (broadcast TV) | Tysons, Virginia, United States | 332 |
+| 950 | 945 | `tenableinc` | TENABLE | Tenable | Vulnerability & exposure management | Columbia, Maryland, USA | 55 |
+| 951 | 946 | `terranorbitalcorporation` | TERRAN_ORBITAL | Terran Orbital | Satellites (small-sat manufacturing) | Boca Raton, Florida, USA | 27 |
+| 952 | 947 | `tesseratherapeutics` | TESSERA_THERAPEUTICS | Tessera Therapeutics | Gene editing / genomics | Somerville, MA, USA | 7 |
+| 953 | 948 | `thedutchie` | DUTCHIE | Dutchie | Retail tech (POS + e-commerce platform) | Bend, Oregon, USA | 10 |
+| 954 | 949 | `thenewyorktimes` | THE_NEW_YORK_TIMES | The New York Times | Media (news publishing) | New York, New York, United States | 157 |
+| 955 | 950 | `thetradedesk` | THE_TRADE_DESK | The Trade Desk | Adtech (DSP) | Ventura, California, United States | 199 |
+| 956 | 951 | `thirdwaveautomation` | THIRD_WAVE_AUTOMATION | Third Wave Automation | Robotics, industrial automation, warehouse/manufacturing automation | Union City, California, USA | 6 |
+| 957 | 952 | `toogoodtogo` | TOO_GOOD_TO_GO | Too Good To Go | Foodtech / food waste | Copenhagen, Denmark | 84 |
+| 958 | 953 | `toradex` | TORADEX | Toradex | Embedded computing / IoT modules (SoMs) | Horw, Lucerne, Switzerland | 13 |
+| 959 | 954 | `transmitsecurity` | TRANSMIT_SECURITY | Transmit Security | Identity / fraud & CIAM | Boston, Massachusetts, USA | 21 |
+| 960 | 955 | `trueanomalyinc` | TRUE_ANOMALY | True Anomaly | Space defense / space domain awareness | Denver, Colorado, USA | 184 |
+| 961 | 956 | `try-picnic` | PICNIC_DELIVERY | Picnic Delivery | Foodtech / food delivery | Los Angeles, California, USA | 45 |
+| 962 | 957 | `uberfreight` | UBER_FREIGHT | Uber Freight | Freight marketplace / brokerage | San Francisco, California, USA | 84 |
+| 963 | 958 | `unqork` | UNQORK | Unqork | Insurtech and insurance technology | New York, New York, USA | 7 |
+| 964 | 959 | `vardaspace` | VARDA_SPACE_INDUSTRIES | Varda Space Industries | Space (in-orbit manufacturing, reentry capsules) | El Segundo, California, USA | 89 |
+| 965 | 960 | `verramobility` | VERRA_MOBILITY | Verra Mobility | Smart transportation / mobility tech | Mesa, Arizona, USA | 43 |
+| 966 | 961 | `vianttechnology` | VIANT_TECHNOLOGY | Viant Technology | Adtech (omnichannel DSP) | Irvine, California, United States | 36 |
+| 967 | 962 | `viralnation` | VIRAL_NATION | Viral Nation | Creator economy (influencer marketing) | Mississauga, Ontario, Canada | 58 |
+| 968 | 963 | `voxmedia` | VOX_MEDIA | Vox Media | Media/streaming (digital publisher) | Washington, District of Columbia, United States | 15 |
+| 969 | 964 | `vts` | VTS | VTS | Proptech / commercial real estate (leasing & asset management platform) | New York, NY, USA | 16 |
+| 970 | 965 | `wildlifestudios` | WILDLIFE_STUDIOS | Wildlife Studios | Mobile gaming / interactive entertainment | São Paulo, São Paulo, Brazil | 16 |
+| 971 | 966 | `wizinc` | WIZ | Wiz | Cloud security (CNAPP) | New York, New York, USA | 157 |
+| 972 | 967 | `wurljobs` | WURL | Wurl | Media/streaming + adtech (CTV distribution) | Palo Alto, California, United States | 4 |
+| 974 | 969 | `zyngacareers` | ZYNGA | Zynga | Mobile gaming / interactive entertainment | San Mateo, California, USA | 49 |
+
+---
+
+## 2026-06-27 — Scheduled run #439 (**sixteen new Source Company Plugins** — Specs 788–803)
+
+**Scope:** Expand the corpus with **16 new Greenhouse-backed company-direct source plugins**,
+discovered and gated entirely through the deterministic, conflict-free company-source pipeline
+(`probe → enrich → assemble → scaffold → wire`). One plugin per real, brand-matched employer board
+that exposed **≥ 3 live roles** at probe time (`MIN_JOBS = 3`). This run leaned into **climate /
+carbon-removal & synthetic fuels** (carbon-to-fuel, BECCS baseload power, smart-building energy),
+**autonomous trucking** (three independent self-driving-freight stacks), **fintech** (earned-wage
+access, banking-as-a-service, merchant-of-record commerce, subscription billing, online brokerage),
+**aerospace/defense propulsion**, **EV / battery**, **transit software** and **adtech** — sectors the
+probe history shows still surface fresh employer boards, in contrast to the mined-out generic
+AI/dev-infra slice (now mostly on Ashby/Lever).
+
+| Spec | Phase | Slug | Enum | Display name | Sector | HQ | Roles |
+| ---- | ----- | ---- | ---- | ------------ | ------ | -- | ----- |
+| 788 | 783 | `aircompany` | AIR_COMPANY | AIR COMPANY | Climate Tech / Carbon Conversion & Synthetic Fuels | Brooklyn, New York, United States | 4 |
+| 789 | 784 | `arborenergy` | ARBOR_ENERGY | Arbor Energy | Climate Tech / Carbon-Negative Power (BECCS) | El Segundo, California, USA | 19 |
+| 790 | 785 | `aurorainnovation` | AURORA_INNOVATION | Aurora Innovation | Autonomous Vehicles / Self-Driving Trucking | Pittsburgh, Pennsylvania, USA | 147 |
+| 791 | 786 | `earnin` | EARNIN | EarnIn | Fintech / Earned-Wage Access | Mountain View, California, United States | 44 |
+| 792 | 787 | `faradayfuture` | FARADAY_FUTURE | Faraday Future | Automotive / Electric Vehicles | El Segundo, California, United States | 62 |
+| 793 | 788 | `fastspring` | FASTSPRING | FastSpring | Fintech / Merchant-of-Record Commerce & Subscription Billing | Santa Barbara, California, United States | 5 |
+| 794 | 789 | `gravity` | GRAVITY_R_D | Gravity R&D | AdTech / Recommendation & Personalization Software | Budapest, Hungary | 4 |
+| 795 | 790 | `runwise` | RUNWISE | Runwise | Climate Tech / Smart Building Energy Management | New York, New York, USA | 7 |
+| 796 | 791 | `sesai` | SES_AI | SES AI | Battery Technology / EV Energy Storage (Li-Metal) | Woburn, Massachusetts, USA | 43 |
+| 797 | 792 | `solarisbank` | SOLARIS | Solaris | Fintech / Banking-as-a-Service (Embedded Finance) | Berlin, Germany | 16 |
+| 798 | 793 | `stackav` | STACK_AV | Stack AV | Autonomous Vehicles / Self-Driving Trucking | Pittsburgh, Pennsylvania, USA | 22 |
+| 799 | 794 | `tastytrade` | TASTYTRADE | tastytrade | Fintech / Online Brokerage (Options & Futures Trading) | Chicago, Illinois, USA | 7 |
+| 800 | 795 | `torcrobotics` | TORC_ROBOTICS | Torc Robotics | Autonomous Vehicles / Self-Driving Trucking | Blacksburg, Virginia, USA | 58 |
+| 801 | 796 | `ursamajor` | URSA_MAJOR | Ursa Major | Aerospace & Defense / Rocket Propulsion | Berthoud, Colorado, USA | 43 |
+| 802 | 797 | `via` | VIA | Via | TransitTech / Mobility Software (SaaS + Operations) | New York City, New York, USA | 165 |
+| 803 | 798 | `zuora` | ZUORA | Zuora | Enterprise SaaS / Subscription Billing & Quote-to-Cash | Redwood City, California, USA | 34 |
+
+**Baseline at run start:** Local `develop` was 7 commits behind `origin/develop`; fast-forwarded
+to `d2a95cc8` (NestJS 11 + Apollo Server 5 upgrade) before any work — the prior CI run was
+**green**. Next spec number per the band-aware allocator (`scripts/next-spec-number.ts`, band
+`ever-jobs/ever-jobs` = 1–4999) was **788**; last enum phase was 782. The four external reference
+repos under the parent `OTHERS/` directory (outside this repo) were `git pull`-ed for situational
+awareness; upstream movement (new foreign-board scrapers, tracker tooling) is non-actionable for our
+sourcing corpus and is recorded only in the parent-directory research watch file **outside this
+repo** — never named here. No competitor intel is referenced in-repo; every board below is
+documented purely on its own public merits.
+
+**Discovery (live, 2026-06-27, `verified=false` — unauthenticated public Greenhouse Job-Board
+API):** 247 candidate slugs across fintech, climate/energy, mobility/robotics, aerospace/defense and
+consumer/SaaS verticals (generated as no-space + hyphenated variants and pre-filtered against the 637
+existing company slugs) were probed against `https://boards-api.greenhouse.io/v1/boards/<slug>`
+(board name) + `…/<slug>/jobs` (listings) at concurrency 16. The gate (`MIN_JOBS = 3` live roles
+**and** a non-empty board `name`) admitted **17 survivors**; one (`ess` → board "cBEYONData + SMX")
+was dropped at review as a brand mismatch (the slug did not resolve to ESS energy), leaving **16**.
+
+**Enrichment:** a **16-way parallel verification workflow** (one web-research agent per board,
+`claude-opus-4-8[1m]`, 572k tokens, 60 tool calls, ~93 s wall-clock) produced factual brand metadata
+for each survivor. Each agent was forbidden from referencing competitors, required to cross-check the
+slug / board name / sample roles / sample locations against the web, and instructed to keep
+disambiguating context **out** of the canonical `displayName` (which single-sources
+`className` / `enumKey` / `serviceName`). All 16 returned `confident=true`. Disambiguation lived in
+the descriptions, not the names: board `Gravity` → `displayName = "Gravity R&D"` (Budapest adtech /
+recommendation vendor, distinct from any homonym); board `SES` (slug `sesai`) → `"SES AI"` (Li-Metal
+battery maker, distinct from the SES satellite operator); board `AIRCO` (slug `aircompany`) →
+`"AIR COMPANY"` (carbon-to-fuel). `displayName`-derived identifiers were collision-checked against
+the existing enum and service classes — all clear.
+
+**Per-plugin shape (uniform Greenhouse company-direct template):** each `*.service.ts` fetches
+`https://api.greenhouse.io/v1/boards/<slug>/jobs?content=true`, maps each Greenhouse job to a
+`JobPostDto` with `id` prefixed `<slug>-`, `site === Site.<ENUMKEY>`, canonical URL
+`https://job-boards.greenhouse.io/<slug>/jobs/<id>`, decoded HTML content, location and department
+parsing, and `category: 'company'`. Every failure mode (HTTP 4xx/5xx, transport/DNS error, malformed
+body, empty board) degrades to an empty result — `scrape()` never throws.
+
+**Changes:**
+
+- Added **16 plugin packages** under `packages/plugins/source-company-<slug>/` (10 files each =
+  **160 files**): `package.json`, `tsconfig.json`, `src/{index,<slug>.module,<slug>.service}.ts`,
+  `__tests__/<slug>.service.spec.ts`, and `__tests__/fixtures/<slug>-jobs.json`.
+- Added **16 spec packages** under `.specify/specs/<788..803>-source-company-<slug>/`
+  (`spec.md`, `plan.md`, `tasks.md`) via the scaffolder.
+- Wired all 16 into the four shared registration files (idempotent `wire-company-source.ts`):
+  `packages/models/src/enums/site.enum.ts` (Phases 783–798), `packages/plugins/index.ts`
+  (`ALL_SOURCE_MODULES`), `tsconfig.base.json` (path aliases), `jest.config.js`
+  (`moduleNameMapper`).
+- `docs/index.md` — +16 spec rows (one per plugin, linking spec/plan/tasks).
+- `docs/COMPANY_SLUG_DIRECTORY.md` — +16 Greenhouse company rows + date bump.
+
+**Verification:** all 16 new suites green — `npx jest source-company-{16 slugs}` →
+**16 suites / 176 tests passed**. `npx tsx scripts/docs-lint.ts` → **passed, no issues**. A
+project-wide `tsc --noEmit` surfaced only 3 pre-existing, environment-only errors in
+`apps/api/src/cache/*` (`cacheable` / `@keyv/redis` not installed in the sandbox — both are declared
+in `package.json` deps and resolve under a fresh CI install); zero errors touch the new plugins or
+the wired shared files.
+
+**Notes:**
+
+- The probe deliberately over-generates candidate variants (no-space + hyphenated) and pre-filters
+  against the existing slug set so the survivor list is duplicate-free before enrichment.
+- The makedeeply fork (band 5000–5999) continues to land specs 50xx in parallel; this run's
+  ever-jobs-band specs (788–803) are disjoint by construction, enforced by `docs-lint` band guards.
+
+---
+
+## 2026-06-24 — Run #459 — Spec 5023 — `source-ats-workatastartup` plugin
+
+**Scope:** YC Work at a Startup (WaaS) was newly detected in fetch1 (both the
+canonical `workatastartup.com/companies/{slug}` and the public YC mirror
+`ycombinator.com/companies/{slug}/jobs`) but had no ever-jobs harvester. Adds a
+new `source-ats-workatastartup` plugin that harvests the YC public mirror.
+
+**New plugin (`packages/plugins/source-ats-workatastartup/`):**
+
+- `workatastartup.constants.ts` — base hosts + URL builders
+  (`waasCompanyJobsUrl` = YC mirror list, `waasDetailUrl` = YC mirror detail,
+  `waasCanonicalCompanyUrl` = canonical WaaS board), browser headers,
+  `WAAS_DETAIL_CONCURRENCY=5`, `WAAS_MAX_RESULTS=200`.
+- `workatastartup.types.ts` — Inertia `data-page` shapes (`WaasInertiaPage`,
+  `WaasPageProps`, `WaasCompany`, `WaasJobPosting`); all fields optional
+  (untrusted external payload).
+- `workatastartup.service.ts` — `@SourcePlugin`/`@Injectable` `IScraper`.
+  `extractInertiaPage` regexes the `data-page` attribute, HTML-unescapes, and
+  `JSON.parse`s defensively (never throws). The list spine is
+  `props.jobPostings[]`; the detail overlay (`fetchDetails`, bounded
+  concurrency, `Promise.allSettled`, isolated failures) parses each detail
+  page's schema.org `JobPosting` ld+json via the Spec 5022 `parseJobPostingLd`
+  helper, with the detail `props.job.description` markdown as a description
+  fallback. `processJob` applies the ATS checklist: structured-first ld+json
+  baseSalary → min/max via `resolveCompensation` with list `salaryRange` text
+  fallback; jobType from list `type` + ld `employmentType`; multi-location from
+  ld `jobLocation` (`parseLocationList`, semicolon-joined) with list `location`
+  fallback; isRemote/workFromHomeType; datePosted; description HTML/markdown/
+  plain; emails; `companyUrl`=canonical WaaS, `jobUrl`=YC detail,
+  `applyUrl`=apply target; `atsType='workatastartup'`. Never fabricates absent
+  fields.
+
+**Registration (4 places):** `Site.WORKATASTARTUP='workatastartup'`,
+`ALL_SOURCE_MODULES`, `tsconfig.base.json` path, `jest.config.js` mapper.
+
+**Tests:** 5 real captured fixtures (diode list + 2 details, loombotic list + 1
+detail). 12 unit tests cover list parse, detail overlay (datePosted/
+employmentType/jobType), structured compensation, single + multi-location,
+description format, detail-fetch failure fallback (list-only + text salary),
+resultsWanted cap, and empty/error robustness. `build` + suite green.
+
+**Docs:** `docs/index.md` row added; Q-072 recorded.
+
+---
+
+## 2026-06-24 — Run #458 — Spec 5022 — Shared schema.org JobPosting (JSON-LD) extraction
+
+**Scope:** schema.org `JobPosting` JSON-LD parsing was duplicated/private in
+breezyhr, available-but-ignored in paylocity, and missing as a generic source.
+Promotes the parsing into a shared `@ever-jobs/common` helper and adopts it in
+breezyhr + paylocity, plus a new generic aggregator-bucket plugin.
+
+**Common (`packages/common/src/utils/jsonld.ts`, new):**
+- `parseJobPostingLd(html)` — finds every `<script type="application/ld+json">`
+  block, parses defensively (malformed skipped), unwraps single / array /
+  `@graph` / `ItemList`(`ListItem.item`) shapes, accepts `@type` as a string or
+  array, and flattens into `JobPostingLd[]` (title←title|name, description,
+  datePosted, validThrough, employmentType (`, `-joined when array),
+  hiringOrganizationName/Url, url, applyUrl (←`potentialAction` ApplyAction),
+  remote (←`jobLocationType === 'TELECOMMUTE'`), locations[], baseSalary).
+- Companions `extractLdJsonBlocks(html)` and
+  `jobPostingLdToCompensation(salary)` (→ `CompensationDto`). Barrelled via
+  `packages/common/src/utils/index.ts`.
+
+**breezyhr (`source-ats-breezyhr`):** removed the private `descriptionFromHtml()`
+and `BreezyJobPostingLd` type; description now comes from the first posting with
+a non-empty `description` via the shared helper. Behaviour unchanged.
+
+**paylocity (`source-ats-paylocity`):** detail overlay is JSON-LD-first — prefers
+the ld+json `description`, still parses the detail HTML for Job Type (ld+json
+lacks it), falls back to the HTML description when no ld+json. Board-page spine
+(enumeration + location/remote/department from `window.pageData`) unchanged.
+
+**source-jsonld (new, aggregator bucket):** generic last-resort harvester — given
+a careers/job URL (`companyUrl`) it fetches the HTML and emits one `JobPostDto`
+per `JobPosting` block. Applies the ATS checklist: structured-first→text-fallback
+compensation (`resolveCompensation`), underscore/multi-value job-type mapping
+(`FULL_TIME` → `getJobTypeFromString`), structured location, remote, description
+HTML/markdown/plain, `extractEmails`, companyUrl/jobUrl/applyUrl. Registered in
+all four places (`Site.JSONLD`, `ALL_SOURCE_MODULES`, tsconfig paths, jest
+moduleNameMapper).
+
+**Tests:** `packages/common/__tests__/jsonld.spec.ts` (shapes, malformed,
+@type variance, name fallback, multi-location, baseSalary, applyUrl,
+compensation) + `packages/plugins/source-jsonld/__tests__/jsonld.service.spec.ts`
+(mapping, structured-salary preference, resultsWanted, remote, no-block /
+fetch-failure, url fallback). breezyhr + paylocity suites stay green.
+`npm run build` (tsc via nx) green.
+
+---
+
+## 2026-06-24 — Run #457 — Spec 5021 — Manatal rework to careers-page.com JSON API
+
+**Scope:** The Manatal plugin fetched `api.manatal.com/open/v1/career-page/{slug}/jobs/`,
+which now returns the SPA HTML shell (not JSON) for real customers (e.g.
+castelion-corporation, 135 jobs) — so it returned 0 jobs everywhere. Manatal
+hosts its public career pages on the white-label domain `careers-page.com`,
+whose JSON API (`/api/v1.0/c/{slug}/jobs/`) is the working data layer the Vue
+front-end itself consumes. Repointed the plugin there and applied the full ATS
+checklist (`docs_fetch1/ats-plugin-feature-checklist-SPEC.md`).
+
+**Plugin rework (`packages/plugins/source-ats-manatal`):**
+- `manatal.constants.ts` — replaced the dead `api.manatal.com` endpoint with
+  `MANATAL_API_BASE` (`https://www.careers-page.com/api/v1.0`) + `MANATAL_SITE_BASE`
+  and builders `manatalListUrl(slug, page?)`, `manatalCompanyUrl(slug)`,
+  `manatalJobUrl(slug, hash)`; added `MANATAL_MAX_PAGES = 50`.
+- `manatal.types.ts` — rewrote to the careers-page.com shapes `ManatalResponse`
+  (`count`/`next`/`results[]`) and `ManatalJob` (`hash`, structured location,
+  `is_salary_visible`, decimal-string `salary_min`/`salary_max`, `currency_code`).
+- `manatal.service.ts` — `scrape()` follows the `next` pagination chain (no
+  detail fetch — the list is self-contained), mapping title, structured
+  location (city/state/country, `parseLocationText` fallback), description
+  (HTML/markdown/plain), structured-first→text-fallback compensation via the
+  shared `resolveCompensation` (interval inferred by magnitude when the API
+  omits it: 350 hourly / 30000 monthly thresholds), `salarySource`, emails, and
+  companyUrl/jobUrl. Never fabricates employment_type/jobFunction/datePosted
+  (absent from the payload).
+
+**Tests:** new `manatal.service.spec.ts` driven by 4 real captured fixtures
+(ghostwerks, calqulate, castelion p1+p2), mocked HTTP routed by URL — 13 unit
+tests (mapping, structured-wins, text-fallback, hourly/yearly interval
+inference, pagination + cap, remote inference, emails, format, empty-slug/throw).
+Repurposed `manatal.e2e-spec.ts` into a `RUN_NETWORK_E2E`-gated network smoke.
+`npm run build` + `lint:docs` green; common + manatal suites green.
+
+**Spec:** `.specify/specs/5021-manatal-careers-page-rework/{spec,plan,tasks}.md`.
+
+## 2026-06-23 — Run #456 — Spec 5020 — Paylocity board-page scrape (replace dead feed API)
+
+**Scope:** The Paylocity plugin depended on the JSON feed endpoint
+`/recruiting/api/feed/jobs/{GUID}`, which is disabled/partner-gated and returns
+5xx/4xx for every tested company (sendcutsend, fermi, shine, blacksea). The
+reliable public source is the server-rendered board page plus a per-job detail
+page. Reworked the plugin to that source and applied the same comprehensive
+field extraction as the other ATS plugins.
+
+**Plugin rework (`packages/plugins/source-ats-paylocity`):**
+- `paylocity.constants.ts` — replaced the feed base with `PAYLOCITY_BASE`,
+  `paylocityBoardUrl(guid)` (`/recruiting/jobs/All/{GUID}`) and
+  `paylocityDetailUrl(guid, jobId)` (`/recruiting/jobs/Details/{JobId}/{GUID}`);
+  added `PAYLOCITY_DETAIL_CONCURRENCY = 5`.
+- `paylocity.types.ts` — replaced the feed schema with `PaylocityPageData`
+  (`ModuleTitle`, `Jobs[]`), `PaylocityListJob`, `PaylocityJobLocation`, and the
+  parsed `PaylocityJobDetail` (`description`, `jobType`).
+- `paylocity.service.ts` — `scrape()` fetches the board, parses `window.pageData`
+  with a string-aware brace matcher, slices to `resultsWanted`, then overlays
+  each job's detail page under bounded `Promise.allSettled` for the full
+  description + Job Type. Maps title, company (`ModuleTitle`), structured
+  location (`JobLocation`, `Remote` fallback), department (`HiringDepartment`),
+  jobType (detail Job Type via `getJobTypeFromString`), isRemote/workFromHomeType
+  (`IsRemote`/`IndeedRemoteType` + hybrid text inference), datePosted
+  (`PublishedDate`), description, text-fallback compensation via the shared
+  `resolveCompensation`, and emails. Fail-safe: a failed detail still maps the
+  board-level fields.
+
+**Tests:** new `paylocity.service.spec.ts` driven by 4 real captured fixtures
+(sendcutsend + fermi boards, one detail each), mocked HTTP routed by URL — 9
+unit tests (mapping, detail overlay, remote, compensation text-fallback,
+fail-safe, resultsWanted, empty-slug/empty-board/throw). Repurposed
+`paylocity.e2e-spec.ts` into a `RUN_NETWORK_E2E`-gated network smoke (skipped by
+default). `npm run build` + `lint:docs` green.
+
+**Spec:** `.specify/specs/5020-paylocity-board-page-scrape/{spec,plan,tasks}.md`.
+
+## 2026-06-23 — Run #455 — Spec 5019 — Multi-tier compensation aggregation
+
+**Scope:** Postings that list pay bands across several tiers (per geography,
+level, or work mode) were collapsing to a single tier. Promoted the
+`payRangeDetails[]` collapse Rippling already hand-rolled into a shared helper so
+every plugin that exposes multiple bands reports the true overall envelope.
+
+**Helper added (`packages/common/src/utils/helpers.ts`):**
+- `CompensationRange` interface + `aggregateCompensation(ranges)` — folds many
+  bounded ranges into `min(floors)…max(ceilings)`. The first bounded range sets
+  the basis currency+interval; only ranges sharing that basis contribute, so a
+  stray EUR or hourly band is excluded (never converted). Returns `null` when no
+  range carries a bounded amount.
+
+**Plugins refactored onto the helper:**
+- ashby — tiered path now folds every tier of the chosen base/salary component
+  (was `tiers[0]`); flat path folds every component sharing the chosen salary's
+  `compensationType` (equity/bonus rows stay out). New overall-range behavior.
+- rippling — `extractCompensation` calls `aggregateCompensation` instead of inline
+  `Math.min`/`Math.max`; per-band `salarySource` logic unchanged. Behavior-preserving.
+
+**Tests:** +5 common unit tests (fold, single-band, currency+interval guard,
+one-sided bands, empty→null); +2 ashby fixtures (tiered SF/NYC/remote, flat
+multi-band + equity); +1 rippling fixture (3+ bands, mismatched currency
+excluded). All prior fixtures green; 321 tests across common + ATS suites (+8).
+
+**Docs:** `docs/index.md` row for 5019; this entry. Spec/plan/tasks under
+`.specify/specs/5019-multi-tier-compensation-aggregation/`.
+
+---
+
+## 2026-06-23 — Run #454 — Spec 5018 — Shared structured-first compensation resolution
+
+**Scope:** Promoted the rippling-discovered compensation precedence (structured
+wire data first, then `extractSalary(description)` fallback) into three shared
+`@ever-jobs/common` helpers and applied them across all eight ATS plugins touched
+this cycle.
+
+**Helpers added (`packages/common/src/utils/helpers.ts`):**
+- `compensationFromSalary(result)` — maps an `ExtractSalaryResult` envelope to a
+  `CompensationDto` (null when no bounded amount; interval via `getCompensationInterval`).
+- `salaryToCompensation(text, options?)` — `extractSalary` + `compensationFromSalary`;
+  the text-fallback half.
+- `resolveCompensation({ structured, text, options })` — canonical precedence:
+  prefer structured, fall back to text only when structured is absent.
+
+**Plugins wired with the description fallback (previously structured-only / none):**
+ashby, greenhouse (public + Harvest), lever, workable.
+
+**Plugins refactored onto the helper (removing four near-identical inline mappings):**
+rippling, workday, breezyhr, bamboohr.
+
+**Currency policy:** structured sources keep their reported currency; text-parsed
+results default to USD via the `CompensationDto` constructor. Behavior-preserving —
+all prior fixtures stay green.
+
+**Tests:** 10 new common-package unit tests + collocated structured-wins /
+text-fallback / null cases for the four newly-wired plugins. `npm run build`,
+`npm run lint:docs`, and the affected jest suites all green (313 tests across
+common + 8 ATS plugins).
+
+---
+
+## 2026-06-23 — Run #453 — Renumber MakeDeeply fork specs 742–759 → 5001–5017
+
+**Scope:** Moved all 17 MakeDeeply-authored specs out of the 742–759 range into
+a reserved **5000–5999** MakeDeeply namespace, eliminating the duplicate spec
+numbers introduced when the upstream merge (Run #436 / PR #11) added 45
+`source-company-*` plugins that independently minted 742–786. Upstream's specs
+are left untouched; only our fork's specs move.
+
+**Mapping (dense, order-preserving):** 742→5001, 743→5002, 744→5003, 745→5004,
+747→5005, 748→5006, 749→5007, 750→5008, 751→5009, 752→5010, 753→5011, 754→5012,
+755→5013, 756→5014, 757→5015, 758→5016, 759→5017. The full table and rationale
+live in the fetch1 design doc `docs_fetch1/ever-jobs-spec-renumber-SPEC.md`.
+
+**Changes:**
+
+- Renamed the 17 spec dirs under `.specify/specs/` (slug preserved, only the
+  numeric prefix changed); updated each `spec.md` / `plan.md` / `tasks.md` H1,
+  `Spec ID` row, and intra-fork `Related specs` references.
+- Added a `(formerly Spec 7xx)` note to each renamed spec's H1 for historical
+  traceability (commit history and merged PR titles still cite the old numbers).
+- Updated `docs/index.md`: the 17 leading number cells and all spec/plan/tasks
+  links now point at the new dirs.
+- Swept bare `Spec 7xx` references in our own files only — the ATS plugin test
+  descriptions (`source-ats-ashby`, `source-ats-greenhouse`, `source-ats-workday`)
+  and `docs/questions.md`. `site.enum.ts` and upstream spec dirs were not touched
+  (their 742–759 mentions refer to upstream company plugins).
+
+**Verification:** `npm run lint:docs` green; `npm run build` green; the three
+affected ATS plugin suites pass (77/77). Pure metadata renumber — no plugin
+behavior change.
+
+---
+
+## 2026-06-23 — Run #452 — Spec 759: Allen Control Systems repoint to Ashby via registry delegation
+
+**Scope:** Repointed the `source-company-allencontrolsystems` company plugin
+from its stale, hardcoded Greenhouse board
+(`api.greenhouse.io/v1/boards/allencontrolsystems/jobs` + ~80 lines of inlined
+Greenhouse field-mapping) to the company's **live, canonical Ashby board**
+(`allen-control-systems`, `jobs.ashbyhq.com/allen-control-systems`). Independent
+ATS discovery (`find-company-ats.py`) flagged the Ashby board with a different
+job count, and the company website was manually verified — Ashby is current, the
+Greenhouse board is out of date.
+
+**Approach (A2 — registry delegation, not a peer import).** Rather than
+re-implement Ashby parsing inline (which would re-create the same drift against
+`source-ats-ashby`), or `import { AshbyService }` directly (forbidden by AGENTS.md
+Rule #4 / CLAUDE.md "Reach across plugins"), the service now resolves the Ashby
+source plugin at runtime through the core `PluginRegistry`:
+
+- `constructor(@Optional() registry?: PluginRegistry)` → `registry?.getScraper(Site.ASHBY)`.
+- Delegates `ashby.scrape({ ...input, companySlug: 'allen-control-systems' })`,
+  so every Ashby field fix (e.g. spec 750) is inherited automatically and
+  `resultsWanted`/`searchTerm` pass through.
+- **Re-stamps the company identity** onto each returned job:
+  `site → Site.ALLENCONTROLSYSTEMS`, `companyName → 'Allen Control Systems'`,
+  `id`'s leading `ashby-` prefix → `allencontrolsystems-`. All other fields flow
+  through untouched.
+- **Fail-safe:** no registry / no Ashby registered → `Logger.error` + empty
+  `JobResponseDto` (direct `new AllencontrolsystemsService()` still works).
+
+**Tests:** rewrote the suite (10 cases) — DI scaffolding; happy path via a real
+`AshbyService` registered in a `PluginRegistry` with a mocked HTTP client and an
+Ashby-shaped fixture (replacing the old Greenhouse fixture), asserting the
+re-stamp and that `api.ashbyhq.com` is hit for `allen-control-systems` (not
+Greenhouse); input pass-through + id-prefix edge via a fake `IScraper`;
+no-registry / no-Ashby resilience; `resultsWanted` cap. `npx jest
+source-company-allencontrolsystems` green; clean `api:build` compiles.
+
+**Files:** spec triad `.specify/specs/759-allencontrolsystems-ashby-delegation/`;
+`source-company-allencontrolsystems` service + fixture + test rewritten. No
+change to `source-ats-ashby`, `@ever-jobs/common`, or `@ever-jobs/models`.
+
+## 2026-06-23 — Run #451 — Spec 758: BambooHR detail-fetch overlay + work-mode, compensation, jobType, type-shape fixes
+
+**Scope:** Added a detail-fetch overlay and several field mappings to the
+**public** path of `source-ats-bamboohr`, measured against a fresh 9-board
+harvest (atkinsonaeronautics 12, avidbots 13, geospectrum 24, satellogic 16,
+cleanenergycounsel 4, ppcsolar 4, carolinasolarservices 3, keyindustries 1,
+deepisolation 1 — 78 jobs; the 20 owner-supplied test URLs minus 11 that no
+longer serve a public board). The public `mapJob` read `job.description`,
+`job.compensation`, and `job.minimumExperience` straight off `/careers/list`, but
+the live list payload omits those keys entirely — they exist only on the per-job
+`/careers/{id}/detail` endpoint (`result.jobOpening`), which the plugin never
+fetched, so description/datePosted/compensation were null on 100%. The plugin now
+overlays each job (the `resultsWanted` slice) with its detail payload under
+bounded concurrency (`BAMBOOHR_DETAIL_CONCURRENCY = 5`, `Promise.allSettled`,
+index-aligned, fail-safe — a failed/empty detail nulls only that index and the
+job still maps from the list). From the detail it maps **description** (rendered
+per the previously accepted-but-ignored `descriptionFormat`), **datePosted** (ISO
+`YYYY-MM-DD`), and **compensation** (free text via the shared `extractSalary` +
+`getCompensationInterval`; `$120,000 - $140,000` yearly, `$19.00 - $27.00 / hr`
+hourly; 29% carry a parseable range). **workFromHomeType/isRemote** now derive
+from `locationType` (0=on-site 55, 1=remote 10, 2=hybrid 13 across the harvest;
+`isRemote` was previously hardcoded `false` because the list `isRemote` boolean is
+null in practice). **jobType/employmentType** map from `employmentStatusLabel` via
+`getJobTypeFromString`. Type-shape bugs fixed: `BambooHRJob.id` was typed `number`
+but the live value is a string (`"13"`); the dead `description`/`compensation`/
+`minimumExperience` list reads were dropped; `location` was typed with a `country`
+that is always null on the list (country lives in `atsLocation.country`), so the
+type was split into `BambooHRLocation` (`city`/`state`) + `BambooHRAtsLocation`
+(`country`). Location is mapped structurally (not via `parseLocationList`) because
+BambooHR returns full state names (`North Carolina`, not `NC`) and a separate
+`atsLocation.country` that the shared `City, ST` parser would collapse into
+`city`; remote-only jobs get `city='Remote'`. The authenticated
+`scrapeWithApi`/`mapApiJobOpening` path (which already maps these correctly but
+needs `BAMBOOHR_API_KEY`) is untouched, as are all other ATS plugins. New
+constants (`bamboohrListUrl`/`bamboohrDetailUrl`/`BAMBOOHR_DETAIL_CONCURRENCY`)
+and detail types added. No change to `@ever-jobs/common` or `@ever-jobs/models`.
+
+**Files:** `packages/plugins/source-ats-bamboohr/src/bamboohr.constants.ts`,
+`bamboohr.types.ts`, `bamboohr.service.ts`,
+`__tests__/bamboohr.service.spec.ts` (15 new tests),
+`.specify/specs/758-bamboohr-detail-fields-mappings/{spec,plan,tasks}.md`,
+`docs/index.md`, `docs/log.md`.
+
+**Verification:** `npx jest source-ats-bamboohr` green (18 total, 15 new + 3
+existing e2e), `npm run build` + `npm run lint:docs` pass.
+
+---
+
+## 2026-06-23 — Run #450 — Spec 757: BreezyHR location fix + detail-page description, compensation, jobType
+
+**Scope:** Fixed one bug and three missing field mappings in `source-ats-breezyhr`,
+found from a fresh 3-board harvest (ondas-networks 1, vvater-llc 24, zeno-power 22
+— 47 jobs) gap-checked against `makedeeply`. (1) **Location bug:** the plugin
+pushed `listing.location.state` and `.country` onto a string array, but on the
+public `/json` list those are `{id,name}` objects — the join produced
+`"Austin, [object Object], [object Object]"` crammed into `LocationDto.city`
+(`state`/`country` never set). Now reads the structured pieces (object-or-string
+tolerant) and routes labels through the shared `parseLocationList`. (2)
+**description** was null on 100% of jobs; the list endpoint carries no body, so
+the plugin now overlays each job with the schema.org `JobPosting` `description`
+parsed from its public detail page (`/p/{friendly_id}`) under bounded concurrency
+(`BREEZYHR_DETAIL_CONCURRENCY = 5`, `Promise.allSettled`, fail-safe per
+Rippling/Workable), rendered via the previously accepted-but-ignored
+`descriptionFormat`. (3) **compensation** now parses the list's free-text
+`salary` (`$105k - $125k`, `$19.00 - $27.00 / hr`) via the shared `extractSalary`
+honoring the real interval (yearly/hourly). (4) **jobType/employmentType** now
+mapped from `type` (`getJobTypeFromString(type.id ?? type.name)`; `employmentType`
+= `type.name`). workFromHomeType / isRemote-broadening / multi-location are
+documented non-goals (no structured work-mode source; `is_remote` false and only
+single-location across the harvest). No change to `@ever-jobs/common` or
+`@ever-jobs/models`.
+
+**Verification:** `npx jest source-ats-breezyhr` green (9 service tests),
+`npm run build` and `npm run lint:docs` pass. Spec triad
+`757-breezyhr-location-detail-description`. No change to other ATS plugins (per owner).
+
+---
+
+## 2026-06-23 — Run #449 — Spec 756: Workable v2 detail fetch — description, workFromHomeType, jobFunction, isRemote
+
+**Scope:** Fixed two field-mapping gaps in `source-ats-workable`, found from a
+fresh 3-board harvest (shift-robotics 4, elastium 2; looking-glass-factory
+genuinely empty) gap-checked against `makedeeply`. Both share one root cause: the
+plugin reads only the v1 widget list (`/api/v1/widget/accounts/{slug}`), which
+carries no body text and no work-mode. (1) **description** was null on 100% of
+jobs; the plugin now overlays each job with its public **v2 per-job detail**
+(`/api/v2/accounts/{slug}/jobs/{shortcode}`) under bounded concurrency
+(`WORKABLE_DETAIL_CONCURRENCY = 5`, `Promise.allSettled`, fail-safe per
+Rippling/Workday) and concatenates the detail's `description` + `requirements` +
+`benefits` (ever-jobs has no distinct fields), rendered via the previously
+accepted-but-ignored `descriptionFormat`. (2) **workFromHomeType** is now derived
+from the v2 `workplace` enum (`hybrid` → `Hybrid`, `remote` → `Remote`,
+`on_site` → none). Plus: **jobFunction** now carries the widget `function`
+job-family taxonomy (owner's call to populate the otherwise LinkedIn-only field
+rather than discard it), and **isRemote** is broadened to union the widget
+`telecommuting` with the v2 `remote` boolean and `workplace === 'remote'`.
+Compensation and department are documented non-goals (no source in v1 or v2;
+0/6 jobs carry a body-text range). No change to `@ever-jobs/common` or
+`@ever-jobs/models`.
+
+**Verification:** `npx jest source-ats-workable` green (7 new service tests),
+`npm run build` and `npm run lint:docs` pass. Spec triad
+`756-workable-detail-fetch-fields`. No change to other ATS plugins (per owner).
+
+---
+
+## 2026-06-23 — Run #448 — Spec 755: Workday compensation, workFromHomeType, multi-location, country, datePosted
+
+**Scope:** Fixed five field-mapping gaps in `source-ats-workday`, found from a
+fresh 2754-job / 7-board harvest (1116 with CXS detail) gap-checked against
+`makedeeply`. (1) **Compensation** was null on 100% of jobs; unlike
+Rippling/Lever the Workday CXS API has **no structured pay field**, so the only
+salary signal is the pay-transparency range in the description body — the plugin
+now runs the shared `extractSalary` over the body text and maps the result into
+`CompensationDto`, honoring the real interval. (2) **workFromHomeType** is now
+derived from `remoteType` (Hybrid/Fully Remote/Remote Eligible/Field-Customer
+Site → `Hybrid`/`Remote`/none), else from parsed labels. (3) **Multi-location**
+now routes `[location, ...additionalLocations, locationsText]` through the shared
+`parseLocationList` (dropping the bare "N Locations" count) instead of merging
+everything into one `city` string. (4) **Country** folds
+`jobRequisitionLocation.country.alpha2Code` into `LocationDto.country` via the
+zero-dep `regionNameFromCode` helper (Spec 752) when the parser left it bare.
+(5) **datePosted** now prefers the absolute `startDate` (drift-free, recovers the
+"30+ Days Ago" nulls) over the lossy relative `postedOn` label. Department is
+left as-is (Workday CXS exposes none on these boards; `jobFamily`/subtitle reads
+stay for other tenants). No change to `@ever-jobs/common` or `@ever-jobs/models`.
+
+**Verification:** `npx jest source-ats-workday` green (45 tests, 10 new),
+`npm run build` and `npm run lint:docs` pass. Spec triad
+`755-workday-field-mappings`. No change to other ATS plugins (per owner).
+
+---
+
+## 2026-06-23 — Run #447 — Spec 754: Rippling compensation, workFromHomeType, multi-location
+
+**Scope:** Fixed three field-mapping gaps in `source-ats-rippling`, found from a
+fresh 246-job / 15-board harvest gap-checked against `makedeeply`. (1)
+**Compensation** was null on 100% of jobs, broken two ways: `enrichJobFromDetail`
+never copied `payRangeDetails` from the detail payload, and `extractCompensation`
++ the `RipplingPayRangeDetail` type read the wrong field names
+(`min_value`/`max_value`/`interval` vs the live `rangeStart`/`rangeEnd`/
+`frequency`). The rewrite reads structured `payRangeDetails` first, collapses
+multiple bands into a min–max envelope, and preserves per-band detail in
+`salarySource` (semicolon-joined, e.g. `Oakland, CA 130,000–200,000; Sandy, UT
+115,000–155,000`) when the bands carry distinct ranges; when no structured range
+exists it falls back to the shared `extractSalary` over the description body
+(pay-transparency text). (2) **workFromHomeType** is now derived from the
+per-location `workplaceType` (HYBRID/REMOTE/both), else from parsed labels. (3)
+**Multi-location** now routes all location labels through the shared
+`parseLocationList` instead of using `locations[0]` only. Also copies
+`locations`/`workLocations` from the detail payload. No change to
+`@ever-jobs/common` or `@ever-jobs/models` (reuses `extractSalary`,
+`parseLocationList`, `getCompensationInterval`).
+
+**Verification:** `npx jest source-ats-rippling` green (26 tests, 10 new),
+`npm run build` and `npm run lint:docs` pass. Spec triad
+`754-rippling-compensation-workfromhometype`. No text-fallback for the other
+ATS plugins in this PR (separate follow-up, per owner).
+
+---
+
+## 2026-06-23 — Run #446 — Spec 753: Fix stateful remote-token regex in normalizeLocation
+
+**Scope:** Fixed a pre-existing bug in `packages/common/src/normalize.ts`:
+`LOCATION_REMOTE_TOKENS` carried the global (`/g`) flag but is consumed by
+`RegExp.prototype.test`, which makes the shared module-level regex stateful —
+each match advances `lastIndex`, so consecutive `.test()` calls alternated
+match/no-match by call order. This caused `normalizeLocation('Anywhere')` →
+`'anywhere'` and `normalizeLocation('Remote, US')` → `'remote us'` instead of
+`'remote'`, and broke Remote-vs-Anywhere dedup in `canonicalKey`. The fix drops
+the `/g` flag (detection is a boolean match, never a global replace) and adds a
+regression test that calls `normalizeLocation` on remote inputs repeatedly and
+asserts a stable `'remote'`. Inherited from upstream `develop`; unrelated to any
+ATS plugin change.
+
+**Verification:** `npx jest packages/common` green (141 tests; the 3 previously
+failing `normalize.spec`/`canonical-key.spec` cases now pass), `npm run build`
+passes.
+
+---
+
+## 2026-06-23 — Run #445 — Spec 752: Lever compensation, department, multi-location, workFromHomeType, country
+
+**Scope:** Fixed four fields the Lever public path
+(`https://api.lever.co/v0/postings/{slug}?mode=json`) carries but never mapped,
+found from a 1116-job harvest across 21 boards. (1) `salaryRange`
+`{min, max, currency, interval}` (832/1116 jobs) now maps to `CompensationDto`,
+honoring the real interval — the `per-<unit>-<kind>` token (e.g.
+`per-year-salary`, `per-hour-wage`, `per-month-salary`) is resolved through the
+shared `getCompensationInterval` rather than coerced to yearly. (2)
+`categories.department` (1035/1116) now maps to `department`, independent of
+`team`. (3) Location now flows through the shared `parseLocationList`, preferring
+the multi-site `categories.allLocations` (171 jobs) over the single
+`categories.location`, so `location`, `isRemote`, and `workFromHomeType` come
+from the shared helper. (4) `workFromHomeType` is set from `workplaceType`
+(hybrid=226, remote=21) merged with the parser's inference. Lever's ISO-3166
+alpha-2 `country` code is folded into `LocationDto.country` via a new
+zero-dependency `regionNameFromCode` helper in `@ever-jobs/common` (native
+`Intl.DisplayNames`, `fallback: 'none'`, guarded), only when the parser left the
+country bare. Both the public and authenticated paths share one `buildJobPost`.
+
+**Verification:** Focused Lever Jest suite passed: 12 cases (9 new Spec 752 cases
+for compensation interval honoring, the no-compensation path, department vs team,
+multi-site location joining, hybrid/remote `workFromHomeType` + `isRemote`, and
+resolvable/unresolvable country folding, plus existing e2e coverage). The
+TypeScript build passed. The private ATS field investigator was updated to emit
+Lever `department` and `compensation`. (Two pre-existing `@ever-jobs/common`
+failures in `normalize.spec`/`canonical-key.spec` around `Remote`/`Anywhere`
+normalization are unrelated to this change and present on `makedeeply`.)
+
+## 2026-06-23 — Run #444 — Spec 751: Greenhouse entity content and locations
+
+**Scope:** Fixed three gaps in the Greenhouse plugin found from a 1359-job
+harvest across 31 boards. (1) The public board returns `content` as HTML
+entity-encoded HTML (`&lt;div&gt;&lt;p&gt;…`), so the shared `htmlToPlainText`
+(which decodes entities only after stripping tags) left literal `<div>`/`<p>`
+markup in 100% of descriptions. The plugin now detects entity-encoding per job
+(no literal block tags but present entity-encoded block tags) and decodes the
+entity layer first, leaving real HTML untouched. (2) Location now flows through
+the shared `parseLocationList` — `location.name` is split on `;`/` or `/newlines
+into discrete labels, setting `location`, `isRemote`, and `workFromHomeType`;
+`location.name` stays the single source (offices used only as fallback). (3)
+Company-defined `metadata[]` is mapped by `value_type`: `currency_range` →
+yearly `CompensationDto`, `Employment Type` → `employmentType`. The description
+and location helpers also apply to the authenticated Harvest path.
+
+**Verification:** Focused Greenhouse Jest suite passed: 11 cases (6 new Spec 751
+cases for entity decoding, real-HTML pass-through, multi-site location parsing,
+remote inference, metadata mapping, and the no-metadata path, plus existing
+e2e coverage). The TypeScript build passed. The private ATS field investigator
+was updated to decode entity-encoded Greenhouse content before comparison.
+
+## 2026-06-23 — Run #443 — Spec 750: Ashby field-name fallbacks
+
+**Scope:** Fixed the Ashby plugin's public path, which mapped `datePosted`,
+`department`, and `team` by their authenticated Posting API names
+(`publishedDate`, `departmentName`, `teamName`). The unauthenticated job-board
+payload uses `publishedAt`, `department`, and `team`, so every public-path job
+emitted `null` for all three. The mapper now reads the public name first and
+falls back to the authenticated name; the `AshbyJob` type documents both
+variants. The private ATS field investigator was aligned to read the same public
+names with authenticated fallbacks so comparisons no longer agree on a false
+`null`.
+
+**Verification:** Focused Ashby Jest suite passed: 21 cases (3 new field-name
+fallback cases plus existing coverage). The TypeScript build passed. A 1789-job
+harvest across 39 live Ashby boards motivated the change (100% null rate on all
+three fields before the fix).
+
+## 2026-06-23 — Run #442 — Spec 749: shared interval and multi-location normalization
+
+**Scope:** Moved Ashby's unambiguous `"1 YEAR"` compensation interval behavior into the shared
+`getCompensationInterval()` helper without dropping arbitrary leading digits; multi-count forms
+such as `"2 weeks"` remain unmapped. Added a shared multi-location parser that deduplicates
+equivalent US city/state labels, suppresses broad country-only labels when concrete locations are
+present, keeps remote/workplace signals, and emits a semicolon-separated singular-DTO fallback for
+multiple concrete locations. Ashby now uses the shared location helper for primary and secondary
+locations and combines explicit `isRemote` with remote location labels.
+
+**Verification:** Focused model/common/Ashby Jest suites passed: 36 cases. Package-focused
+TypeScript checks passed for models, common, and Ashby. The private ATS field investigator now
+uses the repository's interval and location normalizers for canonical comparison and reported zero
+differences and zero errors across `antaresindustries.com` and `reliable.co`.
+
+## 2026-06-23 — Spec 787 (**fork spec-number range reservation**)
+
+**Scope:** Add a code-enforced scheme so each fork reserves a disjoint band of spec numbers and
+fork numbering never collides under bidirectional merges (the failure mode behind the earlier
+742–759 duplicate-number clash).
+
+**Changes:**
+
+- New `.specify/ranges.json` — committed, append-only registry mapping each fork's `origin` repo to
+  an inclusive `[start, end]` band (`ever-jobs/ever-jobs` → 1–4999, `MakeDeeply/ever-jobs` →
+  5000–5999). One row per fork keyed by distinct repo, so appends never merge-conflict.
+- New `scripts/spec-ranges.ts` — shared, dependency-free helpers (load/parse registry, normalise a
+  git remote URL to `owner/repo`, band lookup, overlap detection, band-scoped next-number).
+- New `scripts/next-spec-number.ts` (+ `npm run spec:next`) — derives the local fork from
+  `git remote get-url origin` (override `SPEC_FORK_REPO`), prints `max(n in my band)+1`; errors on
+  unregistered fork / exhausted band.
+- Extended `scripts/docs-lint.ts` — two new CI-enforced checks: registered bands must be pairwise
+  non-overlapping, and every spec directory's number must fall inside some band. Checks are skipped
+  when `.specify/ranges.json` is absent (backwards compatible).
+- Tests: new `scripts/__tests__/spec-ranges.spec.ts`; extended `scripts/__tests__/docs-lint.spec.ts`.
+- Spec triad under `.specify/specs/787-fork-spec-range-reservation/`; indexed in `docs/index.md` §7.
+
+`npm run build`, `npm run lint:docs`, and `npm run test:scripts` all green.
+
+## 2026-06-22 — Run #441 — Spec 748: Lever complete public descriptions
+
+**Scope:** Fixed the Lever public mapper so descriptions include every source-authored component
+returned by the public postings payload: combined opening/body text, fallback split opening/body
+fields, each `lists[]` heading and HTML-stripped body, and optional additional/closing text. The
+same builder now serves public and authenticated paths. This addresses the Enigma (`crgo`) field
+investigation findings where Responsibilities, Desired Qualifications, and Great to have
+Qualifications and Skills were absent from plugin descriptions.
+
+**Verification:** Focused Lever suite, package-focused TypeScript validation, doc-lint, private
+field-investigator verification, and `git diff --check` were run for this change.
+
+## 2026-06-22 — Run #440 — Spec 747: Rippling authoritative detail fields
+
+**Scope:** Corrected three incremental Rippling list/detail mismatches identified on Boom
+Supersonic (`boom-supersonic`). Every admitted, deduplicated selected job now fetches its public
+detail record in ordered batches of five, even when the list already contains a description.
+Non-empty detail values authoritatively overlay company identity, creation timestamp, and
+employment type while absent, malformed, or failed detail fields independently retain list
+fallbacks. `datePosted` now preserves Rippling's complete offset-bearing `createdOn` string.
+`employmentType` always preserves the raw label, while recognized labels additionally populate
+normalized `jobType`. Boom now emits `Boom Technology, Inc.`,
+`2025-09-30T14:03:21.450000-07:00`, and `SALARIED_FT` from the detail response.
+
+**Verification:** Focused Rippling Jest suite passed: 17 cases. Package-focused TypeScript check
+and doc-lint passed. The private investigator sampled the live Boom board and reported zero field
+differences and zero execution errors. `git diff --check` passed.
+
+## 2026-06-22 — Run #439 — Spec 745: Workday job-detail enrichment
+
+**Scope:** Fixed the Workday source's summary-only mapping. Selected list records now fetch their
+public CXS detail endpoints in ordered batches of five, supplying full descriptions, expanded and
+deduplicated multi-location labels, requisition IDs, employment types, departments, remote flags,
+and canonical job URLs. Description output honors HTML, Markdown, and plain formats. A failed or
+unavailable detail request preserves the corresponding summary job, and pagination failures retain
+already-listed partial results. X-energy (`xenergy:5:X-energyUS`) was the live reproduction: its
+list endpoint omitted descriptions and collapsed some geography to counts, while its detail
+endpoint exposed the full fields. The mapper also consumes top-level `hiringOrganization.name`, so
+X-energy now emits the source-authored `X-Energy, LLC` instead of the tenant slug `xenergy`; missing,
+blank, or failed detail identity retains the slug fallback.
+
+**Verification:** Workday Jest suite passed: 35 cases across 2 suites. Package-focused TypeScript
+check passed. A live private-investigator comparison against X-energy matched the sampled company
+name with zero field differences and zero execution errors. `git diff --check` passed.
+
+## 2026-06-22 — Run #438 — Spec 744: Rippling pagination and job details
+
+**Scope:** Extended the upstream Rippling source with zero-based multi-page retrieval, stable-ID
+deduplication, strict rejection of dehydrated filter records, and complete job descriptions from
+the public `/api/v2/board/{slug}/jobs/{id}` detail endpoint. Detail enrichment is bounded to five
+simultaneous requests and isolated per job. Final output also supports requested description
+formats and complete type, URL, email, and location mapping.
+
+**Verification:** Focused Rippling suite passed: 16 cases. Package-focused TypeScript check
+passed.
+
+## 2026-06-22 — Run #437 — Spec 743: source company plugin for Anatar
+
+**Scope:** Added the complete Anatar company-source package for its first-party Next.js careers
+site. The plugin performs bounded Next Flight parsing with semantic rendered-card fallback,
+produces stable IDs and deep links, applies shared job-type and email helpers, supports standard
+filters and result limits, degrades safely, and is registered in all four required locations.
+Spec 742 normalizes Anatar geography while retaining hybrid and remote workplace meaning.
+
+**Verification:** Focused Anatar suite, package-focused TypeScript check, and doc-lint passed.
+
+## 2026-06-22 — Run #436 — Spec 742: shared job-location parser
+
+**Scope:** Added a dependency-free `@ever-jobs/common` parser for conservative US `City, ST`
+normalization. It recognizes case-insensitive hybrid and remote qualifiers in parentheses or
+slash-delimited components on either side of the geography, returns canonical
+`workFromHomeType` values and a remote signal, and preserves the complete input when parsing is
+unsafe.
+
+**Verification:** Focused common-package suite, package-focused TypeScript check, and doc-lint
+passed.
+
+## 2026-06-21 — Scheduled run #438 (**fifteen new Source Company Plugins** — Specs 772–786)
+
+**Scope:** Expand the corpus with **15 new Greenhouse-backed company-direct source plugins**,
+discovered and gated entirely through the deterministic, conflict-free company-source pipeline
+(`probe → enrich → assemble → scaffold → wire`). One plugin per real, brand-matched employer board
+that exposed **≥ 3 live roles** at probe time. This run leaned into **defense-tech / aerospace**
+(air-defense & CUAS sensing, European defense AI, orbital intelligence), **industrial &
+agricultural robotics** (autonomous welding, laser weeding, Robots-as-a-Service), **AI silicon**
+(transformer-inference ASICs, reconfigurable-dataflow systems), **healthtech** (clinical
+intelligence, employee benefits, pediatric neuro-developmental care) and **agbio / gene-therapy**
+verticals — sectors the probe history shows still surface fresh employer boards, in contrast to the
+mined-out generic AI/dev-infra slice (now mostly on Ashby/Lever).
+
+**Baseline at run start:** `origin/develop` clean, 0 ahead / 0 behind; the prior CI run
+(`9ceeeb20`, Specs 756–771) was **green**. Last spec was 771; last enum phase 767. The five
+external reference repos under the parent `OTHERS/` directory (outside this repo) were
+`git fetch`-ed for situational awareness; upstream movement (career-ops dashboard column-picker +
+CV/PDF i18n fixes, ats-scrapers Eightfold company-list additions, a JobSpy LinkedIn date-parse
+fallback) is non-actionable for our sourcing corpus and is recorded only in the parent-directory
+research watch file **outside this repo** — never named here. No competitor intel is referenced
+in-repo; every board below is documented purely on its own public merits.
+
+**Discovery (live, 2026-06-21, `verified=false` — unauthenticated public Job-Board API):** 245
+candidate slugs across defense/space, industrial & ag robotics, AI-silicon, healthtech, biotech and
+agbio verticals were probed against `https://boards-api.greenhouse.io/v1/boards/<slug>` (board name)
++ `…/<slug>/jobs` (listings) at concurrency 16, across two batches (a hyphenated-guess batch of 166
+and a hyphen-stripped + fresh batch of 79). The gate (`MIN_JOBS = 3` live roles **and** a non-empty
+board `name`) admitted **15 survivors**. Brand metadata for each survivor was produced by a **15-way
+parallel enrichment workflow** (one verification agent per board), each agent forbidden from
+referencing competitors and instructed to keep disambiguating context out of the canonical
+`displayName` (which single-sources the `className` / `enumKey` / `serviceName`): board `Etched`
+→ `displayName = "Etched"` (transformer-inference ASIC startup); board `Cortica` → `"Cortica"`
+(pediatric neuro-developmental care, distinct from any homonym); board `Carbon Robotics` →
+`"Carbon Robotics"` (enumKey `CARBON_ROBOTICS`, distinct from the existing `source-company-carbon`
+plugin); board `Path Robotics` → `"Path Robotics"` (distinct from the existing `source-company-pathai`).
+
+**Shipped plugins (Spec / enum Phase / slug / display name / sector / HQ / live roles at probe):**
+
+| Spec | Phase | Slug | Display name | Sector | HQ | Roles |
+| ---- | ----- | ---- | ------------ | ------ | -- | ----- |
+| 772 | 768 | `carbonrobotics` | Carbon Robotics | Robotics / Agriculture (AgTech) | Seattle, Washington, USA | 23 |
+| 773 | 769 | `chaosindustries` | CHAOS Industries | Defense Tech / Aerospace | El Segundo, California, United States | 155 |
+| 774 | 770 | `coherehealth` | Cohere Health | Health Tech / Clinical Intelligence | Boston, Massachusetts, USA | 62 |
+| 775 | 771 | `cortica` | Cortica | Healthcare / Pediatric Neurodevelopmental Care | San Diego, California, United States | 66 |
+| 776 | 772 | `dynotherapeutics` | Dyno Therapeutics | Biotech / Gene Therapy | Watertown, Massachusetts, United States | 3 |
+| 777 | 773 | `eikontherapeutics` | Eikon Therapeutics | Biotechnology / Drug Discovery | Millbrae, California, USA | 21 |
+| 778 | 774 | `etchedai` | Etched | Semiconductors / AI Hardware | Cupertino, California, United States | 25 |
+| 779 | 775 | `formic` | Formic | Robotics / Manufacturing Automation | Chicago, Illinois, USA | 31 |
+| 780 | 776 | `garnerhealth` | Garner Health | Health Tech / Employee Benefits | New York, New York, USA | 49 |
+| 781 | 777 | `helsing` | Helsing | Defense Tech / AI | Munich, Bavaria, Germany | 134 |
+| 782 | 778 | `pathrobotics` | Path Robotics | Robotics / Industrial Automation | Columbus, Ohio, USA | 42 |
+| 783 | 779 | `pivotbio` | Pivot Bio | AgTech / Agricultural Biotechnology | Berkeley, California, USA | 18 |
+| 784 | 780 | `sambanovasystems` | SambaNova Systems | AI Hardware / Semiconductors | San Jose, California, United States | 19 |
+| 785 | 781 | `slingshotaerospace` | Slingshot Aerospace | Space Tech / Defense / AI | El Segundo, California, USA | 35 |
+| 786 | 782 | `soundagriculture` | Sound Agriculture | AgTech / Agricultural Biotechnology | Emeryville, California, USA | 4 |
+**Per-plugin shape (uniform Greenhouse company-direct template):** each `*.service.ts` fetches
+`https://api.greenhouse.io/v1/boards/<slug>/jobs?content=true`, maps each Greenhouse job to a
+`JobPostDto` with `id` prefixed `<slug>-`, `site === Site.<ENUMKEY>`, canonical URL
+`https://job-boards.greenhouse.io/<slug>/jobs/<id>`, decoded HTML content, location and department
+parsing, and `category: 'company'`. Every failure mode (HTTP 4xx/5xx, transport/DNS error,
+malformed body, empty board) degrades to an empty result — `scrape()` never throws.
+
+**Changes:**
+
+- Added **15 plugin packages** under `packages/plugins/source-company-<slug>/` (10 files each =
+  **150 files**): `package.json`, `tsconfig.json`, `src/{index,<slug>.module,<slug>.service}.ts`,
+  `__tests__/<slug>.service.spec.ts`, and `__tests__/fixtures/<slug>-jobs.json`.
+- Added **15 spec packages** under `.specify/specs/<772..786>-source-company-<slug>/`
+  (`spec.md`, `plan.md`, `tasks.md`).
+- Wired all 15 into the four shared registration files (idempotent `wire-company-source.ts`):
+  `packages/models/src/enums/site.enum.ts` (Phases 768–782), `packages/plugins/index.ts`
+  (`ALL_SOURCE_MODULES`), `tsconfig.base.json` (path aliases), `jest.config.js`
+  (`moduleNameMapper`).
+- Linked all 15 specs from `docs/index.md` (§ Source Company Plugins); `docs/log.md` (this entry);
+  external competitor sync recorded in the parent-directory watch file (outside this repo).
+
+**Verification:**
+
+- `npx jest --testPathPatterns "source-company-(…15 slugs…)"` → **15 suites / 165 tests green**
+  (the `status 500` lines in output are the intentional negative-path cases asserting graceful
+  degradation to an empty result).
+- `npm run lint:docs` → **✓ Doc-lint passed — no issues** (all 45 new spec docs linked).
+- No competitor name appears anywhere in-repo; brand metadata is documented on each employer's own
+  public merits.
+
+**Notes:**
+
+- Corpus now stands at **636 company-direct source plugins** (621 → 636) and **921 total source
+  plugins**; Site enum at **921 members** (Phase 782).
+- The hyphenated-slug batch confirmed (again) that Greenhouse board slugs are overwhelmingly
+  hyphen-free, lowercased concatenations — only 4/166 hyphenated guesses survived vs 11/79 in the
+  hyphen-stripped batch. Future probe candidate lists should default to hyphen-stripped forms.
+
+---
+
 ## 2026-06-20 — Scheduled run #437 (**sixteen new Source Company Plugins** — Specs 756–771)
 
 **Scope:** Expand the corpus with **16 new Greenhouse-backed company-direct source plugins**,
