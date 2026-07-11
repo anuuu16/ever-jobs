@@ -22,13 +22,24 @@
  *  9. No IExportedJobStore bound → every tick re-exports with no
  *     cross-run dedup (documented degraded-mode behaviour).
  * 10. onApplicationShutdown clears the interval; idempotent.
+ * 11. Dynamic lookback (IRunStateStore watermark): first tick uses the
+ *     first-run lookback; the next tick computes hoursOld from elapsed
+ *     time + overlap; an explicit hoursOld override always wins; the
+ *     watermark does NOT advance on push failure but DOES advance on a
+ *     zero-fresh-jobs tick; with no IRunStateStore bound, every tick
+ *     falls back to the first-run lookback.
+ * 12. `computeDynamicHoursOld` (pure helper) — override precedence,
+ *     first-run default, elapsed-time computation, and both the
+ *     min-1-hour and max-lookback clamps.
  */
 import 'reflect-metadata';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { IExportedJobStore, JobPostDto } from '@ever-jobs/models';
+import { IExportedJobStore, IRunStateStore, JobPostDto } from '@ever-jobs/models';
 import {
+  computeDynamicHoursOld,
+  DAILY_EXPORT_RUN_STATE_KEY,
   DailyExportConfig,
   DailyExportCron,
   DEFAULT_DAILY_EXPORT_INTERVAL_MS,
@@ -60,6 +71,7 @@ function makeExportedJobStore(): IExportedJobStore & {
   readonly filterUnseen: jest.Mock;
   readonly markExported: jest.Mock;
   readonly prune: jest.Mock;
+  readonly count: jest.Mock;
 } {
   const seen = new Map<string, Date>();
   return {
@@ -70,6 +82,21 @@ function makeExportedJobStore(): IExportedJobStore & {
       for (const u of urls) seen.set(u, at);
     }),
     prune: jest.fn(async () => 0),
+    count: jest.fn(async () => seen.size),
+  };
+}
+
+/** Map-backed fake mirroring InMemoryJobStore's IRunStateStore slice. */
+function makeRunStateStore(): IRunStateStore & {
+  readonly getLastRunAt: jest.Mock;
+  readonly setLastRunAt: jest.Mock;
+} {
+  const state = new Map<string, Date>();
+  return {
+    getLastRunAt: jest.fn(async (key: string) => state.get(key) ?? null),
+    setLastRunAt: jest.fn(async (key: string, at: Date) => {
+      state.set(key, at);
+    }),
   };
 }
 
@@ -80,6 +107,9 @@ function makeConfigService(overrides: Partial<DailyExportConfig>) {
     siteNames: [],
     isRemote: false,
     resultsWanted: 100,
+    firstRunLookbackHours: 168,
+    maxLookbackHours: 720,
+    lookbackOverlapMinutes: 15,
     retentionDays: 30,
     targetMethod: 'POST',
     targetHeaders: {},
@@ -312,5 +342,232 @@ describe('DailyExportCron', () => {
     cron.onApplicationShutdown();
     cron.onApplicationShutdown();
     expect(clearSpy).toHaveBeenCalledTimes(1);
+  });
+
+  describe('dynamic lookback window (IRunStateStore watermark)', () => {
+    const NOW = new Date('2026-06-15T12:00:00.000Z');
+
+    it('first tick with no watermark uses the first-run lookback', async () => {
+      mockedAxios.request.mockResolvedValue({ status: 200 });
+      const aggregator = makeAggregator([makeJob()]);
+      const cron = new DailyExportCron(
+        aggregator as any,
+        makeConfigService({
+          enabled: true,
+          targetUrl: 'https://platform.example/ingest',
+          firstRunLookbackHours: 168,
+        }) as any,
+        makeExportedJobStore(),
+        makeRunStateStore(),
+      );
+
+      await cron.runExport();
+      expect(aggregator.aggregate).toHaveBeenCalledWith(
+        expect.objectContaining({ hoursOld: 168 }),
+      );
+    });
+
+    it('second tick computes hoursOld from elapsed time since the watermark, plus overlap', async () => {
+      mockedAxios.request.mockResolvedValue({ status: 200 });
+      const aggregator = makeAggregator([makeJob({ jobUrl: 'https://example.com/jobs/1' })]);
+      const runState = makeRunStateStore();
+      const cron = new DailyExportCron(
+        aggregator as any,
+        makeConfigService({
+          enabled: true,
+          targetUrl: 'https://platform.example/ingest',
+          firstRunLookbackHours: 168,
+          maxLookbackHours: 720,
+          lookbackOverlapMinutes: 15,
+        }) as any,
+        makeExportedJobStore(),
+        runState,
+      );
+
+      jest.useFakeTimers();
+      jest.setSystemTime(NOW);
+      await cron.runExport(); // first tick — sets the watermark to NOW
+
+      aggregator.aggregate.mockResolvedValue({
+        jobs: [makeJob({ jobUrl: 'https://example.com/jobs/2' })],
+      });
+      jest.setSystemTime(new Date(NOW.getTime() + 3 * 3_600_000)); // +3h
+      await cron.runExport();
+
+      // elapsed 3h + 15min overlap = 3.25h
+      expect(aggregator.aggregate).toHaveBeenLastCalledWith(
+        expect.objectContaining({ hoursOld: 3.25 }),
+      );
+    });
+
+    it('an explicit hoursOld override wins even with a watermark present', async () => {
+      mockedAxios.request.mockResolvedValue({ status: 200 });
+      const runState = makeRunStateStore();
+      await runState.setLastRunAt(DAILY_EXPORT_RUN_STATE_KEY, new Date('2020-01-01T00:00:00.000Z'));
+      const aggregator = makeAggregator([makeJob()]);
+      const cron = new DailyExportCron(
+        aggregator as any,
+        makeConfigService({
+          enabled: true,
+          targetUrl: 'https://platform.example/ingest',
+          hoursOld: 48,
+        }) as any,
+        makeExportedJobStore(),
+        runState,
+      );
+
+      await cron.runExport();
+      expect(aggregator.aggregate).toHaveBeenCalledWith(
+        expect.objectContaining({ hoursOld: 48 }),
+      );
+    });
+
+    it('does NOT advance the watermark when the webhook push fails', async () => {
+      mockedAxios.request.mockRejectedValue(new Error('ECONNREFUSED'));
+      const runState = makeRunStateStore();
+      const cron = new DailyExportCron(
+        makeAggregator([makeJob()]) as any,
+        makeConfigService({ enabled: true, targetUrl: 'https://platform.example/ingest' }) as any,
+        makeExportedJobStore(),
+        runState,
+      );
+
+      const result = await cron.runExport();
+      expect(result).toEqual({ ran: false, reason: 'push-failed' });
+      expect(runState.setLastRunAt).not.toHaveBeenCalled();
+    });
+
+    it('DOES advance the watermark when the search finds zero fresh jobs', async () => {
+      mockedAxios.request.mockResolvedValue({ status: 200 });
+      const job = makeJob();
+      const aggregator = makeAggregator([job]);
+      const store = makeExportedJobStore();
+      const runState = makeRunStateStore();
+      const cron = new DailyExportCron(
+        aggregator as any,
+        makeConfigService({ enabled: true, targetUrl: 'https://platform.example/ingest' }) as any,
+        store,
+        runState,
+      );
+
+      await cron.runExport(); // marks `job` exported
+      runState.setLastRunAt.mockClear();
+      const second = await cron.runExport(); // same job → 0 fresh
+      expect(second).toEqual({ ran: false, reason: 'no-jobs' });
+      expect(runState.setLastRunAt).toHaveBeenCalledWith(
+        DAILY_EXPORT_RUN_STATE_KEY,
+        expect.any(Date),
+      );
+    });
+
+    it('without an IRunStateStore bound, every tick falls back to the first-run lookback', async () => {
+      mockedAxios.request.mockResolvedValue({ status: 200 });
+      const aggregator = makeAggregator([makeJob({ jobUrl: 'https://example.com/jobs/1' })]);
+      const cron = new DailyExportCron(
+        aggregator as any,
+        makeConfigService({
+          enabled: true,
+          targetUrl: 'https://platform.example/ingest',
+          firstRunLookbackHours: 168,
+        }) as any,
+        makeExportedJobStore(),
+        undefined,
+      );
+
+      await cron.runExport();
+      aggregator.aggregate.mockResolvedValue({
+        jobs: [makeJob({ jobUrl: 'https://example.com/jobs/2' })],
+      });
+      await cron.runExport();
+
+      expect(aggregator.aggregate).toHaveBeenLastCalledWith(
+        expect.objectContaining({ hoursOld: 168 }),
+      );
+    });
+  });
+});
+
+describe('computeDynamicHoursOld', () => {
+  const now = new Date('2026-06-15T12:00:00.000Z');
+
+  it('returns the explicit override unchanged, ignoring the watermark', () => {
+    expect(
+      computeDynamicHoursOld({
+        explicitHoursOld: 24,
+        lastRunAt: new Date('2020-01-01T00:00:00.000Z'),
+        now,
+        firstRunLookbackHours: 168,
+        maxLookbackHours: 720,
+        overlapMinutes: 15,
+      }),
+    ).toBe(24);
+  });
+
+  it('falls back to the first-run lookback when there is no watermark', () => {
+    expect(
+      computeDynamicHoursOld({
+        explicitHoursOld: undefined,
+        lastRunAt: null,
+        now,
+        firstRunLookbackHours: 168,
+        maxLookbackHours: 720,
+        overlapMinutes: 15,
+      }),
+    ).toBe(168);
+  });
+
+  it('caps the first-run lookback at maxLookbackHours', () => {
+    expect(
+      computeDynamicHoursOld({
+        explicitHoursOld: undefined,
+        lastRunAt: null,
+        now,
+        firstRunLookbackHours: 1000,
+        maxLookbackHours: 720,
+        overlapMinutes: 15,
+      }),
+    ).toBe(720);
+  });
+
+  it('computes elapsed hours since the watermark, plus overlap', () => {
+    const lastRunAt = new Date(now.getTime() - 5 * 3_600_000); // 5h ago
+    expect(
+      computeDynamicHoursOld({
+        explicitHoursOld: undefined,
+        lastRunAt,
+        now,
+        firstRunLookbackHours: 168,
+        maxLookbackHours: 720,
+        overlapMinutes: 30,
+      }),
+    ).toBe(5.5);
+  });
+
+  it('clamps the computed window to maxLookbackHours for a long-dead watermark', () => {
+    const lastRunAt = new Date(now.getTime() - 1000 * 3_600_000); // 1000h ago
+    expect(
+      computeDynamicHoursOld({
+        explicitHoursOld: undefined,
+        lastRunAt,
+        now,
+        firstRunLookbackHours: 168,
+        maxLookbackHours: 720,
+        overlapMinutes: 15,
+      }),
+    ).toBe(720);
+  });
+
+  it('clamps the computed window to a minimum of 1 hour', () => {
+    const lastRunAt = new Date(now.getTime() - 1000); // 1 second ago
+    expect(
+      computeDynamicHoursOld({
+        explicitHoursOld: undefined,
+        lastRunAt,
+        now,
+        firstRunLookbackHours: 168,
+        maxLookbackHours: 720,
+        overlapMinutes: 0,
+      }),
+    ).toBe(1);
   });
 });

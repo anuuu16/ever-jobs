@@ -37,6 +37,48 @@ function makeJobsService(jobs: JobPostDto[] = []) {
 }
 
 /**
+ * Stub `JobsService.searchJobsIncremental` — invokes `onSiteResult` once
+ * per entry in `bySite`, in object-key order, simulating each site's
+ * scrape settling one at a time (rather than all at once).
+ */
+function makeJobsServiceIncremental(bySite: Record<string, JobPostDto[]>) {
+  return {
+    searchJobsIncremental: jest.fn(
+      async (
+        _input: ScraperInputDto,
+        onSiteResult: (site: Site, jobs: JobPostDto[]) => Promise<void> | void,
+      ) => {
+        for (const [site, jobs] of Object.entries(bySite)) {
+          await onSiteResult(site as Site, jobs);
+        }
+      },
+    ),
+  } as any;
+}
+
+/**
+ * `IDedupEngine` stub that assigns every job its own cluster (no
+ * merging) — unlike `makeStubEngine`, it works for ANY input length/call
+ * count without pre-declared assignments, which `aggregateIncremental`
+ * needs since it calls `dedup()` once per site with that site's own
+ * (independently-sized) batch.
+ */
+function makeIdentityEngine(): IDedupEngine {
+  return {
+    dedup: jest.fn(async (jobs: ReadonlyArray<JobPostDto>) => {
+      const canonical: any[] = jobs.map((j, i) => ({ canonicalJobId: `c-${j.id ?? i}-${Math.random()}` }));
+      const result: DedupResult = {
+        canonical,
+        assignments: canonical.map((c) => c.canonicalJobId),
+        errors: [],
+        metrics: { inputCount: jobs.length, outputCount: jobs.length, mergedPairs: 0, elapsedMs: 1 },
+      };
+      return result;
+    }),
+  };
+}
+
+/**
  * Stub IDedupEngine that maps each input job to one of the supplied
  * cluster ids. `clusterAssignments` length must equal the input length.
  *
@@ -289,6 +331,102 @@ describe('JobsAggregator', () => {
       expect(engine.dedup).not.toHaveBeenCalled();
       expect(out.deduped).toBe(false);
       expect(out.jobs).toBe(fanned);
+    });
+  });
+
+  describe('aggregateIncremental', () => {
+    it('dedupes and combines each site\'s own batch separately, not the whole set at once', async () => {
+      const jobsService = makeJobsServiceIncremental({
+        [Site.INDEED]: [makeJob('1'), makeJob('2')],
+        [Site.LINKEDIN]: [makeJob('3')],
+      });
+      const engine = makeIdentityEngine();
+      const aggregator = new JobsAggregator(jobsService, engine);
+
+      const out = await aggregator.aggregateIncremental(new ScraperInputDto({ searchTerm: 'node' }));
+
+      // dedup() called once per site, each with only that site's jobs —
+      // never once with the combined 3-job set.
+      expect(engine.dedup).toHaveBeenCalledTimes(2);
+      expect(engine.dedup).toHaveBeenNthCalledWith(1, [expect.objectContaining({ id: '1' }), expect.objectContaining({ id: '2' })]);
+      expect(engine.dedup).toHaveBeenNthCalledWith(2, [expect.objectContaining({ id: '3' })]);
+
+      expect(out.rawCount).toBe(3);
+      expect(out.outputCount).toBe(3);
+      expect(out.jobs).toHaveLength(3);
+    });
+
+    it('persists each site\'s batch independently, as soon as that site settles', async () => {
+      const jobsService = makeJobsServiceIncremental({
+        [Site.INDEED]: [makeJob('1')],
+        [Site.LINKEDIN]: [makeJob('2')],
+      });
+      const engine = makeIdentityEngine();
+      const store = makeStubStore({ inserted: 1, updated: 0 });
+      const aggregator = new JobsAggregator(jobsService, engine, store);
+
+      const out = await aggregator.aggregateIncremental(new ScraperInputDto({ searchTerm: 'node' }));
+
+      // One upsertMany call per site (1 job each), not one call with 2 jobs.
+      expect(store.upsertMany).toHaveBeenCalledTimes(2);
+      expect(store.calls[0]).toHaveLength(1);
+      expect(store.calls[1]).toHaveLength(1);
+      expect(out.persisted).toBe(true);
+      expect(out.persistCounts).toEqual({ inserted: 2, updated: 0 });
+    });
+
+    it('returns a perSite breakdown with one entry per site', async () => {
+      const jobsService = makeJobsServiceIncremental({
+        [Site.INDEED]: [makeJob('1'), makeJob('2')],
+        [Site.LINKEDIN]: [makeJob('3')],
+      });
+      const engine = makeIdentityEngine();
+      const store = makeStubStore({ inserted: 1, updated: 0 });
+      const aggregator = new JobsAggregator(jobsService, engine, store);
+
+      const out = await aggregator.aggregateIncremental(new ScraperInputDto({}));
+
+      expect(out.perSite).toEqual([
+        { site: Site.INDEED, rawCount: 2, outputCount: 2, persisted: true, persistError: undefined },
+        { site: Site.LINKEDIN, rawCount: 1, outputCount: 1, persisted: true, persistError: undefined },
+      ]);
+    });
+
+    it('one site failing to persist does not block other sites, but is reflected in persistError', async () => {
+      let call = 0;
+      const flakyStore: IJobStore = {
+        upsert: jest.fn(),
+        upsertMany: jest.fn(async () => {
+          call++;
+          if (call === 1) {
+            const err = Object.assign(new Error('backend blip'), { code: ERR_STORE_BACKEND_DOWN });
+            throw err;
+          }
+          return { inserted: 1, updated: 0 };
+        }),
+        getById: jest.fn(),
+        findByCanonicalId: jest.fn(),
+        listByQuery: jest.fn(),
+        countByQuery: jest.fn(),
+        delete: jest.fn(),
+      };
+      const jobsService = makeJobsServiceIncremental({
+        [Site.INDEED]: [makeJob('1')],
+        [Site.LINKEDIN]: [makeJob('2')],
+      });
+      const engine = makeIdentityEngine();
+      const aggregator = new JobsAggregator(jobsService, engine, flakyStore);
+
+      const out = await aggregator.aggregateIncremental(new ScraperInputDto({}));
+
+      // The 2nd site still persisted despite the 1st site's failure.
+      expect(out.persisted).toBe(true);
+      expect(out.persistCounts).toEqual({ inserted: 1, updated: 0 });
+      expect(out.persistError).toEqual(
+        expect.objectContaining({ message: expect.stringContaining('1 of 2 site(s)') }),
+      );
+      expect(out.perSite[0].persistError).toBeDefined();
+      expect(out.perSite[1].persisted).toBe(true);
     });
   });
 

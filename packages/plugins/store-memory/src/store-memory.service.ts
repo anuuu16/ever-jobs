@@ -10,6 +10,7 @@ import {
   IHealthSnapshotStore,
   IJobObservationStore,
   IJobStore,
+  IRunStateStore,
   JOB_STORE_QUERY_DEFAULT_LIMIT,
   JOB_STORE_QUERY_MAX_LIMIT,
   JobStorePage,
@@ -157,6 +158,28 @@ function compareForListing(a: CanonicalJob, b: CanonicalJob): number {
 }
 
 /**
+ * Shared filter predicate for `listByQuery` / `countByQuery` — kept as a
+ * standalone function so the two can never drift on what "matches this
+ * query" means (the count would silently disagree with the page it's
+ * supposed to describe otherwise).
+ */
+function matchesQuery(job: CanonicalJob, query: JobStoreQuery): boolean {
+  if (query.company && !job.company.toLowerCase().includes(query.company.toLowerCase())) {
+    return false;
+  }
+  if (query.title && !job.title.toLowerCase().includes(query.title.toLowerCase())) {
+    return false;
+  }
+  if (query.location && !job.location.toLowerCase().includes(query.location.toLowerCase())) {
+    return false;
+  }
+  if (query.since instanceof Date && job.mergedAt < query.since.toISOString()) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * In-memory reference implementation of `IJobStore` + `IJobObservationStore`
  * (Spec 004 / Phase 2 / T05–T06).
  *
@@ -193,12 +216,19 @@ function compareForListing(a: CanonicalJob, b: CanonicalJob): number {
 @StorePlugin({ id: STORE_MEMORY_ID, description: STORE_MEMORY_DESCRIPTION })
 @Injectable()
 export class InMemoryJobStore
-  implements IJobStore, IJobObservationStore, IHealthSnapshotStore, IExportedJobStore
+  implements
+    IJobStore,
+    IJobObservationStore,
+    IHealthSnapshotStore,
+    IExportedJobStore,
+    IRunStateStore
 {
   private readonly canonicals = new Map<string, CanonicalJob>();
   private readonly observations = new Map<string, SourceObservation[]>();
   /** `jobUrl → exportedAt` marks written by {@link IExportedJobStore.markExported}. */
   private readonly exportedJobs = new Map<string, Date>();
+  /** `key → lastRunAt` marks written by {@link IRunStateStore.setLastRunAt}. */
+  private readonly runState = new Map<string, Date>();
   /**
    * Append-only ring of `(ts, health)` rows ordered by insertion (== ts
    * ASC by construction — `HealthSnapshotCron` uses one fresh `Date()`
@@ -258,20 +288,11 @@ export class InMemoryJobStore
     const offset =
       typeof query.cursor === 'string' ? decodeCursor(query.cursor).offset : 0;
 
-    const lcCompany = query.company?.toLowerCase();
-    const lcTitle = query.title?.toLowerCase();
-    const lcLocation = query.location?.toLowerCase();
-    const sinceIso = query.since instanceof Date ? query.since.toISOString() : undefined;
-
     // Single-pass filter — avoids materialising the unfiltered set
     // when the cohort is large and the filter is selective.
     const filtered: CanonicalJob[] = [];
     for (const job of this.canonicals.values()) {
-      if (lcCompany && !job.company.toLowerCase().includes(lcCompany)) continue;
-      if (lcTitle && !job.title.toLowerCase().includes(lcTitle)) continue;
-      if (lcLocation && !job.location.toLowerCase().includes(lcLocation)) continue;
-      if (sinceIso && job.mergedAt < sinceIso) continue;
-      filtered.push(job);
+      if (matchesQuery(job, query)) filtered.push(job);
     }
 
     filtered.sort(compareForListing);
@@ -288,6 +309,14 @@ export class InMemoryJobStore
       };
     }
     return { items };
+  }
+
+  async countByQuery(query: JobStoreQuery): Promise<number> {
+    let count = 0;
+    for (const job of this.canonicals.values()) {
+      if (matchesQuery(job, query)) count++;
+    }
+    return count;
   }
 
   async delete(id: string): Promise<boolean> {
@@ -463,6 +492,22 @@ export class InMemoryJobStore
     return removed;
   }
 
+  async count(): Promise<number> {
+    return this.exportedJobs.size;
+  }
+
+  // ----------------------------------------------------------------------
+  // IRunStateStore
+  // ----------------------------------------------------------------------
+
+  async getLastRunAt(key: string): Promise<Date | null> {
+    return this.runState.get(key) ?? null;
+  }
+
+  async setLastRunAt(key: string, at: Date): Promise<void> {
+    this.runState.set(key, at);
+  }
+
   // ----------------------------------------------------------------------
   // Test / debug surface (not part of either interface contract).
   // ----------------------------------------------------------------------
@@ -487,6 +532,7 @@ export class InMemoryJobStore
     this.observations.clear();
     this.snapshots.length = 0;
     this.exportedJobs.clear();
+    this.runState.clear();
   }
 
   /**

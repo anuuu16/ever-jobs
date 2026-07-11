@@ -56,6 +56,9 @@ describe('StoreRegistry (Spec 004 / T03)', () => {
     listByQuery(_q: JobStoreQuery): Promise<JobStorePage<CanonicalJob>> {
       return Promise.resolve({ items: [] });
     }
+    countByQuery(_q: JobStoreQuery): Promise<number> {
+      return Promise.resolve(0);
+    }
     delete(): Promise<boolean> {
       return Promise.resolve(false);
     }

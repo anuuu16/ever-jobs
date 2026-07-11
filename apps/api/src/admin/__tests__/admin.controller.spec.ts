@@ -51,12 +51,20 @@ function makeAggregator(result: Partial<{ rawCount: number; outputCount: number 
       outputCount: result.outputCount ?? 0,
       deduped: false,
     }),
+    aggregateIncremental: jest.fn().mockResolvedValue({
+      jobs: [],
+      rawCount: result.rawCount ?? 0,
+      outputCount: result.outputCount ?? 0,
+      deduped: false,
+      perSite: [],
+    }),
   };
 }
 
 function makeJobStore(jobs: CanonicalJob[] = []) {
   return {
     listByQuery: jest.fn().mockResolvedValue({ items: jobs }),
+    countByQuery: jest.fn().mockResolvedValue(jobs.length),
     getById: jest.fn().mockImplementation(async (id: string) => jobs.find((j) => j.canonicalJobId === id) ?? null),
   };
 }
@@ -72,6 +80,19 @@ function makeRegistry(sources: Array<{ site: string; name: string; category: str
   };
 }
 
+/** Aggregator stub whose `aggregate()` result/rejection varies by `companySlug`. */
+function makeCompanyAggregator(
+  bySlug: Record<string, { rawCount: number; outputCount: number } | Error>,
+) {
+  return {
+    aggregate: jest.fn().mockImplementation(async (input: ScraperInputDto) => {
+      const outcome = bySlug[input.companySlug!];
+      if (outcome instanceof Error) throw outcome;
+      return { jobs: [], rawCount: outcome.rawCount, outputCount: outcome.outputCount, deduped: false };
+    }),
+  };
+}
+
 function makeExportedJobStore(exportedUrls: string[] = []) {
   return {
     filterUnseen: jest.fn().mockImplementation(async (urls: string[]) =>
@@ -79,6 +100,7 @@ function makeExportedJobStore(exportedUrls: string[] = []) {
     ),
     markExported: jest.fn(),
     prune: jest.fn(),
+    count: jest.fn().mockResolvedValue(exportedUrls.length),
   };
 }
 
@@ -107,6 +129,16 @@ describe('AdminController', () => {
     it('sites() throws NotFoundException', () => {
       const controller = new AdminController(makeConfigService(false) as any);
       expect(() => controller.sites()).toThrow(NotFoundException);
+    });
+
+    it('atsCompanies() throws NotFoundException', () => {
+      const controller = new AdminController(makeConfigService(false) as any);
+      expect(() => controller.atsCompanies()).toThrow(NotFoundException);
+    });
+
+    it('runCompanies() throws NotFoundException', async () => {
+      const controller = new AdminController(makeConfigService(false) as any);
+      await expect(controller.runCompanies()).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -170,7 +202,40 @@ describe('AdminController', () => {
     it('list() returns an empty page when no IJobStore is bound', async () => {
       const controller = new AdminController(makeConfigService(true) as any);
       const result = await controller.list();
-      expect(result).toEqual({ items: [] });
+      expect(result).toEqual({ items: [], total: 0, totalExported: null });
+    });
+
+    it('list() returns total (filtered count) and totalExported (global count)', async () => {
+      const jobs = [makeJob({ canonicalJobId: 'a', url: 'https://example.com/a' })];
+      const jobStore = makeJobStore(jobs);
+      const exportedJobStore = makeExportedJobStore(['https://example.com/a', 'https://example.com/b']);
+
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        jobStore as any,
+        undefined,
+        exportedJobStore as any,
+      );
+
+      const result = await controller.list(undefined, 'Acme');
+      expect(result.total).toBe(1);
+      expect(result.totalExported).toBe(2);
+      expect(jobStore.countByQuery).toHaveBeenCalledWith({
+        title: undefined,
+        company: 'Acme',
+        location: undefined,
+        since: undefined,
+        cursor: undefined,
+        limit: undefined,
+      });
+    });
+
+    it('list() reports totalExported as null when no IExportedJobStore is bound', async () => {
+      const jobStore = makeJobStore([makeJob()]);
+      const controller = new AdminController(makeConfigService(true) as any, jobStore as any);
+
+      const result = await controller.list();
+      expect(result.totalExported).toBeNull();
     });
 
     it('detail() 404s when the job store has no matching id', async () => {
@@ -219,7 +284,7 @@ describe('AdminController', () => {
 
       await controller.run({ sites: ['indeed', 'not-a-real-site'], searchTerm: 'engineer' });
 
-      expect(aggregator.aggregate).toHaveBeenCalledWith(
+      expect(aggregator.aggregateIncremental).toHaveBeenCalledWith(
         new ScraperInputDto({
           siteType: ['indeed'] as any,
           searchTerm: 'engineer',
@@ -242,7 +307,7 @@ describe('AdminController', () => {
 
       await controller.run({});
 
-      expect(aggregator.aggregate).toHaveBeenCalledWith(
+      expect(aggregator.aggregateIncremental).toHaveBeenCalledWith(
         new ScraperInputDto({
           siteType: ['indeed', 'linkedin'] as any,
           searchTerm: undefined,
@@ -265,10 +330,10 @@ describe('AdminController', () => {
 
       const result = await controller.run({ resultsWanted: 5000 });
 
-      expect(aggregator.aggregate).toHaveBeenCalledWith(
+      expect(aggregator.aggregateIncremental).toHaveBeenCalledWith(
         expect.objectContaining({ resultsWanted: 100 }),
       );
-      expect(result).toEqual({ rawCount: 12, outputCount: 9, sites: ['indeed'] });
+      expect(result).toEqual({ rawCount: 12, outputCount: 9, sites: ['indeed'], perSite: [] });
     });
 
     it('run() forwards captureRawResponse to the built ScraperInputDto', async () => {
@@ -283,9 +348,35 @@ describe('AdminController', () => {
 
       await controller.run({ captureRawResponse: true });
 
-      expect(aggregator.aggregate).toHaveBeenCalledWith(
+      expect(aggregator.aggregateIncremental).toHaveBeenCalledWith(
         expect.objectContaining({ captureRawResponse: true }),
       );
+    });
+
+    it('run() passes the perSite breakdown through from aggregateIncremental', async () => {
+      const perSite = [
+        { site: 'indeed', rawCount: 5, outputCount: 5, persisted: true },
+        { site: 'linkedin', rawCount: 3, outputCount: 2, persisted: true },
+      ];
+      const aggregator = {
+        aggregateIncremental: jest.fn().mockResolvedValue({
+          jobs: [],
+          rawCount: 8,
+          outputCount: 7,
+          deduped: true,
+          perSite,
+        }),
+      };
+      const controller = new AdminController(
+        makeConfigService(true, ['indeed', 'linkedin']) as any,
+        undefined,
+        undefined,
+        undefined,
+        aggregator as any,
+      );
+
+      const result = await controller.run({});
+      expect(result.perSite).toEqual(perSite);
     });
 
     it('sites() returns an empty catalog when no PluginRegistry is bound', () => {
@@ -339,6 +430,124 @@ describe('AdminController', () => {
 
       const result = controller.sites();
       expect(result.categories.map((c) => c.category)).toEqual(['job-board', 'mystery-category']);
+    });
+
+    it('atsCompanies() with no site query returns entries sorted descending by count', () => {
+      const controller = new AdminController(makeConfigService(true) as any);
+      const result = controller.atsCompanies() as Array<{ site: string; count: number }>;
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBeGreaterThan(0);
+      for (let i = 0; i < result.length - 1; i++) {
+        expect(result[i].count).toBeGreaterThanOrEqual(result[i + 1].count);
+      }
+    });
+
+    it('atsCompanies() with an unknown site returns an empty companies array', () => {
+      const controller = new AdminController(makeConfigService(true) as any);
+      const result = controller.atsCompanies('totally-made-up-site-xyz');
+      expect(result).toEqual({ site: 'totally-made-up-site-xyz', companies: [] });
+    });
+
+    it('runCompanies() throws NotFoundException when no aggregator is bound', async () => {
+      const controller = new AdminController(makeConfigService(true) as any);
+      await expect(controller.runCompanies({ site: 'greenhouse', companySlugs: ['stripe'] }))
+        .rejects.toThrow(NotFoundException);
+    });
+
+    it('runCompanies() throws NotFoundException for an invalid site', async () => {
+      const aggregator = makeAggregator();
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        undefined,
+        undefined,
+        undefined,
+        aggregator as any,
+      );
+      await expect(controller.runCompanies({ site: 'not-a-real-site', companySlugs: ['stripe'] }))
+        .rejects.toThrow(NotFoundException);
+    });
+
+    it('runCompanies() dedupes slugs, fans out concurrently, and sums results across successes', async () => {
+      const aggregator = makeCompanyAggregator({
+        stripe: { rawCount: 5, outputCount: 4 },
+        airbnb: { rawCount: 3, outputCount: 3 },
+      });
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        undefined,
+        undefined,
+        undefined,
+        aggregator as any,
+      );
+
+      const result = await controller.runCompanies({
+        site: 'greenhouse',
+        companySlugs: ['stripe', 'airbnb', 'stripe'],
+      });
+
+      expect(aggregator.aggregate).toHaveBeenCalledTimes(2); // deduped
+      expect(result).toEqual({
+        site: 'greenhouse',
+        companiesRequested: 2,
+        companiesSucceeded: 2,
+        companiesFailed: 0,
+        rawCount: 8,
+        outputCount: 7,
+      });
+    });
+
+    it('runCompanies() counts a rejected company as failed without aborting the batch', async () => {
+      const aggregator = makeCompanyAggregator({
+        stripe: { rawCount: 5, outputCount: 4 },
+        deadco: new Error('site unreachable'),
+      });
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        undefined,
+        undefined,
+        undefined,
+        aggregator as any,
+      );
+
+      const result = await controller.runCompanies({
+        site: 'greenhouse',
+        companySlugs: ['stripe', 'deadco'],
+      });
+
+      expect(result).toEqual({
+        site: 'greenhouse',
+        companiesRequested: 2,
+        companiesSucceeded: 1,
+        companiesFailed: 1,
+        rawCount: 5,
+        outputCount: 4,
+      });
+    });
+
+    it('runCompanies() applies resultsWanted per company, not split across the batch', async () => {
+      const aggregator = makeCompanyAggregator({
+        stripe: { rawCount: 1, outputCount: 1 },
+        airbnb: { rawCount: 1, outputCount: 1 },
+      });
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        undefined,
+        undefined,
+        undefined,
+        aggregator as any,
+      );
+
+      await controller.runCompanies({
+        site: 'greenhouse',
+        companySlugs: ['stripe', 'airbnb'],
+        resultsWanted: 10,
+      });
+
+      const calls = aggregator.aggregate.mock.calls.map((c: [ScraperInputDto]) => c[0]);
+      expect(calls).toHaveLength(2);
+      for (const input of calls) {
+        expect(input.resultsWanted).toBe(10);
+      }
     });
   });
 });

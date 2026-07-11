@@ -373,4 +373,51 @@ describe('SqliteDrizzleJobStore — backend-specific', () => {
       }
     });
   });
+
+  describe('IExportedJobStore.count', () => {
+    it('reflects the number of URLs marked exported', async () => {
+      const store = new SqliteDrizzleJobStore({ databaseUrl: ':memory:' });
+      try {
+        expect(await store.count()).toBe(0);
+        await store.markExported(['https://a', 'https://b'], new Date());
+        expect(await store.count()).toBe(2);
+      } finally {
+        store.close();
+      }
+    });
+  });
+
+  describe('IRunStateStore', () => {
+    it('getLastRunAt returns null for a key that has never run', async () => {
+      const store = new SqliteDrizzleJobStore({ databaseUrl: ':memory:' });
+      try {
+        expect(await store.getLastRunAt('daily-export')).toBeNull();
+      } finally {
+        store.close();
+      }
+    });
+
+    it('setLastRunAt then getLastRunAt round-trips the timestamp', async () => {
+      const store = new SqliteDrizzleJobStore({ databaseUrl: ':memory:' });
+      try {
+        const at = new Date('2026-01-01T00:00:00.000Z');
+        await store.setLastRunAt('daily-export', at);
+        expect(await store.getLastRunAt('daily-export')).toEqual(at);
+      } finally {
+        store.close();
+      }
+    });
+
+    it('setLastRunAt overwrites the previous value for the same key', async () => {
+      const store = new SqliteDrizzleJobStore({ databaseUrl: ':memory:' });
+      try {
+        await store.setLastRunAt('daily-export', new Date('2026-01-01T00:00:00.000Z'));
+        const second = new Date('2026-02-01T00:00:00.000Z');
+        await store.setLastRunAt('daily-export', second);
+        expect(await store.getLastRunAt('daily-export')).toEqual(second);
+      } finally {
+        store.close();
+      }
+    });
+  });
 });

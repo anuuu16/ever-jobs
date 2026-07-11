@@ -5,6 +5,7 @@ import {
   IExportedJobStore,
   IJobObservationStore,
   IJobStore,
+  IRunStateStore,
   JOB_STORE_QUERY_DEFAULT_LIMIT,
   JOB_STORE_QUERY_MAX_LIMIT,
   JobStorePage,
@@ -19,7 +20,7 @@ import {
   BetterSQLite3Database,
   drizzle,
 } from 'drizzle-orm/better-sqlite3';
-import { canonicalJob, exportedJob, INITIAL_SCHEMA_SQL, sourceObservation } from '../drizzle/schema';
+import { canonicalJob, exportedJob, INITIAL_SCHEMA_SQL, runState, sourceObservation } from '../drizzle/schema';
 
 /**
  * Canonical id under which this backend registers with `StoreRegistry`.
@@ -216,12 +217,13 @@ export const STORE_SQLITE_DRIZZLE_CONFIG = 'STORE_SQLITE_DRIZZLE_CONFIG';
 })
 @Injectable()
 export class SqliteDrizzleJobStore
-  implements IJobStore, IJobObservationStore, IExportedJobStore
+  implements IJobStore, IJobObservationStore, IExportedJobStore, IRunStateStore
 {
   private readonly db: BetterSQLite3Database<{
     canonicalJob: typeof canonicalJob;
     sourceObservation: typeof sourceObservation;
     exportedJob: typeof exportedJob;
+    runState: typeof runState;
   }>;
   private readonly client: Database.Database;
 
@@ -241,7 +243,7 @@ export class SqliteDrizzleJobStore
       this.client.pragma('journal_mode = WAL');
     }
     this.db = drizzle(this.client, {
-      schema: { canonicalJob, sourceObservation, exportedJob },
+      schema: { canonicalJob, sourceObservation, exportedJob, runState },
     });
     // Bootstrap the schema — idempotent thanks to `IF NOT EXISTS`.
     // Splits the multi-statement SQL on `;\n` because better-sqlite3
@@ -356,21 +358,10 @@ export class SqliteDrizzleJobStore
     const cursor =
       typeof query.cursor === 'string' ? decodeCursor(query.cursor) : undefined;
 
-    const conds = [];
-    if (query.company) {
-      conds.push(like(canonicalJob.companyLc, `%${query.company.toLowerCase()}%`));
-    }
-    if (query.title) {
-      conds.push(like(canonicalJob.titleLc, `%${query.title.toLowerCase()}%`));
-    }
-    if (query.location) {
-      conds.push(like(canonicalJob.locationLc, `%${query.location.toLowerCase()}%`));
-    }
-    if (query.since instanceof Date) {
-      conds.push(gte(canonicalJob.mergedAt, query.since.toISOString()));
-    }
+    const conds = buildFilterConditions(query);
     if (cursor) {
-      conds.push(buildKeysetCursorPredicate(cursor));
+      const cursorPredicate = buildKeysetCursorPredicate(cursor);
+      if (cursorPredicate) conds.push(cursorPredicate);
     }
 
     const where = conds.length > 0 ? and(...conds) : undefined;
@@ -426,6 +417,17 @@ export class SqliteDrizzleJobStore
         canonicalJobId: last.canonicalJobId,
       }),
     };
+  }
+
+  async countByQuery(query: JobStoreQuery): Promise<number> {
+    const conds = buildFilterConditions(query);
+    const where = conds.length > 0 ? and(...conds) : undefined;
+    const rows = this.db
+      .select({ c: sql<number>`COUNT(*)` })
+      .from(canonicalJob)
+      .where(where)
+      .all();
+    return Number(rows[0]?.c ?? 0);
   }
 
   async delete(id: string): Promise<boolean> {
@@ -535,6 +537,40 @@ export class SqliteDrizzleJobStore
     return result.changes;
   }
 
+  async count(): Promise<number> {
+    const rows = this.db
+      .select({ c: sql<number>`COUNT(*)` })
+      .from(exportedJob)
+      .all();
+    return Number(rows[0]?.c ?? 0);
+  }
+
+  // ----------------------------------------------------------------------
+  // IRunStateStore
+  // ----------------------------------------------------------------------
+
+  async getLastRunAt(key: string): Promise<Date | null> {
+    const rows = this.db
+      .select()
+      .from(runState)
+      .where(eq(runState.key, key))
+      .limit(1)
+      .all();
+    if (rows.length === 0) return null;
+    return new Date(rows[0].lastRunAt);
+  }
+
+  async setLastRunAt(key: string, at: Date): Promise<void> {
+    this.db
+      .insert(runState)
+      .values({ key, lastRunAt: at.toISOString() })
+      .onConflictDoUpdate({
+        target: runState.key,
+        set: { lastRunAt: at.toISOString() },
+      })
+      .run();
+  }
+
   // ----------------------------------------------------------------------
   // Test / debug surface (not part of either interface contract).
   // ----------------------------------------------------------------------
@@ -615,6 +651,29 @@ function fromCanonicalJobRow(row: typeof canonicalJob.$inferSelect): CanonicalJo
       ? (JSON.parse(row.sourcesJson) as CanonicalJob['sources'])
       : [],
   };
+}
+
+/**
+ * Build the `company` / `title` / `location` / `since` filter predicates
+ * shared by `listByQuery` and `countByQuery` (cursor excluded — callers
+ * that need it append {@link buildKeysetCursorPredicate} themselves, since
+ * a total-count has no notion of "resume after this row").
+ */
+function buildFilterConditions(query: JobStoreQuery) {
+  const conds = [];
+  if (query.company) {
+    conds.push(like(canonicalJob.companyLc, `%${query.company.toLowerCase()}%`));
+  }
+  if (query.title) {
+    conds.push(like(canonicalJob.titleLc, `%${query.title.toLowerCase()}%`));
+  }
+  if (query.location) {
+    conds.push(like(canonicalJob.locationLc, `%${query.location.toLowerCase()}%`));
+  }
+  if (query.since instanceof Date) {
+    conds.push(gte(canonicalJob.mergedAt, query.since.toISOString()));
+  }
+  return conds;
 }
 
 /**

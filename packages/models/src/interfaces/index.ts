@@ -11,3 +11,4 @@ export * from './job-store-query.interface';
 export * from './job-store.interface';
 export * from './health-snapshot-store.interface';
 export * from './exported-job-store.interface';
+export * from './run-state-store.interface';

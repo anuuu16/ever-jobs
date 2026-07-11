@@ -35,6 +35,13 @@ export interface IExportedJobStore {
    * all support it.
    */
   prune(olderThan: Date): Promise<number>;
+
+  /**
+   * Total number of URLs currently marked exported (unfiltered — this
+   * tracks the whole "seen" set, not a time-boxed window). Lets the
+   * admin surface show "N exported so far" without pulling every URL.
+   */
+  count(): Promise<number>;
 }
 
 /**
@@ -59,6 +66,7 @@ export function isExportedJobStore(
   return (
     typeof c.filterUnseen === 'function' &&
     typeof c.markExported === 'function' &&
-    typeof c.prune === 'function'
+    typeof c.prune === 'function' &&
+    typeof c.count === 'function'
   );
 }

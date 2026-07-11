@@ -17,6 +17,7 @@ import {
   STORE_POSTGRES_PRISMA_DESCRIPTION,
   STORE_POSTGRES_PRISMA_ID,
   StorePostgresPrismaModule,
+  UPSERT_CHUNK_SIZE,
 } from '../src';
 
 /**
@@ -152,6 +153,86 @@ describe('PostgresPrismaJobStore — always-on contract', () => {
           imports: [StorePostgresPrismaModule],
         }).compile(),
       ).rejects.toThrow(/STORE_POSTGRES_PRISMA_CONFIG/);
+    });
+  });
+
+  describe('upsertMany row isolation', () => {
+    /**
+     * Fake client whose `canonicalJob.upsert` can be individually forced
+     * to reject for specific `canonicalJobId`s — simulates one malformed
+     * row (e.g. a scraper bug leaving `url` empty, which Postgres rejects
+     * as NOT NULL) among an otherwise-healthy batch.
+     */
+    function makeRowAwareFakeClient(failingIds: string[] = []) {
+      const client: any = {
+        canonicalJob: {
+          findMany: jest.fn().mockResolvedValue([]), // every id looks new → all "inserted"
+          upsert: jest.fn().mockImplementation(async (args: { where: { canonicalJobId: string } }) => {
+            if (failingIds.includes(args.where.canonicalJobId)) {
+              throw new Error(`Argument \`url\` is missing.`);
+            }
+            return {};
+          }),
+        },
+      };
+      return client;
+    }
+
+    function makeJobs(count: number) {
+      return Array.from({ length: count }, (_, i) => ({
+        canonicalJobId: `job-${i}`,
+        title: 'T',
+        company: 'C',
+        location: 'L',
+        url: 'u',
+        sources: [],
+        fields: {},
+        mergedAt: '2026-01-01T00:00:00.000Z',
+      }));
+    }
+
+    it('batches the existence check into UPSERT_CHUNK_SIZE-sized findMany calls', async () => {
+      const client = makeRowAwareFakeClient();
+      const store = new PostgresPrismaJobStore({ client });
+      const jobs = makeJobs(UPSERT_CHUNK_SIZE + 50); // 2 chunks: full + partial
+
+      const result = await store.upsertMany(jobs as any);
+
+      expect(client.canonicalJob.findMany).toHaveBeenCalledTimes(2);
+      expect(client.canonicalJob.upsert).toHaveBeenCalledTimes(UPSERT_CHUNK_SIZE + 50);
+      expect(result).toEqual({ inserted: UPSERT_CHUNK_SIZE + 50, updated: 0 });
+    });
+
+    it('one bad row does not discard the rest of its chunk — only that row is skipped', async () => {
+      const client = makeRowAwareFakeClient(['job-1']);
+      const store = new PostgresPrismaJobStore({ client });
+      const jobs = makeJobs(5); // all in one chunk (well under UPSERT_CHUNK_SIZE)
+
+      const result = await store.upsertMany(jobs as any);
+
+      // Every row was attempted (not aborted after the failure)...
+      expect(client.canonicalJob.upsert).toHaveBeenCalledTimes(5);
+      // ...and the 4 good ones still count as persisted.
+      expect(result).toEqual({ inserted: 4, updated: 0 });
+    });
+
+    it('a failure in one chunk does not affect other chunks', async () => {
+      // job-1 lives in chunk 0; chunk 1 is entirely healthy.
+      const client = makeRowAwareFakeClient(['job-1']);
+      const store = new PostgresPrismaJobStore({ client });
+      const jobs = makeJobs(UPSERT_CHUNK_SIZE + 10);
+
+      const result = await store.upsertMany(jobs as any);
+
+      expect(result).toEqual({ inserted: UPSERT_CHUNK_SIZE + 10 - 1, updated: 0 });
+    });
+
+    it('rejects when every row fails, rather than reporting a misleading 0/0 success', async () => {
+      const jobs = makeJobs(3);
+      const client = makeRowAwareFakeClient(jobs.map((j) => j.canonicalJobId));
+      const store = new PostgresPrismaJobStore({ client });
+
+      await expect(store.upsertMany(jobs as any)).rejects.toThrow(/3.*row/i);
     });
   });
 });
@@ -632,6 +713,35 @@ describeIfPg('PostgresPrismaJobStore — Testcontainers-backed (RUN_PG_TESTS=1)'
       expect(await store.filterUnseen(['https://old'])).toEqual(['https://old']);
       expect(await store.filterUnseen(['https://new'])).toEqual([]);
     });
+
+    it('count reflects marks written by markExported', async () => {
+      const store = new PostgresPrismaJobStore({ client: prismaClient });
+      expect(await store.count()).toBe(0);
+      await store.markExported(['https://a', 'https://b'], new Date());
+      expect(await store.count()).toBe(2);
+    });
+  });
+
+  describe('IRunStateStore', () => {
+    it('getLastRunAt returns null for a key that has never run', async () => {
+      const store = new PostgresPrismaJobStore({ client: prismaClient });
+      expect(await store.getLastRunAt('daily-export')).toBeNull();
+    });
+
+    it('setLastRunAt then getLastRunAt round-trips the timestamp', async () => {
+      const store = new PostgresPrismaJobStore({ client: prismaClient });
+      const at = new Date('2026-01-01T00:00:00.000Z');
+      await store.setLastRunAt('daily-export', at);
+      expect(await store.getLastRunAt('daily-export')).toEqual(at);
+    });
+
+    it('setLastRunAt overwrites the previous value for the same key', async () => {
+      const store = new PostgresPrismaJobStore({ client: prismaClient });
+      await store.setLastRunAt('daily-export', new Date('2026-01-01T00:00:00.000Z'));
+      const second = new Date('2026-02-01T00:00:00.000Z');
+      await store.setLastRunAt('daily-export', second);
+      expect(await store.getLastRunAt('daily-export')).toEqual(second);
+    });
   });
 });
 
@@ -684,6 +794,11 @@ function makeFakePrismaClient(): PrismaJobsClient {
       findMany: jest.fn().mockResolvedValue([]),
       createMany: jest.fn().mockResolvedValue({ count: 0 }),
       deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+      count: jest.fn().mockResolvedValue(0),
+    },
+    runState: {
+      findUnique: jest.fn().mockResolvedValue(null),
+      upsert: jest.fn().mockResolvedValue({ key: 'fake', lastRunAt: new Date('2026-01-01T00:00:00.000Z') }),
     },
     $transaction: jest.fn(async (fn) => {
       // Pass the same fake through so transactional calls hit the

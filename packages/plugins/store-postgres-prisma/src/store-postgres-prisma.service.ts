@@ -1,10 +1,11 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import {
   CanonicalJob,
   ERR_STORE_INVALID_CURSOR,
   IExportedJobStore,
   IJobObservationStore,
   IJobStore,
+  IRunStateStore,
   JOB_STORE_QUERY_DEFAULT_LIMIT,
   JOB_STORE_QUERY_MAX_LIMIT,
   JobStorePage,
@@ -171,6 +172,12 @@ interface PrismaExportedJobRow {
   exportedAt: Date;
 }
 
+/** Row shape persisted to the `run_state` table. */
+interface PrismaRunStateRow {
+  key: string;
+  lastRunAt: Date;
+}
+
 /**
  * Narrowed Prisma client surface this store relies on. The real
  * `PrismaClient` produced by `prisma generate` against
@@ -243,13 +250,33 @@ export interface PrismaJobsClient {
     deleteMany(args: {
       where?: Record<string, unknown>;
     }): Promise<{ count: number }>;
+
+    count(args?: { where?: Record<string, unknown> }): Promise<number>;
+  };
+
+  runState: {
+    findUnique(args: {
+      where: { key: string };
+    }): Promise<PrismaRunStateRow | null>;
+
+    upsert(args: {
+      where: { key: string };
+      create: PrismaRunStateRow;
+      update: { lastRunAt: Date };
+    }): Promise<PrismaRunStateRow>;
   };
 
   /**
-   * Callback-form transaction. Prisma's `$transaction(fn)` runs `fn`
-   * inside a single Postgres transaction and rolls back on throw.
+   * Callback-form transaction. Prisma's `$transaction(fn, options)` runs
+   * `fn` inside a single Postgres transaction and rolls back on throw.
+   * `options.timeout` overrides Prisma's default 5s interactive-
+   * transaction budget, for the rare transactional operation whose
+   * duration can't be bounded by chunking alone (see `putAll`).
    */
-  $transaction<T>(fn: (tx: PrismaJobsClient) => Promise<T>): Promise<T>;
+  $transaction<T>(
+    fn: (tx: PrismaJobsClient) => Promise<T>,
+    options?: { timeout?: number; maxWait?: number },
+  ): Promise<T>;
 
   /**
    * Release the underlying connection pool. Tests SHOULD await this in
@@ -306,6 +333,15 @@ export interface StorePostgresPrismaConfig {
  * silently fall back to a no-op or another backend.
  */
 export const STORE_POSTGRES_PRISMA_CONFIG = 'STORE_POSTGRES_PRISMA_CONFIG';
+
+/**
+ * Max ids per `findMany` existence-check query in `upsertMany` — bounds
+ * the `canonicalJobId IN (...)` list to a sane size for very large
+ * batches (tens of thousands of rows from a broad multi-source search).
+ * Not a transaction boundary — `upsertMany` no longer wraps upserts in a
+ * transaction at all (see its doc comment for why).
+ */
+export const UPSERT_CHUNK_SIZE = 100;
 
 // =====================================================================
 // Service
@@ -367,8 +403,9 @@ export const STORE_POSTGRES_PRISMA_CONFIG = 'STORE_POSTGRES_PRISMA_CONFIG';
 })
 @Injectable()
 export class PostgresPrismaJobStore
-  implements IJobStore, IJobObservationStore, IExportedJobStore
+  implements IJobStore, IJobObservationStore, IExportedJobStore, IRunStateStore
 {
+  private readonly logger = new Logger(PostgresPrismaJobStore.name);
   private readonly client: PrismaJobsClient;
 
   constructor(
@@ -420,42 +457,88 @@ export class PostgresPrismaJobStore
     if (jobs.length === 0) {
       return { inserted: 0, updated: 0 };
     }
-    // Single transaction — partial failure leaves no half-written cohort.
-    // We pre-check existence in one query so inserted-vs-updated counts
-    // come back without an extra round-trip per row.
-    return this.client.$transaction(async (tx) => {
-      const ids = jobs.map((j) => j.canonicalJobId);
-      const existing = await tx.canonicalJob.findMany({
-        where: { canonicalJobId: { in: ids } },
-      });
-      const existingSet = new Set(existing.map((e) => e.canonicalJobId));
 
-      let inserted = 0;
-      let updated = 0;
-      for (const job of jobs) {
-        const row = toPrismaCanonicalJobRow(job);
-        await tx.canonicalJob.upsert({
-          where: { canonicalJobId: row.canonicalJobId },
-          create: row,
-          update: {
-            title: row.title,
-            company: row.company,
-            location: row.location,
-            description: row.description,
-            url: row.url,
-            mergedAt: row.mergedAt,
-            fields: row.fields,
-            sources: row.sources,
-          },
+    // Deliberately NOT wrapped in a `$transaction` — there is no cross-row
+    // invariant to protect (each canonical job is independent, and
+    // `upsert` is already atomic per row), so a shared transaction only
+    // bought two failure modes without buying any correctness:
+    //
+    //   1. A transaction spanning thousands of sequential upserts reliably
+    //      outran Prisma's interactive-transaction timeout, killing the
+    //      ENTIRE batch (P2028 "Transaction not found") even though most
+    //      rows would have committed fine.
+    //   2. One malformed row (e.g. a scraper bug leaving `url` empty,
+    //      which Postgres rejects as NOT NULL) aborted the whole
+    //      surrounding transaction — 99 good rows lost alongside the 1
+    //      bad one.
+    //
+    // Plain per-row upserts outside a transaction fix both: nothing times
+    // out because nothing is held open, and a failing row just doesn't
+    // commit — its neighbours do. `UPSERT_CHUNK_SIZE` still bounds the
+    // `findMany` existence-check IN-list to a sane size, nothing more.
+    let inserted = 0;
+    let updated = 0;
+    let rowsFailed = 0;
+
+    for (let i = 0; i < jobs.length; i += UPSERT_CHUNK_SIZE) {
+      const chunk = jobs.slice(i, i + UPSERT_CHUNK_SIZE);
+      const ids = chunk.map((j) => j.canonicalJobId);
+
+      let existingSet: Set<string>;
+      try {
+        const existing = await this.client.canonicalJob.findMany({
+          where: { canonicalJobId: { in: ids } },
         });
-        if (existingSet.has(job.canonicalJobId)) {
-          updated++;
-        } else {
-          inserted++;
+        existingSet = new Set(existing.map((e) => e.canonicalJobId));
+      } catch (err) {
+        rowsFailed += chunk.length;
+        this.logger.warn(
+          `upsertMany: existence check for ${chunk.length}-row chunk failed, skipping it: ` +
+            `${err instanceof Error ? err.message : err}`,
+        );
+        continue;
+      }
+
+      for (const job of chunk) {
+        try {
+          const row = toPrismaCanonicalJobRow(job);
+          await this.client.canonicalJob.upsert({
+            where: { canonicalJobId: row.canonicalJobId },
+            create: row,
+            update: {
+              title: row.title,
+              company: row.company,
+              location: row.location,
+              description: row.description,
+              url: row.url,
+              mergedAt: row.mergedAt,
+              fields: row.fields,
+              sources: row.sources,
+            },
+          });
+          if (existingSet.has(job.canonicalJobId)) {
+            updated++;
+          } else {
+            inserted++;
+          }
+        } catch (err) {
+          rowsFailed++;
+          this.logger.warn(
+            `upsertMany: row ${job.canonicalJobId} ("${job.title}") failed, skipping it: ` +
+              `${err instanceof Error ? err.message : err}`,
+          );
         }
       }
-      return { inserted, updated };
-    });
+    }
+
+    // Every row failing almost certainly means the backend itself is
+    // down (not row-level bad data) — surface that as a rejection so the
+    // caller's existing best-effort handling reports `persisted: false`
+    // rather than a misleading "0 inserted, 0 updated" success.
+    if (rowsFailed === jobs.length) {
+      throw new Error(`All ${jobs.length} upsertMany row(s) failed`);
+    }
+    return { inserted, updated };
   }
 
   async getById(id: string): Promise<CanonicalJob | null> {
@@ -512,6 +595,13 @@ export class PostgresPrismaJobStore
       items,
       nextCursor: encodeCursor(probeCursor),
     };
+  }
+
+  async countByQuery(query: JobStoreQuery): Promise<number> {
+    // Same `where` builder as `listByQuery`, minus the cursor predicate —
+    // this is a total over the filter, not a page.
+    const where = buildWhereClause(query, undefined);
+    return this.client.canonicalJob.count({ where });
   }
 
   async delete(id: string): Promise<boolean> {
@@ -609,6 +699,27 @@ export class PostgresPrismaJobStore
       where: { exportedAt: { lt: olderThan } },
     });
     return result.count;
+  }
+
+  async count(): Promise<number> {
+    return this.client.exportedJob.count();
+  }
+
+  // ----------------------------------------------------------------------
+  // IRunStateStore
+  // ----------------------------------------------------------------------
+
+  async getLastRunAt(key: string): Promise<Date | null> {
+    const row = await this.client.runState.findUnique({ where: { key } });
+    return row === null ? null : row.lastRunAt;
+  }
+
+  async setLastRunAt(key: string, at: Date): Promise<void> {
+    await this.client.runState.upsert({
+      where: { key },
+      create: { key, lastRunAt: at },
+      update: { lastRunAt: at },
+    });
   }
 
   // ----------------------------------------------------------------------

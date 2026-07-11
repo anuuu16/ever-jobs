@@ -93,6 +93,9 @@ describe('Spec 004 / T01 — store interfaces & constants', () => {
       ): Promise<JobStorePage<CanonicalJob>> {
         return { items: [] };
       }
+      async countByQuery(_query: JobStoreQuery): Promise<number> {
+        return 0;
+      }
       async delete(_id: string): Promise<boolean> {
         return false;
       }
@@ -108,6 +111,7 @@ describe('Spec 004 / T01 — store interfaces & constants', () => {
       await expect(store.getById('x')).resolves.toBeNull();
       await expect(store.findByCanonicalId('x')).resolves.toBeNull();
       await expect(store.listByQuery({})).resolves.toEqual({ items: [] });
+      await expect(store.countByQuery({})).resolves.toBe(0);
       await expect(store.delete('x')).resolves.toBe(false);
     });
 

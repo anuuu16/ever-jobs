@@ -8,6 +8,7 @@ export {
   STORE_POSTGRES_PRISMA_ID,
   STORE_POSTGRES_PRISMA_DESCRIPTION,
   STORE_POSTGRES_PRISMA_CONFIG,
+  UPSERT_CHUNK_SIZE,
 } from './store-postgres-prisma.service';
 export type {
   PrismaJobsClient,

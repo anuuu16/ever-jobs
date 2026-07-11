@@ -10,6 +10,7 @@ import {
   JOB_STORE_TOKEN,
   JobPostDto,
   ScraperInputDto,
+  Site,
 } from '@ever-jobs/models';
 import { JobsService } from './jobs.service';
 
@@ -97,6 +98,20 @@ export interface AggregateResult {
  */
 export const ERR_STORE_PERSIST_FAILED = 'ERR_STORE_PERSIST_FAILED';
 
+/** Per-site breakdown entry returned by {@link JobsAggregator.aggregateIncremental}. */
+export interface PerSiteAggregateResult {
+  readonly site: Site;
+  readonly rawCount: number;
+  readonly outputCount: number;
+  readonly persisted?: boolean;
+  readonly persistError?: { readonly code: string; readonly message: string };
+}
+
+/** Result of {@link JobsAggregator.aggregateIncremental} — `AggregateResult` plus the per-site trail. */
+export interface AggregateIncrementalResult extends AggregateResult {
+  readonly perSite: ReadonlyArray<PerSiteAggregateResult>;
+}
+
 /**
  * Thin orchestration layer between {@link JobsService} (fan-out), the
  * dedup engine (Spec 003 / Phase 5), and the persistent store
@@ -149,6 +164,85 @@ export class JobsAggregator {
   ): Promise<AggregateResult> {
     const rawJobs = await this.jobsService.searchJobs(input);
     return this.aggregateRaw(rawJobs, options);
+  }
+
+  /**
+   * Same pipeline as {@link aggregate}, but dedup+persist happens PER
+   * SITE, as soon as that site's scrape settles, instead of waiting for
+   * every selected site to finish before doing one combined dedup+persist.
+   *
+   * Trade-off (deliberately chosen over `aggregate`'s cross-site dedup):
+   * a job posted on two different sites (e.g. LinkedIn AND Indeed) is no
+   * longer merged into one canonical record with two source observations
+   * — each site's batch is deduped only against itself, so the same
+   * posting seen on N sites becomes N separate canonical rows. In
+   * exchange, a broad multi-site run persists incrementally (each site's
+   * results land in the store as soon as that site finishes) rather than
+   * making the caller wait for the single slowest site before ANY row is
+   * saved — the pain point this method exists to fix.
+   *
+   * Reuses {@link aggregateRaw} unchanged, once per site — no dedup/
+   * persist logic is duplicated here.
+   */
+  async aggregateIncremental(
+    input: ScraperInputDto,
+    options: AggregateOptions = {},
+  ): Promise<AggregateIncrementalResult> {
+    const jobs: JobPostDto[] = [];
+    const perSite: PerSiteAggregateResult[] = [];
+    let rawCount = 0;
+    let deduped = false;
+    let anyPersisted = false;
+    let insertedTotal = 0;
+    let updatedTotal = 0;
+    let sitesFailedToPersist = 0;
+
+    await this.jobsService.searchJobsIncremental(input, async (site, siteJobs) => {
+      const result = await this.aggregateRaw(siteJobs, options);
+
+      rawCount += result.rawCount;
+      deduped = deduped || result.deduped;
+      jobs.push(...result.jobs);
+      if (result.persisted) {
+        anyPersisted = true;
+        insertedTotal += result.persistCounts?.inserted ?? 0;
+        updatedTotal += result.persistCounts?.updated ?? 0;
+      }
+      if (result.persistError) sitesFailedToPersist++;
+
+      this.logger.log(
+        `[incremental] ${site}: ${result.rawCount} raw → ${result.outputCount} deduped` +
+          (result.persisted
+            ? `, persisted (+${result.persistCounts?.inserted ?? 0}/${result.persistCounts?.updated ?? 0})`
+            : result.persistError
+              ? `, persist FAILED: ${result.persistError.message}`
+              : ''),
+      );
+
+      perSite.push({
+        site,
+        rawCount: result.rawCount,
+        outputCount: result.outputCount,
+        persisted: result.persisted,
+        persistError: result.persistError,
+      });
+    });
+
+    return {
+      jobs,
+      rawCount,
+      outputCount: jobs.length,
+      deduped,
+      persisted: anyPersisted,
+      persistCounts: anyPersisted ? { inserted: insertedTotal, updated: updatedTotal } : undefined,
+      persistError: sitesFailedToPersist > 0
+        ? {
+            code: ERR_STORE_PERSIST_FAILED,
+            message: `${sitesFailedToPersist} of ${perSite.length} site(s) failed to persist — see perSite for details`,
+          }
+        : undefined,
+      perSite,
+    };
   }
 
   /**

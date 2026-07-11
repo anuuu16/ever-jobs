@@ -129,7 +129,7 @@ export class DedupHybridService implements IDedupEngine {
       fields['title'] = provenance(titleVal, headSite, headSourceId, observedAt);
       fields['company'] = provenance(companyVal, headSite, headSourceId, observedAt);
       fields['location'] = provenance(locationVal, headSite, headSourceId, observedAt);
-      fields['url'] = provenance(head.raw.jobUrl, headSite, headSourceId, observedAt);
+      fields['url'] = provenance(head.raw.jobUrl ?? '', headSite, headSourceId, observedAt);
       if (head.raw.description) {
         fields['description'] = provenance(head.raw.description, headSite, headSourceId, observedAt);
       }
@@ -140,7 +140,13 @@ export class DedupHybridService implements IDedupEngine {
         company: companyVal,
         location: locationVal,
         description: head.raw.description ?? undefined,
-        url: head.raw.jobUrl,
+        // `jobUrl` is typed as required on JobPostDto, but that's a
+        // compile-time assertion, not a runtime guarantee — a scraper bug
+        // can still produce a job without one. Falling back to '' (same
+        // pattern as `location` above) means one malformed posting loses
+        // its deep link, not its entire persistence batch (the `url`
+        // column is NOT NULL in both SQL backends).
+        url: head.raw.jobUrl ?? '',
         sources: observations,
         fields,
         mergedAt,

@@ -34,6 +34,21 @@ describe('DedupHybridService', () => {
     expect(out.canonical[0].sources).toHaveLength(2);
   });
 
+  it('falls back to an empty string url when a scraper produces a job with none', async () => {
+    // `jobUrl` is typed `!: string` on JobPostDto but that's a compile-time
+    // assertion only — a scraper bug can still leave it undefined at
+    // runtime. Postgres/sqlite both declare `url` NOT NULL, so canonical
+    // records MUST NOT carry `url: undefined` through to the store layer
+    // (that crashed persistence for an entire batch — see
+    // apps/api/src/jobs/jobs.aggregator.ts's persistError handling).
+    const broken = job({ id: '1', jobUrl: undefined as unknown as string });
+    const out = await service.dedup([broken]);
+
+    expect(out.errors).toHaveLength(0);
+    expect(out.canonical[0].url).toBe('');
+    expect(out.canonical[0].fields['url'].value).toBe('');
+  });
+
   it('carries rawResponse through into the source observation when present', async () => {
     const a = job({ id: '1', site: Site.GREENHOUSE, rawResponse: '<html>raw a</html>' });
     const b = job({ id: '2', site: Site.LINKEDIN });

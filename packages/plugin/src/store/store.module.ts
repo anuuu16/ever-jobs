@@ -7,12 +7,15 @@ import {
   IHealthSnapshotStore,
   IJobObservationStore,
   IJobStore,
+  IRunStateStore,
   IStoreMetadata,
   JOB_OBSERVATION_STORE_TOKEN,
   JOB_STORE_TOKEN,
+  RUN_STATE_STORE_TOKEN,
   STORE_PLUGIN_METADATA_KEY,
   isExportedJobStore,
   isHealthSnapshotStore,
+  isRunStateStore,
 } from '@ever-jobs/models';
 import { StoreRegistry } from './store-registry.service';
 
@@ -85,6 +88,17 @@ export interface StoreModuleForActiveOptions {
    * unbound.
    */
   readonly bindExportedJobStore?: boolean;
+
+  /**
+   * Bind the chosen backend to {@link RUN_STATE_STORE_TOKEN} as well,
+   * IF the active instance satisfies {@link isRunStateStore}.
+   *
+   * Defaults to `true`. Mirrors `bindExportedJobStore`'s optional-
+   * capability pattern: `DailyExportCron` `@Optional()`-injects this
+   * token to size its dynamic lookback window, falling back to a
+   * static first-run window when unbound.
+   */
+  readonly bindRunStateStore?: boolean;
 
   /**
    * Extra providers registered alongside the backend classes — the
@@ -219,6 +233,7 @@ export class StoreModule {
     const bindObservationStore = options.bindObservationStore !== false;
     const bindHealthSnapshotStore = options.bindHealthSnapshotStore !== false;
     const bindExportedJobStore = options.bindExportedJobStore !== false;
+    const bindRunStateStore = options.bindRunStateStore !== false;
 
     // Pre-validate `backends` before NestJS even constructs them — a
     // missing `@StorePlugin()` decorator is a programmer error that
@@ -348,6 +363,22 @@ export class StoreModule {
       });
     }
 
+    if (bindRunStateStore) {
+      /**
+       * Factory provider for {@link RUN_STATE_STORE_TOKEN}. Same
+       * optional-capability shape as `EXPORTED_JOB_STORE_TOKEN` above:
+       * runtime type-guard via {@link isRunStateStore}, `null` for
+       * backends that don't implement it so `@Optional()` consumers see
+       * a clean bypass rather than a DI error.
+       */
+      providers.push({
+        provide: RUN_STATE_STORE_TOKEN,
+        useFactory: (active: IJobStore): IRunStateStore | null =>
+          isRunStateStore(active) ? active : null,
+        inject: [JOB_STORE_TOKEN],
+      });
+    }
+
     const exports_: Array<string | symbol | Type<unknown>> = [
       JOB_STORE_TOKEN,
       StoreRegistry,
@@ -360,6 +391,9 @@ export class StoreModule {
     }
     if (bindExportedJobStore) {
       exports_.push(EXPORTED_JOB_STORE_TOKEN);
+    }
+    if (bindRunStateStore) {
+      exports_.push(RUN_STATE_STORE_TOKEN);
     }
 
     return {

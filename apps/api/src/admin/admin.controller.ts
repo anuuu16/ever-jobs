@@ -26,8 +26,9 @@ import {
   SourceObservation,
 } from '@ever-jobs/models';
 import { PluginRegistry } from '@ever-jobs/plugin';
-import { JobsAggregator } from '../jobs/jobs.aggregator';
+import { JobsAggregator, PerSiteAggregateResult } from '../jobs/jobs.aggregator';
 import { ADMIN_UI_HTML } from './admin-ui.html';
+import { ATS_COMPANY_DIRECTORY, AtsCompanyEntry } from './ats-company-directory';
 
 interface RunExtractionBody {
   readonly sites?: string[];
@@ -42,6 +43,13 @@ interface RunExtractionResult {
   readonly rawCount: number;
   readonly outputCount: number;
   readonly sites: string[];
+  /**
+   * Per-site breakdown, in settle order (not alphabetical) — each site's
+   * results are dedup'd against itself only and persisted as soon as
+   * that site finishes scraping (see `JobsAggregator.aggregateIncremental`),
+   * rather than waiting for every selected site before persisting anything.
+   */
+  readonly perSite: ReadonlyArray<PerSiteAggregateResult>;
 }
 
 interface AdminJobListItem extends CanonicalJob {
@@ -68,6 +76,30 @@ interface SiteCatalogCategory {
 interface SiteCatalogResult {
   readonly categories: SiteCatalogCategory[];
   readonly total: number;
+}
+
+interface AtsSummaryEntry {
+  readonly site: string;
+  readonly count: number;
+}
+
+interface RunCompaniesBody {
+  readonly site?: string;
+  readonly companySlugs?: string[];
+  readonly searchTerm?: string;
+  readonly location?: string;
+  readonly resultsWanted?: number;
+  readonly isRemote?: boolean;
+  readonly captureRawResponse?: boolean;
+}
+
+interface RunCompaniesResult {
+  readonly site: string;
+  readonly companiesRequested: number;
+  readonly companiesSucceeded: number;
+  readonly companiesFailed: number;
+  readonly rawCount: number;
+  readonly outputCount: number;
 }
 
 /** Display order for categories — most generally-useful first. */
@@ -132,10 +164,17 @@ export class AdminController {
     @Query('since') since?: string,
     @Query('cursor') cursor?: string,
     @Query('limit') limitRaw?: string,
-  ): Promise<{ items: AdminJobListItem[]; nextCursor?: string }> {
+  ): Promise<{
+    items: AdminJobListItem[];
+    nextCursor?: string;
+    /** Total rows matching the current filters (all pages, not just this one). */
+    total: number;
+    /** Total URLs ever marked exported, unfiltered — `null` when no `IExportedJobStore` is bound. */
+    totalExported: number | null;
+  }> {
     this.assertEnabled();
     if (!this.jobStore) {
-      return { items: [] };
+      return { items: [], total: 0, totalExported: null };
     }
 
     const query: JobStoreQuery = {
@@ -150,9 +189,16 @@ export class AdminController {
       limit: limitRaw ? Number(limitRaw) || undefined : undefined,
     };
 
-    const page = await this.jobStore.listByQuery(query);
+    // Fanned out concurrently — `total` (filtered count) and
+    // `totalExported` (global exported-mark count) are independent reads
+    // that don't need the page of items to resolve first.
+    const [page, total, totalExported] = await Promise.all([
+      this.jobStore.listByQuery(query),
+      this.jobStore.countByQuery({ ...query, cursor: undefined, limit: undefined }),
+      this.exportedJobStore ? this.exportedJobStore.count() : Promise.resolve(null),
+    ]);
     const items = await this.withExportedStatus(page.items);
-    return { items, nextCursor: page.nextCursor };
+    return { items, nextCursor: page.nextCursor, total, totalExported };
   }
 
   @Get('api/admin/sites')
@@ -180,6 +226,83 @@ export class AdminController {
     }));
 
     return { categories, total: this.registry.size };
+  }
+
+  @Get('api/admin/ats-companies')
+  atsCompanies(@Query('site') site?: string): AtsSummaryEntry[] | { site: string; companies: AtsCompanyEntry[] } {
+    this.assertEnabled();
+    if (site) {
+      return { site, companies: ATS_COMPANY_DIRECTORY[site] ?? [] };
+    }
+    return Object.entries(ATS_COMPANY_DIRECTORY)
+      .map(([s, companies]) => ({ site: s, count: companies.length }))
+      .sort((a, b) => b.count - a.count || a.site.localeCompare(b.site));
+  }
+
+  @Post('api/admin/jobs/run-companies')
+  async runCompanies(@Body() body: RunCompaniesBody = {}): Promise<RunCompaniesResult> {
+    this.assertEnabled();
+    if (!this.aggregator) {
+      throw new NotFoundException('No JobsAggregator bound');
+    }
+
+    const validSites = new Set(Object.values(Site) as string[]);
+    const site = body.site && validSites.has(body.site) ? (body.site as Site) : undefined;
+    if (!site) {
+      throw new NotFoundException(`Unknown or missing "site" (must be a Site enum id)`);
+    }
+
+    // De-dupe — the caller may combine directory picks with manually-typed
+    // slugs that happen to overlap.
+    const companySlugs = Array.from(new Set((body.companySlugs ?? []).map((s) => s.trim()).filter(Boolean)));
+
+    const resultsWanted = body.resultsWanted && body.resultsWanted > 0
+      ? Math.min(body.resultsWanted, 100)
+      : 20;
+
+    // One aggregate() call per company, fanned out concurrently — mirrors
+    // JobsService's own Promise.allSettled convention so one company's
+    // failure (dead slug, site down) never aborts the rest of the batch.
+    // `resultsWanted` applies PER company, not split across the batch —
+    // "10" means 10 jobs from each selected company.
+    const settled = await Promise.allSettled(
+      companySlugs.map((slug) =>
+        this.aggregator!.aggregate(
+          new ScraperInputDto({
+            siteType: [site],
+            companySlug: slug,
+            searchTerm: body.searchTerm || undefined,
+            location: body.location || undefined,
+            isRemote: body.isRemote ?? false,
+            resultsWanted,
+            captureRawResponse: body.captureRawResponse ?? false,
+          }),
+        ),
+      ),
+    );
+
+    let rawCount = 0;
+    let outputCount = 0;
+    let companiesSucceeded = 0;
+    let companiesFailed = 0;
+    for (const result of settled) {
+      if (result.status === 'fulfilled') {
+        companiesSucceeded++;
+        rawCount += result.value.rawCount;
+        outputCount += result.value.outputCount;
+      } else {
+        companiesFailed++;
+      }
+    }
+
+    return {
+      site,
+      companiesRequested: companySlugs.length,
+      companiesSucceeded,
+      companiesFailed,
+      rawCount,
+      outputCount,
+    };
   }
 
   @Post('api/admin/jobs/run')
@@ -210,10 +333,19 @@ export class AdminController {
       captureRawResponse: body.captureRawResponse ?? false,
     });
 
-    // persist defaults to true — results become immediately browsable
-    // in the table above.
-    const result = await this.aggregator.aggregate(input);
-    return { rawCount: result.rawCount, outputCount: result.outputCount, sites };
+    // Incremental, not `aggregate()` — for a broad multi-site run, each
+    // site's results are dedup'd (against itself only) and persisted as
+    // soon as that site finishes, rather than making the caller wait for
+    // the single slowest site before anything lands in the store. See
+    // JobsAggregator.aggregateIncremental's doc comment for the
+    // cross-site-dedup trade-off this makes.
+    const result = await this.aggregator.aggregateIncremental(input);
+    return {
+      rawCount: result.rawCount,
+      outputCount: result.outputCount,
+      sites,
+      perSite: result.perSite,
+    };
   }
 
   @Get('api/admin/jobs/:id')

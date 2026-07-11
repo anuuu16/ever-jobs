@@ -122,6 +122,18 @@ export const exportedJob = sqliteTable('exported_job', {
 });
 
 /**
+ * `run_state` — one row per named scheduled job (e.g. `'daily-export'`),
+ * tracking when it last completed successfully. Backs `IRunStateStore`
+ * so a cron can size its next lookback window from elapsed time instead
+ * of a static config value. `key` is free-form so future crons reuse
+ * this table rather than each inventing their own watermark column.
+ */
+export const runState = sqliteTable('run_state', {
+  key: text('key').primaryKey().notNull(),
+  lastRunAt: text('last_run_at').notNull(),
+});
+
+/**
  * Initial schema bootstrap statement bundled with the package so a fresh
  * `:memory:` database (used by tests) can be spun up without invoking
  * `drizzle-kit migrate`. Production deployments still go through the
@@ -172,5 +184,9 @@ export const INITIAL_SCHEMA_SQL = sql`
   CREATE TABLE IF NOT EXISTS exported_job (
     job_url TEXT PRIMARY KEY NOT NULL,
     exported_at TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS run_state (
+    key TEXT PRIMARY KEY NOT NULL,
+    last_run_at TEXT NOT NULL
   );
 `;

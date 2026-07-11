@@ -229,6 +229,51 @@ describe('store-memory plugin (Spec 004 / T06)', () => {
   });
 
   // ----------------------------------------------------------------------
+  // IExportedJobStore.count
+  // ----------------------------------------------------------------------
+
+  describe('IExportedJobStore.count', () => {
+    it('reflects the number of URLs marked exported', async () => {
+      const store = new InMemoryJobStore();
+      expect(await store.count()).toBe(0);
+      await store.markExported(['https://a', 'https://b'], new Date());
+      expect(await store.count()).toBe(2);
+    });
+  });
+
+  describe('IRunStateStore', () => {
+    it('getLastRunAt returns null for a key that has never run', async () => {
+      const store = new InMemoryJobStore();
+      expect(await store.getLastRunAt('daily-export')).toBeNull();
+    });
+
+    it('setLastRunAt then getLastRunAt round-trips the timestamp', async () => {
+      const store = new InMemoryJobStore();
+      const at = new Date('2026-01-01T00:00:00.000Z');
+      await store.setLastRunAt('daily-export', at);
+      expect(await store.getLastRunAt('daily-export')).toEqual(at);
+    });
+
+    it('setLastRunAt overwrites the previous value for the same key', async () => {
+      const store = new InMemoryJobStore();
+      await store.setLastRunAt('daily-export', new Date('2026-01-01T00:00:00.000Z'));
+      const second = new Date('2026-02-01T00:00:00.000Z');
+      await store.setLastRunAt('daily-export', second);
+      expect(await store.getLastRunAt('daily-export')).toEqual(second);
+    });
+
+    it('tracks distinct keys independently', async () => {
+      const store = new InMemoryJobStore();
+      const a = new Date('2026-01-01T00:00:00.000Z');
+      const b = new Date('2026-02-01T00:00:00.000Z');
+      await store.setLastRunAt('daily-export', a);
+      await store.setLastRunAt('health-snapshot', b);
+      expect(await store.getLastRunAt('daily-export')).toEqual(a);
+      expect(await store.getLastRunAt('health-snapshot')).toEqual(b);
+    });
+  });
+
+  // ----------------------------------------------------------------------
   // Spec 005 / T09 — IHealthSnapshotStore co-resident binding
   // ----------------------------------------------------------------------
 

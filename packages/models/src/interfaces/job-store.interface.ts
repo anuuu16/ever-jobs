@@ -73,6 +73,15 @@ export interface IJobStore {
   listByQuery(query: JobStoreQuery): Promise<JobStorePage<CanonicalJob>>;
 
   /**
+   * Total rows matching `query`, ignoring `cursor` and `limit` (this is
+   * a count, not a page). Mirrors {@link IJobStore.listByQuery}'s filter
+   * semantics exactly — same `company` / `title` / `location` / `since`
+   * predicates — so callers can show "N total" alongside a paginated
+   * table without walking every page to sum `items.length`.
+   */
+  countByQuery(query: JobStoreQuery): Promise<number>;
+
+  /**
    * Remove a canonical job and any directly-attached source observations.
    *
    * Returns `true` if a row was deleted, `false` if the id was unknown.

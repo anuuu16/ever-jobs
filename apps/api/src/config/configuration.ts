@@ -111,9 +111,24 @@ export default () => {
       location: process.env.DAILY_EXPORT_LOCATION || undefined,
       isRemote: parseBool(process.env.DAILY_EXPORT_IS_REMOTE, false),
       resultsWanted: parseInt(process.env.DAILY_EXPORT_RESULTS_WANTED, 100),
+      // Explicit override — when set, wins outright over the dynamic
+      // watermark-based lookback computed below (`computeDynamicHoursOld`
+      // in daily-export.cron.ts). Leave unset to let the cron size its
+      // own window from elapsed-time-since-last-run.
       hoursOld: process.env.DAILY_EXPORT_HOURS_OLD
         ? parseInt(process.env.DAILY_EXPORT_HOURS_OLD, 24)
         : undefined,
+      // Window used when there's no persisted watermark yet (first run
+      // ever, or `IRunStateStore` unbound) — default 7 days.
+      firstRunLookbackHours: parseInt(process.env.DAILY_EXPORT_FIRST_RUN_LOOKBACK_HOURS, 168),
+      // Safety cap on the computed window (first-run and gap-catchup
+      // alike) — default 30 days, so a long-dead cron or an operator
+      // misconfiguring the first-run value can't trigger a huge fetch.
+      maxLookbackHours: parseInt(process.env.DAILY_EXPORT_MAX_LOOKBACK_HOURS, 720),
+      // Small overlap added on top of elapsed-since-last-run so jobs
+      // posted right at a tick boundary aren't missed; true duplicates
+      // are already absorbed by IExportedJobStore dedup.
+      lookbackOverlapMinutes: parseInt(process.env.DAILY_EXPORT_LOOKBACK_OVERLAP_MINUTES, 15),
       retentionDays: parseInt(process.env.DAILY_EXPORT_RETENTION_DAYS, 30),
       // Push target — your platform's ingest endpoint. When unset, the
       // cron falls back to writing a local file instead.

@@ -86,6 +86,9 @@ describe('StoreModule.forActive (Spec 004 / T04)', () => {
     listByQuery(_q: JobStoreQuery): Promise<JobStorePage<CanonicalJob>> {
       return Promise.resolve({ items: [] });
     }
+    countByQuery(_q: JobStoreQuery): Promise<number> {
+      return Promise.resolve(0);
+    }
     delete(): Promise<boolean> {
       return Promise.resolve(false);
     }
@@ -100,6 +103,12 @@ describe('StoreModule.forActive (Spec 004 / T04)', () => {
     }
     deleteByCanonicalId(): Promise<number> {
       return Promise.resolve(0);
+    }
+    getLastRunAt(): Promise<Date | null> {
+      return Promise.resolve(null);
+    }
+    setLastRunAt(): Promise<void> {
+      return Promise.resolve();
     }
   }
 

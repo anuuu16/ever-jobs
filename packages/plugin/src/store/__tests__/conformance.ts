@@ -58,6 +58,7 @@ export type ConformanceBackendFactory = () => ConformanceBackend;
  *  13. `listByQuery` filters by `location`                    — FR-7
  *  14. `listByQuery` filters by `since` (Date lower bound)    — FR-7
  *  15. `listByQuery` honours combined filters                 — FR-7
+ *  15b. `countByQuery` agrees with `listByQuery` on filters, ignores `limit`
  *  16. `listByQuery` clamps `limit` to MAX                    — FR-7 / NFR-3
  *  17. `listByQuery` defaults `limit` when undefined          — FR-7
  *  18. `listByQuery` cursor pagination — full set, no dupes   — FR-7
@@ -322,6 +323,46 @@ export function runStoreConformance(
           since: new Date('2026-02-01T00:00:00.000Z'),
         });
         expect(page.items.map((j) => j.canonicalJobId)).toEqual(['c']);
+      });
+    });
+
+    // ------------------------------------------------------------------
+    // 4b. countByQuery — same filter semantics as listByQuery, minus
+    // cursor/limit (a total, not a page).
+    // ------------------------------------------------------------------
+
+    describe('countByQuery', () => {
+      beforeEach(async () => {
+        // Same 5-row cohort as the `listByQuery filters` block above —
+        // countByQuery MUST agree with listByQuery on what "matches".
+        await store.upsertMany([
+          makeJob({ canonicalJobId: 'a', company: 'Acme Corp', title: 'Software Engineer', location: 'Remote', mergedAt: '2026-01-01T00:00:00.000Z' }),
+          makeJob({ canonicalJobId: 'b', company: 'Beta LLC', title: 'Senior Software Engineer', location: 'New York', mergedAt: '2026-02-01T00:00:00.000Z' }),
+          makeJob({ canonicalJobId: 'c', company: 'Acme Corp', title: 'Data Scientist', location: 'Berlin', mergedAt: '2026-03-01T00:00:00.000Z' }),
+          makeJob({ canonicalJobId: 'd', company: 'Gamma Inc', title: 'Product Manager', location: 'Remote', mergedAt: '2026-04-01T00:00:00.000Z' }),
+          makeJob({ canonicalJobId: 'e', company: 'Delta Co', title: 'Engineer', location: 'San Francisco', mergedAt: '2026-05-01T00:00:00.000Z' }),
+        ]);
+      });
+
+      it('empty query counts every row', async () => {
+        await expect(store.countByQuery({})).resolves.toBe(5);
+      });
+
+      it('counts a company filter match', async () => {
+        await expect(store.countByQuery({ company: 'acme' })).resolves.toBe(2);
+      });
+
+      it('counts a combined filter match, agreeing with listByQuery', async () => {
+        const query = { company: 'acme', since: new Date('2026-02-01T00:00:00.000Z') };
+        const [count, page] = await Promise.all([
+          store.countByQuery(query),
+          store.listByQuery(query),
+        ]);
+        expect(count).toBe(page.items.length);
+      });
+
+      it('ignores limit — returns the full match count, not a page size', async () => {
+        await expect(store.countByQuery({ limit: 1 })).resolves.toBe(5);
       });
     });
 

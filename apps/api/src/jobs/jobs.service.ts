@@ -60,6 +60,88 @@ export class JobsService implements OnModuleInit {
    * regardless of `companySlug`.
    */
   async searchJobs(input: ScraperInputDto): Promise<JobPostDto[]> {
+    const selectedScrapers = this.resolveScrapers(input);
+    if (selectedScrapers.length === 0) {
+      this.logger.warn('No valid scrapers selected');
+      return [];
+    }
+
+    this.logger.log(`Running ${selectedScrapers.length} scrapers concurrently: ${selectedScrapers.map((s) => s.site).join(', ')}`);
+
+    // Run all scrapers concurrently using Promise.allSettled
+    const results = await Promise.allSettled(
+      selectedScrapers.map(({ site, scraper }) => this.runOneSite(site, scraper, input)),
+    );
+
+    // Aggregate results from fulfilled searches
+    const allJobs: JobPostDto[] = [];
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        allJobs.push(...result.value);
+      }
+    }
+
+    // Sort by site name then by date (most recent first)
+    allJobs.sort((a, b) => {
+      const siteCompare = (a.site ?? '').localeCompare(b.site ?? '');
+      if (siteCompare !== 0) return siteCompare;
+
+      const dateA = a.datePosted ? new Date(a.datePosted as string).getTime() : 0;
+      const dateB = b.datePosted ? new Date(b.datePosted as string).getTime() : 0;
+      return dateB - dateA;
+    });
+
+    this.logger.log(`Total aggregated jobs: ${allJobs.length}`);
+    return allJobs;
+  }
+
+  /**
+   * Same site-resolution, retry policy, circuit-breaker, and salary
+   * post-processing as {@link searchJobs} — but invokes `onSiteResult` as
+   * soon as EACH site's scrape settles, instead of making the caller wait
+   * for every site (via `Promise.allSettled`) before seeing anything.
+   * A site whose scrape rejects is logged (inside `runOneSite`) and
+   * skipped — `onSiteResult` is simply never called for it, matching
+   * `searchJobs`'s existing best-effort semantics.
+   *
+   * Used by `JobsAggregator.aggregateIncremental` so a broad multi-site
+   * run can dedup+persist each site's results as soon as that site
+   * finishes, rather than one atomic dedup+persist at the very end of
+   * the slowest site.
+   */
+  async searchJobsIncremental(
+    input: ScraperInputDto,
+    onSiteResult: (site: Site, jobs: JobPostDto[]) => Promise<void> | void,
+  ): Promise<void> {
+    const selectedScrapers = this.resolveScrapers(input);
+    if (selectedScrapers.length === 0) {
+      this.logger.warn('No valid scrapers selected');
+      return;
+    }
+
+    this.logger.log(
+      `Running ${selectedScrapers.length} scrapers concurrently (incremental): ${selectedScrapers.map((s) => s.site).join(', ')}`,
+    );
+
+    await Promise.allSettled(
+      selectedScrapers.map(async ({ site, scraper }) => {
+        const jobs = await this.runOneSite(site, scraper, input);
+        await onSiteResult(site, jobs);
+      }),
+    );
+  }
+
+  /**
+   * Resolve which registered scrapers to run for `input`.
+   *
+   * Routing rules (when no explicit siteType is provided):
+   * - If `companySlug` provided → only ATS scrapers run (they need a slug)
+   * - Otherwise → search + company scrapers run (ATS scrapers skipped)
+   *
+   * When `siteType` is explicitly provided, the filter is always respected
+   * regardless of `companySlug`.
+   */
+  private resolveScrapers(input: ScraperInputDto): { site: Site; scraper: IScraper }[] {
     const explicitSites = input.siteType;
     const atsSites = new Set<Site>(this.registry.listAtsSites());
     let sites: Site[];
@@ -78,7 +160,6 @@ export class JobsService implements OnModuleInit {
     }
 
     const selectedScrapers: { site: Site; scraper: IScraper }[] = [];
-
     for (const site of sites) {
       const scraper = this.registry.getScraper(site);
       if (scraper) {
@@ -87,94 +168,72 @@ export class JobsService implements OnModuleInit {
         this.logger.warn(`Unknown site: ${site}`);
       }
     }
+    return selectedScrapers;
+  }
 
-    if (selectedScrapers.length === 0) {
-      this.logger.warn('No valid scrapers selected');
-      return [];
-    }
+  /**
+   * Run a single site's scrape: resolves its per-source retry policy,
+   * wraps the dispatch in the circuit breaker (when bound), tags each
+   * job with `site`, and applies salary post-processing. Throws on
+   * failure (including circuit-open short-circuits) — callers decide
+   * how to handle that via `Promise.allSettled`.
+   */
+  private async runOneSite(
+    site: Site,
+    scraper: IScraper,
+    input: ScraperInputDto,
+  ): Promise<JobPostDto[]> {
+    // Resolve retry policy for this source
+    const globalRetry = this.configService.get('retry');
+    const perSourceRetry = globalRetry.perSource?.[site] || {};
 
-    this.logger.log(`Running ${selectedScrapers.length} scrapers concurrently: ${selectedScrapers.map((s) => s.site).join(', ')}`);
-
-    // Run all scrapers concurrently using Promise.allSettled
-    const results = await Promise.allSettled(
-      selectedScrapers.map(async ({ site, scraper }) => {
-        // Resolve retry policy for this source
-        const globalRetry = this.configService.get('retry');
-        const perSourceRetry = globalRetry.perSource?.[site] || {};
-        
-        const scraperInput = new ScraperInputDto({
-          ...input,
-          retries: input.retries ?? perSourceRetry.retries ?? globalRetry.defaultRetries,
-          retryDelay: input.retryDelay ?? perSourceRetry.delayMs ?? globalRetry.defaultDelayMs,
-          retryBackoff: input.retryBackoff ?? perSourceRetry.backoff ?? globalRetry.defaultBackoff,
-          retryMaxDelay: input.retryMaxDelay ?? perSourceRetry.maxDelayMs ?? 30000,
-        });
-
-        this.logger.log(`Starting search for ${site} (retries=${scraperInput.retries}, backoff=${scraperInput.retryBackoff})`);
-        const scraperStop = this.metrics.scraperDuration.startTimer({ site });
-        try {
-          // Spec 005 / T04 — wrap the per-source dispatch in the circuit
-          // breaker when bound. The interceptor short-circuits with
-          // `ERR_SOURCE_CIRCUIT_OPEN` once the breaker has tripped, which
-          // we surface as a `circuit_open` metric status (not `error`) so
-          // operators can distinguish "source down" from "we stopped
-          // calling source" on the dashboard.
-          const response = this.circuitBreaker
-            ? await this.circuitBreaker.wrap(site, () => scraper.scrape(scraperInput))
-            : await scraper.scrape(scraperInput);
-          scraperStop();
-          this.metrics.scraperRequestsTotal.inc({ site, status: 'success' });
-          // Tag each job with the site it came from
-          for (const job of response.jobs) {
-            job.site = site;
-          }
-          this.logger.log(`${site}: found ${response.jobs.length} jobs`);
-          return response;
-        } catch (err: any) {
-          scraperStop();
-          const isCircuitOpen = err?.code === ERR_SOURCE_CIRCUIT_OPEN;
-          this.metrics.scraperRequestsTotal.inc({
-            site,
-            status: isCircuitOpen ? 'circuit_open' : 'error',
-          });
-          if (isCircuitOpen) {
-            // Breaker short-circuits are an *expected* fan-out outcome
-            // for a degraded source — log at warn, not error, and keep
-            // the message terse so logs stay readable.
-            this.logger.warn(`${site}: skipped (circuit open)`);
-          } else {
-            this.logger.error(`${site} search failed: ${err.message}`);
-          }
-          throw err;
-        }
-      }),
-    );
-
-    // Aggregate results from fulfilled searches
-    const allJobs: JobPostDto[] = [];
-    for (const result of results) {
-      if (result.status === 'fulfilled') {
-        allJobs.push(...result.value.jobs);
-      }
-    }
-
-    // Post-processing: salary enrichment (mirrors Python __init__.py logic)
-    for (const job of allJobs) {
-      this.postProcessSalary(job, input);
-    }
-
-    // Sort by site name then by date (most recent first)
-    allJobs.sort((a, b) => {
-      const siteCompare = (a.site ?? '').localeCompare(b.site ?? '');
-      if (siteCompare !== 0) return siteCompare;
-
-      const dateA = a.datePosted ? new Date(a.datePosted as string).getTime() : 0;
-      const dateB = b.datePosted ? new Date(b.datePosted as string).getTime() : 0;
-      return dateB - dateA;
+    const scraperInput = new ScraperInputDto({
+      ...input,
+      retries: input.retries ?? perSourceRetry.retries ?? globalRetry.defaultRetries,
+      retryDelay: input.retryDelay ?? perSourceRetry.delayMs ?? globalRetry.defaultDelayMs,
+      retryBackoff: input.retryBackoff ?? perSourceRetry.backoff ?? globalRetry.defaultBackoff,
+      retryMaxDelay: input.retryMaxDelay ?? perSourceRetry.maxDelayMs ?? 30000,
     });
 
-    this.logger.log(`Total aggregated jobs: ${allJobs.length}`);
-    return allJobs;
+    this.logger.log(`Starting search for ${site} (retries=${scraperInput.retries}, backoff=${scraperInput.retryBackoff})`);
+    const scraperStop = this.metrics.scraperDuration.startTimer({ site });
+    try {
+      // Spec 005 / T04 — wrap the per-source dispatch in the circuit
+      // breaker when bound. The interceptor short-circuits with
+      // `ERR_SOURCE_CIRCUIT_OPEN` once the breaker has tripped, which
+      // we surface as a `circuit_open` metric status (not `error`) so
+      // operators can distinguish "source down" from "we stopped
+      // calling source" on the dashboard.
+      const response = this.circuitBreaker
+        ? await this.circuitBreaker.wrap(site, () => scraper.scrape(scraperInput))
+        : await scraper.scrape(scraperInput);
+      scraperStop();
+      this.metrics.scraperRequestsTotal.inc({ site, status: 'success' });
+      // Tag each job with the site it came from + salary post-processing
+      // (mirrors Python __init__.py logic).
+      for (const job of response.jobs) {
+        job.site = site;
+        this.postProcessSalary(job, input);
+      }
+      this.logger.log(`${site}: found ${response.jobs.length} jobs`);
+      return response.jobs;
+    } catch (err: any) {
+      scraperStop();
+      const isCircuitOpen = err?.code === ERR_SOURCE_CIRCUIT_OPEN;
+      this.metrics.scraperRequestsTotal.inc({
+        site,
+        status: isCircuitOpen ? 'circuit_open' : 'error',
+      });
+      if (isCircuitOpen) {
+        // Breaker short-circuits are an *expected* fan-out outcome
+        // for a degraded source — log at warn, not error, and keep
+        // the message terse so logs stay readable.
+        this.logger.warn(`${site}: skipped (circuit open)`);
+      } else {
+        this.logger.error(`${site} search failed: ${err.message}`);
+      }
+      throw err;
+    }
   }
 
   /**

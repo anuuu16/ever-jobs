@@ -13,7 +13,9 @@ import { join } from 'node:path';
 import {
   EXPORTED_JOB_STORE_TOKEN,
   IExportedJobStore,
+  IRunStateStore,
   JobPostDto,
+  RUN_STATE_STORE_TOKEN,
   ScraperInputDto,
   Site,
 } from '@ever-jobs/models';
@@ -31,7 +33,11 @@ export interface DailyExportConfig {
   readonly location?: string;
   readonly isRemote: boolean;
   readonly resultsWanted: number;
+  /** Explicit override — wins outright over the dynamic lookback below. */
   readonly hoursOld?: number;
+  readonly firstRunLookbackHours: number;
+  readonly maxLookbackHours: number;
+  readonly lookbackOverlapMinutes: number;
   readonly retentionDays: number;
   readonly targetUrl?: string;
   readonly targetMethod: string;
@@ -43,6 +49,56 @@ export interface DailyExportConfig {
 
 /** Default cadence when `DAILY_EXPORT_INTERVAL_MS` is unset or invalid: 24h. */
 export const DEFAULT_DAILY_EXPORT_INTERVAL_MS = 86_400_000;
+
+/**
+ * `key` this cron uses in `IRunStateStore` — one watermark for the whole
+ * scheduled tick (which fans out across every configured site in a single
+ * `aggregate()` call). Manual admin-triggered runs (`AdminController.run()`
+ * / `runCompanies()`) intentionally do NOT read or write this key — they
+ * stay ad-hoc/operator-driven, so there's one clear owner of "last
+ * successful run."
+ */
+export const DAILY_EXPORT_RUN_STATE_KEY = 'daily-export';
+
+/**
+ * Compute the `hoursOld` search window for one tick.
+ *
+ * Precedence:
+ *   1. `explicitHoursOld` set → returned unchanged (today's static
+ *      behaviour, for operators who want a fixed window).
+ *   2. `lastRunAt === null` (first run ever, or no `IRunStateStore` bound)
+ *      → `firstRunLookbackHours`, capped at `maxLookbackHours`.
+ *   3. Otherwise → hours elapsed since `lastRunAt`, plus a small overlap
+ *      (duplicates are absorbed by `IExportedJobStore` dedup, so overlap
+ *      is free), clamped to `[1, maxLookbackHours]` — the cap guards
+ *      against a long-dead cron or clock skew triggering a huge fetch.
+ *
+ * Pure function — exported so it gets direct unit tests without mocking
+ * the cron/store, mirroring this file's existing small-helper style
+ * (see `normaliseInterval`).
+ */
+export function computeDynamicHoursOld(params: {
+  readonly explicitHoursOld: number | undefined;
+  readonly lastRunAt: Date | null;
+  readonly now: Date;
+  readonly firstRunLookbackHours: number;
+  readonly maxLookbackHours: number;
+  readonly overlapMinutes: number;
+}): number {
+  const { explicitHoursOld, lastRunAt, now, firstRunLookbackHours, maxLookbackHours, overlapMinutes } = params;
+
+  if (typeof explicitHoursOld === 'number' && Number.isFinite(explicitHoursOld)) {
+    return explicitHoursOld;
+  }
+
+  if (lastRunAt === null) {
+    return Math.min(firstRunLookbackHours, maxLookbackHours);
+  }
+
+  const elapsedHours = (now.getTime() - lastRunAt.getTime()) / 3_600_000;
+  const withOverlap = elapsedHours + overlapMinutes / 60;
+  return Math.min(Math.max(withOverlap, 1), maxLookbackHours);
+}
 
 /** Outcome of a single {@link DailyExportCron.runExport} pass. */
 export type DailyExportResult =
@@ -84,6 +140,9 @@ export class DailyExportCron
     @Optional()
     @Inject(EXPORTED_JOB_STORE_TOKEN)
     private readonly exportedJobStore?: IExportedJobStore | null,
+    @Optional()
+    @Inject(RUN_STATE_STORE_TOKEN)
+    private readonly runStateStore?: IRunStateStore | null,
   ) {}
 
   onApplicationBootstrap(): void {
@@ -97,6 +156,14 @@ export class DailyExportCron
       this.logger.log(
         'EXPORTED_JOB_STORE_TOKEN unbound — daily export will run without cross-run dedup ' +
           '(every tick re-exports the full search result).',
+      );
+    }
+
+    if (!this.runStateStore && config.hoursOld === undefined) {
+      this.logger.log(
+        `RUN_STATE_STORE_TOKEN unbound — daily export will use the static ` +
+          `${config.firstRunLookbackHours}h first-run lookback on every tick ` +
+          `(no watermark to compute elapsed time from).`,
       );
     }
 
@@ -129,8 +196,13 @@ export class DailyExportCron
       return { ran: false, reason: 'disabled' };
     }
 
+    // Captured BEFORE the search runs — the watermark records "covered
+    // up to this point," not "now after the run finished," so a slow
+    // tick doesn't silently create a gap for the next one.
+    const tickStartedAt = new Date();
+
     try {
-      const input = this.buildSearchInput(config);
+      const input = await this.buildSearchInput(config, tickStartedAt);
       // persist:true (default) so anything the cron finds is also
       // browsable/searchable via the /admin UI, not just pushed downstream.
       const { jobs } = await this.aggregator.aggregate(input);
@@ -147,6 +219,10 @@ export class DailyExportCron
           `Daily export tick: 0 fresh jobs (${skippedDuplicates} already exported previously) — nothing to push.`,
         );
         await this.pruneManifest(config);
+        // The search itself completed successfully — just nothing new
+        // to push. Advance the watermark so the next tick doesn't
+        // re-scan the same window.
+        await this.advanceWatermark(tickStartedAt);
         return { ran: false, reason: 'no-jobs' };
       }
 
@@ -155,8 +231,9 @@ export class DailyExportCron
         : await this.writeExportFile(config, freshJobs);
 
       if (destination === null) {
-        // Push/write failed — do NOT mark exported so the next tick
-        // retries these same jobs.
+        // Push/write failed — do NOT mark exported, and do NOT advance
+        // the watermark, so the next tick retries this same window and
+        // these same jobs.
         return { ran: false, reason: 'push-failed' };
       }
 
@@ -167,6 +244,7 @@ export class DailyExportCron
         );
       }
       await this.pruneManifest(config);
+      await this.advanceWatermark(tickStartedAt);
 
       this.logger.log(
         `Daily export tick: pushed ${freshJobs.length} fresh job(s) to ${destination} (${skippedDuplicates} duplicate(s) skipped).`,
@@ -186,7 +264,10 @@ export class DailyExportCron
     return this.configService.get<DailyExportConfig>('dailyExport')!;
   }
 
-  private buildSearchInput(config: DailyExportConfig): ScraperInputDto {
+  private async buildSearchInput(
+    config: DailyExportConfig,
+    tickStartedAt: Date,
+  ): Promise<ScraperInputDto> {
     const validSites = new Set(Object.values(Site) as string[]);
     // Configured sites win; otherwise fall back to the curated
     // job-board list (`defaults.siteNames`) rather than fanning out
@@ -196,14 +277,38 @@ export class DailyExportCron
       : (this.configService.get<{ siteNames: string[] }>('defaults')?.siteNames ?? []);
     const siteType = configuredSites.filter((s) => validSites.has(s)) as Site[];
 
+    const lastRunAt = this.runStateStore
+      ? await this.runStateStore.getLastRunAt(DAILY_EXPORT_RUN_STATE_KEY)
+      : null;
+    const hoursOld = computeDynamicHoursOld({
+      explicitHoursOld: config.hoursOld,
+      lastRunAt,
+      now: tickStartedAt,
+      firstRunLookbackHours: config.firstRunLookbackHours,
+      maxLookbackHours: config.maxLookbackHours,
+      overlapMinutes: config.lookbackOverlapMinutes,
+    });
+
     return new ScraperInputDto({
       siteType: siteType.length ? siteType : undefined,
       searchTerm: config.searchTerm,
       location: config.location,
       isRemote: config.isRemote,
       resultsWanted: config.resultsWanted,
-      hoursOld: config.hoursOld,
+      hoursOld,
     });
+  }
+
+  /**
+   * Record that the tick starting at `tickStartedAt` covered its search
+   * window successfully — called from both the "pushed fresh jobs" and
+   * "zero fresh jobs" success paths, never from a failure path (see
+   * `runExport`'s call sites for why). No-op when `IRunStateStore` isn't
+   * bound.
+   */
+  private async advanceWatermark(tickStartedAt: Date): Promise<void> {
+    if (!this.runStateStore) return;
+    await this.runStateStore.setLastRunAt(DAILY_EXPORT_RUN_STATE_KEY, tickStartedAt);
   }
 
   /**
