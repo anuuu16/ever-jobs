@@ -135,6 +135,36 @@ describe('DedupHybridService', () => {
     }
   });
 
+  it('carries every other populated raw field through into fields, but excludes rawResponse', async () => {
+    const a = job({
+      id: '1',
+      site: Site.GREENHOUSE,
+      rawResponse: '<html>raw a</html>',
+      compensation: { minAmount: 120_000, maxAmount: 160_000, currency: 'USD' } as any,
+      jobType: ['fulltime'] as any,
+      datePosted: '2026-01-01T00:00:00.000Z',
+      skills: ['TypeScript', 'React'],
+      department: 'Engineering',
+      companyIndustry: null,
+    });
+    const out = await service.dedup([a]);
+    const fields = out.canonical[0].fields;
+
+    expect(fields['compensation'].value).toEqual({ minAmount: 120_000, maxAmount: 160_000, currency: 'USD' });
+    expect(fields['jobType'].value).toEqual(['fulltime']);
+    expect(fields['datePosted'].value).toBe('2026-01-01T00:00:00.000Z');
+    expect(fields['skills'].value).toEqual(['TypeScript', 'React']);
+    expect(fields['department'].value).toBe('Engineering');
+    // null-valued raw fields are skipped, not carried through as null.
+    expect(fields['companyIndustry']).toBeUndefined();
+    // rawResponse stays on the SourceObservation only — never duplicated
+    // into `fields` (it can be a large HTML/JSON blob).
+    expect(fields['rawResponse']).toBeUndefined();
+    // Already-handled identity fields aren't clobbered by the generic loop
+    // — `title` stays the normalized value, not the raw one.
+    expect(fields['title'].value).not.toBe('Senior Software Engineer');
+  });
+
   it('merges near-duplicate descriptions across sources via MinHash', async () => {
     const desc =
       'We are hiring a Staff Backend Engineer to lead our distributed-systems team. ' +

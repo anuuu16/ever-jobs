@@ -19,6 +19,22 @@ import { ClusterPartition, DedupHybridOptions, IDedupStrategy, PreparedJob } fro
 import { UnionFind } from './union-find';
 
 /**
+ * Raw `JobPostDto` keys already materialised into `fields` with a
+ * normalized value (`title`/`companyName`/`location`/`jobUrl`/`description`),
+ * plus `rawResponse` (kept only on `SourceObservation`, not duplicated
+ * into `fields`). Everything else on the winning raw job is carried
+ * through generically — see the loop in `dedup()`.
+ */
+const RAW_FIELDS_HANDLED = new Set([
+  'title',
+  'companyName',
+  'location',
+  'jobUrl',
+  'description',
+  'rawResponse',
+]);
+
+/**
  * Default hybrid dedup engine — Spec 003 / FR-1.
  *
  * Pipeline (each stage further merges clusters from the previous stage):
@@ -132,6 +148,20 @@ export class DedupHybridService implements IDedupEngine {
       fields['url'] = provenance(head.raw.jobUrl ?? '', headSite, headSourceId, observedAt);
       if (head.raw.description) {
         fields['description'] = provenance(head.raw.description, headSite, headSourceId, observedAt);
+      }
+      // Every other populated field on the winning source's raw JobPostDto
+      // (compensation, jobType, datePosted, skills, department, ...) —
+      // carried through generically so the admin detail view (and any
+      // other `fields` consumer) sees everything the scraper returned,
+      // not just the handful of identity fields above. `RAW_FIELDS_HANDLED`
+      // skips keys already set (with normalized values) above, plus
+      // `rawResponse`, which is carried separately on `SourceObservation`
+      // and would otherwise duplicate a potentially large blob here.
+      for (const [key, value] of Object.entries(head.raw)) {
+        if (RAW_FIELDS_HANDLED.has(key) || value === null || value === undefined) {
+          continue;
+        }
+        fields[key] = provenance(value, headSite, headSourceId, observedAt);
       }
 
       const record: CanonicalJob = {
