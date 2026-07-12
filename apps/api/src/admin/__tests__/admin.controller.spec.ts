@@ -121,6 +121,10 @@ function makeRunStateStore() {
   };
 }
 
+function makeBreaker(healths: Array<Record<string, unknown>> = []) {
+  return { list: jest.fn().mockReturnValue(healths) };
+}
+
 describe('AdminController', () => {
   describe('when adminUi.enabled is false', () => {
     it('page() throws NotFoundException', () => {
@@ -467,6 +471,74 @@ describe('AdminController', () => {
 
       const result = controller.sites();
       expect(result.categories.map((c) => c.category)).toEqual(['job-board', 'mystery-category']);
+    });
+
+    it('sourcesOverview() combines per-site job counts with circuit-breaker health, sorted job-count desc', async () => {
+      const registry = makeRegistry([
+        { site: 'greenhouse', name: 'Greenhouse', category: 'ats' },
+        { site: 'linkedin', name: 'LinkedIn', category: 'job-board' },
+        { site: 'indeed', name: 'Indeed', category: 'job-board' },
+      ]);
+      const jobStore = makeJobStore([
+        makeJob({ canonicalJobId: 'a', sources: [{ site: Site.GREENHOUSE, sourceJobId: '1', url: 'u1', observedAt: 't' }] }),
+        makeJob({ canonicalJobId: 'b', sources: [{ site: Site.GREENHOUSE, sourceJobId: '2', url: 'u2', observedAt: 't' }] }),
+        makeJob({ canonicalJobId: 'c', sources: [{ site: Site.LINKEDIN, sourceJobId: '3', url: 'u3', observedAt: 't' }] }),
+      ]);
+      const breaker = makeBreaker([
+        { site: 'greenhouse', state: 'closed', successRate: 1, p95LatencyMs: 120 },
+        { site: 'linkedin', state: 'open', successRate: 0, p95LatencyMs: 900, lastError: { code: 'ERR_X', message: 'boom', at: 't' } },
+      ]);
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        jobStore as any,
+        undefined,
+        undefined,
+        undefined,
+        registry as any,
+        undefined,
+        undefined,
+        breaker as any,
+      );
+
+      const result = await controller.sourcesOverview();
+
+      expect(result.totalSources).toBe(3);
+      expect(result.totalJobs).toBe(3);
+      // Greenhouse (2 jobs) ranks above LinkedIn (1 job) above Indeed (0 jobs).
+      expect(result.sources.map((s) => s.site)).toEqual(['greenhouse', 'linkedin', 'indeed']);
+
+      const greenhouse = result.sources[0];
+      expect(greenhouse).toMatchObject({ jobCount: 2, state: 'closed', successRate: 1, p95LatencyMs: 120 });
+
+      const linkedin = result.sources[1];
+      expect(linkedin).toMatchObject({ jobCount: 1, state: 'open', successRate: 0 });
+      expect(linkedin.lastError).toEqual({ code: 'ERR_X', message: 'boom', at: 't' });
+
+      // Indeed was never scraped this process — 'untested', not a false "down".
+      const indeed = result.sources[2];
+      expect(indeed).toMatchObject({ jobCount: 0, state: 'untested', successRate: null, p95LatencyMs: null });
+    });
+
+    it('sourcesOverview() returns zero-job, untested sources when no jobStore/breaker is bound', async () => {
+      const registry = makeRegistry([{ site: 'greenhouse', name: 'Greenhouse', category: 'ats' }]);
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        registry as any,
+      );
+
+      const result = await controller.sourcesOverview();
+
+      expect(result).toEqual({
+        totalSources: 1,
+        totalJobs: 0,
+        sources: [
+          { site: 'greenhouse', name: 'Greenhouse', category: 'ats', jobCount: 0, state: 'untested', successRate: null, p95LatencyMs: null, lastError: undefined },
+        ],
+      });
     });
 
     it('atsCompanies() with no site query returns entries sorted descending by count', () => {

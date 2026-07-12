@@ -15,7 +15,9 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import {
   CanonicalJob,
+  CIRCUIT_BREAKER_TOKEN,
   EXPORTED_JOB_STORE_TOKEN,
+  ICircuitBreakerService,
   IExportedJobStore,
   IJobObservationStore,
   IJobStore,
@@ -26,6 +28,7 @@ import {
   RUN_STATE_STORE_TOKEN,
   ScraperInputDto,
   Site,
+  SourceHealth,
   SourceObservation,
 } from '@ever-jobs/models';
 import { PluginRegistry } from '@ever-jobs/plugin';
@@ -91,6 +94,30 @@ interface SiteCatalogResult {
 interface AtsSummaryEntry {
   readonly site: string;
   readonly count: number;
+}
+
+interface SourceOverviewEntry {
+  readonly site: string;
+  readonly name: string;
+  readonly category: string;
+  /** Persisted canonical-job count carrying an observation from this site. */
+  readonly jobCount: number;
+  /**
+   * Circuit-breaker state for this process. `untested` means the breaker
+   * has no entry for this site (never invoked since the last restart) —
+   * NOT the same as "broken".
+   */
+  readonly state: 'closed' | 'half-open' | 'open' | 'untested';
+  /** `null` when `state` is `untested` (no rolling-window data yet). */
+  readonly successRate: number | null;
+  readonly p95LatencyMs: number | null;
+  readonly lastError?: { readonly code: string; readonly message: string; readonly at: string };
+}
+
+interface SourcesOverviewResult {
+  readonly sources: SourceOverviewEntry[];
+  readonly totalJobs: number;
+  readonly totalSources: number;
 }
 
 interface RunCompaniesBody {
@@ -165,6 +192,9 @@ export class AdminController {
     private readonly runStateStore?: IRunStateStore | null,
     @Optional()
     private readonly backgroundJobs?: AdminBackgroundJobsService,
+    @Optional()
+    @Inject(CIRCUIT_BREAKER_TOKEN)
+    private readonly breaker?: ICircuitBreakerService,
   ) {}
 
   @Get('admin')
@@ -492,6 +522,75 @@ export class AdminController {
     }));
 
     return { categories, total: this.registry.size };
+  }
+
+  /**
+   * Per-source snapshot for the admin "Sources" tab: how many persisted
+   * jobs carry an observation from each site, plus that site's
+   * circuit-breaker health (working / degraded / down / untested) for
+   * this process. Loaded lazily by the UI (only when the Sources tab is
+   * opened) since the job-count side is a full store scan.
+   */
+  @Get('api/admin/sources-overview')
+  async sourcesOverview(): Promise<SourcesOverviewResult> {
+    this.assertEnabled();
+
+    const jobCounts = await this.countJobsBySite();
+    let totalJobs = 0;
+    for (const n of jobCounts.values()) totalJobs += n;
+
+    const healthBySite = new Map<string, SourceHealth>();
+    if (this.breaker) {
+      for (const health of this.breaker.list()) healthBySite.set(health.site, health);
+    }
+
+    const catalog = this.registry ? this.registry.listSources() : [];
+    const sources: SourceOverviewEntry[] = catalog.map((meta) => {
+      const health = healthBySite.get(meta.site);
+      return {
+        site: meta.site,
+        name: meta.name,
+        category: meta.category,
+        jobCount: jobCounts.get(meta.site) ?? 0,
+        state: health?.state ?? 'untested',
+        successRate: health?.successRate ?? null,
+        p95LatencyMs: health?.p95LatencyMs ?? null,
+        lastError: health?.lastError,
+      };
+    });
+
+    // Most-active sources first — the operator question this tab answers
+    // ("what's actually producing jobs?") is best served job-count-desc,
+    // not alphabetically.
+    sources.sort((a, b) => b.jobCount - a.jobCount || a.name.localeCompare(b.name));
+
+    return { sources, totalJobs, totalSources: sources.length };
+  }
+
+  /**
+   * Full-scan tally of persisted canonical jobs per site (via each job's
+   * embedded `sources[].site`). `IJobStore` has no groupBy in its
+   * contract, so this pages through the whole store once — acceptable
+   * for a local admin tool that loads it lazily and on explicit refresh,
+   * not on every request.
+   */
+  private async countJobsBySite(): Promise<Map<string, number>> {
+    const counts = new Map<string, number>();
+    if (!this.jobStore) return counts;
+
+    const PAGE_SIZE = 500;
+    let cursor: string | undefined;
+    do {
+      const page = await this.jobStore.listByQuery({ limit: PAGE_SIZE, cursor });
+      cursor = page.nextCursor;
+      for (const job of page.items) {
+        for (const source of job.sources ?? []) {
+          counts.set(source.site, (counts.get(source.site) ?? 0) + 1);
+        }
+      }
+    } while (cursor);
+
+    return counts;
   }
 
   @Get('api/admin/ats-companies')

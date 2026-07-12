@@ -140,6 +140,23 @@ export const ADMIN_UI_HTML = `<!doctype html>
   .stat-tile .stat-value { font-size: 1.3rem; font-weight: 600; line-height: 1.2; }
   .stat-tile .stat-label { font-size: 0.75rem; color: var(--muted); }
 
+  .tabs { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--border); margin-bottom: 1.25rem; }
+  .tab-btn {
+    font: inherit;
+    padding: 0.55rem 1rem;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .tab-btn:hover:not(.active) { color: var(--accent); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .badge.warn { background: #fff8c5; color: #9a6700; }
+
   #overlay {
     display: none;
     position: fixed;
@@ -244,6 +261,14 @@ export const ADMIN_UI_HTML = `<!doctype html>
 </head>
 <body>
   <h1>Ever Jobs — Local Admin</h1>
+
+  <div class="tabs" role="tablist">
+    <button type="button" class="tab-btn active" id="tabbtn-run" role="tab">Run &amp; Extract</button>
+    <button type="button" class="tab-btn" id="tabbtn-jobs" role="tab">Jobs</button>
+    <button type="button" class="tab-btn" id="tabbtn-sources" role="tab">Sources</button>
+  </div>
+
+  <div id="tab-run" class="tab-panel active">
 
   <div class="run-panel">
     <h2>Run extraction</h2>
@@ -376,7 +401,9 @@ export const ADMIN_UI_HTML = `<!doctype html>
     <div class="status" id="ats-run-status"></div>
   </div>
 
-  <hr />
+  </div> <!-- /tab-run -->
+
+  <div id="tab-jobs" class="tab-panel">
 
   <div class="stats-bar">
     <div class="stat-tile">
@@ -436,6 +463,36 @@ export const ADMIN_UI_HTML = `<!doctype html>
     <button id="btn-next">Next &rarr;</button>
     <span id="pager-info"></span>
   </div>
+
+  </div> <!-- /tab-jobs -->
+
+  <div id="tab-sources" class="tab-panel">
+    <div class="sub" style="margin-bottom:0.75rem">
+      Per-source job counts (from the persisted store) and circuit-breaker health for
+      <strong>this running process</strong> — health resets on restart. "Untested" means a
+      source hasn't been called since the API last started, not that it's broken.
+    </div>
+    <div class="sites-toolbar">
+      <button type="button" id="btn-sources-refresh">Refresh</button>
+      <span id="sources-summary" class="hint"></span>
+    </div>
+    <div class="status" id="sources-status"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Source</th>
+          <th>Category</th>
+          <th>Jobs</th>
+          <th>Status</th>
+          <th>Success rate</th>
+          <th>p95 latency</th>
+          <th>Last error</th>
+        </tr>
+      </thead>
+      <tbody id="sources-rows"></tbody>
+    </table>
+    <div id="sources-empty" class="empty" style="display:none">No registered sources found.</div>
+  </div> <!-- /tab-sources -->
 
   <div id="overlay">
     <div id="detail-panel">
@@ -539,6 +596,17 @@ export const ADMIN_UI_HTML = `<!doctype html>
     atsCustomSlugsList: document.getElementById('ats-custom-slugs-list'),
     btnAtsRun: document.getElementById('btn-ats-run'),
     atsRunStatus: document.getElementById('ats-run-status'),
+    tabbtnRun: document.getElementById('tabbtn-run'),
+    tabbtnJobs: document.getElementById('tabbtn-jobs'),
+    tabbtnSources: document.getElementById('tabbtn-sources'),
+    tabRun: document.getElementById('tab-run'),
+    tabJobs: document.getElementById('tab-jobs'),
+    tabSources: document.getElementById('tab-sources'),
+    btnSourcesRefresh: document.getElementById('btn-sources-refresh'),
+    sourcesStatus: document.getElementById('sources-status'),
+    sourcesSummary: document.getElementById('sources-summary'),
+    sourcesRows: document.getElementById('sources-rows'),
+    sourcesEmpty: document.getElementById('sources-empty'),
   };
 
   function escapeHtml(s) {
@@ -556,6 +624,83 @@ export const ADMIN_UI_HTML = `<!doctype html>
     if (exported === false) return '<span class="badge no">not exported</span>';
     return '<span class="badge unknown">unknown</span>';
   }
+
+  // ── Tabs (each tab's data loads lazily, once, on first activation) ──
+
+  var tabLoaded = { run: false, jobs: false, sources: false };
+
+  function activateTab(name) {
+    var tabs = { run: els.tabRun, jobs: els.tabJobs, sources: els.tabSources };
+    var buttons = { run: els.tabbtnRun, jobs: els.tabbtnJobs, sources: els.tabbtnSources };
+    Object.keys(tabs).forEach(function (key) {
+      tabs[key].classList.toggle('active', key === name);
+      buttons[key].classList.toggle('active', key === name);
+    });
+    if (tabLoaded[name]) return;
+    tabLoaded[name] = true;
+    if (name === 'run') {
+      loadAtsPlatformOptions();
+      pollBackgroundStatus();
+    } else if (name === 'jobs') {
+      load(undefined, false);
+    } else if (name === 'sources') {
+      loadSourcesOverview();
+    }
+  }
+
+  els.tabbtnRun.addEventListener('click', function () { activateTab('run'); });
+  els.tabbtnJobs.addEventListener('click', function () { activateTab('jobs'); });
+  els.tabbtnSources.addEventListener('click', function () { activateTab('sources'); });
+
+  // ── Sources tab ───────────────────────────
+
+  function sourceBadge(state) {
+    if (state === 'closed') return '<span class="badge yes">working</span>';
+    if (state === 'half-open') return '<span class="badge warn">recovering</span>';
+    if (state === 'open') return '<span class="badge no">not working</span>';
+    return '<span class="badge unknown">untested</span>';
+  }
+
+  function renderSourcesOverview(data) {
+    els.sourcesSummary.textContent = data.totalSources + ' source(s), ' +
+      formatCount(data.totalJobs) + ' job(s) total';
+    els.sourcesEmpty.style.display = data.sources.length ? 'none' : 'block';
+    els.sourcesRows.innerHTML = data.sources.map(function (s) {
+      return '<tr>' +
+        '<td>' + escapeHtml(s.name) + ' <span class="hint">(' + escapeHtml(s.site) + ')</span></td>' +
+        '<td>' + escapeHtml(s.category) + '</td>' +
+        '<td>' + formatCount(s.jobCount) + '</td>' +
+        '<td>' + sourceBadge(s.state) + '</td>' +
+        '<td>' + (s.successRate == null ? '—' : Math.round(s.successRate * 100) + '%') + '</td>' +
+        '<td>' + (s.p95LatencyMs == null ? '—' : s.p95LatencyMs + ' ms') + '</td>' +
+        '<td>' + (s.lastError ? escapeHtml(s.lastError.code) + ': ' + escapeHtml(s.lastError.message) : '—') + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function loadSourcesOverview() {
+    els.btnSourcesRefresh.disabled = true;
+    els.sourcesStatus.textContent = 'Loading — this scans the full job store, may take a moment…';
+    els.sourcesStatus.style.color = 'var(--muted)';
+    fetch('/api/admin/sources-overview')
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        renderSourcesOverview(data);
+        els.sourcesStatus.textContent = '';
+      })
+      .catch(function (err) {
+        els.sourcesStatus.textContent = 'Failed to load: ' + err.message;
+        els.sourcesStatus.style.color = 'var(--bad)';
+      })
+      .finally(function () {
+        els.btnSourcesRefresh.disabled = false;
+      });
+  }
+
+  els.btnSourcesRefresh.addEventListener('click', loadSourcesOverview);
 
   function buildQuery(cursor) {
     var params = new URLSearchParams();
@@ -963,8 +1108,6 @@ export const ADMIN_UI_HTML = `<!doctype html>
       });
   });
 
-  loadAtsPlatformOptions();
-
   document.getElementById('btn-search').addEventListener('click', function () {
     cursorStack = [];
     currentCursor = undefined;
@@ -1240,10 +1383,12 @@ export const ADMIN_UI_HTML = `<!doctype html>
       });
   });
 
-  // Restores whatever is running/finished even across a page refresh.
-  pollBackgroundStatus();
-
-  load(undefined, false);
+  // Only the default active tab's data loads on page open — the rest
+  // (Jobs table, Sources overview) load lazily the first time their tab
+  // is clicked, so opening the page doesn't fan out every API at once.
+  // Activating 'run' also restores any in-progress/finished background
+  // job status across a page refresh.
+  activateTab('run');
 })();
 </script>
 </body>
