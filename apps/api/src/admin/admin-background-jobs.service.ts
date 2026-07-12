@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-/** Names of the (currently two) admin actions tracked by this registry. */
-export type BackgroundJobName = 'extract-all' | 'clear-all';
+/** Names of the admin actions tracked by this registry. */
+export type BackgroundJobName = 'extract-all' | 'clear-all' | 'export-all' | 'reset-exported';
 
 /** Coarse progress marker — "N of M platforms/sites done", plus a label for the status line. */
 export interface BackgroundJobProgress {
@@ -52,7 +52,7 @@ export class AdminBackgroundJobsService {
 
   /** Every tracked job's current status — used by the poll/refresh endpoint. */
   getAll(): Record<BackgroundJobName, BackgroundJobStatus> {
-    const names: BackgroundJobName[] = ['extract-all', 'clear-all'];
+    const names: BackgroundJobName[] = ['extract-all', 'clear-all', 'export-all', 'reset-exported'];
     const out = {} as Record<BackgroundJobName, BackgroundJobStatus>;
     for (const name of names) {
       out[name] = this.jobs.get(name) ?? { name, ...IDLE };

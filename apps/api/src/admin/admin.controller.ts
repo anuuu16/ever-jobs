@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 import {
   CanonicalJob,
   EXPORTED_JOB_STORE_TOKEN,
@@ -28,6 +29,7 @@ import {
   SourceObservation,
 } from '@ever-jobs/models';
 import { PluginRegistry } from '@ever-jobs/plugin';
+import { DailyExportConfig } from '../jobs/daily-export.cron';
 import { JobsAggregator, PerSiteAggregateResult } from '../jobs/jobs.aggregator';
 import {
   AdminBackgroundJobsService,
@@ -249,6 +251,8 @@ export class AdminController {
       return {
         'extract-all': { name: 'extract-all', state: 'idle' },
         'clear-all': { name: 'clear-all', state: 'idle' },
+        'export-all': { name: 'export-all', state: 'idle' },
+        'reset-exported': { name: 'reset-exported', state: 'idle' },
       };
     }
     return this.backgroundJobs.getAll();
@@ -277,6 +281,168 @@ export class AdminController {
     }
 
     return this.backgroundJobs.start('extract-all', (update) => this.runExtractAll(update));
+  }
+
+  /**
+   * Push EVERY persisted canonical job to the configured downstream target
+   * (the `dailyExport` webhook — e.g. the platform's job-board ingest
+   * endpoint) and mark them all exported, so the next daily-export tick
+   * treats them as already-seen.
+   *
+   * Unlike `DailyExportCron`, which only pushes *fresh* (unseen) jobs from a
+   * live scrape, this operator action re-pushes the WHOLE store on demand —
+   * the "sync everything I've already collected to the platform" button.
+   * Idempotent downstream (the platform upserts by canonical id / URL).
+   */
+  @Post('api/admin/jobs/export-all')
+  exportAll(): BackgroundJobStatus {
+    this.assertEnabled();
+    if (!this.jobStore) {
+      throw new NotFoundException('No job store bound');
+    }
+    if (!this.backgroundJobs) {
+      throw new NotFoundException('No AdminBackgroundJobsService bound');
+    }
+    const config = this.configService.get<DailyExportConfig>('dailyExport');
+    if (!config?.targetUrl) {
+      throw new NotFoundException(
+        'No export target configured — set DAILY_EXPORT_TARGET_URL (and DAILY_EXPORT_TARGET_HEADERS) to sync.',
+      );
+    }
+
+    return this.backgroundJobs.start('export-all', (update) => this.runExportAll(update));
+  }
+
+  /**
+   * Clear every "already exported" mark WITHOUT touching job data — the
+   * opposite of `exportAll()`'s side effect. Job rows / observations /
+   * run-state watermark are untouched; only `IExportedJobStore` is wiped,
+   * so every job shows `exported: false` again and the next sync/cron
+   * tick treats the whole store as fresh.
+   */
+  @Post('api/admin/jobs/reset-exported')
+  resetExported(): BackgroundJobStatus {
+    this.assertEnabled();
+    if (!this.exportedJobStore) {
+      throw new NotFoundException('No IExportedJobStore bound');
+    }
+    if (!this.backgroundJobs) {
+      throw new NotFoundException('No AdminBackgroundJobsService bound');
+    }
+
+    return this.backgroundJobs.start('reset-exported', async () => {
+      const clearedMarks = await this.exportedJobStore!.clearAll();
+      return { clearedMarks };
+    });
+  }
+
+  // ── clearAll() / extractAll() / exportAll() background-job bodies ─────
+
+  /**
+   * Body of the `export-all` background job. Pages the whole job store,
+   * converts each `CanonicalJob` to the ingest payload the downstream
+   * target expects, POSTs it in batches, and marks every pushed URL
+   * exported. A failed batch aborts the run (so we don't mark unsent jobs
+   * as exported) and surfaces as `state: 'failed'`.
+   */
+  private async runExportAll(update: (progress: BackgroundJobProgress) => void): Promise<{
+    total: number;
+    pushed: number;
+    batches: number;
+    destination: string;
+  }> {
+    const config = this.configService.get<DailyExportConfig>('dailyExport')!;
+    // Push in modest chunks — a single huge POST risks the target's body-size
+    // limit / timeouts with thousands of postings. Each chunk is its own
+    // request, marked exported only after it lands.
+    const BATCH = 100;
+
+    const total = await this.jobStore!.countByQuery({});
+    update({ done: 0, total, label: `Syncing ${total} job(s)…` });
+
+    let pushed = 0;
+    let batches = 0;
+    let cursor: string | undefined;
+
+    do {
+      const page = await this.jobStore!.listByQuery({ limit: BATCH, cursor });
+      cursor = page.nextCursor;
+      if (page.items.length === 0) break;
+
+      const jobs = page.items.map((job) => this.toExportPayload(job));
+      await this.pushBatch(config, jobs);
+
+      if (this.exportedJobStore) {
+        await this.exportedJobStore.markExported(
+          jobs.map((j) => String(j.jobUrl)),
+          new Date(),
+        );
+      }
+
+      pushed += jobs.length;
+      batches++;
+      update({ done: pushed, total, label: `Synced ${pushed} / ${total} job(s)` });
+    } while (cursor);
+
+    return { total, pushed, batches, destination: config.targetUrl! };
+  }
+
+  /** POST one `{ jobs }` batch to the configured target; throws on failure. */
+  private async pushBatch(
+    config: DailyExportConfig,
+    jobs: ReadonlyArray<Record<string, unknown>>,
+  ): Promise<void> {
+    await axios.request({
+      url: config.targetUrl,
+      method: (config.targetMethod || 'POST') as 'POST' | 'PUT' | 'PATCH',
+      timeout: config.targetTimeoutMs,
+      headers: { 'Content-Type': 'application/json', ...config.targetHeaders },
+      data: { jobs },
+    });
+  }
+
+  /**
+   * Flatten a `CanonicalJob` into the loose JobPost-shaped payload the
+   * downstream ingest accepts. Flat fields come straight off the canonical
+   * record; compensation / jobType / skills / datePosted are pulled from
+   * the provenance `fields` map when the merge resolver surfaced them.
+   */
+  private toExportPayload(job: CanonicalJob): Record<string, unknown> {
+    const fieldValue = <T>(key: string): T | undefined =>
+      (job.fields?.[key]?.value as T | undefined) ?? undefined;
+
+    // Coerce loose provenance values into the exact shapes the downstream
+    // ingest schema accepts, so one odd field never 400s a whole batch.
+    const asStringArray = (v: unknown): string[] | null =>
+      Array.isArray(v) ? v.map(String).filter(Boolean) : v ? [String(v)] : null;
+
+    const compensation = (() => {
+      const c = fieldValue<Record<string, unknown>>('compensation');
+      if (!c || typeof c !== 'object') return null;
+      const num = (x: unknown) => (typeof x === 'number' ? x : null);
+      return {
+        interval: typeof c.interval === 'string' ? c.interval : null,
+        minAmount: num(c.minAmount),
+        maxAmount: num(c.maxAmount),
+        currency: typeof c.currency === 'string' ? c.currency : null,
+      };
+    })();
+
+    const firstSource = job.sources?.[0];
+    const datePosted = fieldValue<unknown>('datePosted') ?? firstSource?.observedAt ?? null;
+
+    return {
+      jobUrl: job.url,
+      title: job.title,
+      companyName: job.company || null,
+      description: job.description || null,
+      location: job.location || null,
+      site: firstSource?.site ?? null,
+      datePosted: datePosted == null ? null : String(datePosted),
+      compensation,
+      jobType: asStringArray(fieldValue('jobType')),
+      skills: asStringArray(fieldValue('skills')),
+    };
   }
 
   // ── clearAll() / extractAll() background-job bodies ──────────────────

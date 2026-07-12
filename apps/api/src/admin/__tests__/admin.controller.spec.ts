@@ -172,6 +172,11 @@ describe('AdminController', () => {
       const controller = new AdminController(makeConfigService(false) as any);
       expect(() => controller.backgroundStatus()).toThrow(NotFoundException);
     });
+
+    it('resetExported() throws NotFoundException', () => {
+      const controller = new AdminController(makeConfigService(false) as any);
+      expect(() => controller.resetExported()).toThrow(NotFoundException);
+    });
   });
 
   describe('when adminUi.enabled is true', () => {
@@ -687,7 +692,84 @@ describe('AdminController', () => {
       expect(controller.backgroundStatus()).toEqual({
         'extract-all': { name: 'extract-all', state: 'idle' },
         'clear-all': { name: 'clear-all', state: 'idle' },
+        'export-all': { name: 'export-all', state: 'idle' },
+        'reset-exported': { name: 'reset-exported', state: 'idle' },
       });
+    });
+
+    it('resetExported() throws NotFoundException when no IExportedJobStore is bound', () => {
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+      expect(() => controller.resetExported()).toThrow(NotFoundException);
+    });
+
+    it('resetExported() throws NotFoundException when no AdminBackgroundJobsService is bound', () => {
+      const exportedJobStore = makeExportedJobStore(['https://example.com/1']);
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        undefined,
+        undefined,
+        exportedJobStore as any,
+      );
+      expect(() => controller.resetExported()).toThrow(NotFoundException);
+    });
+
+    it('resetExported() clears every exported mark WITHOUT touching job data', async () => {
+      const jobStore = makeJobStore([makeJob(), makeJob({ canonicalJobId: 'b' })]);
+      const exportedJobStore = makeExportedJobStore(['https://example.com/1', 'https://example.com/2']);
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        jobStore as any,
+        undefined,
+        exportedJobStore as any,
+        undefined,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+
+      const started = controller.resetExported();
+      expect(started.state).toBe('running');
+      expect(jobStore.deleteAll).not.toHaveBeenCalled();
+
+      await flushMicrotasks();
+
+      const finished = backgroundJobs.getAll()['reset-exported'];
+      expect(finished.state).toBe('done');
+      expect(exportedJobStore.clearAll).toHaveBeenCalled();
+      expect(jobStore.deleteAll).not.toHaveBeenCalled();
+      expect(finished.result).toEqual({ clearedMarks: 2 });
+    });
+
+    it('resetExported() called again while running is a no-op', async () => {
+      const exportedJobStore = makeExportedJobStore(['https://example.com/1']);
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        undefined,
+        undefined,
+        exportedJobStore as any,
+        undefined,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+
+      controller.resetExported();
+      controller.resetExported();
+      await flushMicrotasks();
+
+      expect(exportedJobStore.clearAll).toHaveBeenCalledTimes(1);
     });
 
     it('extractAll() throws NotFoundException when no JobsAggregator is bound', () => {

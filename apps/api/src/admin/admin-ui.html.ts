@@ -294,6 +294,27 @@ export const ADMIN_UI_HTML = `<!doctype html>
 
     <div class="bg-job-row">
       <div class="bg-job-controls">
+        <button type="button" id="btn-export-all">Sync ALL to platform</button>
+        <span class="hint">Pushes every stored job to the configured downstream target (DAILY_EXPORT_TARGET_URL) and marks them exported. Requires a configured target.</span>
+      </div>
+      <div class="status" id="export-all-status"></div>
+    </div>
+
+    <div class="bg-job-row">
+      <div class="bg-job-controls">
+        <button type="button" id="btn-reset-exported">Mark all as NOT exported</button>
+        <span class="hint">Clears every "already exported" mark (job data is untouched) — the next sync/cron tick re-pushes everything.</span>
+      </div>
+      <div class="confirm-inline" id="confirm-reset-exported">
+        <input type="text" id="confirm-reset-exported-input" placeholder='Type "RESET EXPORTED" to confirm' />
+        <button type="button" class="primary" id="confirm-reset-exported-btn" disabled>Confirm</button>
+        <button type="button" id="confirm-reset-exported-cancel">Cancel</button>
+      </div>
+      <div class="status" id="reset-exported-status"></div>
+    </div>
+
+    <div class="bg-job-row">
+      <div class="bg-job-controls">
         <button type="button" id="btn-delete-all" class="danger">Delete ALL data</button>
         <span class="hint">Wipes every canonical job, exported mark, and run watermark. Irreversible.</span>
       </div>
@@ -477,6 +498,14 @@ export const ADMIN_UI_HTML = `<!doctype html>
     confirmExtractAllBtn: document.getElementById('confirm-extract-all-btn'),
     confirmExtractAllCancel: document.getElementById('confirm-extract-all-cancel'),
     extractAllStatus: document.getElementById('extract-all-status'),
+    btnExportAll: document.getElementById('btn-export-all'),
+    exportAllStatus: document.getElementById('export-all-status'),
+    btnResetExported: document.getElementById('btn-reset-exported'),
+    confirmResetExported: document.getElementById('confirm-reset-exported'),
+    confirmResetExportedInput: document.getElementById('confirm-reset-exported-input'),
+    confirmResetExportedBtn: document.getElementById('confirm-reset-exported-btn'),
+    confirmResetExportedCancel: document.getElementById('confirm-reset-exported-cancel'),
+    resetExportedStatus: document.getElementById('reset-exported-status'),
     btnDeleteAll: document.getElementById('btn-delete-all'),
     confirmDeleteAll: document.getElementById('confirm-delete-all'),
     confirmDeleteAllInput: document.getElementById('confirm-delete-all-input'),
@@ -1062,6 +1091,13 @@ export const ADMIN_UI_HTML = `<!doctype html>
         (r.deletedExportedMarks === null ? '' : ', ' + r.deletedExportedMarks + ' exported mark(s)') +
         (r.resetRunState ? ', reset run watermark' : '') + '.';
     }
+    if (status.name === 'export-all') {
+      return 'Done — synced ' + r.pushed + ' / ' + r.total + ' job(s) to ' + r.destination +
+        ' in ' + r.batches + ' batch(es), all marked exported.';
+    }
+    if (status.name === 'reset-exported') {
+      return 'Done — cleared ' + r.clearedMarks + ' exported mark(s). Every job now shows as not exported.';
+    }
     return 'Done.';
   }
 
@@ -1092,18 +1128,24 @@ export const ADMIN_UI_HTML = `<!doctype html>
       .then(function (data) {
         renderBgStatus(els.extractAllStatus, els.btnExtractAll, data['extract-all']);
         renderBgStatus(els.deleteAllStatus, els.btnDeleteAll, data['clear-all']);
+        renderBgStatus(els.exportAllStatus, els.btnExportAll, data['export-all']);
+        renderBgStatus(els.resetExportedStatus, els.btnResetExported, data['reset-exported']);
 
-        var anyRunning = data['extract-all'].state === 'running' || data['clear-all'].state === 'running';
+        var anyRunning = data['extract-all'].state === 'running' ||
+          data['clear-all'].state === 'running' ||
+          data['export-all'].state === 'running' ||
+          data['reset-exported'].state === 'running';
         if (anyRunning) {
           bgPollTimer = setTimeout(pollBackgroundStatus, 3000);
         } else {
           bgPollTimer = null;
         }
 
-        // A background wipe/extraction just finished — the jobs table
-        // and stat tiles are stale until the next manual search, so
-        // refresh them automatically once.
-        if (data['clear-all'].state === 'done' || data['extract-all'].state === 'done') {
+        // A background wipe/extraction/sync/reset just finished — the jobs
+        // table and stat tiles (incl. exported badges) are stale until the
+        // next manual search, so refresh them automatically once.
+        if (data['clear-all'].state === 'done' || data['extract-all'].state === 'done' ||
+            data['export-all'].state === 'done' || data['reset-exported'].state === 'done') {
           if (!anyRunning) {
             cursorStack = [];
             currentCursor = undefined;
@@ -1156,6 +1198,47 @@ export const ADMIN_UI_HTML = `<!doctype html>
         });
     },
   );
+
+  wireTypedConfirmation(
+    els.btnResetExported, els.confirmResetExported, els.confirmResetExportedInput,
+    els.confirmResetExportedBtn, els.confirmResetExportedCancel, 'RESET EXPORTED',
+    function () {
+      fetch('/api/admin/jobs/reset-exported', { method: 'POST' })
+        .then(function (res) {
+          if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || ('HTTP ' + res.status)); });
+          return res.json();
+        })
+        .then(function (status) {
+          renderBgStatus(els.resetExportedStatus, els.btnResetExported, status);
+          if (!bgPollTimer) bgPollTimer = setTimeout(pollBackgroundStatus, 3000);
+        })
+        .catch(function (err) {
+          els.resetExportedStatus.textContent = 'Failed to start: ' + err.message;
+          els.resetExportedStatus.style.color = 'var(--bad)';
+        });
+    },
+  );
+
+  // "Sync ALL to platform" — non-destructive, so no type-to-confirm gate.
+  els.btnExportAll.addEventListener('click', function () {
+    els.btnExportAll.disabled = true;
+    els.exportAllStatus.textContent = 'Starting…';
+    els.exportAllStatus.style.color = 'var(--muted)';
+    fetch('/api/admin/jobs/export-all', { method: 'POST' })
+      .then(function (res) {
+        if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || ('HTTP ' + res.status)); });
+        return res.json();
+      })
+      .then(function (status) {
+        renderBgStatus(els.exportAllStatus, els.btnExportAll, status);
+        if (!bgPollTimer) bgPollTimer = setTimeout(pollBackgroundStatus, 3000);
+      })
+      .catch(function (err) {
+        els.btnExportAll.disabled = false;
+        els.exportAllStatus.textContent = 'Failed to start: ' + err.message;
+        els.exportAllStatus.style.color = 'var(--bad)';
+      });
+  });
 
   // Restores whatever is running/finished even across a page refresh.
   pollBackgroundStatus();
