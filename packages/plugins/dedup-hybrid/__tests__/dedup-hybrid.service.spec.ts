@@ -165,6 +165,74 @@ describe('DedupHybridService', () => {
     expect(fields['title'].value).not.toBe('Senior Software Engineer');
   });
 
+  describe('observedAt / implausible-future-date guard', () => {
+    const FIXED_NOW = new Date('2026-06-15T00:00:00.000Z').getTime();
+
+    beforeEach(() => {
+      // `jobToObservation`'s `observedAt` uses `new Date().toISOString()`
+      // (the constructor, no args) — `jest.spyOn(Date, 'now')` alone does
+      // NOT intercept that, only real fake timers do.
+      jest.useFakeTimers({ now: FIXED_NOW });
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('sets SourceObservation.observedAt to scrape time, never the source-reported datePosted', async () => {
+      // A source reporting a datePosted far from "now" (in either
+      // direction) must NOT leak into observedAt — observedAt means "when
+      // THIS PROCESS scraped it", per the SourceObservation contract.
+      const a = job({
+        id: '1',
+        site: Site.GREENHOUSE,
+        datePosted: '2020-01-01T00:00:00.000Z',
+      });
+      const out = await service.dedup([a]);
+      const observedAt = out.canonical[0].sources[0].observedAt;
+      expect(observedAt).toBe(new Date(FIXED_NOW).toISOString());
+      expect(observedAt).not.toBe('2020-01-01T00:00:00.000Z');
+    });
+
+    it('clamps an implausible future datePosted to today instead of dropping it', async () => {
+      // e.g. a source-side dd/mm vs mm/dd date-parsing bug that silently
+      // swapped month and day, landing months in the future. Not a
+      // genuinely future-dated posting, so it's corrected to today's
+      // date rather than losing the field entirely.
+      const a = job({
+        id: '1',
+        site: Site.GREENHOUSE,
+        datePosted: '2026-12-06T00:00:00.000Z',
+        department: 'Engineering',
+      });
+      const out = await service.dedup([a]);
+      const fields = out.canonical[0].fields;
+      expect(fields['datePosted'].value).toBe(new Date(FIXED_NOW).toISOString().slice(0, 10));
+      // Sibling raw fields on the same job are unaffected by the guard.
+      expect(fields['department'].value).toBe('Engineering');
+    });
+
+    it('accepts a datePosted within the 1-day forward-tolerance window', async () => {
+      const a = job({
+        id: '1',
+        site: Site.GREENHOUSE,
+        datePosted: '2026-06-15T12:00:00.000Z', // 12h ahead of fixed "now"
+      });
+      const out = await service.dedup([a]);
+      expect(out.canonical[0].fields['datePosted'].value).toBe('2026-06-15T12:00:00.000Z');
+    });
+
+    it('still carries a plausible past datePosted through unchanged', async () => {
+      const a = job({
+        id: '1',
+        site: Site.GREENHOUSE,
+        datePosted: '2026-01-01T00:00:00.000Z',
+      });
+      const out = await service.dedup([a]);
+      expect(out.canonical[0].fields['datePosted'].value).toBe('2026-01-01T00:00:00.000Z');
+    });
+  });
+
   it('merges near-duplicate descriptions across sources via MinHash', async () => {
     const desc =
       'We are hiring a Staff Backend Engineer to lead our distributed-systems team. ' +

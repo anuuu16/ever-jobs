@@ -18,12 +18,17 @@
  *  8. `page()` returns the HTML constant when enabled.
  */
 import 'reflect-metadata';
+
+jest.mock('axios');
+import axios from 'axios';
 import { NotFoundException } from '@nestjs/common';
 import { CanonicalJob, ScraperInputDto, Site, SourceObservation } from '@ever-jobs/models';
 import { AdminBackgroundJobsService } from '../admin-background-jobs.service';
 import { AdminController } from '../admin.controller';
 import { ADMIN_UI_HTML } from '../admin-ui.html';
 import { ATS_COMPANY_DIRECTORY } from '../ats-company-directory';
+
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 /** Flushes pending microtasks — `clearAll()`/`extractAll()` fire their work without awaiting it. */
 function flushMicrotasks(): Promise<void> {
@@ -123,6 +128,19 @@ function makeRunStateStore() {
 
 function makeBreaker(healths: Array<Record<string, unknown>> = []) {
   return { list: jest.fn().mockReturnValue(healths) };
+}
+
+/** `ConfigService` stub that additionally serves a `dailyExport` target for `exportAll()` tests. */
+function makeExportConfigService(targetUrl: string | undefined) {
+  return {
+    get: jest.fn((key: string) => {
+      if (key === 'dailyExport') {
+        return targetUrl ? { targetUrl, targetMethod: 'POST', targetTimeoutMs: 5000 } : undefined;
+      }
+      if (key === 'defaults') return { siteNames: [] };
+      return true; // adminUi.enabled
+    }),
+  };
 }
 
 describe('AdminController', () => {
@@ -842,6 +860,99 @@ describe('AdminController', () => {
       await flushMicrotasks();
 
       expect(exportedJobStore.clearAll).toHaveBeenCalledTimes(1);
+    });
+
+    it('exportAll() throws NotFoundException when no export target is configured', () => {
+      const jobStore = makeJobStore([makeJob()]);
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeExportConfigService(undefined) as any,
+        jobStore as any,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+      expect(() => controller.exportAll()).toThrow(NotFoundException);
+    });
+
+    it('exportAll() pushes only NOT-yet-exported jobs, skipping ones already marked exported', async () => {
+      mockedAxios.request.mockResolvedValue({ status: 200, data: {} });
+
+      const jobs = [
+        makeJob({ canonicalJobId: 'a', url: 'https://example.com/1' }),
+        makeJob({ canonicalJobId: 'b', url: 'https://example.com/2' }),
+        makeJob({ canonicalJobId: 'c', url: 'https://example.com/3' }),
+      ];
+      const jobStore = makeJobStore(jobs);
+      // "https://example.com/2" is already exported — it must be skipped.
+      const exportedJobStore = makeExportedJobStore(['https://example.com/2']);
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeExportConfigService('https://sink.example.com/ingest') as any,
+        jobStore as any,
+        undefined,
+        exportedJobStore as any,
+        undefined,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+
+      const started = controller.exportAll();
+      expect(started.state).toBe('running');
+
+      await flushMicrotasks();
+
+      const finished = backgroundJobs.getAll()['export-all'];
+      expect(finished.state).toBe('done');
+      expect(finished.result).toEqual({
+        total: 3,
+        scanned: 3,
+        pushed: 2,
+        skipped: 1,
+        batches: 1,
+        destination: 'https://sink.example.com/ingest',
+      });
+
+      // Only the two unexported jobs were actually sent downstream.
+      expect(mockedAxios.request).toHaveBeenCalledTimes(1);
+      const sentJobs = (mockedAxios.request.mock.calls[0][0] as { data: { jobs: Array<{ jobUrl: string }> } })
+        .data.jobs;
+      expect(sentJobs.map((j) => j.jobUrl).sort()).toEqual([
+        'https://example.com/1',
+        'https://example.com/3',
+      ]);
+      expect(exportedJobStore.markExported).toHaveBeenCalledWith(
+        expect.arrayContaining(['https://example.com/1', 'https://example.com/3']),
+        expect.any(Date),
+      );
+    });
+
+    it('exportAll() with no IExportedJobStore bound falls back to pushing everything (unknowable otherwise)', async () => {
+      mockedAxios.request.mockResolvedValue({ status: 200, data: {} });
+
+      const jobs = [makeJob({ canonicalJobId: 'a', url: 'https://example.com/1' })];
+      const jobStore = makeJobStore(jobs);
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeExportConfigService('https://sink.example.com/ingest') as any,
+        jobStore as any,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+
+      controller.exportAll();
+      await flushMicrotasks();
+
+      const finished = backgroundJobs.getAll()['export-all'];
+      expect(finished.result).toMatchObject({ total: 1, scanned: 1, pushed: 1, skipped: 0 });
     });
 
     it('extractAll() throws NotFoundException when no JobsAggregator is bound', () => {

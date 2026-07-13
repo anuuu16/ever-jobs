@@ -35,6 +35,36 @@ const RAW_FIELDS_HANDLED = new Set([
 ]);
 
 /**
+ * Forward tolerance applied by {@link clampImplausibleFutureDate} — absorbs
+ * legitimate timezone skew between a source and this process (e.g. a
+ * source reporting "today" in a timezone that's already tomorrow UTC).
+ * Anything further out than this is treated as a malformed upstream date
+ * (most commonly a locale mismatch — e.g. a source emitting `DD/MM/YYYY`
+ * that got parsed as `MM/DD/YYYY`, silently swapping month and day) rather
+ * than a real future-dated posting.
+ */
+const FUTURE_DATE_TOLERANCE_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * `value`, unless it parses as a date more than {@link FUTURE_DATE_TOLERANCE_MS}
+ * ahead of now — in which case it's a parsing/scraping artifact (a source
+ * doesn't post as-yet-unposted jobs), not a genuinely future-dated posting,
+ * and gets clamped to today's date instead. Keeps a single misbehaving
+ * source (a bad `datePosted` parse) from contaminating the canonical field
+ * — and, transitively, the export payload built from it
+ * (`AdminController.toExportPayload` in `apps/api`) — while still leaving
+ * the field populated rather than dropping it. Non-string / unparseable
+ * values are returned unchanged; they're not this guard's concern.
+ */
+function clampImplausibleFutureDate(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  const parsed = Date.parse(value);
+  if (Number.isNaN(parsed)) return value;
+  if (parsed <= Date.now() + FUTURE_DATE_TOLERANCE_MS) return value;
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
  * Default hybrid dedup engine — Spec 003 / FR-1.
  *
  * Pipeline (each stage further merges clusters from the previous stage):
@@ -161,7 +191,17 @@ export class DedupHybridService implements IDedupEngine {
         if (RAW_FIELDS_HANDLED.has(key) || value === null || value === undefined) {
           continue;
         }
-        fields[key] = provenance(value, headSite, headSourceId, observedAt);
+        let fieldValue = value;
+        if (key === 'datePosted') {
+          fieldValue = clampImplausibleFutureDate(value);
+          if (fieldValue !== value) {
+            this.logger.warn(
+              `Clamping implausible future datePosted "${String(value)}" from ` +
+                `${headSite}/${headSourceId} to today's date — likely a source-side date-parsing bug`,
+            );
+          }
+        }
+        fields[key] = provenance(fieldValue, headSite, headSourceId, observedAt);
       }
 
       const record: CanonicalJob = {
@@ -213,6 +253,13 @@ export class DedupHybridService implements IDedupEngine {
 /**
  * Build a `SourceObservation` from a `JobPostDto`. Returns `null` if the DTO
  * lacks the bare-minimum identity fields (`site`, `jobUrl`).
+ *
+ * `observedAt` is always "now" (scrape time) — per the `SourceObservation`
+ * contract ("ISO-8601 timestamp when the plugin observed the job"), NOT the
+ * source's self-reported posting date. Using `datePosted` here previously
+ * conflated the two: a malformed/future-dated `datePosted` from one
+ * misbehaving source (e.g. a locale-mismatched date parse) silently
+ * corrupted every field's provenance timestamp on the canonical record.
  */
 function jobToObservation(raw: JobPostDto): SourceObservation | null {
   if (!raw.site || !raw.jobUrl) return null;
@@ -220,7 +267,7 @@ function jobToObservation(raw: JobPostDto): SourceObservation | null {
     site: raw.site as Site,
     sourceJobId: String(raw.id ?? raw.atsId ?? raw.jobUrl),
     url: raw.jobUrl,
-    observedAt: typeof raw.datePosted === 'string' ? raw.datePosted : new Date().toISOString(),
+    observedAt: new Date().toISOString(),
     rawTitle: raw.title,
     rawResponse: raw.rawResponse ?? undefined,
   };

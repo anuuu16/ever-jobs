@@ -319,8 +319,8 @@ export const ADMIN_UI_HTML = `<!doctype html>
 
     <div class="bg-job-row">
       <div class="bg-job-controls">
-        <button type="button" id="btn-export-all">Sync ALL to platform</button>
-        <span class="hint">Pushes every stored job to the configured downstream target (DAILY_EXPORT_TARGET_URL) and marks them exported. Requires a configured target.</span>
+        <button type="button" id="btn-export-all">Sync new to platform</button>
+        <span class="hint">Pushes only NOT-yet-exported jobs to the configured downstream target (DAILY_EXPORT_TARGET_URL) and marks them exported — already-exported jobs are skipped, not re-sent. Requires a configured target.</span>
       </div>
       <div class="status" id="export-all-status"></div>
     </div>
@@ -1235,8 +1235,9 @@ export const ADMIN_UI_HTML = `<!doctype html>
         (r.resetRunState ? ', reset run watermark' : '') + '.';
     }
     if (status.name === 'export-all') {
-      return 'Done — synced ' + r.pushed + ' / ' + r.total + ' job(s) to ' + r.destination +
-        ' in ' + r.batches + ' batch(es), all marked exported.';
+      return 'Done — synced ' + r.pushed + ' new job(s) to ' + r.destination +
+        ' in ' + r.batches + ' batch(es) (skipped ' + r.skipped + ' already-exported, ' +
+        r.scanned + ' / ' + r.total + ' scanned).';
     }
     if (status.name === 'reset-exported') {
       return 'Done — cleared ' + r.clearedMarks + ' exported mark(s). Every job now shows as not exported.';

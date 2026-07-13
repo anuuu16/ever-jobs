@@ -165,15 +165,7 @@ export class ReedService implements IScraper {
       city: raw.locationName ?? null,
     });
 
-    // Parse date
-    let datePosted: string | null = null;
-    if (raw.date) {
-      try {
-        datePosted = new Date(raw.date).toISOString().split('T')[0];
-      } catch {
-        datePosted = null;
-      }
-    }
+    const datePosted = parseReedDate(raw.date, this.logger);
 
     // Detect remote from title or description
     const textToScan = `${raw.jobTitle} ${raw.jobDescription ?? ''}`.toLowerCase();
@@ -198,4 +190,66 @@ export class ReedService implements IScraper {
       site: Site.REED,
     });
   }
+}
+
+/**
+ * Parse Reed's `date` field. The public Jobseeker API returns this as UK
+ * `dd/mm/yyyy` (e.g. `"22/11/2013"`) — this previously went straight into
+ * `new Date(raw.date)`, whose non-ISO slash-format parsing follows the US
+ * `mm/dd/yyyy` convention. For any date where both day and month are ≤ 12
+ * that silently swaps them into a *different but still valid* date instead
+ * of failing — e.g. Reed's "12/06/2026" (12 June 2026) was misread as
+ * month=12/day=06 → 6 December 2026, months in the future. The bug went
+ * unnoticed because a swapped date is rarely itself invalid.
+ *
+ * Returns `null` — rather than propagating a corrupted value — when the
+ * input doesn't match the expected `dd/mm/yyyy` shape, or when the
+ * day/month/year combination isn't a real calendar date (caught via
+ * round-tripping through `Date.UTC`, since `Date.UTC` itself silently
+ * rolls over out-of-range components rather than failing).
+ *
+ * A date that parses fine but lands more than a day in the future is a
+ * different case: Reed doesn't post as-yet-unposted jobs, so this is a
+ * parsing/scraping artifact (most likely the exact day/month swap this
+ * function exists to prevent), not a genuinely future-dated posting — it
+ * gets **clamped to today's date** rather than dropped, so the job still
+ * carries a plausible `datePosted` instead of losing the field entirely.
+ *
+ * Exported (not just a local closure) so it can be unit-tested without
+ * spinning up the whole scraper.
+ */
+export function parseReedDate(raw: string | undefined, logger: Logger): string | null {
+  if (!raw) return null;
+
+  const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(raw.trim());
+  if (!match) {
+    logger.warn(`Unrecognised Reed date format "${raw}" — expected dd/mm/yyyy, dropping`);
+    return null;
+  }
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+
+  const utcMs = Date.UTC(year, month - 1, day);
+  const roundTrip = new Date(utcMs);
+  if (
+    roundTrip.getUTCFullYear() !== year ||
+    roundTrip.getUTCMonth() !== month - 1 ||
+    roundTrip.getUTCDate() !== day
+  ) {
+    logger.warn(`Reed date "${raw}" is not a real calendar date — dropping`);
+    return null;
+  }
+
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  if (utcMs > Date.now() + ONE_DAY_MS) {
+    const today = new Date().toISOString().split('T')[0];
+    logger.warn(
+      `Reed date "${raw}" parsed to an implausible future date — clamping to today (${today})`,
+    );
+    return today;
+  }
+
+  return roundTrip.toISOString().split('T')[0];
 }

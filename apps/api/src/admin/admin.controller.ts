@@ -314,15 +314,16 @@ export class AdminController {
   }
 
   /**
-   * Push EVERY persisted canonical job to the configured downstream target
-   * (the `dailyExport` webhook — e.g. the platform's job-board ingest
-   * endpoint) and mark them all exported, so the next daily-export tick
+   * Push every NOT-YET-exported canonical job to the configured downstream
+   * target (the `dailyExport` webhook — e.g. the platform's job-board
+   * ingest endpoint) and mark them exported, so the next daily-export tick
    * treats them as already-seen.
    *
-   * Unlike `DailyExportCron`, which only pushes *fresh* (unseen) jobs from a
-   * live scrape, this operator action re-pushes the WHOLE store on demand —
-   * the "sync everything I've already collected to the platform" button.
-   * Idempotent downstream (the platform upserts by canonical id / URL).
+   * Scans the whole store (there's no "not exported" filter in
+   * `IJobStore`'s contract) but only POSTs the subset `IExportedJobStore`
+   * doesn't already know about — already-exported jobs are skipped, not
+   * re-sent. When no `IExportedJobStore` is bound, "already exported" is
+   * unknowable, so this falls back to pushing everything (same as before).
    */
   @Post('api/admin/jobs/export-all')
   exportAll(): BackgroundJobStatus {
@@ -370,14 +371,17 @@ export class AdminController {
 
   /**
    * Body of the `export-all` background job. Pages the whole job store,
-   * converts each `CanonicalJob` to the ingest payload the downstream
-   * target expects, POSTs it in batches, and marks every pushed URL
-   * exported. A failed batch aborts the run (so we don't mark unsent jobs
-   * as exported) and surfaces as `state: 'failed'`.
+   * skips any job `IExportedJobStore` already knows about, converts the
+   * rest to the ingest payload the downstream target expects, POSTs them
+   * in batches, and marks every pushed URL exported. A failed batch aborts
+   * the run (so we don't mark unsent jobs as exported) and surfaces as
+   * `state: 'failed'`.
    */
   private async runExportAll(update: (progress: BackgroundJobProgress) => void): Promise<{
     total: number;
+    scanned: number;
     pushed: number;
+    skipped: number;
     batches: number;
     destination: string;
   }> {
@@ -388,9 +392,11 @@ export class AdminController {
     const BATCH = 100;
 
     const total = await this.jobStore!.countByQuery({});
-    update({ done: 0, total, label: `Syncing ${total} job(s)…` });
+    update({ done: 0, total, label: `Scanning ${total} job(s) for unexported…` });
 
+    let scanned = 0;
     let pushed = 0;
+    let skipped = 0;
     let batches = 0;
     let cursor: string | undefined;
 
@@ -399,22 +405,39 @@ export class AdminController {
       cursor = page.nextCursor;
       if (page.items.length === 0) break;
 
-      const jobs = page.items.map((job) => this.toExportPayload(job));
-      await this.pushBatch(config, jobs);
-
+      let candidates = page.items;
       if (this.exportedJobStore) {
-        await this.exportedJobStore.markExported(
-          jobs.map((j) => String(j.jobUrl)),
-          new Date(),
+        const unseenUrls = new Set(
+          await this.exportedJobStore.filterUnseen(page.items.map((j) => j.url)),
         );
+        candidates = page.items.filter((j) => unseenUrls.has(j.url));
+      }
+      scanned += page.items.length;
+      skipped += page.items.length - candidates.length;
+
+      if (candidates.length > 0) {
+        const jobs = candidates.map((job) => this.toExportPayload(job));
+        await this.pushBatch(config, jobs);
+
+        if (this.exportedJobStore) {
+          await this.exportedJobStore.markExported(
+            jobs.map((j) => String(j.jobUrl)),
+            new Date(),
+          );
+        }
+
+        pushed += jobs.length;
+        batches++;
       }
 
-      pushed += jobs.length;
-      batches++;
-      update({ done: pushed, total, label: `Synced ${pushed} / ${total} job(s)` });
+      update({
+        done: scanned,
+        total,
+        label: `Synced ${pushed} new job(s), skipped ${skipped} already-exported (${scanned}/${total} scanned)`,
+      });
     } while (cursor);
 
-    return { total, pushed, batches, destination: config.targetUrl! };
+    return { total, scanned, pushed, skipped, batches, destination: config.targetUrl! };
   }
 
   /** POST one `{ jobs }` batch to the configured target; throws on failure. */
