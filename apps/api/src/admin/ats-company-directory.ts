@@ -1098,21 +1098,47 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
   // Workday companySlug format: `{company}:{wdNumber}:{careerSite}`
   workday: [
     {
+      // Live-verified 2026-07-13 (scripts/verify-ats-directory-slugs.ts) —
+      // the prior slug "salesforce:12:External" 404s; the real career-site
+      // ID is "External_Career_Site" (1463 open roles at verification time).
       name: "Salesforce",
-      slug: "salesforce:12:External",
+      slug: "salesforce:12:External_Career_Site",
       industry: "CRM / Cloud",
     },
     { name: "Intel", slug: "intel:1:External", industry: "Semiconductors" },
-    { name: "Cisco", slug: "cisco:5:Cisco_External", industry: "Networking" },
-    { name: "Adobe", slug: "adobe:5:External", industry: "Software" },
     {
+      // Live-verified 2026-07-13 — prior slug "cisco:5:Cisco_External" 404s;
+      // the real career-site ID is "Cisco_Careers" (965 open roles).
+      name: "Cisco",
+      slug: "cisco:5:Cisco_Careers",
+      industry: "Networking",
+    },
+    {
+      // Live-verified 2026-07-13 — prior slug "adobe:5:External" 404s; the
+      // real career-site ID is "external_experienced" (903 open roles).
+      name: "Adobe",
+      slug: "adobe:5:external_experienced",
+      industry: "Software",
+    },
+    {
+      // TODO(verify manually): live-verified 2026-07-13 — tried
+      // "epicgames:5:EpicExternalSite" (404), "epicgames:5:External" (404),
+      // "epicgames:1:Epic_Games" (422), "epicgames:5:EPIC_GAMES" (403), and
+      // "epicgames:5:External_Careers" (404). The confirmed real career-site
+      // ID "Epic_Games" (per web search) returns 403 "permission denied" on
+      // the public CXS endpoint — possibly gated differently than other
+      // tenants. Left in place per policy (never auto-remove); needs a human
+      // to confirm the live careers URL and re-derive the slug, or drop it
+      // if Epic Games' Workday board genuinely isn't publicly queryable.
       name: "Epic Games",
       slug: "epicgames:5:EpicExternalSite",
       industry: "Gaming",
     },
     {
+      // Live-verified 2026-07-13 — prior slug "warnerbros:5:WarnerBros"
+      // 404s; the real career-site ID is "global" (424 open roles).
       name: "Warner Bros",
-      slug: "warnerbros:5:WarnerBros",
+      slug: "warnerbros:5:global",
       industry: "Entertainment",
     },
     {
@@ -1121,26 +1147,86 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       industry: "Entertainment",
     },
     {
+      // TODO(verify manually): live-verified 2026-07-13 — "deloitte:5:DeloitteUSCareers"
+      // and "deloitte:5:Deloitte" both 422. Deloitte's US careers funnel
+      // through apply.deloitte.com; deloitteie.wd3.myworkdayjobs.com
+      // (Experienced_Professionals) is a real Workday board but is
+      // Deloitte IRELAND, not US — needs a human to find the correct
+      // tenant/site for whichever Deloitte entity this entry should track.
       name: "Deloitte",
       slug: "deloitte:5:DeloitteUSCareers",
       industry: "Consulting",
     },
-    { name: "McKinsey", slug: "mckinsey:5:External", industry: "Consulting" },
-    { name: "Tesla", slug: "tesla:5:Tesla", industry: "EV / Energy" },
     {
+      // TODO(verify manually): live-verified 2026-07-13 — "mckinsey:5:External"
+      // and "mckinsey:5:McKinsey" both 422. McKinsey's public careers site
+      // is jobs.mckinsey.com; no public myworkdayjobs.com tenant found via
+      // search — may not expose a public Workday CXS board at all.
+      name: "McKinsey",
+      slug: "mckinsey:5:External",
+      industry: "Consulting",
+    },
+    {
+      // TODO(verify manually): live-verified 2026-07-13 — "tesla:5:Tesla"
+      // and "tesla:1:Tesla" and "tesla:5:External" all 422 (one earlier hit
+      // also returned a Cloudflare challenge page). Tesla's public careers
+      // site (tesla.com/careers) may not run on a public myworkdayjobs.com
+      // tenant — no working combination found via search either.
+      name: "Tesla",
+      slug: "tesla:5:Tesla",
+      industry: "EV / Energy",
+    },
+    {
+      // TODO(verify manually): live-verified 2026-07-13 — "qualcomm:5:External"
+      // 422s. "qualcomm:12:External" DOES resolve (HTTP 200) but returns
+      // total=0, jobPostings=[] AND facets=[] — unusual even for a
+      // genuinely job-free board (facets are normally still populated).
+      // Real tenant, but needs a human to confirm this is the live board
+      // and not a decommissioned one.
       name: "Qualcomm",
       slug: "qualcomm:5:External",
       industry: "Semiconductors",
     },
-    { name: "AMD", slug: "amd:5:External", industry: "Semiconductors" },
     {
-      name: "Broadcom",
-      slug: "broadcom:5:External",
+      // TODO(verify manually): live-verified 2026-07-13 — "amd:5:External"
+      // and "amd:1:External" both 422. AMD's public careers site
+      // (careers.amd.com) may not run on a public myworkdayjobs.com
+      // tenant — no working combination found via search either.
+      name: "AMD",
+      slug: "amd:5:External",
       industry: "Semiconductors",
     },
-    { name: "Samsung", slug: "samsung:3:Global", industry: "Electronics" },
-    { name: "Siemens", slug: "siemens:3:External", industry: "Industrial" },
     {
+      name: "Broadcom",
+      slug: "broadcom:1:External_Career",
+      industry: "Semiconductors",
+    },
+    {
+      // Live-verified 2026-07-13 — prior slug "samsung:3:Global" 422s; the
+      // real tenant/site is "sec:3:Samsung_Careers" (562 open roles) — the
+      // Workday company subdomain is Samsung Electronics' "sec", not
+      // "samsung".
+      name: "Samsung",
+      slug: "sec:3:Samsung_Careers",
+      industry: "Electronics",
+    },
+    {
+      // TODO(verify manually): live-verified 2026-07-13 — "siemens:3:External",
+      // "siemens:1:External" and "siemens:5:External" all 422. Only a
+      // Siemens GAMESA (renewable-energy subsidiary) board was found via
+      // search (siemensgamesa.wd3.myworkdayjobs.com/SGRE) — needs a human
+      // to confirm whether that's the intended entity for a generic
+      // "Siemens" entry, or find the parent company's own board.
+      name: "Siemens",
+      slug: "siemens:3:External",
+      industry: "Industrial",
+    },
+    {
+      // TODO(verify manually): live-verified 2026-07-13 — "lmco:5:LMCareers"
+      // 422s. Lockheed Martin's public careers site
+      // (lockheedmartinjobs.com) is transitioning platforms per search
+      // results and may not expose a public myworkdayjobs.com tenant right
+      // now — no working combination found via search either.
       name: "Lockheed Martin",
       slug: "lmco:5:LMCareers",
       industry: "Aerospace / Defense",
@@ -1148,8 +1234,826 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
     {
       name: "Thales Group",
       slug: "thales:3:Careers",
+      industry: "Aerospace / Defense",
+    },
+    {
+      name: "Kyndryl",
+      slug: "kyndryl:5:KyndrylProfessionalCareers",
       industry: "CRM / Cloud",
     },
+    {
+      name: "FNZ",
+      slug: "fnz:3:fnz_careers",
+      industry: "Wealth Management / Fintech",
+    },
+    { name: "Visa", slug: "visa:5:Visa", industry: "Payments / Fintech" },
+    {
+      name: "Mastercard",
+      slug: "mastercard:1:CorporateCareers",
+      industry: "Payments / Fintech",
+    },
+    {
+      name: "Boeing",
+      slug: "boeing:1:EXTERNAL_CAREERS",
+      industry: "Aerospace / Defense",
+    },
+    { name: "Nike", slug: "nike:1:nke", industry: "Apparel / Footwear" },
+    { name: "Autodesk", slug: "autodesk:1:Ext", industry: "Software / Design" },
+    {
+      name: "Hewlett Packard Enterprise",
+      slug: "hpe:5:ACJobSite",
+      industry: "Enterprise Technology",
+    },
+    {
+      name: "Caterpillar",
+      slug: "cat:5:CaterpillarCareers",
+      industry: "Heavy Equipment / Industrial",
+    },
+    {
+      name: "Johnson & Johnson",
+      slug: "jj:5:JJ",
+      industry: "Healthcare / Pharmaceuticals",
+    },
+    {
+      name: "Johnson Controls",
+      slug: "jci:5:JCI",
+      industry: "Building Technology / Industrial",
+    },
+    {
+      name: "SC Johnson",
+      slug: "scj:5:External_Career_Site",
+      industry: "Consumer Goods",
+    },
+    {
+      name: "Johnson Matthey",
+      slug: "matthey:3:Ext_Career_Site",
+      industry: "Chemicals / Materials",
+    },
+    {
+      name: "Marriott Vacations Worldwide",
+      slug: "mymvw:5:MVW",
+      industry: "Hospitality / Vacation Ownership",
+    },
+    {
+      name: "Pfizer",
+      slug: "pfizer:1:PfizerCareers",
+      industry: "Pharmaceuticals",
+    },
+    {
+      name: "Merck & Co. (MSD)",
+      slug: "msd:5:SearchJobs",
+      industry: "Pharmaceuticals",
+    },
+    {
+      name: "RTX (Raytheon Technologies)",
+      slug: "globalhr:5:REC_RTX_Ext_Gateway",
+      industry: "Aerospace / Defense",
+    },
+    {
+      name: "NVIDIA",
+      slug: "nvidia:5:NVIDIAExternalCareerSite",
+      industry: "Semiconductors / AI",
+    },
+    {
+      name: "GDIT (General Dynamics IT)",
+      slug: "gdit:5:External_Career_Site",
+      industry: "Defense / IT Services",
+    },
+    {
+      name: "General Motors",
+      slug: "generalmotors:5:Careers_GM",
+      industry: "Automotive",
+    },
+    {
+      name: "UPS",
+      slug: "hcmportal:5:Search",
+      industry: "Logistics / Transportation",
+    },
+    { name: "Target", slug: "target:5:targetcareers", industry: "Retail" },
+    { name: "Chevron", slug: "chevron:5:jobs", industry: "Energy / Oil & Gas" },
+
+    {
+      name: "Marmon Holdings",
+      slug: "marmon:501:Marmon_Careers",
+      industry: "Diversified Industrial",
+    },
+    {
+      name: "Pluralsight",
+      slug: "pluralsight:1:Careers",
+      industry: "EdTech / Software",
+    },
+    {
+      name: "Air Products",
+      slug: "airproducts:5:AP0001",
+      industry: "Industrial Gases / Chemicals",
+    },
+    {
+      name: "Cloudera",
+      slug: "cloudera:5:External_Career",
+      industry: "Data / Software",
+    },
+    {
+      name: "Equiniti (EQ)",
+      slug: "equiniti:3:Opportunities",
+      industry: "Financial Services / Registrar",
+    },
+    {
+      name: "Reworld",
+      slug: "reworld:5:External",
+      industry: "Waste Management / Sustainable Energy",
+    },
+    {
+      name: "Opella",
+      slug: "chloe:3:OpellaCareers",
+      industry: "Consumer Healthcare",
+    },
+    {
+      name: "AutoStore",
+      slug: "autostore:3:autostore",
+      industry: "Robotics / Warehouse Automation",
+    },
+    {
+      name: "Sovereign Network Group",
+      slug: "sovereignnetworkgroup:103:SNGExternal",
+      industry: "Housing / Real Estate",
+    },
+    {
+      name: "ROCKWOOL Group",
+      slug: "rockwoolgroup:3:ROCKWOOL",
+      industry: "Building Materials / Insulation",
+    },
+    {
+      name: "Automation Anywhere",
+      slug: "automationanywhere:5:AutomationAnywhereJobs",
+      industry: "RPA / Software",
+    },
+    { name: "Snyk", slug: "snyk:103:External", industry: "Cybersecurity" },
+    {
+      name: "Starr Companies",
+      slug: "starrcompanies:1:careers",
+      industry: "Insurance",
+    },
+    {
+      name: "Occidental Petroleum (Oxy)",
+      slug: "oxy:5:Corporate",
+      industry: "Energy / Oil & Gas",
+    },
+    {
+      name: "Genentech",
+      slug: "roche:3:ROG-A2O-GENE",
+      industry: "Biotechnology",
+    },
+    {
+      name: "Guidehouse",
+      slug: "guidehouse:1:External",
+      industry: "Consulting / Professional Services",
+    },
+    {
+      name: "Booz Allen Hamilton",
+      slug: "bah:1:BAH_Jobs",
+      industry: "Consulting / Government Services",
+    },
+    {
+      name: "Owens & Minor",
+      slug: "owensminor:1:OMCareers",
+      industry: "Healthcare Distribution",
+    },
+    {
+      name: "McKesson",
+      slug: "mckesson:3:External_Careers",
+      industry: "Healthcare Distribution",
+    },
+    {
+      name: "BDO",
+      slug: "bdo:3:BDO",
+      industry: "Professional Services / Accounting",
+    },
+    {
+      name: "Nationwide",
+      slug: "nationwide:1:Nationwide_Career",
+      industry: "Insurance",
+    },
+    {
+      name: "Barclays",
+      slug: "barclays:3:External_Career_Site_Barclays",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "PNC",
+      slug: "pnc:5:External",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "CrowdStrike",
+      slug: "crowdstrike:5:crowdstrikecareers",
+      industry: "Cybersecurity",
+    },
+    { name: "CDW", slug: "cdw:5:Careers", industry: "IT Solutions / Reseller" },
+    {
+      name: "Fortrea",
+      slug: "fortrea:1:Fortrea",
+      industry: "Clinical Research / CRO",
+    },
+    {
+      name: "Motorola Solutions",
+      slug: "motorolasolutions:5:Careers",
+      industry: "Public Safety Technology",
+    },
+    {
+      name: "Richemont",
+      slug: "richemont:3:broadbean_external",
+      industry: "Luxury Goods",
+    },
+    {
+      name: "NCR Atleos",
+      slug: "ncratleos:1:ext_atleos_us",
+      industry: "Banking Technology / Self-Service",
+    },
+    { name: "Procter & Gamble", slug: "pg:5:1000", industry: "Consumer Goods" },
+    {
+      name: "Kimberly-Clark",
+      slug: "kimberlyclark:1:GLOBAL",
+      industry: "Consumer Goods",
+    },
+    {
+      name: "Cushman & Wakefield",
+      slug: "cw:1:External",
+      industry: "Real Estate Services",
+    },
+    {
+      name: "Prudential Financial",
+      slug: "pru:5:Careers",
+      industry: "Financial Services / Insurance",
+    },
+    {
+      name: "Prudential plc",
+      slug: "prudential:3:prudential",
+      industry: "Insurance / Asset Management (Asia/Africa)",
+    },
+    { name: "Travelers", slug: "travelers:5:External", industry: "Insurance" },
+    {
+      name: "Ultra Intelligence & Communications",
+      slug: "ultra:3:UICCareers",
+      industry: "Defense / Aerospace",
+    },
+    {
+      name: "RBC (Royal Bank of Canada)",
+      slug: "rbc:3:RBCGLOBAL1",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "Revelyst",
+      slug: "revelyst:1:EXTERNAL_REVELYST",
+      industry: "Outdoor Products / Consumer Goods",
+    },
+    {
+      name: "Integra LifeSciences",
+      slug: "integralife:1:Careers",
+      industry: "Medical Devices",
+    },
+    {
+      name: "Aviagen",
+      slug: "aviagen:1:aviagen-careers",
+      industry: "Agriculture / Animal Genetics",
+    },
+    {
+      name: "Wellcome Trust",
+      slug: "wellcome:3:Wellcome",
+      industry: "Biomedical Research / Nonprofit",
+    },
+    {
+      name: "Premier Research",
+      slug: "premierresearch:12:PremierResearch",
+      industry: "Clinical Research / CRO",
+    },
+    {
+      name: "Genesys",
+      slug: "genesys:1:Genesys",
+      industry: "Customer Experience Software",
+    },
+    {
+      name: "Advantech",
+      slug: "advantech:3:External",
+      industry: "Industrial IoT / Hardware",
+    },
+    {
+      name: "Southwest Airlines",
+      slug: "swa:1:external",
+      industry: "Airlines",
+    },
+    {
+      // Live-verified 2026-07-13 — prior slug "aaregional:5:Search" 422s;
+      // the real wdNumber is 503, not 5 (50 open roles at "aaregional:503:Search").
+      name: "Piedmont Airlines",
+      slug: "aaregional:503:Search",
+      industry: "Regional Airline (American Airlines Group)",
+    },
+    {
+      name: "USAA",
+      slug: "usaa:1:USAAJOBSWD",
+      industry: "Financial Services / Insurance",
+    },
+    {
+      name: "Les Schwab",
+      slug: "lesschwab:1:Stores",
+      industry: "Automotive Retail / Tire Services",
+    },
+    {
+      name: "Lowe's",
+      slug: "lowes:5:LWS_External_CS",
+      industry: "Retail / Home Improvement",
+    },
+    {
+      name: "Best Buy Canada",
+      slug: "bestbuycanada:3:BestBuyCA_Career",
+      industry: "Retail / Consumer Electronics",
+    },
+    {
+      name: "ConAgra Brands",
+      slug: "conagrabrands:1:Careers_US",
+      industry: "Consumer Packaged Goods",
+    },
+    {
+      name: "Coca-Cola",
+      slug: "coke:1:coca-cola-careers",
+      industry: "Beverages",
+    },
+    {
+      name: "Kraft Heinz",
+      slug: "heinz:1:KraftHeinz_Careers",
+      industry: "Consumer Packaged Goods",
+    },
+    {
+      name: "P.L. Marketing",
+      slug: "plmarketing:12:PLM",
+      industry: "Merchandising Services",
+    },
+    {
+      name: "J.M. Smucker",
+      slug: "smucker:5:US_External_Careers",
+      industry: "Consumer Packaged Goods",
+    },
+    {
+      name: "Tyson Foods",
+      slug: "tysonfoods:5:tsn",
+      industry: "Food Production",
+    },
+    {
+      name: "Mondelez International",
+      slug: "mdlz:3:External",
+      industry: "Consumer Packaged Goods / Snacks",
+    },
+    {
+      // Note (not a bad slug): live-verified 2026-07-13 — this tenant/site
+      // resolves fine (HTTP 200) but currently reports 0 open roles. Left
+      // as-is; may simply be a quiet hiring period, not a wrong slug.
+      name: "Concentrix",
+      slug: "cnx:1:external_us",
+      industry: "BPO / Customer Experience Services",
+    },
+    { name: "3M", slug: "3m:1:Search", industry: "Industrial / Conglomerate" },
+    {
+      name: "DuPont",
+      slug: "dupont:5:Jobs",
+      industry: "Chemicals / Materials Science",
+    },
+    {
+      // TODO(verify manually): live-verified 2026-07-13 — "eatonvance:5:Professional"
+      // 422s, as do wd1/wd12 variants. Eaton Vance is now part of Morgan
+      // Stanley Investment Management (acquired 2021); its postings appear
+      // to live under Morgan Stanley's own board ("ms:5:External", 1328
+      // open roles, confirmed live) rather than a standalone Eaton Vance
+      // tenant — needs a human to decide whether to point this entry at
+      // Morgan Stanley's board (loses Eaton-Vance-only filtering) or drop it.
+      name: "Eaton Vance",
+      slug: "eatonvance:5:Professional",
+      industry: "Asset Management",
+    },
+    {
+      name: "Ingredion",
+      slug: "ingredion:1:IngredionCareers",
+      industry: "Food Ingredients",
+    },
+    {
+      name: "Applied Materials",
+      slug: "amat:1:External",
+      industry: "Semiconductor Equipment",
+    },
+    {
+      name: "KLA Corporation",
+      slug: "kla:1:Search",
+      industry: "Semiconductor Equipment",
+    },
+    {
+      name: "University of Texas at Austin",
+      slug: "utaustin:1:UTstaff",
+      industry: "Higher Education",
+    },
+    {
+      name: "Abbott Laboratories",
+      slug: "abbott:5:abbottcareers",
+      industry: "Healthcare / Medical Devices / Pharma",
+    },
+    {
+      name: "Stryker",
+      slug: "stryker:1:StrykerCareers",
+      industry: "Medical Technology",
+    },
+    {
+      name: "Medtronic",
+      slug: "medtronic:1:MedtronicCareers",
+      industry: "Medical Technology",
+    },
+    {
+      name: "BD (Becton, Dickinson and Company)",
+      slug: "bdx:1:EXTERNAL_CAREER_SITE_USA",
+      industry: "Medical Technology",
+    },
+    {
+      name: "Baxter International",
+      slug: "baxter:1:baxter",
+      industry: "Healthcare / Medical Devices",
+    },
+    {
+      // TODO(verify manually): live-verified 2026-07-13 — "baxter:1:Vantive"
+      // returns Workday error S22 (permission denied), unlike the sibling
+      // "baxter:1:baxter" entry above which works fine. Vantive (Baxter's
+      // kidney-care spinoff) may have its own separate tenant/site rather
+      // than living under the "baxter" wd1 tenant — needs a human to find
+      // the correct board.
+      name: "Vantive",
+      slug: "baxter:1:Vantive",
+      industry: "Kidney Care (Baxter spinoff)",
+    },
+    {
+      name: "Edwards Lifesciences",
+      slug: "edwards:5:edwardscareers",
+      industry: "Medical Technology / Structural Heart",
+    },
+    {
+      name: "Danaher",
+      slug: "danaher:1:DanaherJobs",
+      industry: "Life Sciences / Diagnostics",
+    },
+    {
+      name: "Thermo Fisher Scientific",
+      slug: "thermofisher:5:ThermoFisherCareers",
+      industry: "Life Sciences / Lab Equipment",
+    },
+    {
+      name: "Illumina",
+      slug: "illumina:1:illumina-careers",
+      industry: "Genomics / Biotech",
+    },
+    {
+      // Live-verified 2026-07-13 — prior slug "illuminateusa:5:Illuminate_Careers"
+      // 422s; the real wdNumber is 503, not 5 (45 open roles at
+      // "illuminateusa:503:Illuminate_Careers").
+      name: "Illuminate USA",
+      slug: "illuminateusa:503:Illuminate_Careers",
+      industry: "Solar Manufacturing",
+    },
+    {
+      name: "Regeneron Pharmaceuticals",
+      slug: "regeneron:1:Careers",
+      industry: "Biotechnology",
+    },
+    { name: "Amgen", slug: "amgen:1:Careers", industry: "Biotechnology" },
+    {
+      name: "Gilead Sciences",
+      slug: "gilead:1:gileadcareers",
+      industry: "Biopharmaceuticals",
+    },
+    {
+      // Live-verified 2026-07-13 — prior slug "vrtx:5:Vertex_Careers" 422s;
+      // the real wdNumber is 501, not 5 (257 open roles at "vrtx:501:Vertex_Careers").
+      name: "Vertex Pharmaceuticals",
+      slug: "vrtx:501:Vertex_Careers",
+      industry: "Biotechnology",
+    },
+    {
+      name: "Vertex Inc.",
+      slug: "vertexinc:1:VertexInc",
+      industry: "Tax Software / SaaS",
+    },
+    { name: "Biogen", slug: "biibhr:3:external", industry: "Biotechnology" },
+    {
+      name: "Novartis",
+      slug: "novartis:3:Novartis_Careers",
+      industry: "Pharmaceuticals",
+    },
+    {
+      name: "Sanofi",
+      slug: "sanofi:3:SanofiCareers",
+      industry: "Pharmaceuticals",
+    },
+    {
+      name: "Bristol Myers Squibb",
+      slug: "bristolmyerssquibb:5:BMS",
+      industry: "Pharmaceuticals",
+    },
+    {
+      // TODO(verify manually): live-verified 2026-07-13 — "lilly:5:LLY"
+      // 422s, as do wd1/wd501/wd503 variants and "lilly:5:CMP". Search
+      // confirms lilly.wd5.myworkdayjobs.com/en-US/LLY as the real public
+      // URL, so the tenant/site names look right — the 422 may be a
+      // transient/regional gating issue rather than a wrong slug. Needs a
+      // human to re-check from a browser.
+      name: "Eli Lilly",
+      slug: "lilly:5:LLY",
+      industry: "Pharmaceuticals",
+    },
+    { name: "GSK", slug: "gsk:5:GSKCareers", industry: "Pharmaceuticals" },
+    {
+      name: "Haleon",
+      slug: "gsknch:3:GSKCareers",
+      industry: "Consumer Health",
+    },
+    {
+      name: "Roche",
+      slug: "roche:3:roche-ext",
+      industry: "Pharmaceuticals / Diagnostics",
+    },
+    {
+      name: "AskBio",
+      slug: "askbio:12:AskBio",
+      industry: "Gene Therapy (Bayer subsidiary)",
+    },
+    {
+      name: "Takeda Pharmaceutical",
+      slug: "takeda:3:External",
+      industry: "Pharmaceuticals",
+    },
+    {
+      name: "AstraZeneca",
+      slug: "astrazeneca:3:Careers",
+      industry: "Pharmaceuticals",
+    },
+    {
+      name: "Alexion",
+      slug: "astrazeneca:3:Alexion",
+      industry: "Rare Disease Biopharma",
+    },
+    {
+      name: "Moderna",
+      slug: "modernatx:1:M_tx",
+      industry: "mRNA Biotechnology",
+    },
+    {
+      name: "Cumming Group",
+      slug: "cumminggroup:1:CGC",
+      industry: "Construction Consulting",
+    },
+    {
+      name: "Rockwell Automation",
+      slug: "rockwellautomation:1:External_Rockwell_Automation",
+      industry: "Industrial Automation",
+    },
+    {
+      // TODO(verify manually): live-verified 2026-07-13 — public web search
+      // confirms real job postings under this exact URL
+      // (rockwellautomation.wd1.myworkdayjobs.com/en-US/External-Sensia/job/...),
+      // but the public CXS API returns Workday error S22 "permission
+      // denied" for it — same symptom as the Epic Games entry above.
+      // Likely a board that renders in a browser but blocks the
+      // programmatic search endpoint; needs a human to confirm.
+      name: "Sensia",
+      slug: "rockwellautomation:1:External-Sensia",
+      industry: "Oil & Gas Automation (Rockwell/Schlumberger JV)",
+    },
+    {
+      name: "Emerson College",
+      slug: "emerson:5:Emerson_College_Staff",
+      industry: "Higher Education",
+    },
+    {
+      name: "Dow",
+      slug: "dow:1:ExternalCareers",
+      industry: "Chemicals / Materials Science",
+    },
+    {
+      name: "Dow Jones",
+      slug: "dowjones:1:Dow_Jones_Career",
+      industry: "Media / Publishing",
+    },
+    {
+      name: "Air Liquide",
+      slug: "airliquidehr:3:AirLiquideExternalCareer",
+      industry: "Industrial Gases / Chemicals",
+    },
+    {
+      // Live-verified 2026-07-13 — prior slug "kiongroup:3:KION_ITS_EMEA"
+      // 422s; the general/global board is "KIONGroup", not the
+      // EMEA-specific "KION_ITS_EMEA" site (980 open roles).
+      name: "KION Group",
+      slug: "kiongroup:3:KIONGroup",
+      industry: "Industrial Trucks / Material Handling",
+    },
+    {
+      name: "Siemens Healthineers",
+      slug: "onehealthineers:3:SHSJB",
+      industry: "Medical Technology",
+    },
+    {
+      name: "Philips",
+      slug: "philips:3:jobs-and-careers",
+      industry: "Health Technology",
+    },
+    // Batch added 2026-07-13, all live-verified via
+    // scripts/verify-ats-directory-slugs.ts before being added (per the
+    // "never commit a slug on search-guess alone" policy).
+    {
+      name: "Walmart",
+      slug: "walmart:504:WalmartExternal",
+      industry: "Retail",
+    },
+    {
+      // Search surfaced this as a Bank of America lateral-hire recruiting
+      // board (ghr = "Global Human Resources"?), not a generic "External"
+      // board — 1722 open roles confirmed live, but flagged in case a
+      // broader public board exists under a different tenant/site.
+      name: "Bank of America",
+      slug: "ghr:1:Lateral-US",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "Allstate",
+      slug: "allstate:5:allstate_careers",
+      industry: "Insurance",
+    },
+    {
+      name: "Cardinal Health",
+      slug: "cardinalhealth:1:EXT",
+      industry: "Healthcare Distribution",
+    },
+    {
+      name: "Comcast",
+      slug: "comcast:5:Comcast_Careers",
+      industry: "Media / Telecommunications",
+    },
+    {
+      name: "Wells Fargo",
+      slug: "wf:1:WellsFargoJobs",
+      industry: "Banking / Financial Services",
+    },
+    { name: "Unum", slug: "unum:1:External", industry: "Insurance" },
+    {
+      name: "Unilever",
+      slug: "unilever:3:Unilever_Experienced_Professionals",
+      industry: "Consumer Packaged Goods",
+    },
+    {
+      // Workday tenant is "ag" (Airbus Group's legacy short name), not "airbus".
+      name: "Airbus",
+      slug: "ag:3:Airbus",
+      industry: "Aerospace / Defense",
+    },
+    // Second batch added 2026-07-13, all live-verified.
+    { name: "Workday", slug: "workday:5:Workday", industry: "HR / Finance Software" },
+    { name: "JLL", slug: "jll:1:jllcareers", industry: "Commercial Real Estate" },
+    {
+      name: "Broadridge Financial Solutions",
+      slug: "broadridge:5:Careers",
+      industry: "Financial Technology",
+    },
+    {
+      name: "Flex",
+      slug: "flextronics:1:Careers",
+      industry: "Electronics Manufacturing Services",
+    },
+    { name: "Duke Energy", slug: "dukeenergy:1:Search", industry: "Utilities / Energy" },
+    {
+      // Small board (1 open role at verification time) — likely United
+      // Aviate Academy (United's flight school subsidiary) rather than the
+      // whole airline's general hiring, per the "uaa" tenant name.
+      name: "United Airlines",
+      slug: "uaa:12:EXT",
+      industry: "Airlines",
+    },
+    {
+      name: "Carrier",
+      slug: "carrier:5:jobs",
+      industry: "HVAC / Building Systems",
+    },
+    // Third batch added 2026-07-13, all live-verified.
+    {
+      name: "Verizon",
+      slug: "verizon:12:verizon-careers",
+      industry: "Telecommunications",
+    },
+    { name: "AT&T", slug: "att:1:ATTGeneral", industry: "Telecommunications" },
+    { name: "T-Mobile", slug: "tmobile:1:External", industry: "Telecommunications" },
+    {
+      name: "CVS Health",
+      slug: "cvshealth:1:CVS_Health_Careers",
+      industry: "Healthcare / Pharmacy Retail",
+    },
+    {
+      name: "Humana",
+      slug: "humana:5:Humana_External_Career_Site",
+      industry: "Health Insurance",
+    },
+    {
+      name: "HCA Healthcare",
+      slug: "hcahealthcare:3:hcacareers",
+      industry: "Hospital Operations",
+    },
+    // Fourth batch added 2026-07-13, all live-verified.
+    {
+      name: "Elevance Health",
+      slug: "elevancehealth:1:ANT",
+      industry: "Health Insurance",
+    },
+    {
+      name: "Marsh McLennan",
+      slug: "mmc:1:MMC",
+      industry: "Insurance Brokerage / Risk Management",
+    },
+    {
+      name: "Accenture",
+      slug: "accenture:103:AccentureCareers",
+      industry: "IT Consulting",
+    },
+    { name: "HP Inc.", slug: "hp:5:ExternalCareerSite", industry: "Computer Hardware" },
+    // Fifth batch added 2026-07-13, all live-verified.
+    {
+      name: "GE Aerospace",
+      slug: "geaerospace:5:GE_ExternalSite",
+      industry: "Aerospace / Jet Engines",
+    },
+    {
+      // Workday tenant is "gevernova", distinct from the "geaerospace"
+      // tenant above — the two GE spinoffs run separate Workday instances.
+      name: "GE Vernova",
+      slug: "gevernova:5:Vernova_ExternalSite",
+      industry: "Energy / Power Generation",
+    },
+    {
+      name: "Northrop Grumman",
+      slug: "ngc:1:Northrop_Grumman_External_Site",
+      industry: "Aerospace / Defense",
+    },
+    {
+      name: "Leidos",
+      slug: "leidos:5:External",
+      industry: "Defense / IT Services",
+    },
+    // Sixth batch added 2026-07-13, all live-verified.
+    {
+      name: "S&P Global",
+      slug: "spgi:5:SPGI_Careers",
+      industry: "Financial Data / Ratings",
+    },
+    {
+      name: "Nasdaq",
+      slug: "nasdaq:1:Global_External_Site",
+      industry: "Financial Markets / Exchange Technology",
+    },
+    {
+      name: "CME Group",
+      slug: "cmegroup:1:cme_careers",
+      industry: "Derivatives Exchange",
+    },
+    { name: "Fiserv", slug: "fiserv:5:EXT", industry: "Financial Technology" },
+    // Seventh batch added 2026-07-13, all live-verified.
+    {
+      // Workday tenant is "priceline" (Booking Holdings' legacy corporate
+      // name), not "booking" or "bookingholdings".
+      name: "Booking Holdings",
+      slug: "priceline:1:BookingHoldings",
+      industry: "Online Travel",
+    },
+    { name: "Expedia Group", slug: "expedia:108:search", industry: "Online Travel" },
+    { name: "PayPal", slug: "paypal:1:jobs", industry: "Payments / Fintech" },
+    // Eighth batch added 2026-07-13, all live-verified.
+    { name: "Cigna", slug: "cigna:5:cignacareers", industry: "Health Insurance" },
+    { name: "AIG", slug: "aig:1:aig", industry: "Insurance" },
+    {
+      name: "The Hartford",
+      slug: "thehartford:5:Careers_External",
+      industry: "Insurance / Financial Services",
+    },
+    // Ninth batch added 2026-07-13, all live-verified.
+    { name: "DXC Technology", slug: "dxctechnology:1:DXCJobs", industry: "IT Services" },
+    { name: "NCR Voyix", slug: "ncr:1:ext_us", industry: "Retail / Restaurant Technology" },
+    {
+      name: "Micron Technology",
+      slug: "micron:1:External",
+      industry: "Semiconductors / Memory",
+    },
+    {
+      name: "Analog Devices",
+      slug: "analogdevices:1:External",
+      industry: "Semiconductors",
+    },
+    {
+      // Small board (1 open role at verification time), but a real,
+      // live tenant/site — Lexmark is now a Xerox subsidiary.
+      name: "Lexmark",
+      slug: "lexmark:1:Lexmark",
+      industry: "Printing / Imaging (Xerox subsidiary)",
+    },
+    /** Workday END  */
   ],
   lever: [
     {
