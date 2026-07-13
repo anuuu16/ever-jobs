@@ -1909,8 +1909,16 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       industry: "Aerospace / Defense",
     },
     // Second batch added 2026-07-13, all live-verified.
-    { name: "Workday", slug: "workday:5:Workday", industry: "HR / Finance Software" },
-    { name: "JLL", slug: "jll:1:jllcareers", industry: "Commercial Real Estate" },
+    {
+      name: "Workday",
+      slug: "workday:5:Workday",
+      industry: "HR / Finance Software",
+    },
+    {
+      name: "JLL",
+      slug: "jll:1:jllcareers",
+      industry: "Commercial Real Estate",
+    },
     {
       name: "Broadridge Financial Solutions",
       slug: "broadridge:5:Careers",
@@ -1921,7 +1929,11 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "flextronics:1:Careers",
       industry: "Electronics Manufacturing Services",
     },
-    { name: "Duke Energy", slug: "dukeenergy:1:Search", industry: "Utilities / Energy" },
+    {
+      name: "Duke Energy",
+      slug: "dukeenergy:1:Search",
+      industry: "Utilities / Energy",
+    },
     {
       // Small board (1 open role at verification time) — likely United
       // Aviate Academy (United's flight school subsidiary) rather than the
@@ -1942,7 +1954,11 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       industry: "Telecommunications",
     },
     { name: "AT&T", slug: "att:1:ATTGeneral", industry: "Telecommunications" },
-    { name: "T-Mobile", slug: "tmobile:1:External", industry: "Telecommunications" },
+    {
+      name: "T-Mobile",
+      slug: "tmobile:1:External",
+      industry: "Telecommunications",
+    },
     {
       name: "CVS Health",
       slug: "cvshealth:1:CVS_Health_Careers",
@@ -1974,7 +1990,11 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "accenture:103:AccentureCareers",
       industry: "IT Consulting",
     },
-    { name: "HP Inc.", slug: "hp:5:ExternalCareerSite", industry: "Computer Hardware" },
+    {
+      name: "HP Inc.",
+      slug: "hp:5:ExternalCareerSite",
+      industry: "Computer Hardware",
+    },
     // Fifth batch added 2026-07-13, all live-verified.
     {
       name: "GE Aerospace",
@@ -2023,10 +2043,18 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "priceline:1:BookingHoldings",
       industry: "Online Travel",
     },
-    { name: "Expedia Group", slug: "expedia:108:search", industry: "Online Travel" },
+    {
+      name: "Expedia Group",
+      slug: "expedia:108:search",
+      industry: "Online Travel",
+    },
     { name: "PayPal", slug: "paypal:1:jobs", industry: "Payments / Fintech" },
     // Eighth batch added 2026-07-13, all live-verified.
-    { name: "Cigna", slug: "cigna:5:cignacareers", industry: "Health Insurance" },
+    {
+      name: "Cigna",
+      slug: "cigna:5:cignacareers",
+      industry: "Health Insurance",
+    },
     { name: "AIG", slug: "aig:1:aig", industry: "Insurance" },
     {
       name: "The Hartford",
@@ -2034,8 +2062,16 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       industry: "Insurance / Financial Services",
     },
     // Ninth batch added 2026-07-13, all live-verified.
-    { name: "DXC Technology", slug: "dxctechnology:1:DXCJobs", industry: "IT Services" },
-    { name: "NCR Voyix", slug: "ncr:1:ext_us", industry: "Retail / Restaurant Technology" },
+    {
+      name: "DXC Technology",
+      slug: "dxctechnology:1:DXCJobs",
+      industry: "IT Services",
+    },
+    {
+      name: "NCR Voyix",
+      slug: "ncr:1:ext_us",
+      industry: "Retail / Restaurant Technology",
+    },
     {
       name: "Micron Technology",
       slug: "micron:1:External",
@@ -2052,6 +2088,228 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       name: "Lexmark",
       slug: "lexmark:1:Lexmark",
       industry: "Printing / Imaging (Xerox subsidiary)",
+    },
+    // Tenth batch added 2026-07-13, all live-verified.
+    {
+      name: "Mars",
+      slug: "mars:3:External",
+      industry: "Food / Confectionery / Pet Care",
+    },
+    {
+      // Workday tenant is "bpinternational", not "bp".
+      name: "BP",
+      slug: "bpinternational:3:bpCareers",
+      industry: "Energy / Oil & Gas",
+    },
+    {
+      name: "Baker Hughes",
+      slug: "bakerhughes:5:BakerHughes",
+      industry: "Energy Technology / Oilfield Services",
+    },
+    {
+      // Workday tenant is "lbg" (Lloyds Banking Group's initials), not "lloyds".
+      name: "Lloyds Banking Group",
+      slug: "lbg:3:LBG_Careers",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "BMO",
+      slug: "bmo:3:External",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "U.S. Bank",
+      slug: "usbank:1:US_Bank_Careers",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "TD Bank",
+      slug: "td:3:TD_Bank_Careers",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "Shell",
+      slug: "shell:3:ShellCareers",
+      industry: "Energy / Oil & Gas",
+    },
+    // Eleventh batch added 2026-07-13, all live-verified.
+    {
+      name: "Centene",
+      slug: "centene:5:Centene_External",
+      industry: "Managed Health Care",
+    },
+    {
+      name: "O'Reilly Auto Parts",
+      slug: "oreillyauto:1:oreilly",
+      industry: "Automotive Retail",
+    },
+    {
+      name: "Genuine Parts Company",
+      slug: "genpt:1:Careers",
+      industry: "Automotive / Industrial Parts Distribution",
+    },
+    {
+      name: "TJX Companies",
+      slug: "tjx:1:TJX_EXTERNAL",
+      industry: "Off-Price Retail",
+    },
+    { name: "Gap Inc.", slug: "gapinc:1:GAPINC", industry: "Apparel Retail" },
+    {
+      name: "Nordstrom",
+      slug: "nordstrom:501:nordstrom_careers",
+      industry: "Department Store Retail",
+    },
+    {
+      name: "Dollar Tree",
+      slug: "dollartree:5:dollartreeus",
+      industry: "Discount Retail",
+    },
+    {
+      name: "Advance Auto Parts",
+      slug: "advanceauto:5:AdvanceExternalCareers",
+      industry: "Automotive Retail",
+    },
+    // Twelfth batch added 2026-07-13, all live-verified.
+    {
+      name: "Kohl's",
+      slug: "kohls:504:kohlscareers",
+      industry: "Department Store Retail",
+    },
+    {
+      name: "Ecolab",
+      slug: "ecolab:1:Ecolab_External",
+      industry: "Industrial Cleaning / Water Treatment",
+    },
+    {
+      name: "Republic Services",
+      slug: "republic:5:Republic",
+      industry: "Waste Management",
+    },
+    {
+      name: "Old Dominion Freight Line",
+      slug: "odfl:1:ODFL_Careers",
+      industry: "Trucking / Logistics",
+    },
+    {
+      name: "J.B. Hunt",
+      slug: "jbhunt:501:Careers",
+      industry: "Trucking / Logistics",
+    },
+    {
+      name: "Citi",
+      slug: "citi:5:2",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "Truist",
+      slug: "truist:1:Careers",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "Fifth Third Bank",
+      slug: "fifththird:5:53careers",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "KeyBank",
+      slug: "keybank:5:External_Career_Site",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "Regions Bank",
+      slug: "regions:5:Regions_Careers",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "M&T Bank",
+      slug: "mtb:5:MTB",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "Synchrony",
+      slug: "synchronyfinancial:5:careers",
+      industry: "Consumer Finance / Fintech",
+    },
+    {
+      name: "State Street",
+      slug: "statestreet:1:Global",
+      industry: "Financial Services / Custody Banking",
+    },
+    {
+      name: "TD Bank",
+      slug: "td:3:TD_Bank_Careers",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "BMO",
+      slug: "bmo:3:External",
+      industry: "Banking / Financial Services",
+    },
+    {
+      name: "Morgan Stanley",
+      slug: "ms:5:External",
+      industry: "Investment Banking / Financial Services",
+    },
+    {
+      name: "Dell Technologies",
+      slug: "dell:1:External",
+      industry: "Computer Hardware / Enterprise Technology",
+    },
+    {
+      name: "Zoom",
+      slug: "zoom:5:Zoom",
+      industry: "Video Communications / Software",
+    },
+    {
+      name: "Marvell",
+      slug: "marvell:1:MarvellCareers",
+      industry: "Semiconductors",
+    },
+    {
+      name: "Nordstrom",
+      slug: "nordstrom:501:nordstrom_careers",
+      industry: "Retail / Fashion",
+    },
+    {
+      name: "TJX Companies",
+      slug: "tjx:1:TJX_EXTERNAL",
+      industry: "Retail / Off-Price Apparel",
+    },
+    { name: "Gap Inc.", slug: "gapinc:1:GAPINC", industry: "Retail / Apparel" },
+    {
+      name: "Sysco",
+      slug: "sysco:5:syscocareers",
+      industry: "Foodservice Distribution",
+    },
+    {
+      name: "Baker Hughes",
+      slug: "bakerhughes:5:BakerHughes",
+      industry: "Energy Technology / Oilfield Services",
+    },
+    {
+      name: "Enbridge",
+      slug: "enbridge:3:enbridge_careers",
+      industry: "Energy / Pipelines & Utilities",
+    },
+    {
+      name: "ConocoPhillips",
+      slug: "conocophillips:1:eQuest",
+      industry: "Energy / Oil & Gas",
+    },
+    {
+      name: "IQVIA",
+      slug: "iqvia:1:IQVIA",
+      industry: "Clinical Research / Healthcare Data",
+    },
+    {
+      name: "Labcorp",
+      slug: "labcorp:1:External",
+      industry: "Diagnostics / Life Sciences",
+    },
+    {
+      name: "Zoetis",
+      slug: "zoetis:5:zoetis",
+      industry: "Animal Health / Pharmaceuticals",
     },
     /** Workday END  */
   ],
