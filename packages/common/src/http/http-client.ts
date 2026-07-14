@@ -127,9 +127,11 @@ export class HttpClient {
         lastError = error;
         const status = error.response?.status;
         if (status && [500, 502, 503, 504, 429].includes(status) && attempt < this.maxRetries) {
-          const delay = this.retryBackoff === 'exponential'
+          const retryAfterMs = status === 429 ? this.parseRetryAfter(error.response?.headers?.['retry-after']) : null;
+          const backoffDelay = this.retryBackoff === 'exponential'
             ? Math.min(this.retryMaxDelay, this.retryDelay * Math.pow(2, attempt))
             : Math.min(this.retryMaxDelay, this.retryDelay * (attempt + 1));
+          const delay = retryAfterMs !== null ? Math.min(retryAfterMs, this.retryMaxDelay) : backoffDelay;
 
           this.logger.warn(`Request failed with ${status}, retrying (${attempt + 1}/${this.maxRetries}) in ${delay}ms...`);
           await this.sleep(delay);
@@ -139,6 +141,28 @@ export class HttpClient {
       }
     }
     throw lastError;
+  }
+
+  /**
+   * Parse a Retry-After header value (seconds or HTTP-date) into a millisecond delay.
+   * Returns null if the header is absent or unparseable.
+   */
+  private parseRetryAfter(header: unknown): number | null {
+    if (!header) return null;
+    const value = Array.isArray(header) ? header[0] : header;
+    if (typeof value !== 'string' || value.trim() === '') return null;
+
+    const seconds = Number(value);
+    if (!Number.isNaN(seconds)) {
+      return Math.max(0, seconds * 1000);
+    }
+
+    const dateMs = Date.parse(value);
+    if (!Number.isNaN(dateMs)) {
+      return Math.max(0, dateMs - Date.now());
+    }
+
+    return null;
   }
 
   /** Update default headers for this client instance */
