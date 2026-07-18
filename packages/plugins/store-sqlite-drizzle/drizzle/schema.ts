@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   index,
+  integer,
   primaryKey,
   sqliteTable,
   text,
@@ -48,6 +49,14 @@ export const canonicalJob = sqliteTable(
     location: text('location').notNull(),
     description: text('description'),
     url: text('url').notNull(),
+    /**
+     * Elected remote status (Spec 004 follow-up — dedup boolean-OR merge
+     * across sources, see `DedupHybridService.resolveIsRemote`). `NULL`
+     * means no source expressed an opinion either way, distinct from
+     * `false` ("explicitly not remote") — filters treat both as
+     * non-matches for `isRemote: true` or `isRemote: false`.
+     */
+    isRemote: integer('is_remote', { mode: 'boolean' }),
     mergedAt: text('merged_at').notNull(),
     fieldsJson: text('fields_json').notNull().default('{}'),
     sourcesJson: text('sources_json').notNull().default('[]'),
@@ -63,6 +72,7 @@ export const canonicalJob = sqliteTable(
     idxCompanyLc: index('idx_canonical_job_company_lc').on(t.companyLc),
     idxTitleLc: index('idx_canonical_job_title_lc').on(t.titleLc),
     idxLocationLc: index('idx_canonical_job_location_lc').on(t.locationLc),
+    idxIsRemote: index('idx_canonical_job_is_remote').on(t.isRemote),
   }),
 );
 
@@ -151,6 +161,7 @@ export const INITIAL_SCHEMA_SQL = sql`
     location TEXT NOT NULL,
     description TEXT,
     url TEXT NOT NULL,
+    is_remote INTEGER,
     merged_at TEXT NOT NULL,
     fields_json TEXT NOT NULL DEFAULT '{}',
     sources_json TEXT NOT NULL DEFAULT '[]',
@@ -166,6 +177,8 @@ export const INITIAL_SCHEMA_SQL = sql`
     ON canonical_job (title_lc);
   CREATE INDEX IF NOT EXISTS idx_canonical_job_location_lc
     ON canonical_job (location_lc);
+  CREATE INDEX IF NOT EXISTS idx_canonical_job_is_remote
+    ON canonical_job (is_remote);
   CREATE TABLE IF NOT EXISTS source_observation (
     canonical_job_id TEXT NOT NULL,
     site TEXT NOT NULL,

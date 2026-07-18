@@ -8,7 +8,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Ever Jobs — Local Admin</title>
+<title>MyLivecv Jobs — Local Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   :root {
@@ -120,6 +120,8 @@ export const ADMIN_UI_HTML = `<!doctype html>
   .badge.yes { background: #dafbe1; color: var(--ok); }
   .badge.no { background: #ffebe9; color: var(--bad); }
   .badge.unknown { background: var(--bg-alt); color: var(--muted); }
+  .badge.remote { background: #ddf4ff; color: var(--accent); }
+  .badge.onsite { background: var(--bg-alt); color: var(--muted); }
   .pager { display: flex; gap: 0.5rem; align-items: center; margin-top: 1rem; }
   .pager span { color: var(--muted); font-size: 0.85rem; }
   .status { color: var(--muted); font-size: 0.85rem; margin: 0.5rem 0; min-height: 1.2em; }
@@ -260,7 +262,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
 </style>
 </head>
 <body>
-  <h1>Ever Jobs — Local Admin</h1>
+  <h1>MyLivecv Jobs — Local Admin</h1>
 
   <div class="tabs" role="tablist">
     <button type="button" class="tab-btn active" id="tabbtn-run" role="tab">Run &amp; Extract</button>
@@ -323,6 +325,19 @@ export const ADMIN_UI_HTML = `<!doctype html>
         <span class="hint">Pushes only NOT-yet-exported jobs to the configured downstream target (DAILY_EXPORT_TARGET_URL) and marks them exported — already-exported jobs are skipped, not re-sent. Requires a configured target.</span>
       </div>
       <div class="status" id="export-all-status"></div>
+    </div>
+
+    <div class="bg-job-row">
+      <div class="bg-job-controls">
+        <button type="button" id="btn-export-all-full">Sync ALL to platform</button>
+        <span class="hint">Re-pushes EVERY job to the target, ignoring already-exported status — use this to propagate data changes (a re-scrape updated a description/compensation/etc.) that "Sync new" would skip. Does not check whether a posting has expired; it's a full data resync, not an expiry sweep. Can be a very large/expensive run on a big store.</span>
+      </div>
+      <div class="confirm-inline" id="confirm-export-all-full">
+        <input type="text" id="confirm-export-all-full-input" placeholder='Type "SYNC ALL" to confirm' />
+        <button type="button" class="primary" id="confirm-export-all-full-btn" disabled>Confirm</button>
+        <button type="button" id="confirm-export-all-full-cancel">Cancel</button>
+      </div>
+      <div class="status" id="export-all-full-status"></div>
     </div>
 
     <div class="bg-job-row">
@@ -429,6 +444,13 @@ export const ADMIN_UI_HTML = `<!doctype html>
     <label>Since
       <input id="f-since" type="date" />
     </label>
+    <label>Remote
+      <select id="f-remote">
+        <option value="">All</option>
+        <option value="true">Remote only</option>
+        <option value="false">Onsite / hybrid only</option>
+      </select>
+    </label>
     <label>Page size
       <select id="f-limit">
         <option>25</option>
@@ -449,6 +471,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
         <th>Title</th>
         <th>Company</th>
         <th>Location</th>
+        <th>Remote</th>
         <th>Merged At</th>
         <th>Sources</th>
         <th>Exported</th>
@@ -532,6 +555,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
     company: document.getElementById('f-company'),
     location: document.getElementById('f-location'),
     since: document.getElementById('f-since'),
+    remote: document.getElementById('f-remote'),
     limit: document.getElementById('f-limit'),
     rows: document.getElementById('rows'),
     empty: document.getElementById('empty'),
@@ -557,6 +581,12 @@ export const ADMIN_UI_HTML = `<!doctype html>
     extractAllStatus: document.getElementById('extract-all-status'),
     btnExportAll: document.getElementById('btn-export-all'),
     exportAllStatus: document.getElementById('export-all-status'),
+    btnExportAllFull: document.getElementById('btn-export-all-full'),
+    confirmExportAllFull: document.getElementById('confirm-export-all-full'),
+    confirmExportAllFullInput: document.getElementById('confirm-export-all-full-input'),
+    confirmExportAllFullBtn: document.getElementById('confirm-export-all-full-btn'),
+    confirmExportAllFullCancel: document.getElementById('confirm-export-all-full-cancel'),
+    exportAllFullStatus: document.getElementById('export-all-full-status'),
     btnResetExported: document.getElementById('btn-reset-exported'),
     confirmResetExported: document.getElementById('confirm-reset-exported'),
     confirmResetExportedInput: document.getElementById('confirm-reset-exported-input'),
@@ -622,6 +652,12 @@ export const ADMIN_UI_HTML = `<!doctype html>
   function badge(exported) {
     if (exported === true) return '<span class="badge yes">exported</span>';
     if (exported === false) return '<span class="badge no">not exported</span>';
+    return '<span class="badge unknown">unknown</span>';
+  }
+
+  function remoteBadge(isRemote) {
+    if (isRemote === true) return '<span class="badge remote">remote</span>';
+    if (isRemote === false) return '<span class="badge onsite">onsite / hybrid</span>';
     return '<span class="badge unknown">unknown</span>';
   }
 
@@ -708,6 +744,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
     if (els.company.value.trim()) params.set('company', els.company.value.trim());
     if (els.location.value.trim()) params.set('location', els.location.value.trim());
     if (els.since.value) params.set('since', new Date(els.since.value).toISOString());
+    if (els.remote.value) params.set('isRemote', els.remote.value);
     params.set('limit', els.limit.value);
     if (cursor) params.set('cursor', cursor);
     return params.toString();
@@ -752,6 +789,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
         '<td>' + escapeHtml(job.title) + '</td>' +
         '<td>' + escapeHtml(job.company) + '</td>' +
         '<td>' + escapeHtml(job.location) + '</td>' +
+        '<td>' + remoteBadge(job.isRemote) + '</td>' +
         '<td>' + escapeHtml(job.mergedAt) + '</td>' +
         '<td>' + (job.sources ? job.sources.length : 0) + '</td>' +
         '<td>' + badge(job.exported) + '</td>';
@@ -803,6 +841,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
       '<div class="sub">' + escapeHtml(job.company) + ' — ' + escapeHtml(job.location) + '</div>' +
       '<dl class="kv">' +
         '<dt>URL</dt><dd><a href="' + escapeHtml(job.url) + '" target="_blank" rel="noopener">' + escapeHtml(job.url) + '</a></dd>' +
+        '<dt>Remote</dt><dd>' + remoteBadge(job.isRemote) + '</dd>' +
         '<dt>Merged at</dt><dd>' + escapeHtml(job.mergedAt) + '</dd>' +
         '<dt>Canonical ID</dt><dd>' + escapeHtml(job.canonicalJobId) + '</dd>' +
         '<dt>Exported</dt><dd>' + badge(data.exported) + '</dd>' +
@@ -1118,6 +1157,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
     els.company.value = '';
     els.location.value = '';
     els.since.value = '';
+    els.remote.value = '';
     els.limit.value = '50';
     cursorStack = [];
     currentCursor = undefined;
@@ -1239,6 +1279,10 @@ export const ADMIN_UI_HTML = `<!doctype html>
         ' in ' + r.batches + ' batch(es) (skipped ' + r.skipped + ' already-exported, ' +
         r.scanned + ' / ' + r.total + ' scanned).';
     }
+    if (status.name === 'export-all-full') {
+      return 'Done — resynced ' + r.pushed + ' job(s) to ' + r.destination +
+        ' in ' + r.batches + ' batch(es) (' + r.scanned + ' / ' + r.total + ' scanned).';
+    }
     if (status.name === 'reset-exported') {
       return 'Done — cleared ' + r.clearedMarks + ' exported mark(s). Every job now shows as not exported.';
     }
@@ -1273,11 +1317,13 @@ export const ADMIN_UI_HTML = `<!doctype html>
         renderBgStatus(els.extractAllStatus, els.btnExtractAll, data['extract-all']);
         renderBgStatus(els.deleteAllStatus, els.btnDeleteAll, data['clear-all']);
         renderBgStatus(els.exportAllStatus, els.btnExportAll, data['export-all']);
+        renderBgStatus(els.exportAllFullStatus, els.btnExportAllFull, data['export-all-full']);
         renderBgStatus(els.resetExportedStatus, els.btnResetExported, data['reset-exported']);
 
         var anyRunning = data['extract-all'].state === 'running' ||
           data['clear-all'].state === 'running' ||
           data['export-all'].state === 'running' ||
+          data['export-all-full'].state === 'running' ||
           data['reset-exported'].state === 'running';
         if (anyRunning) {
           bgPollTimer = setTimeout(pollBackgroundStatus, 3000);
@@ -1289,7 +1335,8 @@ export const ADMIN_UI_HTML = `<!doctype html>
         // table and stat tiles (incl. exported badges) are stale until the
         // next manual search, so refresh them automatically once.
         if (data['clear-all'].state === 'done' || data['extract-all'].state === 'done' ||
-            data['export-all'].state === 'done' || data['reset-exported'].state === 'done') {
+            data['export-all'].state === 'done' || data['export-all-full'].state === 'done' ||
+            data['reset-exported'].state === 'done') {
           if (!anyRunning) {
             cursorStack = [];
             currentCursor = undefined;
@@ -1363,7 +1410,8 @@ export const ADMIN_UI_HTML = `<!doctype html>
     },
   );
 
-  // "Sync ALL to platform" — non-destructive, so no type-to-confirm gate.
+  // "Sync new to platform" — non-destructive (only ever pushes NOT-yet-exported
+  // jobs), so no type-to-confirm gate.
   els.btnExportAll.addEventListener('click', function () {
     els.btnExportAll.disabled = true;
     els.exportAllStatus.textContent = 'Starting…';
@@ -1383,6 +1431,30 @@ export const ADMIN_UI_HTML = `<!doctype html>
         els.exportAllStatus.style.color = 'var(--bad)';
       });
   });
+
+  // "Sync ALL to platform" — not destructive (no data is deleted), but it
+  // ignores already-exported status and can push the ENTIRE store to the
+  // downstream target, which is easy to trigger by accident and expensive
+  // to undo — gated behind a type-to-confirm, like the other expensive ops.
+  wireTypedConfirmation(
+    els.btnExportAllFull, els.confirmExportAllFull, els.confirmExportAllFullInput,
+    els.confirmExportAllFullBtn, els.confirmExportAllFullCancel, 'SYNC ALL',
+    function () {
+      fetch('/api/admin/jobs/export-all-full', { method: 'POST' })
+        .then(function (res) {
+          if (!res.ok) return res.json().then(function (e) { throw new Error(e.message || ('HTTP ' + res.status)); });
+          return res.json();
+        })
+        .then(function (status) {
+          renderBgStatus(els.exportAllFullStatus, els.btnExportAllFull, status);
+          if (!bgPollTimer) bgPollTimer = setTimeout(pollBackgroundStatus, 3000);
+        })
+        .catch(function (err) {
+          els.exportAllFullStatus.textContent = 'Failed to start: ' + err.message;
+          els.exportAllFullStatus.style.color = 'var(--bad)';
+        });
+    },
+  );
 
   // Only the default active tab's data loads on page open — the rest
   // (Jobs table, Sources overview) load lazily the first time their tab

@@ -228,4 +228,28 @@ describe('CircuitBreakerService', () => {
       expect(service.state(SITE)).toBe('open');
     });
   });
+
+  describe('MAX_SITES capacity', () => {
+    it('tracks every real Site enum member without falling back to an ephemeral entry', async () => {
+      const allSites = Object.values(Site);
+      for (const site of allSites) {
+        await service.exec(site, ok);
+      }
+      const tracked = new Set(service.list().map((h) => h.site));
+      expect(tracked.size).toBe(allSites.length);
+    });
+
+    it('still guards against unbounded growth once the cap is exceeded', async () => {
+      // Fill well past Site's current cardinality with synthetic values to
+      // reach the hard cap without relying on its exact number.
+      for (let i = 0; i < 2048; i++) {
+        await service.exec(`synthetic-site-${i}` as Site, ok);
+      }
+      const before = service.list().length;
+      // One more distinct site beyond the cap must not grow the map, but
+      // must still execute `fn` via an ephemeral entry rather than throw.
+      await expect(service.exec('synthetic-site-overflow' as Site, ok)).resolves.toBe('ok');
+      expect(service.list().length).toBe(before);
+    });
+  });
 });

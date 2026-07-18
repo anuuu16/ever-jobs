@@ -148,6 +148,31 @@ describe('WorkdayService — Spec 720 / T05', () => {
       const remote = result.jobs.find((j) => j.id === 'wd-tesla-34567');
       expect(remote?.isRemote).toBe(true);
     });
+
+    it('honors an explicit locale segment in the companySlug (e.g. IQVIA -> en-GB)', async () => {
+      mockPost.mockResolvedValueOnce({
+        data: {
+          total: 1,
+          jobPostings: [
+            {
+              title: 'UI Developer with React JS',
+              externalPath: '/job/Kochi-India/UI-developer_R1518556',
+              locationsText: 'Kochi, India',
+              postedOn: 'Posted Today',
+            },
+          ],
+        },
+      });
+      const service = new WorkdayService();
+      const result = await service.scrape({
+        siteType: [Site.WORKDAY],
+        companySlug: 'iqvia:1:IQVIA:en-GB',
+      } as ScraperInputDto);
+
+      expect(result.jobs[0]?.jobUrl).toBe(
+        'https://iqvia.wd1.myworkdayjobs.com/en-GB/IQVIA/job/Kochi-India/UI-developer_R1518556',
+      );
+    });
   });
 
   describe('error handling', () => {
@@ -242,7 +267,9 @@ describe('WorkdayService — Spec 720 / T05', () => {
       expect(job.employmentType).toBe('Full time');
       expect(job.department).toBe('Engineering');
       expect(job.isRemote).toBe(true);
-      expect(job.jobUrl).toBe(DETAIL.jobPostingInfo.externalUrl);
+      expect(job.jobUrl).toBe(
+        'https://xenergy.wd5.myworkdayjobs.com/en-US/X-energyUS/job/Rockville-MD/Reactor-Engineer_R101234',
+      );
       expect(job.datePosted).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
 

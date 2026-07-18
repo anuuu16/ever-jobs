@@ -39,6 +39,7 @@ export const CanonicalJobSchema = z.object({
   location: z.string(),
   description: z.string().optional(),
   url: z.string().url(),
+  isRemote: z.boolean().optional(),
   sources: z.array(SourceObservationSchema).min(1),
   fields: z.record(z.string(), FieldWithProvenanceSchema),
   mergedAt: z.string().datetime({ offset: true }),

@@ -150,6 +150,7 @@ interface PrismaCanonicalJobRow {
   location: string;
   description: string | null;
   url: string;
+  isRemote: boolean | null;
   mergedAt: Date;
   fields: unknown;
   sources: unknown;
@@ -447,6 +448,7 @@ export class PostgresPrismaJobStore
         location: row.location,
         description: row.description,
         url: row.url,
+        isRemote: row.isRemote,
         mergedAt: row.mergedAt,
         fields: row.fields,
         sources: row.sources,
@@ -515,6 +517,7 @@ export class PostgresPrismaJobStore
               location: row.location,
               description: row.description,
               url: row.url,
+              isRemote: row.isRemote,
               mergedAt: row.mergedAt,
               fields: row.fields,
               sources: row.sources,
@@ -772,6 +775,7 @@ function toPrismaCanonicalJobRow(job: CanonicalJob): PrismaCanonicalJobRow {
     location: job.location,
     description: job.description ?? null,
     url: job.url,
+    isRemote: job.isRemote ?? null,
     mergedAt: new Date(job.mergedAt),
     fields: job.fields ?? {},
     sources: job.sources ?? [],
@@ -797,6 +801,7 @@ function fromPrismaCanonicalJobRow(row: PrismaCanonicalJobRow): CanonicalJob {
     location: row.location,
     description: row.description ?? undefined,
     url: row.url,
+    isRemote: row.isRemote ?? undefined,
     mergedAt: row.mergedAt instanceof Date
       ? row.mergedAt.toISOString()
       : String(row.mergedAt),
@@ -840,6 +845,9 @@ function buildWhereClause(
   }
   if (query.since instanceof Date) {
     conditions.push({ mergedAt: { gte: query.since } });
+  }
+  if (typeof query.isRemote === 'boolean') {
+    conditions.push({ isRemote: query.isRemote });
   }
   if (cursor) {
     conditions.push(buildCursorWherePredicate(cursor));

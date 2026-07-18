@@ -109,6 +109,7 @@ export function runStoreConformance(
         location,
         url,
         description: overrides.description,
+        isRemote: overrides.isRemote,
         sources: overrides.sources ?? [],
         fields: overrides.fields ?? {},
         mergedAt,
@@ -244,6 +245,7 @@ export function runStoreConformance(
             title: 'Software Engineer',
             location: 'Remote',
             mergedAt: '2026-01-01T00:00:00.000Z',
+            isRemote: true,
           }),
           makeJob({
             canonicalJobId: 'b',
@@ -251,6 +253,7 @@ export function runStoreConformance(
             title: 'Senior Software Engineer',
             location: 'New York',
             mergedAt: '2026-02-01T00:00:00.000Z',
+            isRemote: false,
           }),
           makeJob({
             canonicalJobId: 'c',
@@ -258,6 +261,7 @@ export function runStoreConformance(
             title: 'Data Scientist',
             location: 'Berlin',
             mergedAt: '2026-03-01T00:00:00.000Z',
+            isRemote: true,
           }),
           makeJob({
             canonicalJobId: 'd',
@@ -265,6 +269,7 @@ export function runStoreConformance(
             title: 'Product Manager',
             location: 'Remote',
             mergedAt: '2026-04-01T00:00:00.000Z',
+            isRemote: false,
           }),
           makeJob({
             canonicalJobId: 'e',
@@ -272,6 +277,7 @@ export function runStoreConformance(
             title: 'Engineer',
             location: 'San Francisco',
             mergedAt: '2026-05-01T00:00:00.000Z',
+            // no isRemote signal at all — must be excluded by either filter value.
           }),
         ]);
       });
@@ -323,6 +329,22 @@ export function runStoreConformance(
           since: new Date('2026-02-01T00:00:00.000Z'),
         });
         expect(page.items.map((j) => j.canonicalJobId)).toEqual(['c']);
+      });
+
+      it('filters by isRemote=true (exact match, excludes unset)', async () => {
+        const page = await store.listByQuery({ isRemote: true });
+        expect(page.items.map((j) => j.canonicalJobId).sort()).toEqual([
+          'a',
+          'c',
+        ]);
+      });
+
+      it('filters by isRemote=false (exact match, excludes unset)', async () => {
+        const page = await store.listByQuery({ isRemote: false });
+        expect(page.items.map((j) => j.canonicalJobId).sort()).toEqual([
+          'b',
+          'd',
+        ]);
       });
     });
 

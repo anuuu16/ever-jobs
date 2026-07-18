@@ -1095,7 +1095,10 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       industry: "Mobile gaming / interactive entertainment",
     },
   ],
-  // Workday companySlug format: `{company}:{wdNumber}:{careerSite}`
+  // Workday companySlug format: `{company}:{wdNumber}:{careerSite}:{locale}`
+  // (locale is optional, defaults to "en-US" — only set it when the tenant's
+  // real public career site uses a different locale, e.g. IQVIA's "en-GB";
+  // Workday's CXS API never reports this, so it has to be hand-verified)
   workday: [
     {
       // Live-verified 2026-07-13 — prior slug 404s; real ID is External_Career_Site (1463 roles).
@@ -2232,7 +2235,7 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
     },
     {
       name: "IQVIA",
-      slug: "iqvia:1:IQVIA",
+      slug: "iqvia:1:IQVIA:en-GB",
       industry: "Clinical Research / Healthcare Data",
     },
     {
@@ -2800,6 +2803,96 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "iubh:3:IUBH_WD_Jobboard",
       industry: "Higher Education (Germany)",
     },
+    {
+      name: "Telesure Group",
+      slug: "telesure:3:Wday",
+      industry: "Insurance (South Africa)",
+    },
+    {
+      name: "GFL Environmental",
+      slug: "gflenv:3:Careers",
+      industry: "Waste Management / Environmental Services",
+    },
+    {
+      name: "Waste Connections",
+      slug: "wasteconnections:1:Careers",
+      industry: "Waste Management",
+    },
+    {
+      name: "Parexel",
+      slug: "parexel:1:Parexel_External_Careers",
+      industry: "Clinical Research / CRO",
+    },
+    {
+      name: "The Clorox Company",
+      slug: "clorox:1:clorox",
+      industry: "Consumer Goods",
+    },
+    {
+      name: "Life Time",
+      slug: "lifetime:1:lifetime",
+      industry: "Fitness / Wellness (Athletic Clubs)",
+    },
+    {
+      name: "Houston Fitness Partners",
+      slug: "houfit:1:Houston_Fitness_Partners",
+      industry: "Fitness / Gym",
+    },
+    {
+      name: "Life Fitness / Hammer Strength",
+      slug: "lifefitness:1:searchLFN",
+      industry: "Fitness Equipment Manufacturing",
+    },
+    {
+      name: "BSI Group",
+      slug: "bsigroup:3:BSI_Careers",
+      industry: "Standards / Certification / Compliance",
+    },
+    {
+      name: "St John of God Health Care",
+      slug: "sjog:105:SJGHC_External_Career_Site",
+      industry: "Healthcare (Australia)",
+    },
+    {
+      name: "Federation University",
+      slug: "federation:3:Federation_Careers",
+      industry: "Higher Education (Australia)",
+    },
+    {
+      name: "Mercy Health",
+      slug: "easyservice:5:MercyHealthCareers",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "IMEG",
+      slug: "imeg:1:Imeg_Careers",
+      industry: "Engineering Consulting",
+    },
+    {
+      name: "Havas",
+      slug: "havas:3:GroupExternalCareerSite",
+      industry: "Advertising / Communications",
+    },
+    {
+      name: "Medbase Group",
+      slug: "medbase:502:Medbase_jobs",
+      industry: "Healthcare (Switzerland)",
+    },
+    {
+      name: "City of Burlington (Ontario)",
+      slug: "cityofburlington:10:cob",
+      industry: "Government / Municipal (Canada)",
+    },
+    {
+      name: "HEI Hotels & Resorts",
+      slug: "heihotels:12:External_Career_Site",
+      industry: "Hospitality / Hotel Management",
+    },
+    {
+      name: "Cerveceria Boliviana Nacional (AB InBev)",
+      slug: "abinbev:1:BOL",
+      industry: "Beverages (Bolivia)",
+    },
   ],
   lever: [
     {
@@ -3322,7 +3415,15 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
   dvinci: [],
   easycruit: [],
   eddy: [],
-  eightfold: [],
+  eightfold: [
+    { name: "Qualcomm", slug: "qualcomm.com", industry: "Semiconductors" },
+    { name: "HP Inc.", slug: "hp.com", industry: "Computer Hardware" },
+    {
+      name: "Micron Technology",
+      slug: "micron.com",
+      industry: "Semiconductors / Memory",
+    },
+  ],
   elmo: [],
   employmenthero: [],
   emply: [],

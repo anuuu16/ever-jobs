@@ -22,20 +22,53 @@ export const WORKDAY_HEADERS: Record<string, string> = {
 
 /**
  * Parse a Workday compound slug into its components.
- * Format: "{company}:{wd_number}:{site}"
- * Defaults: wd_number=5, site=External
+ * Format: "{company}:{wd_number}:{site}:{locale}"
+ * Defaults: wd_number=5, site=External, locale=en-US
+ *
+ * `locale` is the career-site language/region segment Workday's public apply
+ * URLs require (e.g. "en-GB"). It cannot be derived from the CXS API, so it
+ * is a per-tenant config value maintained alongside the slug in the ATS
+ * directory (`apps/api/src/admin/ats-company-directory.ts`).
  */
 export function parseWorkdaySlug(slug: string): {
   company: string;
   wdNumber: string;
   site: string;
+  locale: string;
 } {
   const parts = slug.split(':');
   return {
     company: parts[0],
     wdNumber: parts[1] ?? '5',
     site: parts[2] ?? 'External',
+    locale: parts[3] ?? 'en-US',
   };
+}
+
+/** Matches a leading Workday locale segment, e.g. "/en-US/" or "/fr-FR/". */
+const LOCALE_SEGMENT_RE = /^\/[a-z]{2}(-[a-zA-Z]{2,3})?(?=\/)/;
+
+/**
+ * Ensure a Workday career-site path carries its `/{locale}/{site}` prefix.
+ * Workday's own CXS responses (`externalPath`, `jobPostingInfo.externalUrl`)
+ * are site-relative and typically omit the locale entirely — hitting the
+ * public site without it silently falls back to whatever default locale
+ * that tenant configured, which is often wrong (e.g. IQVIA's real career
+ * site is "en-GB", not the fallback "en-US"). Idempotent: a path that
+ * already carries a locale segment is returned unchanged.
+ */
+export function withWorkdayLocale(
+  path: string,
+  site: string,
+  locale: string,
+): string {
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  if (LOCALE_SEGMENT_RE.test(normalized)) return normalized;
+  const siteSegment = `/${site}`;
+  if (normalized.toLowerCase().startsWith(`${siteSegment.toLowerCase()}/`)) {
+    return `/${locale}${normalized}`;
+  }
+  return `/${locale}${siteSegment}${normalized}`;
 }
 
 /**

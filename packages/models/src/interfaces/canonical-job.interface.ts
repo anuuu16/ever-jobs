@@ -21,6 +21,16 @@ export interface CanonicalJob {
   readonly description?: string;
   /** The "primary" URL — picked by the merge resolver from `sources[].url`. */
   readonly url: string;
+  /**
+   * Whether this role is remote. Elected as `true` if ANY contributing
+   * source reported it as remote (a boolean OR across the cluster), not
+   * just whichever observation happened to become the merge "head" — a
+   * single source under-detecting remote status (e.g. a bare location
+   * string with no "remote" mention) must not override another source's
+   * confident signal (an ATS's structured remote-type field). `undefined`
+   * when no source reported a value either way.
+   */
+  readonly isRemote?: boolean;
 
   /** Every observation that contributed to this canonical record. */
   readonly sources: ReadonlyArray<SourceObservation>;

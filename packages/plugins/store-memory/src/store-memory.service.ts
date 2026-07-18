@@ -176,6 +176,9 @@ function matchesQuery(job: CanonicalJob, query: JobStoreQuery): boolean {
   if (query.since instanceof Date && job.mergedAt < query.since.toISOString()) {
     return false;
   }
+  if (typeof query.isRemote === 'boolean' && job.isRemote !== query.isRemote) {
+    return false;
+  }
   return true;
 }
 

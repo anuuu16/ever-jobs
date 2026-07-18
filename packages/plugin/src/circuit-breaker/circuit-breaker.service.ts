@@ -39,8 +39,16 @@ interface Sample {
   latencyMs: number;
 }
 
-/** Hard memory bound — see Spec 005 / NFR-3 (< 1 KB/site → ~250 KB ceiling). */
-const MAX_SITES = 250;
+/**
+ * Hard memory bound — see Spec 005 / NFR-3 (< 1 KB/site → ~2 MB ceiling).
+ * Sized to clear `Site`'s current cardinality (~1.8K entries, one per
+ * registered source plugin including per-company ATS boards) with
+ * headroom; the original 250 was sized for the ~190 named integrations
+ * that existed before per-company plugin generation, and silently
+ * starved high-traffic sources (adzuna, linkedin, …) of breaker
+ * tracking once the registry grew past it — see docs/log.md.
+ */
+const MAX_SITES = 2048;
 /** Per-site sample ring-buffer cap (~600 / 60 s = 10 RPS ceiling per site). */
 const MAX_SAMPLES = 600;
 
@@ -215,7 +223,7 @@ export class CircuitBreakerService implements ICircuitBreakerService {
     if (this.entries.size >= MAX_SITES) {
       // Hard cap — refuse to grow further. Return a transient "ghost"
       // entry so the caller path doesn't crash; this should never happen
-      // outside a misconfigured fixture (we currently track ~190 sites).
+      // outside a misconfigured fixture (Site currently has ~1.8K members).
       this.logger.error(
         `MAX_SITES (${MAX_SITES}) reached — refusing to track new site ${site}; using ephemeral entry`,
       );

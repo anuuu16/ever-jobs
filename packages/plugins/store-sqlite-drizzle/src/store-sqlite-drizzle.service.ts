@@ -271,6 +271,7 @@ export class SqliteDrizzleJobStore
           location: row.location,
           description: row.description,
           url: row.url,
+          isRemote: row.isRemote,
           mergedAt: row.mergedAt,
           fieldsJson: row.fieldsJson,
           sourcesJson: row.sourcesJson,
@@ -638,6 +639,7 @@ function toCanonicalJobRow(job: CanonicalJob) {
     location: job.location,
     description: job.description ?? null,
     url: job.url,
+    isRemote: job.isRemote ?? null,
     mergedAt: job.mergedAt,
     fieldsJson: JSON.stringify(job.fields ?? {}),
     sourcesJson: JSON.stringify(job.sources ?? []),
@@ -660,6 +662,7 @@ function fromCanonicalJobRow(row: typeof canonicalJob.$inferSelect): CanonicalJo
     location: row.location,
     description: row.description ?? undefined,
     url: row.url,
+    isRemote: row.isRemote ?? undefined,
     mergedAt: row.mergedAt,
     fields: row.fieldsJson ? (JSON.parse(row.fieldsJson) as CanonicalJob['fields']) : {},
     sources: row.sourcesJson
@@ -687,6 +690,9 @@ function buildFilterConditions(query: JobStoreQuery) {
   }
   if (query.since instanceof Date) {
     conds.push(gte(canonicalJob.mergedAt, query.since.toISOString()));
+  }
+  if (typeof query.isRemote === 'boolean') {
+    conds.push(eq(canonicalJob.isRemote, query.isRemote));
   }
   return conds;
 }

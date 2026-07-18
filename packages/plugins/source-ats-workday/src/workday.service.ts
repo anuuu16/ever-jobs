@@ -29,6 +29,7 @@ import {
   buildWorkdayUrl,
   buildWorkdayDetailUrl,
   parseWorkdayPostedOn,
+  withWorkdayLocale,
 } from "./workday.constants";
 import {
   WorkdayJobDetail,
@@ -53,7 +54,7 @@ export class WorkdayService implements IScraper {
       return new JobResponseDto([]);
     }
 
-    const { company, wdNumber, site } = parseWorkdaySlug(companySlug);
+    const { company, wdNumber, site, locale } = parseWorkdaySlug(companySlug);
     const apiUrl = buildWorkdayUrl(company, wdNumber, site);
 
     const client = createHttpClient({
@@ -114,6 +115,7 @@ export class WorkdayService implements IScraper {
       company,
       wdNumber,
       site,
+      locale,
       input.descriptionFormat,
     );
   }
@@ -124,6 +126,7 @@ export class WorkdayService implements IScraper {
     company: string,
     wdNumber: string,
     site: string,
+    locale: string,
     format?: DescriptionFormat,
   ): Promise<JobResponseDto> {
     const details = await this.fetchDetails(
@@ -142,6 +145,7 @@ export class WorkdayService implements IScraper {
             company,
             wdNumber,
             site,
+            locale,
             format,
           );
         } catch (err: any) {
@@ -206,6 +210,7 @@ export class WorkdayService implements IScraper {
     company: string,
     wdNumber: string,
     site: string,
+    locale: string,
     format?: DescriptionFormat,
   ): JobPostDto | null {
     const title = listing.title;
@@ -216,16 +221,24 @@ export class WorkdayService implements IScraper {
       ? hiringOrganizationName
       : company;
 
-    // Extract job path for URL construction. Workday's CXS `externalPath` is
-    // site-relative (e.g. "/job/Austin-TX/Software-Engineer_R-101/12345"); the
-    // public careers page lives under "/en-US/{site}" — without that prefix
-    // Workday answers 404. Guard against double-prefixing for tenants whose
-    // externalPath already carries a locale/site segment.
+    // Both Workday's CXS `externalPath` (e.g. "/job/Austin-TX/Software-Engineer_R-101/12345")
+    // and its own `jobPostingInfo.externalUrl` are site-relative and omit the
+    // locale segment the public careers page requires (confirmed against
+    // live tenants: externalUrl comes back as ".../{site}/job/..." with no
+    // "/{locale}/" prefix at all). Without it Workday silently falls back to
+    // its default locale, which is often the wrong one for that tenant (e.g.
+    // IQVIA's real site is "en-GB"). `withWorkdayLocale` inserts the
+    // configured locale for this tenant and is idempotent, so it is safe to
+    // apply to both the constructed fallback and Workday's own externalUrl.
+    const host = `https://${company}.wd${wdNumber}.myworkdayjobs.com`;
     const externalPath = listing.externalPath ?? "";
     const summaryJobUrl = externalPath
-      ? `https://${company}.wd${wdNumber}.myworkdayjobs.com${externalPath.startsWith("/") ? "" : "/"}${externalPath}`
-      : `https://${company}.wd${wdNumber}.myworkdayjobs.com/en-US/${site}/details/${encodeURIComponent(title)}`;
-    const jobUrl = info?.externalUrl ?? summaryJobUrl;
+      ? `${host}${withWorkdayLocale(externalPath, site, locale)}`
+      : `${host}${withWorkdayLocale(`/details/${encodeURIComponent(title)}`, site, locale)}`;
+    const rawJobUrl = info?.externalUrl ?? summaryJobUrl;
+    const jobUrl = rawJobUrl.startsWith(host)
+      ? `${host}${withWorkdayLocale(rawJobUrl.slice(host.length), site, locale)}`
+      : rawJobUrl;
 
     const description = this.formatDescription(info?.jobDescription, format);
 

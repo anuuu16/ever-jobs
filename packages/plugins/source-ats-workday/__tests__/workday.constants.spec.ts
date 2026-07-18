@@ -3,6 +3,7 @@ import {
   parseWorkdaySlug,
   buildWorkdayUrl,
   buildWorkdayDetailUrl,
+  withWorkdayLocale,
   WORKDAY_DETAIL_CONCURRENCY,
 } from '../src/workday.constants';
 
@@ -122,11 +123,48 @@ describe('existing pure helpers — regression', () => {
       company: 'tesla',
       wdNumber: '5',
       site: 'Tesla',
+      locale: 'en-US',
     });
     expect(parseWorkdaySlug('acme')).toEqual({
       company: 'acme',
       wdNumber: '5',
       site: 'External',
+      locale: 'en-US',
+    });
+  });
+
+  it('parseWorkdaySlug reads an explicit locale segment', () => {
+    expect(parseWorkdaySlug('iqvia:1:IQVIA:en-GB')).toEqual({
+      company: 'iqvia',
+      wdNumber: '1',
+      site: 'IQVIA',
+      locale: 'en-GB',
+    });
+  });
+
+  describe('withWorkdayLocale', () => {
+    it('inserts the locale and site when both are missing', () => {
+      expect(
+        withWorkdayLocale('/job/Kochi-India/UI-developer_R1518556', 'IQVIA', 'en-GB'),
+      ).toBe('/en-GB/IQVIA/job/Kochi-India/UI-developer_R1518556');
+    });
+
+    it('inserts only the locale when the site segment is already present', () => {
+      expect(
+        withWorkdayLocale('/IQVIA/job/Kochi-India/UI-developer_R1518556', 'IQVIA', 'en-GB'),
+      ).toBe('/en-GB/IQVIA/job/Kochi-India/UI-developer_R1518556');
+    });
+
+    it('is idempotent when a locale segment is already present', () => {
+      expect(
+        withWorkdayLocale('/en-GB/IQVIA/job/Kochi-India/UI-developer_R1518556', 'IQVIA', 'en-US'),
+      ).toBe('/en-GB/IQVIA/job/Kochi-India/UI-developer_R1518556');
+    });
+
+    it('adds a leading slash when the path is missing one', () => {
+      expect(withWorkdayLocale('IQVIA/job/Test_R1', 'IQVIA', 'en-GB')).toBe(
+        '/en-GB/IQVIA/job/Test_R1',
+      );
     });
   });
 

@@ -165,6 +165,77 @@ describe('DedupHybridService', () => {
     expect(fields['title'].value).not.toBe('Senior Software Engineer');
   });
 
+  describe('isRemote merge', () => {
+    it('elects true when ANY source in the cluster reports remote, even if the merge head does not', async () => {
+      // Head (id '1', first in the array) has no remote signal; a second
+      // source for the same role confidently reports remote (e.g. an ATS's
+      // structured remoteType field). The naive "head wins" default would
+      // have silently dropped the positive signal.
+      const head = job({ id: '1', site: Site.GREENHOUSE, isRemote: false });
+      const secondary = job({ id: '2', site: Site.LINKEDIN, isRemote: true });
+      const out = await service.dedup([head, secondary]);
+
+      expect(out.canonical).toHaveLength(1);
+      expect(out.canonical[0].isRemote).toBe(true);
+      expect(out.canonical[0].fields['isRemote'].value).toBe(true);
+      expect(out.canonical[0].fields['isRemote']._source).toBe(Site.LINKEDIN);
+    });
+
+    it('elects false when every source explicitly reports non-remote', async () => {
+      const a = job({ id: '1', site: Site.GREENHOUSE, isRemote: false });
+      const b = job({ id: '2', site: Site.LINKEDIN, isRemote: false });
+      const out = await service.dedup([a, b]);
+
+      expect(out.canonical[0].isRemote).toBe(false);
+      expect(out.canonical[0].fields['isRemote'].value).toBe(false);
+    });
+
+    it('leaves isRemote unset when no source expresses an opinion', async () => {
+      const a = job({ id: '1', site: Site.GREENHOUSE });
+      const out = await service.dedup([a]);
+
+      expect(out.canonical[0].isRemote).toBeUndefined();
+      expect(out.canonical[0].fields['isRemote']).toBeUndefined();
+    });
+
+    it('elects true when the canonical location text says "Remote", even with no isRemote signal from any source', async () => {
+      const a = job({
+        id: '1',
+        site: Site.GREENHOUSE,
+        location: new LocationDto({ city: 'Remote' }),
+      });
+      const out = await service.dedup([a]);
+
+      expect(out.canonical[0].isRemote).toBe(true);
+      expect(out.canonical[0].fields['isRemote'].value).toBe(true);
+    });
+
+    it('location text saying "Remote" overrides an explicit false from every source', async () => {
+      // A scraper's isRemote detector under-fired (bug/gap), but the
+      // location string itself is unambiguous — location wins.
+      const a = job({
+        id: '1',
+        site: Site.GREENHOUSE,
+        isRemote: false,
+        location: new LocationDto({ city: 'Remote', state: 'CA' }),
+      });
+      const out = await service.dedup([a]);
+
+      expect(out.canonical[0].isRemote).toBe(true);
+    });
+
+    it('does not false-positive on a location that merely contains "remote" as a substring, not a word', async () => {
+      const a = job({
+        id: '1',
+        site: Site.GREENHOUSE,
+        location: new LocationDto({ city: 'Remoteville' }),
+      });
+      const out = await service.dedup([a]);
+
+      expect(out.canonical[0].isRemote).toBeUndefined();
+    });
+  });
+
   describe('observedAt / implausible-future-date guard', () => {
     const FIXED_NOW = new Date('2026-06-15T00:00:00.000Z').getTime();
 

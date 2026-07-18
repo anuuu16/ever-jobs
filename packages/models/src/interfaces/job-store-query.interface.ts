@@ -22,6 +22,15 @@ export interface JobStoreQuery {
   /** Case-insensitive substring match on `canonical_job.location`. */
   readonly location?: string;
   /**
+   * Exact match on `canonical_job.is_remote`. `true` returns only jobs
+   * elected remote by the dedup merge; `false` returns only jobs
+   * explicitly elected NOT remote. Omitted (the default) applies no
+   * filter on this dimension — jobs with no remote signal at all
+   * (`isRemote` undefined) are excluded by either `true` or `false`,
+   * since neither is a match for "unknown".
+   */
+  readonly isRemote?: boolean;
+  /**
    * Lower bound on `canonical_job.merged_at` (inclusive). Lets callers do
    * incremental re-scrape — "give me everything since my last sync".
    */

@@ -32,6 +32,7 @@ const RAW_FIELDS_HANDLED = new Set([
   'jobUrl',
   'description',
   'rawResponse',
+  'isRemote',
 ]);
 
 /**
@@ -62,6 +63,44 @@ function clampImplausibleFutureDate(value: unknown): unknown {
   if (Number.isNaN(parsed)) return value;
   if (parsed <= Date.now() + FUTURE_DATE_TOLERANCE_MS) return value;
   return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * Resolve `isRemote` across every source in a cluster: `true` if ANY
+ * member's raw `JobPostDto` reported it, `false` only when at least one
+ * member explicitly reported `false` and none reported `true`, else
+ * `null` when no source expressed an opinion either way (all
+ * null/undefined). This is a deliberate boolean-OR across the whole
+ * cluster rather than the head-wins default every other field gets: a
+ * single source under-detecting "remote" (e.g. a bare location string
+ * with no "remote" mention) must not silently clobber another source's
+ * confident positive signal (e.g. an ATS's structured remote-type
+ * field) just because it happened to become the merge head. `false` is
+ * still head-preferring among the sources that said `false`, since
+ * there's no positive signal to prioritize among them.
+ */
+function resolveIsRemote(
+  cluster: ReadonlyArray<number>,
+  prepared: ReadonlyArray<PreparedJob>,
+): { value: boolean; site: Site; sourceId: string } | null {
+  let falseFallback: { site: Site; sourceId: string } | null = null;
+  for (const pos of cluster) {
+    const raw = prepared[pos].raw;
+    if (raw.isRemote === true) {
+      return {
+        value: true,
+        site: (raw.site as Site) ?? Site.LINKEDIN,
+        sourceId: String(raw.id ?? raw.atsId ?? raw.jobUrl ?? ''),
+      };
+    }
+    if (raw.isRemote === false && !falseFallback) {
+      falseFallback = {
+        site: (raw.site as Site) ?? Site.LINKEDIN,
+        sourceId: String(raw.id ?? raw.atsId ?? raw.jobUrl ?? ''),
+      };
+    }
+  }
+  return falseFallback ? { value: false, ...falseFallback } : null;
 }
 
 /**
@@ -179,6 +218,27 @@ export class DedupHybridService implements IDedupEngine {
       if (head.raw.description) {
         fields['description'] = provenance(head.raw.description, headSite, headSourceId, observedAt);
       }
+      // isRemote: boolean-OR across every source in the cluster (see
+      // `resolveIsRemote` doc comment), NOT the generic head-wins default
+      // every other field gets — a confident positive from a weaker
+      // source must not lose to a head that simply didn't detect remote.
+      // The canonical location text is an equally confident positive
+      // signal on its own: a source whose structured isRemote flag is
+      // missing/wrong but whose location literally says "Remote" still
+      // means the job is remote, so that overrides `resolveIsRemote`
+      // (including an explicit `false`) rather than being subordinate to it.
+      const isRemoteResolved = resolveIsRemote(cluster, prepared);
+      const locationMentionsRemote = /\bremote\b/i.test(locationVal);
+      if (locationMentionsRemote) {
+        fields['isRemote'] = provenance(true, headSite, headSourceId, observedAt);
+      } else if (isRemoteResolved) {
+        fields['isRemote'] = provenance(
+          isRemoteResolved.value,
+          isRemoteResolved.site,
+          isRemoteResolved.sourceId,
+          observedAt,
+        );
+      }
       // Every other populated field on the winning source's raw JobPostDto
       // (compensation, jobType, datePosted, skills, department, ...) —
       // carried through generically so the admin detail view (and any
@@ -217,6 +277,7 @@ export class DedupHybridService implements IDedupEngine {
         // its deep link, not its entire persistence batch (the `url`
         // column is NOT NULL in both SQL backends).
         url: head.raw.jobUrl ?? '',
+        isRemote: locationMentionsRemote ? true : isRemoteResolved?.value,
         sources: observations,
         fields,
         mergedAt,

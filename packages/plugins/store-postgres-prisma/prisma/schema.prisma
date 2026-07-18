@@ -74,6 +74,11 @@ model CanonicalJob {
   location       String   @db.Text
   description    String?  @db.Text
   url            String   @db.Text
+  /// Elected remote status (dedup boolean-OR merge across sources, see
+  /// `DedupHybridService.resolveIsRemote`). `NULL` means no source
+  /// expressed an opinion either way, distinct from `false` ("explicitly
+  /// not remote") — filters on `true`/`false` both exclude `NULL` rows.
+  isRemote       Boolean? @map("is_remote")
   mergedAt       DateTime @map("merged_at") @db.Timestamptz(6)
   fields         Json     @default("{}") @map("fields_json") @db.JsonB
   sources        Json     @default("[]") @map("sources_json") @db.JsonB
@@ -81,6 +86,7 @@ model CanonicalJob {
   observations SourceObservation[]
 
   @@index([mergedAt(sort: Desc), canonicalJobId], map: "idx_canonical_job_merged_at_id")
+  @@index([isRemote], map: "idx_canonical_job_is_remote")
   @@map("canonical_job")
 }
 

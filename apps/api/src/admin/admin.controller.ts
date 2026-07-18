@@ -31,6 +31,7 @@ import {
   SourceHealth,
   SourceObservation,
 } from '@ever-jobs/models';
+import { mapWithConcurrency } from '@ever-jobs/common';
 import { PluginRegistry } from '@ever-jobs/plugin';
 import { DailyExportConfig } from '../jobs/daily-export.cron';
 import { JobsAggregator, PerSiteAggregateResult } from '../jobs/jobs.aggregator';
@@ -139,6 +140,16 @@ interface RunCompaniesResult {
   readonly outputCount: number;
 }
 
+/**
+ * Max concurrent `aggregate()` calls in-flight across companies within a
+ * single `runCompanyBatch()` call. Keeps large ATS directories (e.g. 343
+ * Workday tenants) from firing every company's requests at once — many
+ * tenants of the same ATS platform share upstream CDN/WAF infra that
+ * rate-limits across tenants, so unbounded fan-out here 429s everyone.
+ * Overridable via env for operators who know their proxy pool can take more.
+ */
+const ATS_COMPANY_BATCH_CONCURRENCY = Number(process.env.ATS_COMPANY_BATCH_CONCURRENCY) || 8;
+
 /** Display order for categories — most generally-useful first. */
 const CATEGORY_ORDER = [
   'job-board',
@@ -212,6 +223,7 @@ export class AdminController {
     @Query('since') since?: string,
     @Query('cursor') cursor?: string,
     @Query('limit') limitRaw?: string,
+    @Query('isRemote') isRemoteRaw?: string,
   ): Promise<{
     items: AdminJobListItem[];
     nextCursor?: string;
@@ -235,6 +247,9 @@ export class AdminController {
       since: since ? new Date(since) : undefined,
       cursor: cursor || undefined,
       limit: limitRaw ? Number(limitRaw) || undefined : undefined,
+      // Tri-state query param: "true"/"false" filter, anything else
+      // (absent, "", "all") means no filter on this dimension.
+      isRemote: isRemoteRaw === 'true' ? true : isRemoteRaw === 'false' ? false : undefined,
     };
 
     // Fanned out concurrently — `total` (filtered count) and
@@ -282,6 +297,7 @@ export class AdminController {
         'extract-all': { name: 'extract-all', state: 'idle' },
         'clear-all': { name: 'clear-all', state: 'idle' },
         'export-all': { name: 'export-all', state: 'idle' },
+        'export-all-full': { name: 'export-all-full', state: 'idle' },
         'reset-exported': { name: 'reset-exported', state: 'idle' },
       };
     }
@@ -341,7 +357,38 @@ export class AdminController {
       );
     }
 
-    return this.backgroundJobs.start('export-all', (update) => this.runExportAll(update));
+    return this.backgroundJobs.start('export-all', (update) => this.runExportAll(update, true));
+  }
+
+  /**
+   * Push EVERY canonical job to the configured downstream target,
+   * regardless of its `IExportedJobStore` status, and (re-)mark them
+   * exported. Unlike `exportAll()`, this ignores "already exported" —
+   * useful for propagating in-place data changes (a job's description,
+   * compensation, etc. was re-scraped and changed since it was first
+   * synced) that the skip-already-exported path would never re-send.
+   *
+   * Does NOT track or convey posting expiry/liveness — `toExportPayload`
+   * has no such field, and nothing here re-probes each URL. This is a
+   * full data resync, not a liveness/expiry sweep.
+   */
+  @Post('api/admin/jobs/export-all-full')
+  exportAllFull(): BackgroundJobStatus {
+    this.assertEnabled();
+    if (!this.jobStore) {
+      throw new NotFoundException('No job store bound');
+    }
+    if (!this.backgroundJobs) {
+      throw new NotFoundException('No AdminBackgroundJobsService bound');
+    }
+    const config = this.configService.get<DailyExportConfig>('dailyExport');
+    if (!config?.targetUrl) {
+      throw new NotFoundException(
+        'No export target configured — set DAILY_EXPORT_TARGET_URL (and DAILY_EXPORT_TARGET_HEADERS) to sync.',
+      );
+    }
+
+    return this.backgroundJobs.start('export-all-full', (update) => this.runExportAll(update, false));
   }
 
   /**
@@ -370,14 +417,28 @@ export class AdminController {
   // ── clearAll() / extractAll() / exportAll() background-job bodies ─────
 
   /**
-   * Body of the `export-all` background job. Pages the whole job store,
-   * skips any job `IExportedJobStore` already knows about, converts the
-   * rest to the ingest payload the downstream target expects, POSTs them
-   * in batches, and marks every pushed URL exported. A failed batch aborts
-   * the run (so we don't mark unsent jobs as exported) and surfaces as
-   * `state: 'failed'`.
+   * Body of the `export-all` / `export-all-full` background jobs. Pages
+   * the whole job store, converts each candidate to the ingest payload
+   * the downstream target expects, POSTs in batches, and marks every
+   * pushed URL exported. A failed batch aborts the run (so we don't mark
+   * unsent jobs as exported) and surfaces as `state: 'failed'`.
+   *
+   * `onlyUnexported=true` (the `export-all` / "Sync new" path) skips any
+   * job `IExportedJobStore` already knows about — the steady-state,
+   * cheap path. `onlyUnexported=false` (the `export-all-full` / "Sync
+   * ALL" path) ignores exported-status entirely and re-pushes every job,
+   * re-stamping its exported mark — useful for propagating in-place data
+   * changes (e.g. a re-scrape updated a job's description or
+   * compensation) that the skip-already-exported path would never
+   * re-send. Neither path re-checks whether a posting is still live —
+   * there's no expiry/liveness field in `toExportPayload` or anywhere
+   * else on `CanonicalJob` today, so "sync ALL" is a full data resync,
+   * not an expiry sweep.
    */
-  private async runExportAll(update: (progress: BackgroundJobProgress) => void): Promise<{
+  private async runExportAll(
+    update: (progress: BackgroundJobProgress) => void,
+    onlyUnexported: boolean,
+  ): Promise<{
     total: number;
     scanned: number;
     pushed: number;
@@ -392,7 +453,13 @@ export class AdminController {
     const BATCH = 100;
 
     const total = await this.jobStore!.countByQuery({});
-    update({ done: 0, total, label: `Scanning ${total} job(s) for unexported…` });
+    update({
+      done: 0,
+      total,
+      label: onlyUnexported
+        ? `Scanning ${total} job(s) for unexported…`
+        : `Resyncing ALL ${total} job(s)…`,
+    });
 
     let scanned = 0;
     let pushed = 0;
@@ -406,7 +473,7 @@ export class AdminController {
       if (page.items.length === 0) break;
 
       let candidates = page.items;
-      if (this.exportedJobStore) {
+      if (onlyUnexported && this.exportedJobStore) {
         const unseenUrls = new Set(
           await this.exportedJobStore.filterUnseen(page.items.map((j) => j.url)),
         );
@@ -433,7 +500,9 @@ export class AdminController {
       update({
         done: scanned,
         total,
-        label: `Synced ${pushed} new job(s), skipped ${skipped} already-exported (${scanned}/${total} scanned)`,
+        label: onlyUnexported
+          ? `Synced ${pushed} new job(s), skipped ${skipped} already-exported (${scanned}/${total} scanned)`
+          : `Resynced ${pushed} job(s) (${scanned}/${total} scanned)`,
       });
     } while (cursor);
 
@@ -459,6 +528,12 @@ export class AdminController {
    * downstream ingest accepts. Flat fields come straight off the canonical
    * record; compensation / jobType / skills / datePosted are pulled from
    * the provenance `fields` map when the merge resolver surfaced them.
+   *
+   * `isRemote` is `null` (not omitted) when the dedup merge had no remote
+   * signal from any source — downstream's own "remote only" filter can
+   * only ever match jobs this pipeline actually classified, and a job
+   * deduped before the isRemote merge existed carries `null` here until
+   * it's naturally re-scraped (or backfilled) and re-upserted.
    */
   private toExportPayload(job: CanonicalJob): Record<string, unknown> {
     const fieldValue = <T>(key: string): T | undefined =>
@@ -495,6 +570,7 @@ export class AdminController {
       compensation,
       jobType: asStringArray(fieldValue('jobType')),
       skills: asStringArray(fieldValue('skills')),
+      isRemote: job.isRemote ?? null,
     };
   }
 
@@ -664,13 +740,17 @@ export class AdminController {
   }
 
   /**
-   * One `aggregate()` call per company slug, fanned out concurrently —
-   * mirrors `JobsService`'s own `Promise.allSettled` convention so one
-   * company's failure (dead slug, site down) never aborts the rest of
-   * the batch. `resultsWanted` applies PER company, not split across the
-   * batch. Shared by `runCompanies()` (one platform, operator-picked
-   * companies) and `extractAll()`'s ATS phase (every platform, every
-   * known company) so the fan-out-and-tally logic isn't duplicated.
+   * One `aggregate()` call per company slug, fanned out with a bounded
+   * concurrency (`ATS_COMPANY_BATCH_CONCURRENCY`) so one company's failure
+   * (dead slug, site down) never aborts the rest of the batch, but a large
+   * directory (e.g. 343 Workday tenants) never fires all requests at once
+   * either — unbounded fan-out here previously self-inflicted a 429 storm,
+   * since many ATS tenants of the same platform share upstream infra
+   * (CDN/WAF) that rate-limits across tenants, not just per-tenant.
+   * `resultsWanted` applies PER company, not split across the batch.
+   * Shared by `runCompanies()` (one platform, operator-picked companies)
+   * and `extractAll()`'s ATS phase (every platform, every known company)
+   * so the fan-out-and-tally logic isn't duplicated.
    */
   private async runCompanyBatch(
     site: Site,
@@ -688,8 +768,10 @@ export class AdminController {
     companiesSucceeded: number;
     companiesFailed: number;
   }> {
-    const settled = await Promise.allSettled(
-      companySlugs.map((slug) =>
+    const settled = await mapWithConcurrency(
+      companySlugs,
+      ATS_COMPANY_BATCH_CONCURRENCY,
+      (slug) =>
         this.aggregator!.aggregate(
           new ScraperInputDto({
             siteType: [site],
@@ -701,7 +783,6 @@ export class AdminController {
             captureRawResponse: options.captureRawResponse ?? false,
           }),
         ),
-      ),
     );
 
     let rawCount = 0;

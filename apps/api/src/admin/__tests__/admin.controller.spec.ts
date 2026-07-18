@@ -247,7 +247,28 @@ describe('AdminController', () => {
         since: new Date('2026-01-01'),
         cursor: 'cursor123',
         limit: 25,
+        isRemote: undefined,
       });
+    });
+
+    it.each([
+      ['true', true],
+      ['false', false],
+      [undefined, undefined],
+      ['', undefined],
+      ['garbage', undefined],
+    ])('maps isRemote query param %p onto the JobStoreQuery filter as %p', async (raw, expected) => {
+      const jobStore = makeJobStore([]);
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        jobStore as any,
+      );
+
+      await controller.list(undefined, undefined, undefined, undefined, undefined, undefined, raw);
+
+      expect(jobStore.listByQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ isRemote: expected }),
+      );
     });
 
     it('list() sets exported: null on every item when no IExportedJobStore is bound', async () => {
@@ -783,6 +804,7 @@ describe('AdminController', () => {
         'extract-all': { name: 'extract-all', state: 'idle' },
         'clear-all': { name: 'clear-all', state: 'idle' },
         'export-all': { name: 'export-all', state: 'idle' },
+        'export-all-full': { name: 'export-all-full', state: 'idle' },
         'reset-exported': { name: 'reset-exported', state: 'idle' },
       });
     });
@@ -931,6 +953,45 @@ describe('AdminController', () => {
       );
     });
 
+    it('exportAll() includes isRemote in the export payload so downstream can filter on it', async () => {
+      // Regression test — toExportPayload previously omitted isRemote
+      // entirely, so a downstream consumer's "remote only" filter matched
+      // zero jobs even though ever-jobs' own store had the signal.
+      mockedAxios.request.mockClear();
+      mockedAxios.request.mockResolvedValue({ status: 200, data: {} });
+
+      const jobs = [
+        makeJob({ canonicalJobId: 'a', url: 'https://example.com/1', isRemote: true }),
+        makeJob({ canonicalJobId: 'b', url: 'https://example.com/2', isRemote: false }),
+        makeJob({ canonicalJobId: 'c', url: 'https://example.com/3' }),
+      ];
+      const jobStore = makeJobStore(jobs);
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeExportConfigService('https://sink.example.com/ingest') as any,
+        jobStore as any,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+
+      controller.exportAll();
+      await flushMicrotasks();
+
+      const sentJobs = (mockedAxios.request.mock.calls[0][0] as {
+        data: { jobs: Array<{ jobUrl: string; isRemote: boolean | null }> };
+      }).data.jobs;
+      const byUrl = Object.fromEntries(sentJobs.map((j) => [j.jobUrl, j.isRemote]));
+      expect(byUrl).toEqual({
+        'https://example.com/1': true,
+        'https://example.com/2': false,
+        'https://example.com/3': null,
+      });
+    });
+
     it('exportAll() with no IExportedJobStore bound falls back to pushing everything (unknowable otherwise)', async () => {
       mockedAxios.request.mockResolvedValue({ status: 200, data: {} });
 
@@ -953,6 +1014,87 @@ describe('AdminController', () => {
 
       const finished = backgroundJobs.getAll()['export-all'];
       expect(finished.result).toMatchObject({ total: 1, scanned: 1, pushed: 1, skipped: 0 });
+    });
+
+    it('exportAllFull() throws NotFoundException when no export target is configured', () => {
+      const jobStore = makeJobStore([makeJob()]);
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeExportConfigService(undefined) as any,
+        jobStore as any,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+      expect(() => controller.exportAllFull()).toThrow(NotFoundException);
+    });
+
+    it('exportAllFull() re-pushes every job regardless of already-exported status', async () => {
+      // No global mock reset in this file — earlier tests' axios.request calls
+      // otherwise bleed into this test's call-count assertions below.
+      mockedAxios.request.mockClear();
+      mockedAxios.request.mockResolvedValue({ status: 200, data: {} });
+
+      const jobs = [
+        makeJob({ canonicalJobId: 'a', url: 'https://example.com/1' }),
+        makeJob({ canonicalJobId: 'b', url: 'https://example.com/2' }),
+        makeJob({ canonicalJobId: 'c', url: 'https://example.com/3' }),
+      ];
+      const jobStore = makeJobStore(jobs);
+      // All three are already exported — a plain exportAll() would skip all of them.
+      const exportedJobStore = makeExportedJobStore([
+        'https://example.com/1',
+        'https://example.com/2',
+        'https://example.com/3',
+      ]);
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeExportConfigService('https://sink.example.com/ingest') as any,
+        jobStore as any,
+        undefined,
+        exportedJobStore as any,
+        undefined,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+
+      const started = controller.exportAllFull();
+      expect(started.state).toBe('running');
+
+      await flushMicrotasks();
+
+      const finished = backgroundJobs.getAll()['export-all-full'];
+      expect(finished.state).toBe('done');
+      expect(finished.result).toEqual({
+        total: 3,
+        scanned: 3,
+        pushed: 3,
+        skipped: 0,
+        batches: 1,
+        destination: 'https://sink.example.com/ingest',
+      });
+
+      // Every job was re-sent, despite all three being pre-marked exported.
+      expect(mockedAxios.request).toHaveBeenCalledTimes(1);
+      const sentJobs = (mockedAxios.request.mock.calls[0][0] as { data: { jobs: Array<{ jobUrl: string }> } })
+        .data.jobs;
+      expect(sentJobs.map((j) => j.jobUrl).sort()).toEqual([
+        'https://example.com/1',
+        'https://example.com/2',
+        'https://example.com/3',
+      ]);
+      expect(exportedJobStore.markExported).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          'https://example.com/1',
+          'https://example.com/2',
+          'https://example.com/3',
+        ]),
+        expect.any(Date),
+      );
     });
 
     it('extractAll() throws NotFoundException when no JobsAggregator is bound', () => {
