@@ -580,6 +580,92 @@ describe('AdminController', () => {
       });
     });
 
+    it('analytics() buckets jobs by UTC day and by source, with remote/exported sub-counts', async () => {
+      const registry = makeRegistry([
+        { site: 'greenhouse', name: 'Greenhouse', category: 'ats' },
+        { site: 'linkedin', name: 'LinkedIn', category: 'job-board' },
+      ]);
+      const jobStore = makeJobStore([
+        makeJob({
+          canonicalJobId: 'a',
+          url: 'https://example.com/a',
+          mergedAt: '2026-01-02T10:00:00.000Z',
+          isRemote: true,
+          sources: [{ site: Site.GREENHOUSE, sourceJobId: '1', url: 'u1', observedAt: 't' }],
+        }),
+        makeJob({
+          canonicalJobId: 'b',
+          url: 'https://example.com/b',
+          mergedAt: '2026-01-02T23:00:00.000Z',
+          isRemote: false,
+          sources: [{ site: Site.LINKEDIN, sourceJobId: '2', url: 'u2', observedAt: 't' }],
+        }),
+        makeJob({
+          canonicalJobId: 'c',
+          url: 'https://example.com/c',
+          mergedAt: '2026-01-01T00:00:00.000Z',
+          isRemote: false,
+          sources: [{ site: Site.GREENHOUSE, sourceJobId: '3', url: 'u3', observedAt: 't' }],
+        }),
+      ]);
+      const exportedJobStore = makeExportedJobStore(['https://example.com/a']);
+      const controller = new AdminController(
+        makeConfigService(true) as any,
+        jobStore as any,
+        undefined,
+        exportedJobStore as any,
+        undefined,
+        registry as any,
+      );
+
+      const result = await controller.analytics();
+
+      expect(result.totalJobs).toBe(3);
+      expect(result.totalRemote).toBe(1);
+      expect(result.totalExported).toBe(1);
+
+      // Newest day first; Jan 2 has 2 jobs (one remote, one exported).
+      expect(result.byDay).toEqual([
+        { date: '2026-01-02', jobCount: 2, remoteCount: 1, exportedCount: 1 },
+        { date: '2026-01-01', jobCount: 1, remoteCount: 0, exportedCount: 0 },
+      ]);
+
+      // Greenhouse (2 jobs) ranks above LinkedIn (1 job).
+      expect(result.bySource).toEqual([
+        { site: 'greenhouse', name: 'Greenhouse', jobCount: 2, remoteCount: 1, exportedCount: 1 },
+        { site: 'linkedin', name: 'LinkedIn', jobCount: 1, remoteCount: 0, exportedCount: 0 },
+      ]);
+    });
+
+    it('analytics() returns zeroed/empty result when no jobStore is bound', async () => {
+      const controller = new AdminController(makeConfigService(true) as any);
+
+      const result = await controller.analytics();
+
+      expect(result).toEqual({
+        totalJobs: 0,
+        totalRemote: 0,
+        totalExported: null,
+        byDay: [],
+        bySource: [],
+      });
+    });
+
+    it('analytics() reports totalExported as null (not 0) when no IExportedJobStore is bound', async () => {
+      const jobStore = makeJobStore([
+        makeJob({
+          canonicalJobId: 'a',
+          sources: [{ site: Site.GREENHOUSE, sourceJobId: '1', url: 'u1', observedAt: 't' }],
+        }),
+      ]);
+      const controller = new AdminController(makeConfigService(true) as any, jobStore as any);
+
+      const result = await controller.analytics();
+
+      expect(result.totalExported).toBeNull();
+      expect(result.bySource[0].exportedCount).toBe(0);
+    });
+
     it('atsCompanies() with no site query returns entries sorted descending by count', () => {
       const controller = new AdminController(makeConfigService(true) as any);
       const result = controller.atsCompanies() as Array<{ site: string; count: number }>;

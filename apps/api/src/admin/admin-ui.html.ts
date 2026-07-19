@@ -37,6 +37,8 @@ export const ADMIN_UI_HTML = `<!doctype html>
     margin-bottom: 1.25rem;
   }
   .run-panel h2 { font-size: 0.95rem; margin: 0 0 0.75rem; }
+  #tab-analytics h2 { font-size: 0.95rem; margin: 1.5rem 0 0.75rem; }
+  #tab-analytics h2:first-of-type { margin-top: 0; }
   .hint { font-weight: 400; color: var(--muted); }
   .checkbox-label {
     flex-direction: row !important;
@@ -268,6 +270,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
     <button type="button" class="tab-btn active" id="tabbtn-run" role="tab">Run &amp; Extract</button>
     <button type="button" class="tab-btn" id="tabbtn-jobs" role="tab">Jobs</button>
     <button type="button" class="tab-btn" id="tabbtn-sources" role="tab">Sources</button>
+    <button type="button" class="tab-btn" id="tabbtn-analytics" role="tab">Analytics</button>
   </div>
 
   <div id="tab-run" class="tab-panel active">
@@ -517,6 +520,60 @@ export const ADMIN_UI_HTML = `<!doctype html>
     <div id="sources-empty" class="empty" style="display:none">No registered sources found.</div>
   </div> <!-- /tab-sources -->
 
+  <div id="tab-analytics" class="tab-panel">
+    <div class="sub" style="margin-bottom:0.75rem">
+      Basic analytics from the persisted store — full scan, same cost as the Sources tab.
+      Days are bucketed by UTC calendar day the job was merged in.
+    </div>
+    <div class="sites-toolbar">
+      <button type="button" id="btn-analytics-refresh">Refresh</button>
+    </div>
+    <div class="status" id="analytics-status"></div>
+
+    <div class="stats-bar">
+      <div class="stat-tile">
+        <div class="stat-value" id="stat-analytics-total">—</div>
+        <div class="stat-label">Total jobs</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-value" id="stat-analytics-remote">—</div>
+        <div class="stat-label">Remote</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-value" id="stat-analytics-exported">—</div>
+        <div class="stat-label">Exported</div>
+      </div>
+    </div>
+
+    <h2>Jobs by day</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>Jobs</th>
+          <th>Remote</th>
+          <th>Exported</th>
+        </tr>
+      </thead>
+      <tbody id="analytics-day-rows"></tbody>
+    </table>
+    <div id="analytics-day-empty" class="empty" style="display:none">No jobs found.</div>
+
+    <h2>Jobs by source</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Source</th>
+          <th>Jobs</th>
+          <th>Remote</th>
+          <th>Exported</th>
+        </tr>
+      </thead>
+      <tbody id="analytics-source-rows"></tbody>
+    </table>
+    <div id="analytics-source-empty" class="empty" style="display:none">No jobs found.</div>
+  </div> <!-- /tab-analytics -->
+
   <div id="overlay">
     <div id="detail-panel">
       <button class="close-btn" id="btn-close">&times; Close</button>
@@ -629,14 +686,25 @@ export const ADMIN_UI_HTML = `<!doctype html>
     tabbtnRun: document.getElementById('tabbtn-run'),
     tabbtnJobs: document.getElementById('tabbtn-jobs'),
     tabbtnSources: document.getElementById('tabbtn-sources'),
+    tabbtnAnalytics: document.getElementById('tabbtn-analytics'),
     tabRun: document.getElementById('tab-run'),
     tabJobs: document.getElementById('tab-jobs'),
     tabSources: document.getElementById('tab-sources'),
+    tabAnalytics: document.getElementById('tab-analytics'),
     btnSourcesRefresh: document.getElementById('btn-sources-refresh'),
     sourcesStatus: document.getElementById('sources-status'),
     sourcesSummary: document.getElementById('sources-summary'),
     sourcesRows: document.getElementById('sources-rows'),
     sourcesEmpty: document.getElementById('sources-empty'),
+    btnAnalyticsRefresh: document.getElementById('btn-analytics-refresh'),
+    analyticsStatus: document.getElementById('analytics-status'),
+    statAnalyticsTotal: document.getElementById('stat-analytics-total'),
+    statAnalyticsRemote: document.getElementById('stat-analytics-remote'),
+    statAnalyticsExported: document.getElementById('stat-analytics-exported'),
+    analyticsDayRows: document.getElementById('analytics-day-rows'),
+    analyticsDayEmpty: document.getElementById('analytics-day-empty'),
+    analyticsSourceRows: document.getElementById('analytics-source-rows'),
+    analyticsSourceEmpty: document.getElementById('analytics-source-empty'),
   };
 
   function escapeHtml(s) {
@@ -663,11 +731,11 @@ export const ADMIN_UI_HTML = `<!doctype html>
 
   // ── Tabs (each tab's data loads lazily, once, on first activation) ──
 
-  var tabLoaded = { run: false, jobs: false, sources: false };
+  var tabLoaded = { run: false, jobs: false, sources: false, analytics: false };
 
   function activateTab(name) {
-    var tabs = { run: els.tabRun, jobs: els.tabJobs, sources: els.tabSources };
-    var buttons = { run: els.tabbtnRun, jobs: els.tabbtnJobs, sources: els.tabbtnSources };
+    var tabs = { run: els.tabRun, jobs: els.tabJobs, sources: els.tabSources, analytics: els.tabAnalytics };
+    var buttons = { run: els.tabbtnRun, jobs: els.tabbtnJobs, sources: els.tabbtnSources, analytics: els.tabbtnAnalytics };
     Object.keys(tabs).forEach(function (key) {
       tabs[key].classList.toggle('active', key === name);
       buttons[key].classList.toggle('active', key === name);
@@ -681,12 +749,15 @@ export const ADMIN_UI_HTML = `<!doctype html>
       load(undefined, false);
     } else if (name === 'sources') {
       loadSourcesOverview();
+    } else if (name === 'analytics') {
+      loadAnalytics();
     }
   }
 
   els.tabbtnRun.addEventListener('click', function () { activateTab('run'); });
   els.tabbtnJobs.addEventListener('click', function () { activateTab('jobs'); });
   els.tabbtnSources.addEventListener('click', function () { activateTab('sources'); });
+  els.tabbtnAnalytics.addEventListener('click', function () { activateTab('analytics'); });
 
   // ── Sources tab ───────────────────────────
 
@@ -737,6 +808,58 @@ export const ADMIN_UI_HTML = `<!doctype html>
   }
 
   els.btnSourcesRefresh.addEventListener('click', loadSourcesOverview);
+
+  // ── Analytics tab ───────────────────────────
+
+  function renderAnalytics(data) {
+    els.statAnalyticsTotal.textContent = formatCount(data.totalJobs);
+    els.statAnalyticsRemote.textContent = formatCount(data.totalRemote);
+    els.statAnalyticsExported.textContent = data.totalExported == null ? '—' : formatCount(data.totalExported);
+
+    els.analyticsDayEmpty.style.display = data.byDay.length ? 'none' : 'block';
+    els.analyticsDayRows.innerHTML = data.byDay.map(function (d) {
+      return '<tr>' +
+        '<td>' + escapeHtml(d.date) + '</td>' +
+        '<td>' + formatCount(d.jobCount) + '</td>' +
+        '<td>' + formatCount(d.remoteCount) + '</td>' +
+        '<td>' + formatCount(d.exportedCount) + '</td>' +
+        '</tr>';
+    }).join('');
+
+    els.analyticsSourceEmpty.style.display = data.bySource.length ? 'none' : 'block';
+    els.analyticsSourceRows.innerHTML = data.bySource.map(function (s) {
+      return '<tr>' +
+        '<td>' + escapeHtml(s.name) + ' <span class="hint">(' + escapeHtml(s.site) + ')</span></td>' +
+        '<td>' + formatCount(s.jobCount) + '</td>' +
+        '<td>' + formatCount(s.remoteCount) + '</td>' +
+        '<td>' + formatCount(s.exportedCount) + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function loadAnalytics() {
+    els.btnAnalyticsRefresh.disabled = true;
+    els.analyticsStatus.textContent = 'Loading — this scans the full job store, may take a moment…';
+    els.analyticsStatus.style.color = 'var(--muted)';
+    fetch('/api/admin/analytics')
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        renderAnalytics(data);
+        els.analyticsStatus.textContent = '';
+      })
+      .catch(function (err) {
+        els.analyticsStatus.textContent = 'Failed to load: ' + err.message;
+        els.analyticsStatus.style.color = 'var(--bad)';
+      })
+      .finally(function () {
+        els.btnAnalyticsRefresh.disabled = false;
+      });
+  }
+
+  els.btnAnalyticsRefresh.addEventListener('click', loadAnalytics);
 
   function buildQuery(cursor) {
     var params = new URLSearchParams();

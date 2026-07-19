@@ -121,6 +121,33 @@ interface SourcesOverviewResult {
   readonly totalSources: number;
 }
 
+interface AnalyticsBucket {
+  readonly jobCount: number;
+  readonly remoteCount: number;
+  readonly exportedCount: number;
+}
+
+interface AnalyticsDayEntry extends AnalyticsBucket {
+  /** UTC calendar day the job was merged into the store, `YYYY-MM-DD`. */
+  readonly date: string;
+}
+
+interface AnalyticsSourceEntry extends AnalyticsBucket {
+  readonly site: string;
+  readonly name: string;
+}
+
+interface AnalyticsResult {
+  readonly totalJobs: number;
+  readonly totalRemote: number;
+  /** `null` when no `IExportedJobStore` is bound — status is unknown, not "no". */
+  readonly totalExported: number | null;
+  /** Newest day first. One row per calendar day that has at least one job. */
+  readonly byDay: AnalyticsDayEntry[];
+  /** Job-count descending. */
+  readonly bySource: AnalyticsSourceEntry[];
+}
+
 interface RunCompaniesBody {
   readonly site?: string;
   readonly companySlugs?: string[];
@@ -690,6 +717,86 @@ export class AdminController {
     } while (cursor);
 
     return counts;
+  }
+
+  /**
+   * Basic analytics for the admin "Analytics" tab: jobs bucketed by the
+   * UTC day they were merged into the store, and by source — each with
+   * a remote count and an exported count alongside the raw job count.
+   *
+   * Single full-scan (same `PAGE_SIZE` paging as `countJobsBySite`),
+   * batching `IExportedJobStore.filterUnseen` per page rather than per
+   * job so a 100K+ row store costs ~hundreds of queries, not one per
+   * job. Loaded lazily by the UI, same as the Sources tab.
+   */
+  @Get('api/admin/analytics')
+  async analytics(): Promise<AnalyticsResult> {
+    this.assertEnabled();
+    if (!this.jobStore) {
+      return { totalJobs: 0, totalRemote: 0, totalExported: null, byDay: [], bySource: [] };
+    }
+
+    const dayCounts = new Map<string, { jobCount: number; remoteCount: number; exportedCount: number }>();
+    const sourceCounts = new Map<string, { jobCount: number; remoteCount: number; exportedCount: number }>();
+    let totalJobs = 0;
+    let totalRemote = 0;
+    let totalExported = 0;
+
+    const PAGE_SIZE = 500;
+    let cursor: string | undefined;
+    do {
+      const page = await this.jobStore.listByQuery({ limit: PAGE_SIZE, cursor });
+      cursor = page.nextCursor;
+      if (page.items.length === 0) break;
+
+      const unseen = this.exportedJobStore
+        ? new Set(await this.exportedJobStore.filterUnseen(page.items.map((j) => j.url)))
+        : null;
+
+      for (const job of page.items) {
+        totalJobs++;
+        const day = job.mergedAt.slice(0, 10);
+        const isRemote = job.isRemote === true;
+        const isExported = unseen ? !unseen.has(job.url) : false;
+
+        if (isRemote) totalRemote++;
+        if (isExported) totalExported++;
+
+        const d = dayCounts.get(day) ?? { jobCount: 0, remoteCount: 0, exportedCount: 0 };
+        d.jobCount++;
+        if (isRemote) d.remoteCount++;
+        if (isExported) d.exportedCount++;
+        dayCounts.set(day, d);
+
+        for (const source of job.sources ?? []) {
+          const s = sourceCounts.get(source.site) ?? { jobCount: 0, remoteCount: 0, exportedCount: 0 };
+          s.jobCount++;
+          if (isRemote) s.remoteCount++;
+          if (isExported) s.exportedCount++;
+          sourceCounts.set(source.site, s);
+        }
+      }
+    } while (cursor);
+
+    const nameBySite = new Map<string, string>(
+      (this.registry ? this.registry.listSources() : []).map((m) => [m.site, m.name]),
+    );
+
+    const byDay = Array.from(dayCounts.entries())
+      .map(([date, bucket]) => ({ date, ...bucket }))
+      .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+
+    const bySource = Array.from(sourceCounts.entries())
+      .map(([site, bucket]) => ({ site, name: nameBySite.get(site) ?? site, ...bucket }))
+      .sort((a, b) => b.jobCount - a.jobCount || a.name.localeCompare(b.name));
+
+    return {
+      totalJobs,
+      totalRemote,
+      totalExported: this.exportedJobStore ? totalExported : null,
+      byDay,
+      bySource,
+    };
   }
 
   @Get('api/admin/ats-companies')
