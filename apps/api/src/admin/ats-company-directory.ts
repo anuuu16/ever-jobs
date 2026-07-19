@@ -2893,6 +2893,176 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "abinbev:1:BOL",
       industry: "Beverages (Bolivia)",
     },
+    {
+      name: "Harris Computer (N. Harris Computer Corporation)",
+      slug: "harriscomputer:3:1",
+      industry: "Software / IT (Constellation Software subsidiary)",
+    },
+    {
+      name: "Corteva Agriscience",
+      slug: "corteva:5:Corteva",
+      industry: "Agriculture / Crop Science",
+    },
+    {
+      name: "Intermountain Health",
+      slug: "imh:5:IntermountainCareers",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Mass General Brigham",
+      slug: "massgeneralbrigham:1:MGBExternal",
+      industry: "Healthcare / Academic Medicine",
+    },
+    {
+      name: "Blue Cross Blue Shield of Rhode Island (BCBSRI)",
+      slug: "bcbsri:1:BCBSRICareers",
+      industry: "Health Insurance",
+    },
+    {
+      name: "Brown University Health",
+      slug: "brownhealth:12:External_Careers",
+      industry: "Healthcare / Academic Medicine",
+    },
+    {
+      name: "R1 RCM",
+      slug: "r1rcm:1:R1RCM",
+      industry: "Healthcare Revenue Cycle Management",
+    },
+    {
+      name: "Trinity Health",
+      slug: "trinityhealth:1:Jobs",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Trinity Life Sciences",
+      slug: "trinitylifesciences:108:Trinity",
+      industry: "Life Sciences Consulting",
+    },
+    {
+      name: "Vizient",
+      slug: "vizient:1:Vizient_Careers",
+      industry: "Healthcare Supply Chain / GPO",
+    },
+    {
+      name: "National Education Association (NEA)",
+      slug: "nea:1:ExternalCareers",
+      industry: "Labor Union / Professional Association",
+    },
+    {
+      name: "ZOLL Medical Corporation",
+      slug: "zoll:5:ZOLLMedicalCorp",
+      industry: "Medical Devices",
+    },
+    {
+      name: "CareOregon (Health Share of Oregon)",
+      slug: "careoregon:12:HSO",
+      industry: "Healthcare / Medicaid Coordinated Care",
+    },
+    {
+      name: "Cleveland Clinic",
+      slug: "ccf:1:ClevelandClinicCareers",
+      industry: "Healthcare / Academic Medical Center",
+    },
+    {
+      name: "Vanderbilt University Medical Center",
+      slug: "vumc:1:vumccareers",
+      industry: "Healthcare / Academic Medical Center",
+    },
+    {
+      name: "HHC (Houston Healthcare)",
+      slug: "hhc:5:HHC",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Ameriprise Financial",
+      slug: "ameriprise:5:Ameriprise",
+      industry: "Financial Services / Asset Management",
+    },
+    {
+      name: "Voya Financial",
+      slug: "godirect:5:voya_jobs",
+      industry: "Financial Services / Retirement",
+    },
+    {
+      name: "MassMutual",
+      slug: "massmutual:1:MMCareers",
+      industry: "Insurance / Financial Services",
+    },
+    {
+      name: "MassMutual Ascend",
+      slug: "massmutual:1:MMAscendCareers",
+      industry: "Annuities / Insurance",
+    },
+    {
+      name: "MassMutual India",
+      slug: "massmutual:1:MMINDCareersite",
+      industry: "Financial Services (India operations)",
+    },
+    {
+      name: "Guardian Life Insurance",
+      slug: "guardianlife:5:Guardian-Life-Careers",
+      industry: "Insurance / Financial Services",
+    },
+    {
+      name: "Manulife / John Hancock",
+      slug: "manulife:3:MFCJH_Jobs",
+      industry: "Insurance / Financial Services",
+    },
+    {
+      name: "Pacific Life",
+      slug: "pacificlife:1:PacificLifeCareers",
+      industry: "Insurance / Annuities",
+    },
+    {
+      name: "Pacific Life Re",
+      slug: "pacificlife:1:PacificLifeReCareers",
+      industry: "Reinsurance",
+    },
+    {
+      name: "Transamerica",
+      slug: "transamerica:5:US",
+      industry: "Insurance / Financial Services",
+    },
+    {
+      name: "Transamerica Life (Bermuda)",
+      slug: "transamerica:5:TLB",
+      industry: "Life Insurance (HNW, Bermuda)",
+    },
+    {
+      name: "American Family Insurance",
+      slug: "amfam:1:Careers",
+      industry: "Insurance",
+    },
+    {
+      name: "American Family Insurance Claims Services",
+      slug: "amfam:1:American_Family_Insurance_Claims_Services",
+      industry: "Insurance Claims Services",
+    },
+    {
+      name: "Auto-Owners Insurance",
+      slug: "aoins:5:AutoOwners",
+      industry: "Insurance",
+    },
+    {
+      name: "Brown University",
+      slug: "brown:5:staff-careers-brown",
+      industry: "Higher Education",
+    },
+    {
+      name: "CI Financial",
+      slug: "ci:3:CI_FINANCIAL_EXTERNAL_CAREER-SITE",
+      industry: "Asset Management / Wealth Management (Canada)",
+    },
+    {
+      name: "CNA Financial",
+      slug: "cna:1:CNA_Careers",
+      industry: "Commercial Property & Casualty Insurance",
+    },
+    {
+      name: "Chubb Fire & Security",
+      slug: "chubbfiresecurity:3:chubbfs",
+      industry: "Fire Safety / Security Services",
+    },
   ],
   lever: [
     {
@@ -3423,6 +3593,37 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "micron.com",
       industry: "Semiconductors / Memory",
     },
+    {
+      name: "Bayer",
+      slug: "bayer.com",
+      industry: "Pharmaceuticals / Life Sciences",
+    },
+    {
+      name: "Estée Lauder Companies",
+      slug: "elcompanies.com",
+      industry: "Beauty / Cosmetics",
+    },
+    {
+      name: "Starbucks",
+      slug: "starbucks.com",
+      industry: "Food & Beverage Retail",
+    },
+    {
+      name: "Boston Scientific",
+      slug: "bostonscientific.com",
+      industry: "Medical Technology",
+    },
+    {
+      name: "Liberty Mutual Insurance",
+      slug: "libertymutual.com",
+      industry: "Insurance",
+    },
+    {
+      name: "Whirlpool Corporation",
+      slug: "whirlpool.com",
+      industry: "Home Appliances",
+    },
+    { name: "Vodafone", slug: "vodafone.com", industry: "Telecommunications" },
   ],
   elmo: [],
   employmenthero: [],
