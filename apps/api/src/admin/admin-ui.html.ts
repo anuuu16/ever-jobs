@@ -1400,11 +1400,12 @@ export const ADMIN_UI_HTML = `<!doctype html>
     if (status.name === 'export-all') {
       return 'Done — synced ' + r.pushed + ' new job(s) to ' + r.destination +
         ' in ' + r.batches + ' batch(es) (skipped ' + r.skipped + ' already-exported, ' +
-        r.scanned + ' / ' + r.total + ' scanned).';
+        r.skippedNoUrl + ' no-url, ' + r.scanned + ' / ' + r.total + ' scanned).';
     }
     if (status.name === 'export-all-full') {
       return 'Done — resynced ' + r.pushed + ' job(s) to ' + r.destination +
-        ' in ' + r.batches + ' batch(es) (' + r.scanned + ' / ' + r.total + ' scanned).';
+        ' in ' + r.batches + ' batch(es) (skipped ' + r.skippedNoUrl + ' no-url, ' +
+        r.scanned + ' / ' + r.total + ' scanned).';
     }
     if (status.name === 'reset-exported') {
       return 'Done — cleared ' + r.clearedMarks + ' exported mark(s). Every job now shows as not exported.';

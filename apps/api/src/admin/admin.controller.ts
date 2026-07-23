@@ -9,10 +9,10 @@ import {
   Param,
   Post,
   Query,
-} from '@nestjs/common';
-import { ApiExcludeController } from '@nestjs/swagger';
-import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
+} from "@nestjs/common";
+import { ApiExcludeController } from "@nestjs/swagger";
+import { ConfigService } from "@nestjs/config";
+import axios from "axios";
 import {
   CanonicalJob,
   CIRCUIT_BREAKER_TOKEN,
@@ -30,19 +30,25 @@ import {
   Site,
   SourceHealth,
   SourceObservation,
-} from '@ever-jobs/models';
-import { mapWithConcurrency } from '@ever-jobs/common';
-import { PluginRegistry } from '@ever-jobs/plugin';
-import { DailyExportConfig } from '../jobs/daily-export.cron';
-import { JobsAggregator, PerSiteAggregateResult } from '../jobs/jobs.aggregator';
+} from "@ever-jobs/models";
+import { mapWithConcurrency } from "@ever-jobs/common";
+import { PluginRegistry } from "@ever-jobs/plugin";
+import { DailyExportConfig } from "../jobs/daily-export.cron";
+import {
+  JobsAggregator,
+  PerSiteAggregateResult,
+} from "../jobs/jobs.aggregator";
 import {
   AdminBackgroundJobsService,
   BackgroundJobName,
   BackgroundJobProgress,
   BackgroundJobStatus,
-} from './admin-background-jobs.service';
-import { ADMIN_UI_HTML } from './admin-ui.html';
-import { ATS_COMPANY_DIRECTORY, AtsCompanyEntry } from './ats-company-directory';
+} from "./admin-background-jobs.service";
+import { ADMIN_UI_HTML } from "./admin-ui.html";
+import {
+  ATS_COMPANY_DIRECTORY,
+  AtsCompanyEntry,
+} from "./ats-company-directory";
 
 interface RunExtractionBody {
   readonly sites?: string[];
@@ -108,11 +114,15 @@ interface SourceOverviewEntry {
    * has no entry for this site (never invoked since the last restart) —
    * NOT the same as "broken".
    */
-  readonly state: 'closed' | 'half-open' | 'open' | 'untested';
+  readonly state: "closed" | "half-open" | "open" | "untested";
   /** `null` when `state` is `untested` (no rolling-window data yet). */
   readonly successRate: number | null;
   readonly p95LatencyMs: number | null;
-  readonly lastError?: { readonly code: string; readonly message: string; readonly at: string };
+  readonly lastError?: {
+    readonly code: string;
+    readonly message: string;
+    readonly at: string;
+  };
 }
 
 interface SourcesOverviewResult {
@@ -175,18 +185,41 @@ interface RunCompaniesResult {
  * rate-limits across tenants, so unbounded fan-out here 429s everyone.
  * Overridable via env for operators who know their proxy pool can take more.
  */
-const ATS_COMPANY_BATCH_CONCURRENCY = Number(process.env.ATS_COMPANY_BATCH_CONCURRENCY) || 8;
+const ATS_COMPANY_BATCH_CONCURRENCY =
+  Number(process.env.ATS_COMPANY_BATCH_CONCURRENCY) || 8;
+
+/**
+ * Pause (ms) each `runCompanyBatch` worker takes after a company request
+ * before picking its next one, on top of `ATS_COMPANY_BATCH_CONCURRENCY` —
+ * concurrency alone bounds how many requests are in flight, not how fast a
+ * single worker re-fires against the same shared platform infra. Default
+ * 10s per the same shared-CDN/WAF 429 concern `ATS_COMPANY_BATCH_CONCURRENCY`
+ * documents. Overridable via env; set to 0 to disable pacing entirely.
+ *
+ * Read at call time (not a frozen module-level constant) so tests can flip
+ * it to 0 around a real-directory sweep without needing to control module
+ * load order.
+ */
+function atsCompanyBatchDelayMs(): number {
+  const raw = process.env.ATS_COMPANY_BATCH_DELAY_MS;
+  if (raw === undefined || raw === '') return 10_000;
+  const parsed = Number(raw);
+  // `0` is a legitimate "disable pacing" value — `Number(raw) || 10_000`
+  // would silently discard it since 0 is falsy, defeating the documented
+  // opt-out. Only fall back to the default for missing/unparseable input.
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 10_000;
+}
 
 /** Display order for categories — most generally-useful first. */
 const CATEGORY_ORDER = [
-  'job-board',
-  'remote',
-  'regional',
-  'freelance',
-  'government',
-  'niche',
-  'ats',
-  'company',
+  "job-board",
+  "remote",
+  "regional",
+  "freelance",
+  "government",
+  "niche",
+  "ats",
+  "company",
 ];
 
 /**
@@ -235,22 +268,22 @@ export class AdminController {
     private readonly breaker?: ICircuitBreakerService,
   ) {}
 
-  @Get('admin')
-  @Header('Content-Type', 'text/html; charset=utf-8')
+  @Get("admin")
+  @Header("Content-Type", "text/html; charset=utf-8")
   page(): string {
     this.assertEnabled();
     return ADMIN_UI_HTML;
   }
 
-  @Get('api/admin/jobs')
+  @Get("api/admin/jobs")
   async list(
-    @Query('search') search?: string,
-    @Query('company') company?: string,
-    @Query('location') location?: string,
-    @Query('since') since?: string,
-    @Query('cursor') cursor?: string,
-    @Query('limit') limitRaw?: string,
-    @Query('isRemote') isRemoteRaw?: string,
+    @Query("search") search?: string,
+    @Query("company") company?: string,
+    @Query("location") location?: string,
+    @Query("since") since?: string,
+    @Query("cursor") cursor?: string,
+    @Query("limit") limitRaw?: string,
+    @Query("isRemote") isRemoteRaw?: string,
   ): Promise<{
     items: AdminJobListItem[];
     nextCursor?: string;
@@ -276,7 +309,12 @@ export class AdminController {
       limit: limitRaw ? Number(limitRaw) || undefined : undefined,
       // Tri-state query param: "true"/"false" filter, anything else
       // (absent, "", "all") means no filter on this dimension.
-      isRemote: isRemoteRaw === 'true' ? true : isRemoteRaw === 'false' ? false : undefined,
+      isRemote:
+        isRemoteRaw === "true"
+          ? true
+          : isRemoteRaw === "false"
+            ? false
+            : undefined,
     };
 
     // Fanned out concurrently — `total` (filtered count) and
@@ -284,8 +322,14 @@ export class AdminController {
     // that don't need the page of items to resolve first.
     const [page, total, totalExported] = await Promise.all([
       this.jobStore.listByQuery(query),
-      this.jobStore.countByQuery({ ...query, cursor: undefined, limit: undefined }),
-      this.exportedJobStore ? this.exportedJobStore.count() : Promise.resolve(null),
+      this.jobStore.countByQuery({
+        ...query,
+        cursor: undefined,
+        limit: undefined,
+      }),
+      this.exportedJobStore
+        ? this.exportedJobStore.count()
+        : Promise.resolve(null),
     ]);
     const items = await this.withExportedStatus(page.items);
     return { items, nextCursor: page.nextCursor, total, totalExported };
@@ -303,29 +347,31 @@ export class AdminController {
    * start/poll contract so the UI has one status-polling mechanism for
    * both destructive/long-running actions instead of two.
    */
-  @Post('api/admin/jobs/clear-all')
+  @Post("api/admin/jobs/clear-all")
   clearAll(): BackgroundJobStatus {
     this.assertEnabled();
     if (!this.jobStore) {
-      throw new NotFoundException('No job store bound');
+      throw new NotFoundException("No job store bound");
     }
     if (!this.backgroundJobs) {
-      throw new NotFoundException('No AdminBackgroundJobsService bound');
+      throw new NotFoundException("No AdminBackgroundJobsService bound");
     }
 
-    return this.backgroundJobs.start('clear-all', async () => this.runClearAll());
+    return this.backgroundJobs.start("clear-all", async () =>
+      this.runClearAll(),
+    );
   }
 
-  @Get('api/admin/jobs/background-status')
+  @Get("api/admin/jobs/background-status")
   backgroundStatus(): Record<BackgroundJobName, BackgroundJobStatus> {
     this.assertEnabled();
     if (!this.backgroundJobs) {
       return {
-        'extract-all': { name: 'extract-all', state: 'idle' },
-        'clear-all': { name: 'clear-all', state: 'idle' },
-        'export-all': { name: 'export-all', state: 'idle' },
-        'export-all-full': { name: 'export-all-full', state: 'idle' },
-        'reset-exported': { name: 'reset-exported', state: 'idle' },
+        "extract-all": { name: "extract-all", state: "idle" },
+        "clear-all": { name: "clear-all", state: "idle" },
+        "export-all": { name: "export-all", state: "idle" },
+        "export-all-full": { name: "export-all-full", state: "idle" },
+        "reset-exported": { name: "reset-exported", state: "idle" },
       };
     }
     return this.backgroundJobs.getAll();
@@ -340,20 +386,22 @@ export class AdminController {
    * companies simultaneously). No manual selection — this is the "just
    * get everything" button.
    */
-  @Post('api/admin/jobs/extract-all')
+  @Post("api/admin/jobs/extract-all")
   extractAll(): BackgroundJobStatus {
     this.assertEnabled();
     if (!this.aggregator) {
-      throw new NotFoundException('No JobsAggregator bound');
+      throw new NotFoundException("No JobsAggregator bound");
     }
     if (!this.registry) {
-      throw new NotFoundException('No PluginRegistry bound');
+      throw new NotFoundException("No PluginRegistry bound");
     }
     if (!this.backgroundJobs) {
-      throw new NotFoundException('No AdminBackgroundJobsService bound');
+      throw new NotFoundException("No AdminBackgroundJobsService bound");
     }
 
-    return this.backgroundJobs.start('extract-all', (update) => this.runExtractAll(update));
+    return this.backgroundJobs.start("extract-all", (update) =>
+      this.runExtractAll(update),
+    );
   }
 
   /**
@@ -368,23 +416,25 @@ export class AdminController {
    * re-sent. When no `IExportedJobStore` is bound, "already exported" is
    * unknowable, so this falls back to pushing everything (same as before).
    */
-  @Post('api/admin/jobs/export-all')
+  @Post("api/admin/jobs/export-all")
   exportAll(): BackgroundJobStatus {
     this.assertEnabled();
     if (!this.jobStore) {
-      throw new NotFoundException('No job store bound');
+      throw new NotFoundException("No job store bound");
     }
     if (!this.backgroundJobs) {
-      throw new NotFoundException('No AdminBackgroundJobsService bound');
+      throw new NotFoundException("No AdminBackgroundJobsService bound");
     }
-    const config = this.configService.get<DailyExportConfig>('dailyExport');
+    const config = this.configService.get<DailyExportConfig>("dailyExport");
     if (!config?.targetUrl) {
       throw new NotFoundException(
-        'No export target configured — set DAILY_EXPORT_TARGET_URL (and DAILY_EXPORT_TARGET_HEADERS) to sync.',
+        "No export target configured — set DAILY_EXPORT_TARGET_URL (and DAILY_EXPORT_TARGET_HEADERS) to sync.",
       );
     }
 
-    return this.backgroundJobs.start('export-all', (update) => this.runExportAll(update, true));
+    return this.backgroundJobs.start("export-all", (update) =>
+      this.runExportAll(update, true),
+    );
   }
 
   /**
@@ -399,23 +449,25 @@ export class AdminController {
    * has no such field, and nothing here re-probes each URL. This is a
    * full data resync, not a liveness/expiry sweep.
    */
-  @Post('api/admin/jobs/export-all-full')
+  @Post("api/admin/jobs/export-all-full")
   exportAllFull(): BackgroundJobStatus {
     this.assertEnabled();
     if (!this.jobStore) {
-      throw new NotFoundException('No job store bound');
+      throw new NotFoundException("No job store bound");
     }
     if (!this.backgroundJobs) {
-      throw new NotFoundException('No AdminBackgroundJobsService bound');
+      throw new NotFoundException("No AdminBackgroundJobsService bound");
     }
-    const config = this.configService.get<DailyExportConfig>('dailyExport');
+    const config = this.configService.get<DailyExportConfig>("dailyExport");
     if (!config?.targetUrl) {
       throw new NotFoundException(
-        'No export target configured — set DAILY_EXPORT_TARGET_URL (and DAILY_EXPORT_TARGET_HEADERS) to sync.',
+        "No export target configured — set DAILY_EXPORT_TARGET_URL (and DAILY_EXPORT_TARGET_HEADERS) to sync.",
       );
     }
 
-    return this.backgroundJobs.start('export-all-full', (update) => this.runExportAll(update, false));
+    return this.backgroundJobs.start("export-all-full", (update) =>
+      this.runExportAll(update, false),
+    );
   }
 
   /**
@@ -425,17 +477,17 @@ export class AdminController {
    * so every job shows `exported: false` again and the next sync/cron
    * tick treats the whole store as fresh.
    */
-  @Post('api/admin/jobs/reset-exported')
+  @Post("api/admin/jobs/reset-exported")
   resetExported(): BackgroundJobStatus {
     this.assertEnabled();
     if (!this.exportedJobStore) {
-      throw new NotFoundException('No IExportedJobStore bound');
+      throw new NotFoundException("No IExportedJobStore bound");
     }
     if (!this.backgroundJobs) {
-      throw new NotFoundException('No AdminBackgroundJobsService bound');
+      throw new NotFoundException("No AdminBackgroundJobsService bound");
     }
 
-    return this.backgroundJobs.start('reset-exported', async () => {
+    return this.backgroundJobs.start("reset-exported", async () => {
       const clearedMarks = await this.exportedJobStore!.clearAll();
       return { clearedMarks };
     });
@@ -470,10 +522,11 @@ export class AdminController {
     scanned: number;
     pushed: number;
     skipped: number;
+    skippedNoUrl: number;
     batches: number;
     destination: string;
   }> {
-    const config = this.configService.get<DailyExportConfig>('dailyExport')!;
+    const config = this.configService.get<DailyExportConfig>("dailyExport")!;
     // Push in modest chunks — a single huge POST risks the target's body-size
     // limit / timeouts with thousands of postings. Each chunk is its own
     // request, marked exported only after it lands.
@@ -491,6 +544,7 @@ export class AdminController {
     let scanned = 0;
     let pushed = 0;
     let skipped = 0;
+    let skippedNoUrl = 0;
     let batches = 0;
     let cursor: string | undefined;
 
@@ -499,15 +553,28 @@ export class AdminController {
       cursor = page.nextCursor;
       if (page.items.length === 0) break;
 
-      let candidates = page.items;
+      scanned += page.items.length;
+
+      // Jobs with no `url` (dedup-hybrid falls back to '' when a scraper
+      // omits jobUrl — see its `url: head.raw.jobUrl ?? ''` comment) have no
+      // deep link worth sending downstream, AND must never share that empty
+      // string as an export-dedup identity: the first url-less job to sync
+      // would mark '' exported, silently making every OTHER url-less job
+      // look "already exported" too. Exclude them from export entirely
+      // rather than treating '' as a valid identity, in both sync modes.
+      const exportable = page.items.filter((j) => j.url);
+      skippedNoUrl += page.items.length - exportable.length;
+
+      let candidates = exportable;
       if (onlyUnexported && this.exportedJobStore) {
         const unseenUrls = new Set(
-          await this.exportedJobStore.filterUnseen(page.items.map((j) => j.url)),
+          await this.exportedJobStore.filterUnseen(
+            exportable.map((j) => j.url),
+          ),
         );
-        candidates = page.items.filter((j) => unseenUrls.has(j.url));
+        candidates = exportable.filter((j) => unseenUrls.has(j.url));
       }
-      scanned += page.items.length;
-      skipped += page.items.length - candidates.length;
+      skipped += exportable.length - candidates.length;
 
       if (candidates.length > 0) {
         const jobs = candidates.map((job) => this.toExportPayload(job));
@@ -528,12 +595,21 @@ export class AdminController {
         done: scanned,
         total,
         label: onlyUnexported
-          ? `Synced ${pushed} new job(s), skipped ${skipped} already-exported (${scanned}/${total} scanned)`
-          : `Resynced ${pushed} job(s) (${scanned}/${total} scanned)`,
+          ? `Synced ${pushed} new job(s), skipped ${skipped} already-exported, ` +
+            `${skippedNoUrl} no-url (${scanned}/${total} scanned)`
+          : `Resynced ${pushed} job(s), skipped ${skippedNoUrl} no-url (${scanned}/${total} scanned)`,
       });
     } while (cursor);
 
-    return { total, scanned, pushed, skipped, batches, destination: config.targetUrl! };
+    return {
+      total,
+      scanned,
+      pushed,
+      skipped,
+      skippedNoUrl,
+      batches,
+      destination: config.targetUrl!,
+    };
   }
 
   /** POST one `{ jobs }` batch to the configured target; throws on failure. */
@@ -543,9 +619,9 @@ export class AdminController {
   ): Promise<void> {
     await axios.request({
       url: config.targetUrl,
-      method: (config.targetMethod || 'POST') as 'POST' | 'PUT' | 'PATCH',
+      method: (config.targetMethod || "POST") as "POST" | "PUT" | "PATCH",
       timeout: config.targetTimeoutMs,
-      headers: { 'Content-Type': 'application/json', ...config.targetHeaders },
+      headers: { "Content-Type": "application/json", ...config.targetHeaders },
       data: { jobs },
     });
   }
@@ -572,19 +648,20 @@ export class AdminController {
       Array.isArray(v) ? v.map(String).filter(Boolean) : v ? [String(v)] : null;
 
     const compensation = (() => {
-      const c = fieldValue<Record<string, unknown>>('compensation');
-      if (!c || typeof c !== 'object') return null;
-      const num = (x: unknown) => (typeof x === 'number' ? x : null);
+      const c = fieldValue<Record<string, unknown>>("compensation");
+      if (!c || typeof c !== "object") return null;
+      const num = (x: unknown) => (typeof x === "number" ? x : null);
       return {
-        interval: typeof c.interval === 'string' ? c.interval : null,
+        interval: typeof c.interval === "string" ? c.interval : null,
         minAmount: num(c.minAmount),
         maxAmount: num(c.maxAmount),
-        currency: typeof c.currency === 'string' ? c.currency : null,
+        currency: typeof c.currency === "string" ? c.currency : null,
       };
     })();
 
     const firstSource = job.sources?.[0];
-    const datePosted = fieldValue<unknown>('datePosted') ?? firstSource?.observedAt ?? null;
+    const datePosted =
+      fieldValue<unknown>("datePosted") ?? firstSource?.observedAt ?? null;
 
     return {
       jobUrl: job.url,
@@ -595,8 +672,8 @@ export class AdminController {
       site: firstSource?.site ?? null,
       datePosted: datePosted == null ? null : String(datePosted),
       compensation,
-      jobType: asStringArray(fieldValue('jobType')),
-      skills: asStringArray(fieldValue('skills')),
+      jobType: asStringArray(fieldValue("jobType")),
+      skills: asStringArray(fieldValue("skills")),
       isRemote: job.isRemote ?? null,
     };
   }
@@ -610,7 +687,9 @@ export class AdminController {
   }> {
     const [deletedJobs, deletedExportedMarks] = await Promise.all([
       this.jobStore!.deleteAll(),
-      this.exportedJobStore ? this.exportedJobStore.clearAll() : Promise.resolve(null),
+      this.exportedJobStore
+        ? this.exportedJobStore.clearAll()
+        : Promise.resolve(null),
     ]);
     if (this.runStateStore) {
       await this.runStateStore.resetAll();
@@ -623,7 +702,7 @@ export class AdminController {
     };
   }
 
-  @Get('api/admin/sites')
+  @Get("api/admin/sites")
   sites(): SiteCatalogResult {
     this.assertEnabled();
     if (!this.registry) {
@@ -639,12 +718,16 @@ export class AdminController {
 
     const orderedKeys = [
       ...CATEGORY_ORDER.filter((c) => byCategory.has(c)),
-      ...Array.from(byCategory.keys()).filter((c) => !CATEGORY_ORDER.includes(c)),
+      ...Array.from(byCategory.keys()).filter(
+        (c) => !CATEGORY_ORDER.includes(c),
+      ),
     ];
 
     const categories = orderedKeys.map((category) => ({
       category,
-      sites: (byCategory.get(category) ?? []).sort((a, b) => a.name.localeCompare(b.name)),
+      sites: (byCategory.get(category) ?? []).sort((a, b) =>
+        a.name.localeCompare(b.name),
+      ),
     }));
 
     return { categories, total: this.registry.size };
@@ -657,7 +740,7 @@ export class AdminController {
    * this process. Loaded lazily by the UI (only when the Sources tab is
    * opened) since the job-count side is a full store scan.
    */
-  @Get('api/admin/sources-overview')
+  @Get("api/admin/sources-overview")
   async sourcesOverview(): Promise<SourcesOverviewResult> {
     this.assertEnabled();
 
@@ -667,7 +750,8 @@ export class AdminController {
 
     const healthBySite = new Map<string, SourceHealth>();
     if (this.breaker) {
-      for (const health of this.breaker.list()) healthBySite.set(health.site, health);
+      for (const health of this.breaker.list())
+        healthBySite.set(health.site, health);
     }
 
     const catalog = this.registry ? this.registry.listSources() : [];
@@ -678,7 +762,7 @@ export class AdminController {
         name: meta.name,
         category: meta.category,
         jobCount: jobCounts.get(meta.site) ?? 0,
-        state: health?.state ?? 'untested',
+        state: health?.state ?? "untested",
         successRate: health?.successRate ?? null,
         p95LatencyMs: health?.p95LatencyMs ?? null,
         lastError: health?.lastError,
@@ -688,7 +772,9 @@ export class AdminController {
     // Most-active sources first — the operator question this tab answers
     // ("what's actually producing jobs?") is best served job-count-desc,
     // not alphabetically.
-    sources.sort((a, b) => b.jobCount - a.jobCount || a.name.localeCompare(b.name));
+    sources.sort(
+      (a, b) => b.jobCount - a.jobCount || a.name.localeCompare(b.name),
+    );
 
     return { sources, totalJobs, totalSources: sources.length };
   }
@@ -707,7 +793,10 @@ export class AdminController {
     const PAGE_SIZE = 500;
     let cursor: string | undefined;
     do {
-      const page = await this.jobStore.listByQuery({ limit: PAGE_SIZE, cursor });
+      const page = await this.jobStore.listByQuery({
+        limit: PAGE_SIZE,
+        cursor,
+      });
       cursor = page.nextCursor;
       for (const job of page.items) {
         for (const source of job.sources ?? []) {
@@ -729,15 +818,27 @@ export class AdminController {
    * job so a 100K+ row store costs ~hundreds of queries, not one per
    * job. Loaded lazily by the UI, same as the Sources tab.
    */
-  @Get('api/admin/analytics')
+  @Get("api/admin/analytics")
   async analytics(): Promise<AnalyticsResult> {
     this.assertEnabled();
     if (!this.jobStore) {
-      return { totalJobs: 0, totalRemote: 0, totalExported: null, byDay: [], bySource: [] };
+      return {
+        totalJobs: 0,
+        totalRemote: 0,
+        totalExported: null,
+        byDay: [],
+        bySource: [],
+      };
     }
 
-    const dayCounts = new Map<string, { jobCount: number; remoteCount: number; exportedCount: number }>();
-    const sourceCounts = new Map<string, { jobCount: number; remoteCount: number; exportedCount: number }>();
+    const dayCounts = new Map<
+      string,
+      { jobCount: number; remoteCount: number; exportedCount: number }
+    >();
+    const sourceCounts = new Map<
+      string,
+      { jobCount: number; remoteCount: number; exportedCount: number }
+    >();
     let totalJobs = 0;
     let totalRemote = 0;
     let totalExported = 0;
@@ -745,12 +846,19 @@ export class AdminController {
     const PAGE_SIZE = 500;
     let cursor: string | undefined;
     do {
-      const page = await this.jobStore.listByQuery({ limit: PAGE_SIZE, cursor });
+      const page = await this.jobStore.listByQuery({
+        limit: PAGE_SIZE,
+        cursor,
+      });
       cursor = page.nextCursor;
       if (page.items.length === 0) break;
 
       const unseen = this.exportedJobStore
-        ? new Set(await this.exportedJobStore.filterUnseen(page.items.map((j) => j.url)))
+        ? new Set(
+            await this.exportedJobStore.filterUnseen(
+              page.items.map((j) => j.url),
+            ),
+          )
         : null;
 
       for (const job of page.items) {
@@ -762,14 +870,22 @@ export class AdminController {
         if (isRemote) totalRemote++;
         if (isExported) totalExported++;
 
-        const d = dayCounts.get(day) ?? { jobCount: 0, remoteCount: 0, exportedCount: 0 };
+        const d = dayCounts.get(day) ?? {
+          jobCount: 0,
+          remoteCount: 0,
+          exportedCount: 0,
+        };
         d.jobCount++;
         if (isRemote) d.remoteCount++;
         if (isExported) d.exportedCount++;
         dayCounts.set(day, d);
 
         for (const source of job.sources ?? []) {
-          const s = sourceCounts.get(source.site) ?? { jobCount: 0, remoteCount: 0, exportedCount: 0 };
+          const s = sourceCounts.get(source.site) ?? {
+            jobCount: 0,
+            remoteCount: 0,
+            exportedCount: 0,
+          };
           s.jobCount++;
           if (isRemote) s.remoteCount++;
           if (isExported) s.exportedCount++;
@@ -779,7 +895,10 @@ export class AdminController {
     } while (cursor);
 
     const nameBySite = new Map<string, string>(
-      (this.registry ? this.registry.listSources() : []).map((m) => [m.site, m.name]),
+      (this.registry ? this.registry.listSources() : []).map((m) => [
+        m.site,
+        m.name,
+      ]),
     );
 
     const byDay = Array.from(dayCounts.entries())
@@ -787,7 +906,11 @@ export class AdminController {
       .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 
     const bySource = Array.from(sourceCounts.entries())
-      .map(([site, bucket]) => ({ site, name: nameBySite.get(site) ?? site, ...bucket }))
+      .map(([site, bucket]) => ({
+        site,
+        name: nameBySite.get(site) ?? site,
+        ...bucket,
+      }))
       .sort((a, b) => b.jobCount - a.jobCount || a.name.localeCompare(b.name));
 
     return {
@@ -799,8 +922,10 @@ export class AdminController {
     };
   }
 
-  @Get('api/admin/ats-companies')
-  atsCompanies(@Query('site') site?: string): AtsSummaryEntry[] | { site: string; companies: AtsCompanyEntry[] } {
+  @Get("api/admin/ats-companies")
+  atsCompanies(
+    @Query("site") site?: string,
+  ): AtsSummaryEntry[] | { site: string; companies: AtsCompanyEntry[] } {
     this.assertEnabled();
     if (site) {
       return { site, companies: ATS_COMPANY_DIRECTORY[site] ?? [] };
@@ -810,26 +935,34 @@ export class AdminController {
       .sort((a, b) => b.count - a.count || a.site.localeCompare(b.site));
   }
 
-  @Post('api/admin/jobs/run-companies')
-  async runCompanies(@Body() body: RunCompaniesBody = {}): Promise<RunCompaniesResult> {
+  @Post("api/admin/jobs/run-companies")
+  async runCompanies(
+    @Body() body: RunCompaniesBody = {},
+  ): Promise<RunCompaniesResult> {
     this.assertEnabled();
     if (!this.aggregator) {
-      throw new NotFoundException('No JobsAggregator bound');
+      throw new NotFoundException("No JobsAggregator bound");
     }
 
     const validSites = new Set(Object.values(Site) as string[]);
-    const site = body.site && validSites.has(body.site) ? (body.site as Site) : undefined;
+    const site =
+      body.site && validSites.has(body.site) ? (body.site as Site) : undefined;
     if (!site) {
-      throw new NotFoundException(`Unknown or missing "site" (must be a Site enum id)`);
+      throw new NotFoundException(
+        `Unknown or missing "site" (must be a Site enum id)`,
+      );
     }
 
     // De-dupe — the caller may combine directory picks with manually-typed
     // slugs that happen to overlap.
-    const companySlugs = Array.from(new Set((body.companySlugs ?? []).map((s) => s.trim()).filter(Boolean)));
+    const companySlugs = Array.from(
+      new Set((body.companySlugs ?? []).map((s) => s.trim()).filter(Boolean)),
+    );
 
-    const resultsWanted = body.resultsWanted && body.resultsWanted > 0
-      ? Math.min(body.resultsWanted, 100)
-      : 20;
+    const resultsWanted =
+      body.resultsWanted && body.resultsWanted > 0
+        ? Math.min(body.resultsWanted, 100)
+        : 20;
 
     const batch = await this.runCompanyBatch(site, companySlugs, {
       searchTerm: body.searchTerm || undefined,
@@ -848,12 +981,15 @@ export class AdminController {
 
   /**
    * One `aggregate()` call per company slug, fanned out with a bounded
-   * concurrency (`ATS_COMPANY_BATCH_CONCURRENCY`) so one company's failure
-   * (dead slug, site down) never aborts the rest of the batch, but a large
-   * directory (e.g. 343 Workday tenants) never fires all requests at once
-   * either — unbounded fan-out here previously self-inflicted a 429 storm,
-   * since many ATS tenants of the same platform share upstream infra
-   * (CDN/WAF) that rate-limits across tenants, not just per-tenant.
+   * concurrency (`ATS_COMPANY_BATCH_CONCURRENCY`) AND a per-worker pause
+   * between calls (`atsCompanyBatchDelayMs()`, default 10s) so one
+   * company's failure (dead slug, site down) never aborts the rest of the
+   * batch, but a large directory (e.g. 343 Workday tenants) never fires
+   * requests back-to-back either — many ATS tenants of the same platform
+   * share upstream infra (CDN/WAF) that rate-limits across tenants, not
+   * just per-tenant, so concurrency alone wasn't enough to stop 429s once
+   * the directory grew; pacing each worker's own requests cuts the
+   * effective request rate further without fully serializing the batch.
    * `resultsWanted` applies PER company, not split across the batch.
    * Shared by `runCompanies()` (one platform, operator-picked companies)
    * and `extractAll()`'s ATS phase (every platform, every known company)
@@ -890,6 +1026,7 @@ export class AdminController {
             captureRawResponse: options.captureRawResponse ?? false,
           }),
         ),
+      atsCompanyBatchDelayMs(),
     );
 
     let rawCount = 0;
@@ -897,7 +1034,7 @@ export class AdminController {
     let companiesSucceeded = 0;
     let companiesFailed = 0;
     for (const result of settled) {
-      if (result.status === 'fulfilled') {
+      if (result.status === "fulfilled") {
         companiesSucceeded++;
         rawCount += result.value.rawCount;
         outputCount += result.value.outputCount;
@@ -933,10 +1070,16 @@ export class AdminController {
     ) as Array<[Site, AtsCompanyEntry[]]>;
     const totalUnits = 1 + platforms.length;
 
-    update({ done: 0, total: totalUnits, label: 'Phase 1/2: full-site extraction (running)' });
+    update({
+      done: 0,
+      total: totalUnits,
+      label: "Phase 1/2: full-site extraction (running)",
+    });
     const allSiteIds = this.registry!.listSources().map((s) => s.site);
     const siteResult = await this.aggregator!.aggregateIncremental(
-      new ScraperInputDto({ siteType: allSiteIds.length ? allSiteIds : undefined }),
+      new ScraperInputDto({
+        siteType: allSiteIds.length ? allSiteIds : undefined,
+      }),
     );
 
     update({
@@ -968,7 +1111,10 @@ export class AdminController {
     }
 
     return {
-      sites: { rawCount: siteResult.rawCount, outputCount: siteResult.outputCount },
+      sites: {
+        rawCount: siteResult.rawCount,
+        outputCount: siteResult.outputCount,
+      },
       atsCompanies: {
         platforms: platforms.length,
         companiesSucceeded,
@@ -979,11 +1125,13 @@ export class AdminController {
     };
   }
 
-  @Post('api/admin/jobs/run')
-  async run(@Body() body: RunExtractionBody = {}): Promise<RunExtractionResult> {
+  @Post("api/admin/jobs/run")
+  async run(
+    @Body() body: RunExtractionBody = {},
+  ): Promise<RunExtractionResult> {
     this.assertEnabled();
     if (!this.aggregator) {
-      throw new NotFoundException('No JobsAggregator bound');
+      throw new NotFoundException("No JobsAggregator bound");
     }
 
     const validSites = new Set(Object.values(Site) as string[]);
@@ -994,16 +1142,18 @@ export class AdminController {
     // hours-long scrape.
     const sites = requestedSites.length
       ? requestedSites
-      : (this.configService.get<{ siteNames: string[] }>('defaults')?.siteNames ?? []);
+      : (this.configService.get<{ siteNames: string[] }>("defaults")
+          ?.siteNames ?? []);
 
     const input = new ScraperInputDto({
       siteType: sites.length ? (sites as Site[]) : undefined,
       searchTerm: body.searchTerm || undefined,
       location: body.location || undefined,
       isRemote: body.isRemote ?? false,
-      resultsWanted: body.resultsWanted && body.resultsWanted > 0
-        ? Math.min(body.resultsWanted, 100)
-        : 20,
+      resultsWanted:
+        body.resultsWanted && body.resultsWanted > 0
+          ? Math.min(body.resultsWanted, 100)
+          : 20,
       captureRawResponse: body.captureRawResponse ?? false,
     });
 
@@ -1022,11 +1172,11 @@ export class AdminController {
     };
   }
 
-  @Get('api/admin/jobs/:id')
-  async detail(@Param('id') id: string): Promise<AdminJobDetail> {
+  @Get("api/admin/jobs/:id")
+  async detail(@Param("id") id: string): Promise<AdminJobDetail> {
     this.assertEnabled();
     if (!this.jobStore) {
-      throw new NotFoundException('No job store bound');
+      throw new NotFoundException("No job store bound");
     }
 
     const job = await this.jobStore.getById(id);
@@ -1043,7 +1193,7 @@ export class AdminController {
   // ── helpers ──────────────────────────────
 
   private assertEnabled(): void {
-    if (!this.configService.get<boolean>('adminUi.enabled', true)) {
+    if (!this.configService.get<boolean>("adminUi.enabled", true)) {
       throw new NotFoundException();
     }
   }

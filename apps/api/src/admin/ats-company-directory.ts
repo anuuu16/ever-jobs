@@ -3063,6 +3063,252 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "chubbfiresecurity:3:chubbfs",
       industry: "Fire Safety / Security Services",
     },
+    {
+      name: "Georgetown University",
+      slug: "georgetown:1:Georgetown_Admin_Careers",
+      industry: "Higher Education",
+    },
+    {
+      name: "Cornell University",
+      slug: "cornell:1:CornellCareerPage",
+      industry: "Higher Education",
+    },
+    {
+      name: "Cornell Cooperative Extension",
+      slug: "cornell:1:CCECareerPage",
+      industry: "Agricultural Extension / Education",
+    },
+    {
+      name: "Northeastern University",
+      slug: "northeastern:1:careers",
+      industry: "Higher Education",
+    },
+    {
+      name: "Northeastern Illinois University",
+      slug: "neiu:1:NEIU",
+      industry: "Higher Education",
+    },
+    {
+      name: "University of Chicago",
+      slug: "uchicago:5:External",
+      industry: "Higher Education",
+    },
+    {
+      name: "Levi Strauss & Co.",
+      slug: "levistraussandco:5:External",
+      industry: "Apparel / Retail",
+    },
+    {
+      name: "VF Corporation",
+      slug: "vfc:5:vfc_careers",
+      industry: "Apparel / Footwear (Vans, The North Face, Timberland)",
+    },
+    {
+      name: "Altra Running (VF Corp)",
+      slug: "vfc:5:altra_careers",
+      industry: "Athletic Footwear",
+    },
+    {
+      name: "Timberland (VF Corp)",
+      slug: "vfc:5:timberland_careers",
+      industry: "Footwear / Apparel",
+    },
+    {
+      name: "PVH Corp (Calvin Klein, Tommy Hilfiger)",
+      slug: "pvh:1:PVH_Careers",
+      industry: "Apparel / Fashion",
+    },
+    {
+      name: "Hibbett",
+      slug: "hibbett:1:HSPRETAIL",
+      industry: "Athletic Retail",
+    },
+    {
+      name: "Columbia Sportswear Company",
+      slug: "columbiasportswearcompany:5:CSC_Careers",
+      industry: "Outdoor Apparel / Footwear",
+    },
+    {
+      name: "prAna (Columbia Sportswear subsidiary)",
+      slug: "columbiasportswearcompany:5:prAna_Careers",
+      industry: "Outdoor / Yoga Apparel",
+    },
+    {
+      name: "Deckers Brands (UGG, HOKA, Teva)",
+      slug: "deckers:5:Deckers",
+      industry: "Footwear / Apparel",
+    },
+    {
+      name: "New Balance",
+      slug: "newbalance:1:Careers",
+      industry: "Athletic Footwear / Apparel",
+    },
+    {
+      name: "Wolverine Worldwide",
+      slug: "wwwinc:1:WWW",
+      industry: "Footwear / Apparel Multi-Brand",
+    },
+    {
+      name: "Carter's Inc. (Carter's, OshKosh B'gosh)",
+      slug: "carters:1:CartersCareers",
+      industry: "Children's Apparel Retail",
+    },
+    {
+      name: "Abercrombie & Fitch Co.",
+      slug: "abercrombie:108:anf",
+      industry: "Apparel Retail (Abercrombie, Hollister)",
+    },
+    {
+      name: "Abercrombie & Kent",
+      slug: "abercrombiekent:12:abercrombiekent_careers",
+      industry: "Luxury Travel",
+    },
+    {
+      name: "Vanderlande",
+      slug: "vanderlande:3:careers",
+      industry: "Logistics Automation / Material Handling Systems",
+    },
+    {
+      name: "Finish Line",
+      slug: "finishline:1:Store_Careers",
+      industry: "Athletic Footwear Retail",
+    },
+    {
+      name: "Burlington Stores",
+      slug: "burlington:5:BurlingtonCareers",
+      industry: "Off-Price Retail",
+    },
+    {
+      name: "Sanford Health",
+      slug: "sanford:5:SanfordHealth",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Marshfield Clinic Health System",
+      slug: "marshfieldclinichealthsystems:5:External",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Geisinger Health",
+      slug: "geisinger:5:GeisingerExternal",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Advocate Health",
+      slug: "aah:5:External",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Health Advocate (Teleperformance)",
+      slug: "languageline:5:HAS_Careers",
+      industry: "Employee Health Benefits Navigation",
+    },
+    {
+      name: "Corewell Health",
+      slug: "spectrumhealth:5:CorewellHealthCareers",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Baptist Health (Kentucky)",
+      slug: "bhs:1:careers",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Baptist Health (Alabama)",
+      slug: "baptistfirst:12:baptistfirst",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Wellstar Health System",
+      slug: "wellstar:1:wellstarcareers",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Ochsner Health",
+      slug: "ochsner:1:Ochsner",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Ochsner LSU Health System of North Louisiana",
+      slug: "ochsner:1:OchsnerLSUHealthSystemNL",
+      industry: "Healthcare / Academic Medical Center",
+    },
+    {
+      name: "Vyaire Medical",
+      slug: "vyaire:1:1",
+      industry: "Medical Devices / Respiratory Care",
+    },
+    {
+      name: "Novanta",
+      slug: "novanta:5:Novanta-Careers",
+      industry: "Medical / Industrial Technology Components",
+    },
+    {
+      name: "Bon Secours Mercy Health",
+      slug: "easyservice:5:BonSecoursMercyHealthCareers",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Adventist HealthCare (Maryland)",
+      slug: "adventisthealthcare:1:AdventistHealthCareCareers",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "AdventHealth",
+      slug: "adventhealth:12:AH_External_Career_Site",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Delta Dental of Michigan, Ohio, and Indiana",
+      slug: "rhsc:5:Delta_Dental_of_Michigan",
+      industry: "Dental Insurance",
+    },
+    {
+      name: "Blue Cross Blue Shield Association (BCBSA)",
+      slug: "bcbsa:1:Careers",
+      industry: "Health Insurance / Trade Association",
+    },
+    {
+      name: "Highmark Health",
+      slug: "highmarkhealth:1:highmark",
+      industry: "Health Insurance / Hospital System",
+    },
+    {
+      name: "Blue Cross of Idaho",
+      slug: "bcidaho:5:BCI",
+      industry: "Health Insurance",
+    },
+    {
+      name: "Blue Cross and Blue Shield of Kansas",
+      slug: "bcbsks:1:External",
+      industry: "Health Insurance",
+    },
+    {
+      name: "Blue Cross and Blue Shield of North Carolina",
+      slug: "bcbsnc:5:BCBSNC",
+      industry: "Health Insurance",
+    },
+    {
+      name: "Xcel Energy",
+      slug: "xcelenergy:1:External",
+      industry: "Energy / Utilities",
+    },
+    {
+      name: "BlueCross BlueShield of South Carolina",
+      slug: "ourhrconnect:5:SCBlues",
+      industry: "Health Insurance",
+    },
+    {
+      name: "HCSC (Health Care Service Corporation)",
+      slug: "hcsc:1:HCSC_External",
+      industry:
+        "Health Insurance (Multi-state Blue Cross Blue Shield operator)",
+    },
+    {
+      name: "Florida Institute of Technology",
+      slug: "floridatech:5:FloridaTechCareers",
+      industry: "Higher Education",
+    },
   ],
   lever: [
     {

@@ -1021,6 +1021,7 @@ describe('AdminController', () => {
         scanned: 3,
         pushed: 2,
         skipped: 1,
+        skippedNoUrl: 0,
         batches: 1,
         destination: 'https://sink.example.com/ingest',
       });
@@ -1035,6 +1036,63 @@ describe('AdminController', () => {
       ]);
       expect(exportedJobStore.markExported).toHaveBeenCalledWith(
         expect.arrayContaining(['https://example.com/1', 'https://example.com/3']),
+        expect.any(Date),
+      );
+    });
+
+    it('exportAll() excludes url-less jobs from export entirely, without treating "" as a shared already-exported identity', async () => {
+      // Regression test — dedup-hybrid falls back to url: '' when a scraper
+      // omits jobUrl. toExportPayload/filterUnseen previously treated '' as
+      // a normal dedup key, so the FIRST url-less job to sync would mark ''
+      // exported — silently making every OTHER url-less job look
+      // already-exported too, even though none of them were ever actually
+      // sent downstream (a job with no deep link is useless to the platform
+      // anyway).
+      mockedAxios.request.mockClear();
+      mockedAxios.request.mockResolvedValue({ status: 200, data: {} });
+
+      const jobs = [
+        makeJob({ canonicalJobId: 'a', url: 'https://example.com/1' }),
+        makeJob({ canonicalJobId: 'b', url: '' }),
+        makeJob({ canonicalJobId: 'c', url: '' }),
+      ];
+      const jobStore = makeJobStore(jobs);
+      const exportedJobStore = makeExportedJobStore([]);
+      const backgroundJobs = new AdminBackgroundJobsService();
+      const controller = new AdminController(
+        makeExportConfigService('https://sink.example.com/ingest') as any,
+        jobStore as any,
+        undefined,
+        exportedJobStore as any,
+        undefined,
+        undefined,
+        undefined,
+        backgroundJobs,
+      );
+
+      controller.exportAll();
+      await flushMicrotasks();
+
+      const finished = backgroundJobs.getAll()['export-all'];
+      expect(finished.result).toEqual({
+        total: 3,
+        scanned: 3,
+        pushed: 1,
+        skipped: 0,
+        skippedNoUrl: 2,
+        batches: 1,
+        destination: 'https://sink.example.com/ingest',
+      });
+
+      // Only the real-URL job was ever sent or marked exported — '' was
+      // never passed to filterUnseen/markExported at all.
+      expect(mockedAxios.request).toHaveBeenCalledTimes(1);
+      const sentJobs = (mockedAxios.request.mock.calls[0][0] as { data: { jobs: Array<{ jobUrl: string }> } })
+        .data.jobs;
+      expect(sentJobs.map((j) => j.jobUrl)).toEqual(['https://example.com/1']);
+      expect(exportedJobStore.filterUnseen).toHaveBeenCalledWith(['https://example.com/1']);
+      expect(exportedJobStore.markExported).toHaveBeenCalledWith(
+        ['https://example.com/1'],
         expect.any(Date),
       );
     });
@@ -1160,6 +1218,7 @@ describe('AdminController', () => {
         scanned: 3,
         pushed: 3,
         skipped: 0,
+        skippedNoUrl: 0,
         batches: 1,
         destination: 'https://sink.example.com/ingest',
       });
@@ -1215,53 +1274,64 @@ describe('AdminController', () => {
     });
 
     it('extractAll() runs every registered site AND every known ATS company, reporting progress and a final summary', async () => {
-      const registry = makeRegistry([
-        { site: 'indeed', name: 'Indeed', category: 'job-board' },
-        { site: 'linkedin', name: 'LinkedIn', category: 'job-board' },
-      ]);
-      const backgroundJobs = new AdminBackgroundJobsService();
-      const aggregateIncremental = jest.fn().mockResolvedValue({
-        jobs: [], rawCount: 10, outputCount: 8, deduped: true, perSite: [],
-      });
-      const aggregate = jest.fn().mockResolvedValue({ jobs: [], rawCount: 1, outputCount: 1, deduped: false });
-      const aggregator = { aggregate, aggregateIncremental };
-      const controller = new AdminController(
-        makeConfigService(true) as any,
-        undefined,
-        undefined,
-        undefined,
-        aggregator as any,
-        registry as any,
-        undefined,
-        backgroundJobs,
-      );
+      // This sweep hits the full real ATS_COMPANY_DIRECTORY (~170 platforms /
+      // ~530 companies); atsCompanyBatchDelayMs() is read at call time, so
+      // zeroing it here avoids real per-company pacing delays blowing well
+      // past this test's own timeout.
+      const originalDelayMs = process.env.ATS_COMPANY_BATCH_DELAY_MS;
+      process.env.ATS_COMPANY_BATCH_DELAY_MS = '0';
+      try {
+        const registry = makeRegistry([
+          { site: 'indeed', name: 'Indeed', category: 'job-board' },
+          { site: 'linkedin', name: 'LinkedIn', category: 'job-board' },
+        ]);
+        const backgroundJobs = new AdminBackgroundJobsService();
+        const aggregateIncremental = jest.fn().mockResolvedValue({
+          jobs: [], rawCount: 10, outputCount: 8, deduped: true, perSite: [],
+        });
+        const aggregate = jest.fn().mockResolvedValue({ jobs: [], rawCount: 1, outputCount: 1, deduped: false });
+        const aggregator = { aggregate, aggregateIncremental };
+        const controller = new AdminController(
+          makeConfigService(true) as any,
+          undefined,
+          undefined,
+          undefined,
+          aggregator as any,
+          registry as any,
+          undefined,
+          backgroundJobs,
+        );
 
-      const started = controller.extractAll();
-      expect(started.state).toBe('running');
+        const started = controller.extractAll();
+        expect(started.state).toBe('running');
 
-      await flushMicrotasks();
-      // The ATS phase is a sequential per-platform loop over the full real
-      // directory (~170 platforms / ~530 companies) — give it a few more
-      // microtask turns to fully settle rather than assuming one flush.
-      for (let i = 0; i < 20; i++) await flushMicrotasks();
+        await flushMicrotasks();
+        // The ATS phase is a sequential per-platform loop over the full real
+        // directory (~170 platforms / ~530 companies) — give it a few more
+        // microtask turns to fully settle rather than assuming one flush.
+        for (let i = 0; i < 20; i++) await flushMicrotasks();
 
-      const finished = backgroundJobs.getAll()['extract-all'];
-      expect(finished.state).toBe('done');
-      expect(aggregateIncremental).toHaveBeenCalledWith(
-        expect.objectContaining({ siteType: ['indeed', 'linkedin'] }),
-      );
+        const finished = backgroundJobs.getAll()['extract-all'];
+        expect(finished.state).toBe('done');
+        expect(aggregateIncremental).toHaveBeenCalledWith(
+          expect.objectContaining({ siteType: ['indeed', 'linkedin'] }),
+        );
 
-      const validSites = new Set(Object.values(Site) as string[]);
-      const expectedPlatforms = Object.keys(ATS_COMPANY_DIRECTORY).filter((s) => validSites.has(s));
-      const expectedCompanyCalls = expectedPlatforms.reduce(
-        (sum, s) => sum + ATS_COMPANY_DIRECTORY[s].length,
-        0,
-      );
-      expect(aggregate).toHaveBeenCalledTimes(expectedCompanyCalls);
-      expect(finished.result).toMatchObject({
-        sites: { rawCount: 10, outputCount: 8 },
-        atsCompanies: { platforms: expectedPlatforms.length },
-      });
+        const validSites = new Set(Object.values(Site) as string[]);
+        const expectedPlatforms = Object.keys(ATS_COMPANY_DIRECTORY).filter((s) => validSites.has(s));
+        const expectedCompanyCalls = expectedPlatforms.reduce(
+          (sum, s) => sum + ATS_COMPANY_DIRECTORY[s].length,
+          0,
+        );
+        expect(aggregate).toHaveBeenCalledTimes(expectedCompanyCalls);
+        expect(finished.result).toMatchObject({
+          sites: { rawCount: 10, outputCount: 8 },
+          atsCompanies: { platforms: expectedPlatforms.length },
+        });
+      } finally {
+        if (originalDelayMs === undefined) delete process.env.ATS_COMPANY_BATCH_DELAY_MS;
+        else process.env.ATS_COMPANY_BATCH_DELAY_MS = originalDelayMs;
+      }
     }, 30_000);
   });
 });
