@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "ATS SERP Harvester",
+  "version": "2.0.0",
+  "description": "Auto-runs a saved list of Google searches and collects ATS career slugs (Workday, Greenhouse, Lever, Ashby, BambooHR, and more) into one copyable list.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["https://www.google.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.google.com/search*", "https://www.google.com/sorry*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ATS SERP Harvester"
+  }
+}
