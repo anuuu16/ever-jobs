@@ -15,10 +15,10 @@
  */
 
 /** Canonical Work at a Startup host (source-of-truth identity). */
-export const WAAS_CANONICAL_BASE = 'https://www.workatastartup.com';
+export const WAAS_CANONICAL_BASE = "https://www.workatastartup.com";
 
 /** Public YC mirror host (the harvestable face). */
-export const WAAS_YC_BASE = 'https://www.ycombinator.com';
+export const WAAS_YC_BASE = "https://www.ycombinator.com";
 
 /** Public YC company jobs page (the list spine). Note the `/jobs` suffix. */
 export function waasCompanyJobsUrl(slug: string): string {
@@ -36,12 +36,12 @@ export function waasCanonicalCompanyUrl(slug: string): string {
  */
 export function waasDetailUrl(jobUrlPath: string): string {
   if (/^https?:\/\//i.test(jobUrlPath)) return jobUrlPath;
-  const path = jobUrlPath.startsWith('/') ? jobUrlPath : `/${jobUrlPath}`;
+  const path = jobUrlPath.startsWith("/") ? jobUrlPath : `/${jobUrlPath}`;
   return `${WAAS_YC_BASE}${path}`;
 }
 
 /** Bounded concurrency for the per-job detail (ld+json) overlay fetch. */
-export const WAAS_DETAIL_CONCURRENCY = 5;
+export const WAAS_DETAIL_CONCURRENCY = 1;
 
 /**
  * Hard cap on jobs harvested per company, a safety valve independent of
@@ -51,8 +51,7 @@ export const WAAS_MAX_RESULTS = 200;
 
 /** YC mirror serves HTML; request as a browser would. */
 export const WAAS_HEADERS: Record<string, string> = {
-  Accept:
-    'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-  'User-Agent':
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129 Safari/537.36',
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "User-Agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129 Safari/537.36",
 };

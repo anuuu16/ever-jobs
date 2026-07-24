@@ -439,7 +439,8 @@ export const ADMIN_UI_HTML = `<!doctype html>
       <input id="f-search" type="text" placeholder="e.g. engineer" />
     </label>
     <label>Company
-      <input id="f-company" type="text" placeholder="e.g. Acme" />
+      <input id="f-company" type="text" placeholder="e.g. Acme" list="f-company-list" />
+      <datalist id="f-company-list"></datalist>
     </label>
     <label>Location
       <input id="f-location" type="text" placeholder="e.g. Remote" />
@@ -567,6 +568,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
           <th>Jobs</th>
           <th>Remote</th>
           <th>Exported</th>
+          <th>Companies</th>
         </tr>
       </thead>
       <tbody id="analytics-source-rows"></tbody>
@@ -602,6 +604,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
   var cursorStack = []; // cursors of pages visited, for "Prev"
   var currentCursor = undefined;
   var nextCursor = undefined;
+  var loadSeq = 0; // guards against an older in-flight /api/admin/jobs response overwriting a newer one
   var selectedSites = new Set(); // empty = use server-side default site list
   var siteCatalog = null; // cached /api/admin/sites response, fetched lazily
   var atsCustomSlugs = []; // manually-typed slugs, not in the known directory
@@ -610,6 +613,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
   var els = {
     search: document.getElementById('f-search'),
     company: document.getElementById('f-company'),
+    companyList: document.getElementById('f-company-list'),
     location: document.getElementById('f-location'),
     since: document.getElementById('f-since'),
     remote: document.getElementById('f-remote'),
@@ -747,6 +751,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
       pollBackgroundStatus();
     } else if (name === 'jobs') {
       load(undefined, false);
+      loadCompanyOptions();
     } else if (name === 'sources') {
       loadSourcesOverview();
     } else if (name === 'analytics') {
@@ -828,11 +833,25 @@ export const ADMIN_UI_HTML = `<!doctype html>
 
     els.analyticsSourceEmpty.style.display = data.bySource.length ? 'none' : 'block';
     els.analyticsSourceRows.innerHTML = data.bySource.map(function (s) {
+      var companyCount = s.companyCount || 0;
+      var topCompanies = s.topCompanies || [];
+      var companiesCell;
+      if (companyCount <= 1) {
+        companiesCell = topCompanies.length ? escapeHtml(topCompanies[0].company) : '—';
+      } else {
+        var shown = topCompanies.map(function (c) {
+          return escapeHtml(c.company) + ' (' + formatCount(c.jobCount) + ')';
+        }).join(', ');
+        var remaining = companyCount - topCompanies.length;
+        companiesCell = formatCount(companyCount) + ' companies: ' + shown +
+          (remaining > 0 ? ' <span class="hint">+' + formatCount(remaining) + ' more</span>' : '');
+      }
       return '<tr>' +
         '<td>' + escapeHtml(s.name) + ' <span class="hint">(' + escapeHtml(s.site) + ')</span></td>' +
         '<td>' + formatCount(s.jobCount) + '</td>' +
         '<td>' + formatCount(s.remoteCount) + '</td>' +
         '<td>' + formatCount(s.exportedCount) + '</td>' +
+        '<td>' + companiesCell + '</td>' +
         '</tr>';
     }).join('');
   }
@@ -861,6 +880,39 @@ export const ADMIN_UI_HTML = `<!doctype html>
 
   els.btnAnalyticsRefresh.addEventListener('click', loadAnalytics);
 
+  var companyOptionsLoaded = false;
+
+  // Populates the Company filter's autocomplete from the known ATS company
+  // directory (~530 entries across Workday/Lever/Greenhouse/...) — a
+  // curated list of names known to be scrapeable, not a scan of every
+  // distinct company already in the store (which would be unbounded for
+  // job-board sources like LinkedIn/Indeed). The filter itself stays a
+  // free-text substring match, so typing anything not in the list still
+  // works — this only offers suggestions where a company is known.
+  function loadCompanyOptions() {
+    if (companyOptionsLoaded) return;
+    companyOptionsLoaded = true;
+    fetch('/api/admin/ats-companies?site=*')
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (entries) {
+        var seen = new Set();
+        var options = [];
+        entries.forEach(function (c) {
+          if (seen.has(c.name)) return;
+          seen.add(c.name);
+          options.push('<option value="' + escapeHtml(c.name) + '"></option>');
+        });
+        els.companyList.innerHTML = options.join('');
+      })
+      .catch(function () {
+        // Best-effort — the free-text filter still works without suggestions.
+        companyOptionsLoaded = false;
+      });
+  }
+
   function buildQuery(cursor) {
     var params = new URLSearchParams();
     if (els.search.value.trim()) params.set('search', els.search.value.trim());
@@ -879,6 +931,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
   }
 
   function load(cursor, pushToStack) {
+    var seq = ++loadSeq;
     setStatus('Loading…');
     fetch('/api/admin/jobs?' + buildQuery(cursor))
       .then(function (res) {
@@ -886,6 +939,11 @@ export const ADMIN_UI_HTML = `<!doctype html>
         return res.json();
       })
       .then(function (data) {
+        // A newer load() fired while this one was in flight (e.g. the
+        // user changed a filter or paged again before this response
+        // came back) — drop this stale result instead of letting it
+        // clobber what the newer request already rendered.
+        if (seq !== loadSeq) return;
         if (pushToStack && currentCursor !== undefined) cursorStack.push(currentCursor);
         currentCursor = cursor;
         nextCursor = data.nextCursor;
@@ -898,6 +956,7 @@ export const ADMIN_UI_HTML = `<!doctype html>
         setStatus('');
       })
       .catch(function (err) {
+        if (seq !== loadSeq) return;
         setStatus('Failed to load: ' + err.message, true);
         render([]);
       });

@@ -1094,6 +1094,7 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "zyngacareers",
       industry: "Mobile gaming / interactive entertainment",
     },
+    /** GREENHOUSE END */
   ],
   // Workday companySlug format: `{company}:{wdNumber}:{careerSite}:{locale}`
   // (locale is optional, defaults to "en-US" — only set it when the tenant's
@@ -3309,6 +3310,157 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "floridatech:5:FloridaTechCareers",
       industry: "Higher Education",
     },
+    {
+      name: "BlueCross BlueShield of Tennessee",
+      slug: "bcbst:1:External",
+      industry: "Health Insurance",
+    },
+    {
+      name: "Blue Cross Blue Shield of Massachusetts",
+      slug: "bcbsma:5:BCBSMA",
+      industry: "Health Insurance",
+    },
+    {
+      name: "Blue Cross Blue Shield of Arizona",
+      slug: "bcbsaz:1:BCBSAZCareers",
+      industry: "Health Insurance",
+    },
+    {
+      name: "Blue Cross and Blue Shield of Minnesota",
+      slug: "bcbsmn:5:bluecrossmn",
+      industry: "Health Insurance",
+    },
+    {
+      name: "Blue Cross and Blue Shield of Louisiana",
+      slug: "bcbsla:1:External",
+      industry: "Health Insurance",
+    },
+    {
+      name: "Itron",
+      slug: "itron:5:Itron",
+      industry: "Smart Grid / Utility Metering Technology",
+    },
+    {
+      name: "TC Energy",
+      slug: "tcenergy:3:CAREER_SITE_TC",
+      industry: "Energy / Pipelines (Canada)",
+    },
+    {
+      name: "ISS (Institutional Shareholder Services)",
+      slug: "issgovernance:1:ISScareers",
+      industry: "Corporate Governance / Proxy Advisory",
+    },
+    {
+      name: "Ryan Specialty Group",
+      slug: "ryansg:5:Ryan_Specialty_Career_Site",
+      industry: "Insurance / Specialty Underwriting",
+    },
+    {
+      name: "ASU Enterprise Partners",
+      slug: "asuep:5:ASUEP",
+      industry: "Higher Education / Nonprofit Foundation",
+    },
+    {
+      name: "Williams Companies",
+      slug: "williams:5:External",
+      industry: "Energy / Natural Gas Pipelines",
+    },
+    {
+      name: "Williams Racing (F1)",
+      slug: "dorilton:1:WilliamsRacing",
+      industry: "Motorsports / Formula 1",
+    },
+    {
+      name: "Exact Sciences",
+      slug: "exactsciences:1:Exact_Sciences",
+      industry: "Diagnostics / Cancer Screening",
+    },
+    {
+      name: "Overlake Medical Center",
+      slug: "overlakemedicalcenter:5:Overlake_External_Career_Site",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Banner Health",
+      slug: "bannerhealth:108:Careers",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "SSM Health",
+      slug: "ssmh:5:ssmhealth",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "Prisma Health",
+      slug: "prismahealth:5:PrismaHealthCorporate",
+      industry: "Healthcare / Hospital System",
+    },
+    {
+      name: "ASM Global",
+      slug: "asmglobal:1:careers",
+      industry: "Venue / Stadium Management",
+    },
+    {
+      name: "Live Nation Entertainment",
+      slug: "livenation:1:LNExternalSite",
+      industry: "Live Entertainment / Concerts",
+    },
+    {
+      name: "Ticketmaster",
+      slug: "livenation:1:TMExternalSite",
+      industry: "Event Ticketing",
+    },
+    {
+      name: "A+E Networks (A+E Global Media)",
+      slug: "aenetworks:1:AE-Careers",
+      industry: "Media / Entertainment",
+    },
+    {
+      name: "Azuria Water Solutions (Aegion)",
+      slug: "aegion:5:Aegion_Careers",
+      industry: "Water Infrastructure / Industrial Services",
+    },
+    {
+      name: "Mattress Firm",
+      slug: "mattressfirm:1:MattressFirmCareers",
+      industry: "Specialty Mattress Retail",
+    },
+    {
+      name: "La-Z-Boy Incorporated",
+      slug: "lazboy:1:LZBCareers",
+      industry: "Furniture Manufacturing / Retail",
+    },
+    {
+      name: "MillerKnoll",
+      slug: "millerknoll:1:MillerKnoll",
+      industry: "Furniture Design / Manufacturing",
+    },
+    {
+      name: "Acrisure",
+      slug: "acrisure:1:Acrisure",
+      industry: "Insurance Brokerage / Fintech",
+    },
+    {
+      name: "Charter Manufacturing",
+      slug: "chartermfg:5:Charter_Careers",
+      industry: "Metals Manufacturing",
+    },
+    {
+      name: "Pharmavite (Nature Made)",
+      slug: "vhr-otsuka:1:Pharmavite",
+      industry: "Vitamins / Supplements (Otsuka subsidiary)",
+    },
+    {
+      name: "Church & Dwight",
+      slug: "churchdwight:1:chdcareers",
+      industry: "Consumer Packaged Goods / Household Products",
+    },
+    {
+      name: "Spectrum Control",
+      slug: "spectrumcontrol:1:SpectrumControl",
+      industry: "Electronic Components / Aerospace-Defense",
+    },
+    /** WORKDAY END */
   ],
   lever: [
     {
@@ -3345,6 +3497,7 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
     { name: "Thrivecausemetics", slug: "thrivecausemetics" },
     { name: "Unusual", slug: "unusual" },
     { name: "Waveapps", slug: "waveapps" },
+    /** LEVER END */
   ],
   ashby: [
     { name: "OpenAI", slug: "openai", industry: "AI" },
@@ -3355,6 +3508,7 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
     { name: "Plaid", slug: "plaid", industry: "Fintech" },
     { name: "Retool", slug: "retool", industry: "Developer Tools" },
     { name: "Notion", slug: "notion", industry: "Productivity" },
+    /** ASHBY END */
   ],
   // Taleo companySlug format: `{company}:{careerSection}`
   taleo: [
@@ -3373,11 +3527,13 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "pepsico:ExternalSite",
       industry: "Consumer Goods",
     },
+    /** TALEO END */
   ],
   icims: [
     { name: "EA (Electronic Arts)", slug: "ea", industry: "Gaming" },
     { name: "Goldman Sachs", slug: "goldmansachs", industry: "Banking" },
     { name: "UPS", slug: "ups", industry: "Logistics" },
+    /** ICIMS END */
   ],
   smartrecruiters: [
     { name: "Visa", slug: "Visa", industry: "Payments" },
@@ -3412,6 +3568,7 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
     { name: "Telefonicatech", slug: "telefonicatech" },
     { name: "Trustonic", slug: "trustonic" },
     { name: "Virtuaadvancedsolution", slug: "virtuaadvancedsolution" },
+    /** SMARTRECRUITERS END */
   ],
   successfactors: [
     { name: "SAP", slug: "sap:SAP", industry: "Enterprise Software" },
@@ -3421,6 +3578,7 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "siemens:SiemensExternal",
       industry: "Industrial",
     },
+    /** SUCCESSFACTORS END */
   ],
   workable: [
     { name: "Sephora", slug: "sephora", industry: "Retail / Beauty" },
@@ -3456,39 +3614,544 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "university-of-mount-saint-vincent",
     },
     { name: "Wearenoble", slug: "wearenoble" },
-  ],
-  bamboohr: [
+    // --- expansion batch (verified from live apply.workable.com URLs) ---
+    { name: "JobRack", slug: "jobrack", industry: "Recruiting" },
+    { name: "Jobgether", slug: "jobgether", industry: "Recruiting" },
     {
-      name: "StackOverflow",
-      slug: "stackoverflow",
-      industry: "Developer Community",
+      name: "Journey Further",
+      slug: "journey-further-1",
+      industry: "Marketing Agency",
     },
+    { name: "Jobble", slug: "jobble-4", industry: "Gig / Staffing" },
+    {
+      name: "Globaldev Group",
+      slug: "globaldevgroup",
+      industry: "Software / IT Services",
+    },
+    { name: "Seeq", slug: "seeq", industry: "Industrial Software" },
+    { name: "Remote VA", slug: "remote-va", industry: "Staffing / BPO" },
+    { name: "BrightOrder", slug: "brightorder", industry: "Fleet / SaaS" },
+    { name: "Huzzle", slug: "huzzle", industry: "Recruiting / SaaS" },
+    { name: "Octane AI", slug: "octane-ai-1", industry: "eCommerce SaaS" },
+    { name: "Acelab", slug: "acelab", industry: "AEC / SaaS" },
+    { name: "Cura Health", slug: "cura-health", industry: "Healthcare" },
+    {
+      name: "WorkFit Medical Staffing",
+      slug: "workfitstaffing",
+      industry: "Healthcare Staffing",
+    },
+    {
+      name: "Greenlife Healthcare Staffing",
+      slug: "greenlife-healthcare-staffing-1",
+      industry: "Healthcare Staffing",
+    },
+    {
+      name: "Dallas Behavioral Healthcare Hospital",
+      slug: "dbhh",
+      industry: "Healthcare",
+    },
+    {
+      name: "Amazing Care Home Health Services",
+      slug: "amazingcarecareers",
+      industry: "Home Health",
+    },
+    { name: "Amaze Health", slug: "amazehealth", industry: "Healthcare" },
+    {
+      name: "Elite Care Management",
+      slug: "elitecaremanagement",
+      industry: "Healthcare",
+    },
+    { name: "AlgaeCal", slug: "algaecal", industry: "Health / CPG" },
+    { name: "Wrisk", slug: "wrisk", industry: "Insurtech" },
+    { name: "GP Automate", slug: "gp-automate", industry: "Health Tech" },
+    {
+      name: "Keywords Studios",
+      slug: "keywords-intl1",
+      industry: "Gaming Services",
+    },
+    {
+      name: "Alex Staff Agency",
+      slug: "alex-staff-agency-careers",
+      industry: "Recruiting",
+    },
+    { name: "Protofire", slug: "protofire-14", industry: "Blockchain / Web3" },
+    { name: "Trail of Bits", slug: "trailofbits", industry: "Cybersecurity" },
+    { name: "Hospitable", slug: "hospitable", industry: "Travel / SaaS" },
+    { name: "JAM+", slug: "jam-4", industry: "eCommerce / DTC" },
+    { name: "NoGigiddy", slug: "nogigiddy", industry: "Gig / Staffing" },
+    { name: "ScaleSource", slug: "scalesource-1", industry: "BPO / Support" },
+    {
+      name: "Remote Talent Cloud",
+      slug: "remote-talent-cloud",
+      industry: "Staffing",
+    },
+    { name: "Paired", slug: "pairedrecruiting", industry: "Recruiting" },
+    {
+      name: "SupportYourApp",
+      slug: "supportyourapp",
+      industry: "BPO / Support",
+    },
+    { name: "Devoted Studios", slug: "devoted-studios-1", industry: "Gaming" },
+    { name: "GameSim", slug: "gamesim-2", industry: "Gaming" },
+    { name: "ActivTrak", slug: "activtrak", industry: "SaaS / Analytics" },
+    {
+      name: "Crystalia Glass",
+      slug: "crystalia-glass",
+      industry: "Manufacturing",
+    },
+    { name: "HireLive", slug: "hirelive-1", industry: "Recruiting" },
+    { name: "SmartFinancial", slug: "smartfinancial", industry: "Insurtech" },
+    { name: "Vesta Home", slug: "vestahome", industry: "Retail / Furniture" },
+    { name: "The Scalable Company", slug: "scalable", industry: "Consulting" },
+    { name: "Salvo Software", slug: "salvo-software", industry: "Software" },
+    {
+      name: "US Submergent Technologies",
+      slug: "us-submergent-technologies-llc",
+      industry: "Industrial",
+    },
+    {
+      name: "Gunnebo Safe Storage USA",
+      slug: "gunnebo-safe-storage-usa",
+      industry: "Manufacturing",
+    },
+    {
+      name: "Education Perfect",
+      slug: "education-perfect",
+      industry: "EdTech",
+    },
+    { name: "EdSurge", slug: "edsurge", industry: "EdTech / Media" },
+    {
+      name: "Tutored by Teachers",
+      slug: "tutoredbyteachers",
+      industry: "EdTech",
+    },
+    { name: "McLane Global", slug: "mclane-global", industry: "Logistics" },
+    { name: "Alfil Logistics", slug: "alfil-logistics", industry: "Logistics" },
+    { name: "Bezos.ai", slug: "bezos", industry: "Fulfilment / Logistics" },
+    {
+      name: "Travelworks Communications",
+      slug: "travelworkspr",
+      industry: "Travel / PR",
+    },
+    {
+      name: "Royalty Hospitality Staffing",
+      slug: "royalty-hospitality-staffing-1",
+      industry: "Hospitality Staffing",
+    },
+    { name: "TravelBeat", slug: "travelbeat", industry: "Travel / Marketing" },
+    { name: "Two Parts", slug: "twoparts", industry: "Creative Agency" },
+    { name: "AYANA Hospitality", slug: "ayana", industry: "Hospitality" },
+    {
+      name: "Hallson Hospitality",
+      slug: "hallson-hospitality",
+      industry: "Hospitality",
+    },
+    { name: "YoungShand", slug: "youngshand", industry: "Creative Agency" },
+    { name: "WITHIN", slug: "within-1", industry: "Marketing Agency" },
+    // --- expansion batch 2 (verified from live apply.workable.com URLs) ---
+    {
+      name: "NAV Real Estate",
+      slug: "nav-real-estate",
+      industry: "Real Estate",
+    },
+    { name: "Assistantly", slug: "assistantly", industry: "Staffing / VA" },
+    {
+      name: "Crown Homes Real Estate",
+      slug: "crown-homes-real-estate",
+      industry: "Real Estate",
+    },
+    {
+      name: "The Dwelling Collection",
+      slug: "the-dwelling-collection",
+      industry: "Real Estate",
+    },
+    { name: "Betterhomes", slug: "betterhomes", industry: "Real Estate" },
+    { name: "YouLend", slug: "youlend-1", industry: "Fintech" },
+    {
+      name: "Hire Resolve",
+      slug: "hire-resolve-the-top-recruitment-agency",
+      industry: "Recruiting",
+    },
+    { name: "Athari", slug: "athari", industry: "Legal / Recruiting" },
+    { name: "Strategic Legal Practices", slug: "slp", industry: "Legal" },
+    { name: "PSI", slug: "psi-9", industry: "Legal" },
+    {
+      name: "The Lawyering Project",
+      slug: "the-lawyering-project",
+      industry: "Nonprofit / Legal",
+    },
+    {
+      name: "Mira Construction",
+      slug: "mira-construction-l-dot-l-c-1",
+      industry: "Construction",
+    },
+    { name: "Zifo", slug: "zifo", industry: "Life Sciences / IT" },
+    { name: "Drug Hunter", slug: "drug-hunter", industry: "Biotech / Media" },
+    { name: "Unreal Gigs", slug: "unreal-gigs", industry: "Recruiting" },
+    {
+      name: "New Energy Nexus",
+      slug: "newenergynexus",
+      industry: "Nonprofit / Clean Energy",
+    },
+    {
+      name: "Action Against Hunger",
+      slug: "action-against-hunger",
+      industry: "Nonprofit",
+    },
+    { name: "KIHOMAC", slug: "kihomac", industry: "Defense / Engineering" },
+    { name: "Braven", slug: "braven", industry: "Nonprofit / EdTech" },
+    {
+      name: "The Common Market",
+      slug: "the-common-market",
+      industry: "Nonprofit / Food",
+    },
+    { name: "CVNL", slug: "cvnl", industry: "Nonprofit" },
+    { name: "NUS Enterprise", slug: "nus-enterprise", industry: "Education" },
+    {
+      name: "Uptalent.io",
+      slug: "uptalent-dot-i-o",
+      industry: "Staffing / Engineering",
+    },
+    {
+      name: "New Flyer",
+      slug: "new-flyer",
+      industry: "Manufacturing / Transit",
+    },
+    {
+      name: "Luxium Solutions",
+      slug: "luxium-solutions-llc",
+      industry: "Manufacturing",
+    },
+    {
+      name: "Headworks",
+      slug: "headworks-inc",
+      industry: "Manufacturing / Water",
+    },
+    {
+      name: "Production Modeling Corporation",
+      slug: "production-modeling-corporation-pmc",
+      industry: "Industrial Engineering",
+    },
+    {
+      name: "Conner Industries",
+      slug: "conner-industries-inc",
+      industry: "Manufacturing",
+    },
+    {
+      name: "A Society Group",
+      slug: "a-society-group-inc",
+      industry: "Recruiting / Automotive",
+    },
+    {
+      name: "Acensblue",
+      slug: "acensblue",
+      industry: "Recruiting / Automotive",
+    },
+    { name: "Tactivus", slug: "tactivus-llc", industry: "Recruiting / AI" },
+    { name: "Tavus", slug: "dev-tavus", industry: "AI / Media" },
+    { name: "Unosecur", slug: "unosecur", industry: "Cybersecurity SaaS" },
+    { name: "Twosense", slug: "twosense", industry: "Cybersecurity / AI" },
+    { name: "Moonshot", slug: "moonshot", industry: "Tech / Social Impact" },
+    { name: "Hugging Face", slug: "huggingface", industry: "AI / ML" },
+    { name: "1Kosmos", slug: "1kosmos", industry: "Cybersecurity / Identity" },
+    { name: "Pathway", slug: "pathwaycom", industry: "AI / ML" },
+    {
+      name: "Daystar Power",
+      slug: "daystar-power-group",
+      industry: "Renewable Energy",
+    },
+    { name: "Fuse Energy", slug: "fuseenergy", industry: "Renewable Energy" },
+    { name: "3E", slug: "3e", industry: "Renewable Energy" },
+    { name: "Essel", slug: "esselenvironmental", industry: "Renewable Energy" },
+    {
+      name: "Solar Energy Solutions",
+      slug: "solar-energy-solutions",
+      industry: "Renewable Energy",
+    },
+    {
+      name: "Terabase Energy",
+      slug: "terabase-energy",
+      industry: "Renewable Energy",
+    },
+    {
+      name: "Scout Clean Energy",
+      slug: "scout-clean-energy",
+      industry: "Renewable Energy",
+    },
+    {
+      name: "Legacy Food Group",
+      slug: "legacy-food-group",
+      industry: "Food Distribution",
+    },
+    { name: "SIHAMCO", slug: "sihamco", industry: "Food & Beverage / Retail" },
+    { name: "Modern AI", slug: "modern-ai", industry: "Marketing / F&B" },
+    { name: "EatClub", slug: "eatclub", industry: "Food Tech" },
+    { name: "Foodics", slug: "foodics", industry: "Restaurant SaaS / Fintech" },
+    // --- expansion batch 3 (verified from live apply.workable.com URLs) ---
+    {
+      name: "Weekday AI",
+      slug: "weekday-1",
+      industry: "Recruiting / Insurtech",
+    },
+    {
+      name: "Liberty Mutual Canada",
+      slug: "liberty-mutual-canada",
+      industry: "Insurance",
+    },
+    { name: "Toloka AI", slug: "toloka-ai", industry: "AI Data / Insurance" },
+    {
+      name: "Twoconnect",
+      slug: "twoconnect-careers",
+      industry: "BPO / Insurance",
+    },
+    { name: "Outsourcing Advantage", slug: "osa", industry: "BPO / Insurance" },
+    { name: "Betterview", slug: "betterview", industry: "Insurtech" },
+    { name: "Vero HR", slug: "vero-hr-ltd", industry: "HR / Insurance" },
+    {
+      name: "Rallye Motor Company",
+      slug: "rallye-motors",
+      industry: "Automotive",
+    },
+    {
+      name: "Isuzu Veterans Apprenticeship Program",
+      slug: "isuzu-veterans-apprenticeship-program",
+      industry: "Automotive",
+    },
+    {
+      name: "Martin Automotive Group",
+      slug: "martin-automotive-group",
+      industry: "Automotive",
+    },
+    {
+      name: "Miller Transportation Group",
+      slug: "miller-transportation-group-1",
+      industry: "Automotive / Transport",
+    },
+    {
+      name: "Kia Veterans Technician Apprenticeship Program",
+      slug: "kiavets",
+      industry: "Automotive",
+    },
+    { name: "Byrider", slug: "byrider", industry: "Automotive" },
+    {
+      name: "Conklin Automotive Group",
+      slug: "conklin-automotive",
+      industry: "Automotive",
+    },
+    {
+      name: "Little Wolf Auto",
+      slug: "little-wolf-auto",
+      industry: "Automotive",
+    },
+    {
+      name: "Yoshi Mobility",
+      slug: "yoshi-mobility",
+      industry: "Automotive / Mobility",
+    },
+    {
+      name: "Green.Earth",
+      slug: "greenearth",
+      industry: "Agriculture / Climate",
+    },
+    { name: "DGB Group", slug: "dgbgroup", industry: "Agriculture / Climate" },
+    { name: "IITA", slug: "iita", industry: "Agriculture / Research" },
+    {
+      name: "CloudFactory",
+      slug: "cloudfactory",
+      industry: "AI Data / AgTech",
+    },
+    { name: "Meridia", slug: "meridia", industry: "AgTech / SaaS" },
+    { name: "Dyson Farming", slug: "dyson-farming", industry: "Agriculture" },
+    {
+      name: "Lighthouse Reports",
+      slug: "lighthouse-reports-2",
+      industry: "Media / Journalism",
+    },
+    {
+      name: "The Canadian Press",
+      slug: "the-canadian-press",
+      industry: "Media / News",
+    },
+    {
+      name: "Journey Beyond",
+      slug: "journey-beyond",
+      industry: "Travel / Tourism",
+    },
+    {
+      name: "What Now Travel",
+      slug: "what-now-travel",
+      industry: "Travel Tech",
+    },
+    {
+      name: "The Cruise Globe",
+      slug: "the-cruise-globe",
+      industry: "Travel Tech",
+    },
+    {
+      name: "Crystal Cruises",
+      slug: "crystal-cruises",
+      industry: "Cruise / Hospitality",
+    },
+    {
+      name: "Tours for the World",
+      slug: "tours-for-the-world-1",
+      industry: "Travel",
+    },
+    {
+      name: "Cullinan Holdings",
+      slug: "cullinan-holdings",
+      industry: "Travel / Tourism",
+    },
+    {
+      name: "Woodfibre / Pacific Energy Canada",
+      slug: "woodfibre-management-limited",
+      industry: "Energy / IT",
+    },
+    { name: "1GLOBAL", slug: "1global", industry: "Telecom" },
+    {
+      name: "Race Communications",
+      slug: "racecommunications",
+      industry: "Telecom",
+    },
+    {
+      name: "Applied Business Communications",
+      slug: "abcom",
+      industry: "Telecom",
+    },
+    {
+      name: "Emerging Travel Group",
+      slug: "emerging-travel-group",
+      industry: "Travel Tech",
+    },
+    {
+      name: "Ultimate Performance",
+      slug: "ultimateperformance",
+      industry: "Fitness",
+    },
+    { name: "6WEEX", slug: "6weex-u-dot-s-inc", industry: "Fitness" },
+    {
+      name: "Urbana Country Club",
+      slug: "ucc-12",
+      industry: "Hospitality / Fitness",
+    },
+    {
+      name: "Lockwood Publishing",
+      slug: "lockwood",
+      industry: "Gaming / Virtual Worlds",
+    },
+    {
+      name: "Esquel Group",
+      slug: "esquel-group",
+      industry: "Apparel Manufacturing",
+    },
+    {
+      name: "Keller Executive Search",
+      slug: "keller-executive-search",
+      industry: "Recruiting",
+    },
+    {
+      name: "Tessellation Group",
+      slug: "tessellation-group",
+      industry: "Apparel / Design",
+    },
+    {
+      name: "White Fox Boutique",
+      slug: "white-fox-boutique",
+      industry: "Fashion Retail",
+    },
+    { name: "Awtad", slug: "awtad", industry: "Real Estate / Construction" },
+    {
+      name: "Highbridge Human Capital",
+      slug: "highbridgecareers",
+      industry: "Recruiting / Construction",
+    },
+    {
+      name: "Rimkus",
+      slug: "rimkus",
+      industry: "Engineering / Built Environment",
+    },
+    {
+      name: "Hardesty & Hanover",
+      slug: "hardestyand-hanover",
+      industry: "Civil Engineering",
+    },
+    {
+      name: "BKF Engineers",
+      slug: "bkfengineers",
+      industry: "Civil Engineering",
+    },
+    { name: "Hero Gaming", slug: "hero-gaming", industry: "iGaming" },
+    { name: "ComeOn Group", slug: "comeon-group", industry: "iGaming" },
+    { name: "Immortals Gaming Club", slug: "immortals", industry: "Esports" },
+    { name: "GoReel", slug: "goreel", industry: "iGaming" },
+    { name: "Gaming Innovation Group", slug: "gig-6", industry: "iGaming" },
+    /** WORKABLE END */
+  ],
+  // BambooHR `slug` is the tenant subdomain: the scraper hits
+  // `https://{slug}.bamboohr.com/careers/list`. A valid tenant returns JSON
+  // (`{meta:{totalCount},result:[]}`); a non-tenant 302-redirects to
+  // www.bamboohr.com (axios follows it → 0 jobs). Every slug below was probed
+  // live and confirmed to resolve to a real tenant feed. NOTE: "buffer" and
+  // "stackoverflow" were removed — both redirect to the marketing site (not
+  // BambooHR tenants). Some tenants legitimately show 0 open roles at times.
+  bamboohr: [
+    { name: "PostHog", slug: "posthog", industry: "Product Analytics" },
+    { name: "Remote3", slug: "remote3", industry: "Web3 Recruiting" },
     { name: "Zapier", slug: "zapier", industry: "Automation" },
-    { name: "Buffer", slug: "buffer", industry: "Social Media" },
+    { name: "Linear", slug: "linear", industry: "Developer Tools" },
+    { name: "Vercel", slug: "vercel", industry: "Developer Tools" },
+    { name: "Netlify", slug: "netlify", industry: "Developer Tools" },
+    /** BAMBOOHR END */
   ],
   recruitee: [
     { name: "Toggl", slug: "toggl", industry: "Productivity" },
     { name: "Hostinger", slug: "hostinger", industry: "Web Hosting" },
+    /** RECRUITEE END */
   ],
-  manatal: [{ name: "Manatal", slug: "manatal", industry: "HR Tech" }],
+  manatal: [
+    { name: "Manatal", slug: "manatal", industry: "HR Tech" },
+    /** MANATAL END */
+  ],
   paylocity: [
     {
       name: "(Discover from company career page URL pattern: `recruiting.paylocity.com/Recruiting/Jobs/Details/{guid}`)",
       slug: "",
     },
+    /** PAYLOCITY END */
   ],
+  // Phenom's `slug` is the tenant's actual careers HOST (Phenom sites live on
+  // varied hostnames, not a `jobs.{slug}.com` template). The scraper POSTs to
+  // `https://{slug}/widgets`. Each host below was verified live to return jobs
+  // via the widgets `refineSearch` API. NOTE: Boeing/Comcast/Nestle/Verizon/
+  // Hilton were previously listed here but are NOT Phenom tenants (Boeing &
+  // Comcast run Radancy/TalentBrew) — removed.
   phenom: [
-    { name: "Boeing", slug: "boeing", industry: "Aerospace" },
-    { name: "Hilton", slug: "hilton", industry: "Hospitality" },
-    { name: "Nestle", slug: "nestle", industry: "Consumer Goods" },
-    { name: "Comcast", slug: "comcast", industry: "Telecom" },
-    { name: "Verizon", slug: "verizon", industry: "Telecom" },
+    {
+      name: "Southwest Airlines",
+      slug: "careers.southwestair.com",
+      industry: "Aviation",
+    },
+    { name: "United Airlines", slug: "careers.united.com", industry: "Aviation" },
+    {
+      name: "Cencora (AmerisourceBergen)",
+      slug: "careers.cencora.com",
+      industry: "Pharmaceutical Distribution",
+    },
+    {
+      name: "The Cigna Group",
+      slug: "jobs.thecignagroup.com",
+      industry: "Health Insurance",
+    },
+    { name: "U.S. Bank", slug: "careers.usbank.com", industry: "Banking" },
+    { name: "DHL", slug: "careers.dhl.com", industry: "Logistics" },
+    /** PHENOM END */
   ],
   bullhorn: [
     {
       name: "(Discover from staffing agency career portal source code)",
       slug: "",
     },
+    /** BULLHORN END */
   ],
   avature: [
     { name: "Bloomberg", slug: "bloomberg", industry: "Financial Data" },
@@ -3530,6 +4193,7 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "resourcebank",
       industry: "Financial Services",
     },
+    /** AVATURE END */
   ],
   gem: [
     { name: "Accel", slug: "accel", industry: "Venture Capital" },
@@ -3562,6 +4226,7 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
     { name: "Acely", slug: "acely", industry: "Education Tech" },
     { name: "Afterquery", slug: "afterquery", industry: "AI / Data" },
     { name: "Agenta AI", slug: "agenta-ai", industry: "LLM Ops" },
+    /** GEM END */
   ],
   join_com: [
     { name: "Awork", slug: "awork", industry: "Productivity / SaaS" },
@@ -3599,6 +4264,7 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "career-sancovia",
       industry: "Career Services",
     },
+    /** JOIN_COM END */
   ],
   oracle: [
     { name: "Oracle", slug: "eeho-us2", industry: "Enterprise Software" },
@@ -3620,6 +4286,7 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
     { name: "Ricoh", slug: "cbha-us2", industry: "Imaging / Technology" },
     { name: "Galliford Try", slug: "cbct-em2", industry: "Construction" },
     { name: "Apollo Hospitals", slug: "cgs-ap2", industry: "Healthcare" },
+    /** ORACLE END */
   ],
   mercor: [
     { name: "Stripe", slug: "stripe", industry: "Payments" },
@@ -3638,6 +4305,7 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
     { name: "Coinbase", slug: "coinbase", industry: "Crypto / Finance" },
     { name: "Plaid", slug: "plaid", industry: "Fintech / Open Banking" },
     { name: "Ramp", slug: "ramp", industry: "Fintech / Spend Management" },
+    /** MERCOR END */
   ],
   tesla: [
     { name: "Tesla", slug: "tesla", industry: "Electric Vehicles / Energy" },
@@ -3789,6 +4457,7 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       industry: "Neurotechnology / Brain-Computer Interface",
     },
     { name: "CLEAR", slug: "clear", industry: "Identity / Biometric Security" },
+    /** TESLA END */
   ],
 
   // No known companies yet for the platforms below — add entries as you
@@ -3870,6 +4539,7 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       industry: "Home Appliances",
     },
     { name: "Vodafone", slug: "vodafone.com", industry: "Telecommunications" },
+    /** EIGHTFOLD END */
   ],
   elmo: [],
   employmenthero: [],
@@ -3935,6 +4605,7 @@ export const ATS_COMPANY_DIRECTORY: Record<string, AtsCompanyEntry[]> = {
       slug: "cbmglobal",
       industry: "HR Tech / Employee Engagement",
     },
+    /** PEOPLEHR END */
   ],
   peoplestrong: [],
   personio: [],

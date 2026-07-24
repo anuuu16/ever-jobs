@@ -142,9 +142,23 @@ interface AnalyticsDayEntry extends AnalyticsBucket {
   readonly date: string;
 }
 
+interface AnalyticsCompanyEntry {
+  readonly company: string;
+  readonly jobCount: number;
+}
+
 interface AnalyticsSourceEntry extends AnalyticsBucket {
   readonly site: string;
   readonly name: string;
+  /**
+   * Distinct companies observed under this source. ATS platforms
+   * (Workday, Lever, Greenhouse, ...) are one `site` shared by many
+   * tenant companies, so this is what actually answers "who's posting
+   * on Workday?" — `jobCount` alone collapses them all together.
+   */
+  readonly companyCount: number;
+  /** Top companies by job count, descending. Capped to keep the payload small on high-cardinality ATS platforms. */
+  readonly topCompanies: AnalyticsCompanyEntry[];
 }
 
 interface AnalyticsResult {
@@ -209,6 +223,13 @@ function atsCompanyBatchDelayMs(): number {
   // opt-out. Only fall back to the default for missing/unparseable input.
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 10_000;
 }
+
+/**
+ * Max per-site company breakdown rows returned by `/api/admin/analytics`.
+ * ATS platforms like Workday can have 40+ tenant companies; the UI only
+ * needs the top ones, not an exhaustive list, so this caps payload size.
+ */
+const ANALYTICS_TOP_COMPANIES_LIMIT = 10;
 
 /** Display order for categories — most generally-useful first. */
 const CATEGORY_ORDER = [
@@ -837,7 +858,12 @@ export class AdminController {
     >();
     const sourceCounts = new Map<
       string,
-      { jobCount: number; remoteCount: number; exportedCount: number }
+      {
+        jobCount: number;
+        remoteCount: number;
+        exportedCount: number;
+        companyCounts: Map<string, number>;
+      }
     >();
     let totalJobs = 0;
     let totalRemote = 0;
@@ -885,10 +911,15 @@ export class AdminController {
             jobCount: 0,
             remoteCount: 0,
             exportedCount: 0,
+            companyCounts: new Map<string, number>(),
           };
           s.jobCount++;
           if (isRemote) s.remoteCount++;
           if (isExported) s.exportedCount++;
+          s.companyCounts.set(
+            job.company,
+            (s.companyCounts.get(job.company) ?? 0) + 1,
+          );
           sourceCounts.set(source.site, s);
         }
       }
@@ -906,11 +937,22 @@ export class AdminController {
       .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 
     const bySource = Array.from(sourceCounts.entries())
-      .map(([site, bucket]) => ({
-        site,
-        name: nameBySite.get(site) ?? site,
-        ...bucket,
-      }))
+      .map(([site, bucket]) => {
+        const { companyCounts, ...rest } = bucket;
+        const topCompanies = Array.from(companyCounts.entries())
+          .map(([company, jobCount]) => ({ company, jobCount }))
+          .sort(
+            (a, b) => b.jobCount - a.jobCount || a.company.localeCompare(b.company),
+          )
+          .slice(0, ANALYTICS_TOP_COMPANIES_LIMIT);
+        return {
+          site,
+          name: nameBySite.get(site) ?? site,
+          ...rest,
+          companyCount: companyCounts.size,
+          topCompanies,
+        };
+      })
       .sort((a, b) => b.jobCount - a.jobCount || a.name.localeCompare(b.name));
 
     return {
@@ -925,8 +967,20 @@ export class AdminController {
   @Get("api/admin/ats-companies")
   atsCompanies(
     @Query("site") site?: string,
-  ): AtsSummaryEntry[] | { site: string; companies: AtsCompanyEntry[] } {
+  ):
+    | AtsSummaryEntry[]
+    | { site: string; companies: AtsCompanyEntry[] }
+    | Array<AtsCompanyEntry & { site: string }> {
     this.assertEnabled();
+    // `site=*` flattens the whole directory (name + owning site) for the
+    // Jobs-tab company filter's autocomplete — the directory is small,
+    // static, in-memory data, so this is cheap even across every platform,
+    // unlike a full job-store scan for distinct company names.
+    if (site === "*") {
+      return Object.entries(ATS_COMPANY_DIRECTORY).flatMap(([s, companies]) =>
+        companies.map((c) => ({ ...c, site: s })),
+      );
+    }
     if (site) {
       return { site, companies: ATS_COMPANY_DIRECTORY[site] ?? [] };
     }

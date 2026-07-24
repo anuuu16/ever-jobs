@@ -631,10 +631,55 @@ describe('AdminController', () => {
       ]);
 
       // Greenhouse (2 jobs) ranks above LinkedIn (1 job).
+      // Both Greenhouse jobs share the default 'Acme' company (makeJob's
+      // default), so companyCount is 1 for each source here — the
+      // multi-company breakdown is covered by the dedicated test below.
       expect(result.bySource).toEqual([
-        { site: 'greenhouse', name: 'Greenhouse', jobCount: 2, remoteCount: 1, exportedCount: 1 },
-        { site: 'linkedin', name: 'LinkedIn', jobCount: 1, remoteCount: 0, exportedCount: 0 },
+        {
+          site: 'greenhouse',
+          name: 'Greenhouse',
+          jobCount: 2,
+          remoteCount: 1,
+          exportedCount: 1,
+          companyCount: 1,
+          topCompanies: [{ company: 'Acme', jobCount: 2 }],
+        },
+        {
+          site: 'linkedin',
+          name: 'LinkedIn',
+          jobCount: 1,
+          remoteCount: 0,
+          exportedCount: 0,
+          companyCount: 1,
+          topCompanies: [{ company: 'Acme', jobCount: 1 }],
+        },
       ]);
+    });
+
+    it('analytics() breaks down a single ATS site by company, capped at the top-companies limit', async () => {
+      const registry = makeRegistry([{ site: 'workday', name: 'Workday', category: 'ats' }]);
+      const companies = ['Trimble', 'IQVIA', 'Acme', 'Globex', 'Initech', 'Umbrella', 'Stark', 'Wayne', 'Wonka', 'Soylent', 'Hooli'];
+      const jobs = companies.map((company, i) =>
+        makeJob({
+          canonicalJobId: String(i),
+          company,
+          url: 'https://example.com/' + i,
+          sources: [{ site: Site.WORKDAY, sourceJobId: String(i), url: 'u' + i, observedAt: 't' }],
+        }),
+      );
+      const jobStore = makeJobStore(jobs);
+      const controller = new AdminController(makeConfigService(true) as any, jobStore as any, undefined, undefined, undefined, registry as any);
+
+      const result = await controller.analytics();
+
+      expect(result.bySource).toHaveLength(1);
+      const workday = result.bySource[0];
+      expect(workday.jobCount).toBe(companies.length);
+      expect(workday.companyCount).toBe(companies.length);
+      // Every company here has exactly 1 job, so ties break alphabetically;
+      // the cap keeps the payload small on high-cardinality ATS platforms.
+      expect(workday.topCompanies).toHaveLength(10);
+      expect(workday.topCompanies.every((c) => c.jobCount === 1)).toBe(true);
     });
 
     it('analytics() returns zeroed/empty result when no jobStore is bound', async () => {

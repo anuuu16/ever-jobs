@@ -10,14 +10,14 @@
 export const WORKDAY_PAGE_SIZE = 20;
 
 /** Maximum number of public CXS detail requests in flight at once. */
-export const WORKDAY_DETAIL_CONCURRENCY = 5;
+export const WORKDAY_DETAIL_CONCURRENCY = 1;
 
 /** Default headers for Workday API requests */
 export const WORKDAY_HEADERS: Record<string, string> = {
-  Accept: 'application/json',
-  'Content-Type': 'application/json',
-  'User-Agent':
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129 Safari/537.36',
+  Accept: "application/json",
+  "Content-Type": "application/json",
+  "User-Agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129 Safari/537.36",
 };
 
 /**
@@ -36,12 +36,12 @@ export function parseWorkdaySlug(slug: string): {
   site: string;
   locale: string;
 } {
-  const parts = slug.split(':');
+  const parts = slug.split(":");
   return {
     company: parts[0],
-    wdNumber: parts[1] ?? '5',
-    site: parts[2] ?? 'External',
-    locale: parts[3] ?? 'en-US',
+    wdNumber: parts[1] ?? "5",
+    site: parts[2] ?? "External",
+    locale: parts[3] ?? "en-US",
   };
 }
 
@@ -62,7 +62,7 @@ export function withWorkdayLocale(
   site: string,
   locale: string,
 ): string {
-  const normalized = path.startsWith('/') ? path : `/${path}`;
+  const normalized = path.startsWith("/") ? path : `/${path}`;
   if (LOCALE_SEGMENT_RE.test(normalized)) return normalized;
   const siteSegment = `/${site}`;
   if (normalized.toLowerCase().startsWith(`${siteSegment.toLowerCase()}/`)) {
@@ -74,7 +74,11 @@ export function withWorkdayLocale(
 /**
  * Build the Workday API URL for a given company.
  */
-export function buildWorkdayUrl(company: string, wdNumber: string, site: string): string {
+export function buildWorkdayUrl(
+  company: string,
+  wdNumber: string,
+  site: string,
+): string {
   return `https://${company}.wd${wdNumber}.myworkdayjobs.com/wday/cxs/${company}/${site}/jobs`;
 }
 
@@ -85,7 +89,7 @@ export function buildWorkdayDetailUrl(
   site: string,
   externalPath: string,
 ): string {
-  const path = externalPath.startsWith('/') ? externalPath : `/${externalPath}`;
+  const path = externalPath.startsWith("/") ? externalPath : `/${externalPath}`;
   return `https://${company}.wd${wdNumber}.myworkdayjobs.com/wday/cxs/${company}/${site}${path}`;
 }
 
@@ -99,7 +103,7 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
  */
 function toIsoDate(date: Date): string | null {
   if (Number.isNaN(date.getTime())) return null;
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 }
 
 /**
@@ -156,14 +160,14 @@ export function parseWorkdayPostedOn(
 ): string | null {
   if (!postedOn) return null;
 
-  const normalized = postedOn.trim().replace(/\s+/g, ' ').toLowerCase();
+  const normalized = postedOn.trim().replace(/\s+/g, " ").toLowerCase();
   if (!normalized) return null;
 
-  if (normalized === 'posted today') {
+  if (normalized === "posted today") {
     return toIsoDate(now);
   }
 
-  if (normalized === 'posted yesterday') {
+  if (normalized === "posted yesterday") {
     return toIsoDate(new Date(now.getTime() - MS_PER_DAY));
   }
 

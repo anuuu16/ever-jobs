@@ -59,10 +59,10 @@
  */
 
 /** Hosted careers host suffix — tenant boards live at `{tenant}.isolvedhire.com`. */
-export const ISOLVED_CAREER_HOST_SUFFIX = '.isolvedhire.com';
+export const ISOLVED_CAREER_HOST_SUFFIX = ".isolvedhire.com";
 
 /** Root domain — used to recognise tenant hosts / URLs passed via `companyUrl`. */
-export const ISOLVED_ROOT_DOMAIN = 'isolvedhire.com';
+export const ISOLVED_ROOT_DOMAIN = "isolvedhire.com";
 
 /** Builds a tenant's career-board origin from its slug. */
 export const isolvedCareerOrigin = (tenant: string): string =>
@@ -74,7 +74,7 @@ export const isolvedCareerOrigin = (tenant: string): string =>
  * is the clean, machine-readable index of the tenant's open board (the human `/jobs/`
  * page is a Vue SPA), so it is the adapter's primary listing surface.
  */
-export const ISOLVED_JOB_SITEMAP_PATH = '/job_site_map.xml';
+export const ISOLVED_JOB_SITEMAP_PATH = "/job_site_map.xml";
 
 /**
  * Builds the canonical public detail / apply URL for a role from its sub-domain tenant
@@ -101,7 +101,7 @@ export const ISOLVED_MAX_DETAIL_FETCHES = 100;
  * (via `Promise.allSettled`) so a tenant with many open roles stays inside the CI time
  * budget without hammering the board host.
  */
-export const ISOLVED_DETAIL_CONCURRENCY = 8;
+export const ISOLVED_DETAIL_CONCURRENCY = 1;
 
 /**
  * Upper bound (seconds) on the per-request HTTP timeout. An unresponsive isolved Hire
@@ -113,10 +113,10 @@ export const ISOLVED_DEFAULT_TIMEOUT_SECONDS = 15;
 
 /** Default request headers. The board expects a browser-like UA + an XML/HTML Accept. */
 export const ISOLVED_HEADERS: Record<string, string> = {
-  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-  'User-Agent':
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129 Safari/537.36',
-  'Accept-Language': 'en-US,en;q=0.9',
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "User-Agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129 Safari/537.36",
+  "Accept-Language": "en-US,en;q=0.9",
 };
 
 /**

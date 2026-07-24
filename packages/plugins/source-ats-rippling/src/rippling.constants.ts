@@ -2,7 +2,7 @@
 export const RIPPLING_BASE_URL = "https://ats.rippling.com";
 
 /** Maximum simultaneous public job-detail requests. */
-export const RIPPLING_DETAIL_CONCURRENCY = 5;
+export const RIPPLING_DETAIL_CONCURRENCY = 1;
 
 /** Build the public JSON detail endpoint for a board job. */
 export function ripplingDetailUrl(companySlug: string, jobId: string): string {

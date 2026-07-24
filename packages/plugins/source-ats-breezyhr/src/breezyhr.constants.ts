@@ -9,9 +9,12 @@ export function breezyListUrl(companySlug: string): string {
  * (the list endpoint does not). There is no plain per-job JSON endpoint — the
  * `/json/{id}` variants 302-redirect to the company root.
  */
-export function breezyDetailUrl(companySlug: string, friendlyId: string): string {
+export function breezyDetailUrl(
+  companySlug: string,
+  friendlyId: string,
+): string {
   return `https://${companySlug}.breezy.hr/p/${friendlyId}`;
 }
 
 /** Bounded concurrency for per-job detail-page fetches. */
-export const BREEZYHR_DETAIL_CONCURRENCY = 5;
+export const BREEZYHR_DETAIL_CONCURRENCY = 1;

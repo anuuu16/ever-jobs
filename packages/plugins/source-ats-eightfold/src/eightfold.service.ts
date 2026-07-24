@@ -231,6 +231,17 @@ export class EightfoldService implements IScraper {
     });
   }
 
+  /**
+   * The Eightfold tenant subdomain label — the first dot-segment of the slug.
+   * Directory slugs come in two forms: a bare tenant label (`cbmglobal`) or a
+   * full company domain (`qualcomm.com`). The host subdomain is only ever the
+   * first label (`qualcomm.eightfold.ai`, NOT `qualcomm.com.eightfold.ai` which
+   * NXDOMAINs), so strip anything from the first `.` onward here.
+   */
+  private tenantLabel(companySlug: string): string {
+    return companySlug.split('.')[0];
+  }
+
   /** Resolve the tenant host from an explicit URL or the slug subdomain. */
   private resolveHost(companySlug: string | undefined, companyUrl: string | undefined): string {
     if (companyUrl) {
@@ -241,12 +252,22 @@ export class EightfoldService implements IScraper {
         // Fall through to slug-based host if the URL is malformed.
       }
     }
-    return EIGHTFOLD_HOST_TEMPLATE.replace('{slug}', encodeURIComponent(companySlug ?? ''));
+    return EIGHTFOLD_HOST_TEMPLATE.replace(
+      '{slug}',
+      encodeURIComponent(this.tenantLabel(companySlug ?? '')),
+    );
   }
 
-  /** The `domain` query param Eightfold expects — derived from the host or slug. */
+  /**
+   * The `domain` query param Eightfold expects — the company's real domain.
+   * A slug that already carries a TLD (`qualcomm.com`) is used verbatim;
+   * a bare label (`cbmglobal`) gets `.com` appended. The old unconditional
+   * `${slug}.com` produced `qualcomm.com.com` for domain-form slugs.
+   */
   private resolveDomain(host: string, companySlug: string | undefined): string {
-    if (companySlug) return `${companySlug}.com`;
+    if (companySlug) {
+      return companySlug.includes('.') ? companySlug : `${companySlug}.com`;
+    }
     try {
       return new URL(host).host;
     } catch {
@@ -255,7 +276,9 @@ export class EightfoldService implements IScraper {
   }
 
   private deriveCompanyName(companySlug: string | undefined, host: string): string {
-    const base = companySlug ?? new URL(host).host.split('.')[0];
+    const base = companySlug
+      ? this.tenantLabel(companySlug)
+      : new URL(host).host.split('.')[0];
     return base
       .replace(/[-_]+/g, ' ')
       .replace(/\b\w/g, (c) => c.toUpperCase());

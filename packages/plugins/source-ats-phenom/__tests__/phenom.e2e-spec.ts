@@ -22,7 +22,7 @@ describe('PhenomService (E2E)', () => {
   it('should return job results for a known company', async () => {
     const input = new ScraperInputDto({
       siteType: [Site.PHENOM],
-      companySlug: 'boeing',
+      companySlug: 'careers.southwestair.com',
       resultsWanted: 5,
       descriptionFormat: DescriptionFormat.MARKDOWN,
     });
@@ -60,7 +60,7 @@ describe('PhenomService (E2E)', () => {
   it('should handle an unknown company gracefully', async () => {
     const input = new ScraperInputDto({
       siteType: [Site.PHENOM],
-      companySlug: 'this-company-definitely-does-not-exist-xyz-99999',
+      companySlug: 'careers.this-company-definitely-does-not-exist-xyz-99999.com',
       resultsWanted: 5,
     });
 
@@ -75,7 +75,7 @@ describe('PhenomService (E2E)', () => {
   it('should respect resultsWanted limit', async () => {
     const input = new ScraperInputDto({
       siteType: [Site.PHENOM],
-      companySlug: 'boeing',
+      companySlug: 'careers.southwestair.com',
       resultsWanted: 3,
       descriptionFormat: DescriptionFormat.PLAIN,
     });
