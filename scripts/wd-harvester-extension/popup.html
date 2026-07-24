@@ -39,10 +39,11 @@
   </details>
 
   <div class="row">
-    <button id="run" class="primary">▶ Run</button>
+    <button id="run" class="primary">▶ Run (new)</button>
+    <button id="resume" class="primary" disabled>▶ Resume</button>
     <button id="stop" class="danger" disabled>■ Stop</button>
-    <span id="status"></span>
   </div>
+  <div class="row"><span id="status"></span></div>
 
   <div class="row">
     <span id="count">0 collected</span>
@@ -55,7 +56,7 @@
   </div>
 
   <textarea id="list" readonly placeholder="Collected slugs appear here — platform ⇥ slug ⇥ url"></textarea>
-  <div class="hint">Auto-run pages through Google with human-ish delays and stops itself on a CAPTCHA. Go easy across many queries.</div>
+  <div class="hint">Auto-run pages through Google with human-ish delays and PAUSES itself on a CAPTCHA (never solves/bypasses it) without losing its place. Solve the CAPTCHA in the tab, then click Resume — it jumps back and continues the same run instead of restarting.</div>
 
   <script src="popup.js"></script>
 </body>

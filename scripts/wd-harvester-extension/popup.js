@@ -68,12 +68,20 @@ function renderRun() {
   chrome.storage.local.get([RUN], (res) => {
     const s = res[RUN];
     const running = !!(s && s.running);
+    // Resumable = a paused run that still has somewhere to go back to.
+    const resumable = !!(s && !running && Array.isArray(s.queries) && s.queries.length
+      && (s.stoppedReason === 'captcha' || s.stoppedReason === 'manual'));
+
     $('run').disabled = running;
+    $('resume').disabled = !resumable;
     $('stop').disabled = !running;
+
     if (running) {
       $('status').textContent = `Running · query ${s.qIndex + 1}/${s.queries.length} · page ${s.page}`;
     } else if (s && s.stoppedReason === 'captcha') {
-      $('status').textContent = 'Stopped: Google CAPTCHA — wait a bit, then Run again.';
+      $('status').textContent = `Paused: Google CAPTCHA (query ${s.qIndex + 1}/${s.queries.length} · page ${s.page}). Solve it in the tab, then click Resume.`;
+    } else if (s && s.stoppedReason === 'manual') {
+      $('status').textContent = `Stopped (query ${s.qIndex + 1}/${s.queries.length} · page ${s.page}). Click Resume to continue, or Run for a fresh start.`;
     } else if (s && s.stoppedReason === 'done') {
       $('status').textContent = 'Run complete.';
     } else {
@@ -99,6 +107,25 @@ $('run').addEventListener('click', () => {
 $('stop').addEventListener('click', () => {
   chrome.storage.local.get([RUN], (res) => {
     chrome.storage.local.set({ [RUN]: { ...(res[RUN] || {}), running: false, stoppedReason: 'manual' } }, renderRun);
+  });
+});
+
+// Continues a paused run (CAPTCHA or manual Stop) from exactly where it left
+// off — same queries/qIndex/page, no rebuild — by navigating back to the last
+// known-good results page and re-arming `running`. This is the "don't
+// restart" fix: plain Run always rebuilds the query list from scratch and
+// resets to query 0 / page 1, which would throw away all run progress.
+$('resume').addEventListener('click', () => {
+  chrome.storage.local.get([RUN], (res) => {
+    const s = res[RUN];
+    if (!s || !Array.isArray(s.queries) || !s.queries.length) return;
+    const target = s.lastGoodUrl || firstUrl(s.queries[s.qIndex] || s.queries[0]);
+    chrome.storage.local.set({ [RUN]: { ...s, running: true, stoppedReason: null } }, () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+        chrome.tabs.update(tab.id, { url: target });
+        window.close();
+      });
+    });
   });
 });
 

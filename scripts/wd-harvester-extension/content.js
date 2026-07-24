@@ -6,11 +6,18 @@
  *     network calls, no clicking results) and append them to storage, deduped.
  *  2) AUTO-RUN (optional): when a run is active, page through the current query
  *     then advance to the next saved query — all by navigating the tab itself.
- *     Stops instantly on a Google CAPTCHA / "unusual traffic" wall.
+ *     Pauses instantly on a Google CAPTCHA / "unusual traffic" wall (never
+ *     tries to solve or bypass it) WITHOUT losing its place: `queries`,
+ *     `qIndex`, and `page` stay exactly as they were, and `lastGoodUrl` keeps
+ *     tracking the freshest non-challenge results page — including while
+ *     paused, since the user may navigate/solve things by hand. Clicking
+ *     Resume in the popup jumps back to `lastGoodUrl` and re-arms `running`,
+ *     continuing the same run instead of rebuilding the query list from
+ *     scratch (which is what re-clicking Run does).
  */
 
 const DATA = 'atsHarvest';   // Array<{platform, slug, url}>
-const RUN = 'atsRun';        // { running, queries[], qIndex, page, maxPages }
+const RUN = 'atsRun';        // { running, queries[], qIndex, page, maxPages, lastGoodUrl, stoppedReason }
 
 // ── URL → { platform, slug, url } ──────────────────────────────────────────
 function parseAts(u) {
@@ -100,14 +107,29 @@ function buildUrl(q) {
   return `https://www.google.com/search?q=${encodeURIComponent(q)}&num=100&hl=en`;
 }
 
-function drive() {
+function syncAndDrive() {
   chrome.storage.local.get([RUN], (res) => {
-    const s = res[RUN];
-    if (!s || !s.running) return;
+    const raw = res[RUN];
+    if (!raw) return; // no search plan saved yet — nothing to drive or track
 
-    if (isChallengePage()) {
+    const challenge = isChallengePage();
+    // Keep the freshest known-good results URL for Resume — computed once so
+    // every write below uses the SAME snapshot (avoids a stale-`raw` write
+    // clobbering this update; see note on the paused branch).
+    const s = challenge ? raw : { ...raw, lastGoodUrl: location.href };
+
+    if (!raw.running) {
+      // Paused (CAPTCHA or manual Stop). Never auto-navigate — but do persist
+      // a fresher lastGoodUrl if the user has manually browsed forward while
+      // paused, so Resume jumps to where they actually are, not where the
+      // pause first happened.
+      if (s.lastGoodUrl !== raw.lastGoodUrl) chrome.storage.local.set({ [RUN]: s });
+      return;
+    }
+
+    if (challenge) {
       chrome.storage.local.set({ [RUN]: { ...s, running: false, stoppedReason: 'captcha' } });
-      console.warn('[ATS] CAPTCHA / unusual-traffic wall — run stopped.');
+      console.warn('[ATS] CAPTCHA / unusual-traffic wall — run PAUSED, not lost. Solve it in this tab, then click Resume in the popup to continue from the same query/page.');
       return;
     }
 
@@ -134,8 +156,8 @@ function drive() {
   });
 }
 
-// Passive harvest on every load, then drive the run if one is active.
+// Passive harvest on every load, then drive (or track) the run if one exists.
 harvestPage((added, total) => {
   console.log(`[ATS] +${added} new · ${total} total`);
-  drive();
+  syncAndDrive();
 });
